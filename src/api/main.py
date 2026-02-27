@@ -572,45 +572,6 @@ async def export_job_result(
     }
 
 
-@app.get("/api/v1/jobs/{job_id}/lineage")
-@limiter.limit("500/hour")
-async def get_job_lineage(
-    request: Request,
-    job_id: str,
-    db: Session = Depends(get_db),
-    api_key: APIKey = Depends(get_current_api_key),
-):
-    """Get lineage events for a job — stage-by-stage extraction audit trail."""
-    try:
-        job_uuid = UUID(job_id)
-    except ValueError:
-        raise HTTPException(400, "Invalid job_id format")
-
-    job = crud.get_job(db, job_uuid)
-    if not job:
-        raise HTTPException(404, "Job not found")
-
-    try:
-        events = crud.get_job_lineage(db, job_uuid)
-        return {
-            "job_id": job_id,
-            "status": job.status.value,
-            "events_count": len(events),
-            "events": [
-                {
-                    "event_id": str(e.event_id),
-                    "stage_name": e.stage_name,
-                    "timestamp": e.timestamp.isoformat() if e.timestamp else None,
-                    "data": e.data,
-                }
-                for e in events
-            ],
-        }
-    except DatabaseError as e:
-        logger.error(f"Database error getting lineage: {str(e)}")
-        raise HTTPException(500, "Database error getting lineage")
-
-
 @app.post("/api/v1/jobs/{job_id}/retry")
 @limiter.limit("20/hour")
 async def retry_job(
