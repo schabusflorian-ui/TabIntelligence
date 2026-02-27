@@ -1,10 +1,11 @@
 """Stage 1: Guided Parsing - Extract structured data from Excel files."""
 import asyncio
-import base64
+import io
 import time
 from typing import Any, Dict
 
 import anthropic
+import openpyxl
 
 from src.core.exceptions import ClaudeAPIError, ExtractionError, RateLimitError
 from src.core.logging import extraction_logger as logger, log_performance, log_exception
@@ -38,28 +39,27 @@ class ParsingStage(ExtractionStage):
         logger.info("Stage 1: Parsing started")
         start_time = time.time()
 
+        # Pre-process Excel to text using openpyxl (Claude document API only supports PDFs)
+        excel_text = self._excel_to_text(context.file_bytes)
+        logger.debug(f"Converted Excel to text ({len(excel_text)} chars)")
+
         while retry_count < max_retries:
             try:
-                file_base64 = base64.standard_b64encode(context.file_bytes).decode("utf-8")
-
                 logger.debug(f"Calling Claude API (attempt {retry_count + 1}/{max_retries})")
+
+                prompt_text = get_prompt("parsing").content
+                full_prompt = (
+                    f"Below is the content of an Excel file, with each sheet shown separately.\n\n"
+                    f"{excel_text}\n\n"
+                    f"{prompt_text}"
+                )
 
                 response = get_claude_client().messages.create(
                     model="claude-sonnet-4-20250514",
                     max_tokens=8192,
                     messages=[{
                         "role": "user",
-                        "content": [
-                            {
-                                "type": "document",
-                                "source": {
-                                    "type": "base64",
-                                    "media_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                    "data": file_base64,
-                                },
-                            },
-                            {"type": "text", "text": get_prompt("parsing").content},
-                        ],
+                        "content": full_prompt,
                     }],
                 )
 
@@ -129,6 +129,23 @@ class ParsingStage(ExtractionStage):
                 raise error
 
         raise ClaudeAPIError("Max retries exceeded", stage="parsing", retry_count=max_retries)
+
+    @staticmethod
+    def _excel_to_text(file_bytes: bytes) -> str:
+        """Convert Excel file bytes to a text representation for Claude."""
+        wb = openpyxl.load_workbook(io.BytesIO(file_bytes), data_only=True, read_only=True)
+        parts = []
+        for sheet_name in wb.sheetnames:
+            ws = wb[sheet_name]
+            parts.append(f"=== Sheet: {sheet_name} ===")
+            for row in ws.iter_rows(values_only=True):
+                cells = [str(c) if c is not None else "" for c in row]
+                # Skip fully empty rows
+                if any(cells):
+                    parts.append("\t".join(cells))
+            parts.append("")  # blank line between sheets
+        wb.close()
+        return "\n".join(parts)
 
 
 # Self-register at import time

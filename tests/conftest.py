@@ -16,12 +16,34 @@ mock_boto3_module.client.return_value = mock_s3_client
 sys.modules['boto3'] = mock_boto3_module
 sys.modules['botocore'] = MagicMock()
 sys.modules['botocore.config'] = MagicMock()
-sys.modules['botocore.exceptions'] = MagicMock()
+# botocore exception classes must be real exceptions (not MagicMock) so that
+# `except ClientError:` works in S3 client code.
+_mock_botocore_exceptions = MagicMock()
+
+class _MockClientError(Exception):
+    """Mock botocore ClientError with response attribute."""
+    def __init__(self, error_response=None, operation_name=""):
+        self.response = error_response or {"Error": {"Code": "Unknown", "Message": ""}}
+        self.operation_name = operation_name
+        super().__init__(str(error_response))
+
+class _MockNoCredentialsError(Exception): pass
+class _MockPartialCredentialsError(Exception): pass
+class _MockEndpointConnectionError(Exception): pass
+
+_mock_botocore_exceptions.ClientError = _MockClientError
+_mock_botocore_exceptions.NoCredentialsError = _MockNoCredentialsError
+_mock_botocore_exceptions.PartialCredentialsError = _MockPartialCredentialsError
+_mock_botocore_exceptions.EndpointConnectionError = _MockEndpointConnectionError
+sys.modules['botocore.exceptions'] = _mock_botocore_exceptions
 
 # Create a mock celery module
 mock_celery_module = MagicMock()
 mock_celery_app = MagicMock()
 mock_celery_module.Celery.return_value = mock_celery_app
+# celery.Task must be a real class (not MagicMock) so DLQTask can inherit
+# methods properly. MagicMock base classes swallow subclass method definitions.
+mock_celery_module.Task = type('Task', (), {})
 sys.modules['celery'] = mock_celery_module
 sys.modules['celery.result'] = MagicMock()
 sys.modules['celery.exceptions'] = MagicMock()
@@ -305,6 +327,14 @@ def mock_anthropic(monkeypatch, mock_claude_client):
         """Mock save_to_db to do nothing (sync - matches actual implementation)."""
         pass
 
+    # Mock Excel-to-text conversion so tests can pass fake bytes
+    def mock_excel_to_text(file_bytes):
+        return "=== Sheet: Income Statement ===\nRevenue\t100\t200\t300\n"
+
+    monkeypatch.setattr(
+        "src.extraction.stages.parsing.ParsingStage._excel_to_text",
+        staticmethod(mock_excel_to_text)
+    )
     monkeypatch.setattr(
         "src.extraction.claude_client.get_claude_client",
         mock_get_claude_client
