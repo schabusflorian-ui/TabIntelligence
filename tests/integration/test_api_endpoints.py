@@ -165,12 +165,13 @@ def test_extraction_result_structure(test_client_with_db, sample_xlsx, mock_anth
     assert "cost_usd" in result
 
 
-def test_concurrent_uploads(test_client_with_db, sample_xlsx, mock_anthropic):
-    """Test that multiple concurrent uploads are handled correctly."""
+def test_concurrent_uploads(test_client_with_db, mock_anthropic):
+    """Test that multiple uploads with different content are handled correctly."""
+    # Use unique content for each file to avoid deduplication
     files_list = [
-        ("test1.xlsx", BytesIO(sample_xlsx), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
-        ("test2.xlsx", BytesIO(sample_xlsx), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
-        ("test3.xlsx", BytesIO(sample_xlsx), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+        ("test1.xlsx", BytesIO(b"PK\x03\x04" + b"\x01" * 100), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+        ("test2.xlsx", BytesIO(b"PK\x03\x04" + b"\x02" * 100), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+        ("test3.xlsx", BytesIO(b"PK\x03\x04" + b"\x03" * 100), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
     ]
 
     job_ids = []

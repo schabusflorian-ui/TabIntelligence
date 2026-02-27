@@ -170,10 +170,18 @@ def get_db_context():
 
 def get_db() -> Generator[Session, None, None]:
     """
-    Backward compatibility alias for get_db_sync().
+    FastAPI dependency for sync database sessions.
 
-    This is used by legacy code that expects a sync session.
-    New code should use get_db_sync() or get_db_async() explicitly.
+    Unlike get_db_sync(), this does NOT wrap non-database exceptions
+    in DatabaseError. This is important because FastAPI/Starlette throws
+    HTTPExceptions back into dependency generators during cleanup.
     """
-    with get_db_sync() as session:
+    session = SyncSessionLocal()
+    try:
         yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
