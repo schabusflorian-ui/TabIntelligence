@@ -32,7 +32,6 @@ dependencies = [
     "opentelemetry-exporter-jaeger>=1.20.0",
     "python-json-logger>=2.0.0",
     "prometheus-client>=0.19.0",
-    "prometheus-fastapi-instrumentator>=6.1.0",
     "slowapi>=0.1.9",
 ]
 
@@ -67,3 +66,11 @@ addopts = [
     "--cov-report=term-missing",
     "--ignore=tests/e2e",
 ]
+
+[tool.coverage.run]
+omit = [
+    "src/extraction/llm.py",  # Unused provider abstraction (dead code)
+]
+
+[tool.coverage.report]
+fail_under = 80

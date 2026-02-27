@@ -310,8 +310,8 @@ async def circuit_breaker_status():
 # Metrics Endpoint (Prometheus-compatible)
 # ============================================================================
 
-@router.get("/metrics", include_in_schema=False)
-async def metrics():
+@router.get("/db-metrics", include_in_schema=False)
+async def db_metrics():
     """
     Prometheus-compatible metrics endpoint.
 

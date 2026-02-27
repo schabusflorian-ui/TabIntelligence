@@ -113,7 +113,7 @@ class TestBuildEntityContext:
 
     def test_high_confidence_patterns(self):
         """Should include high-confidence (>=0.85) mappings as patterns."""
-        context = MagicMock(spec=PipelineContext)
+        context = MagicMock(spec=PipelineContext, entity_id=None)
         mappings = [
             {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95},
             {"original_label": "COGS", "canonical_name": "cogs", "confidence": 0.90},
@@ -127,7 +127,7 @@ class TestBuildEntityContext:
 
     def test_no_high_confidence(self):
         """Should return fallback message when no high-confidence mappings exist."""
-        context = MagicMock(spec=PipelineContext)
+        context = MagicMock(spec=PipelineContext, entity_id=None)
         mappings = [
             {"original_label": "Mystery", "canonical_name": "unmapped", "confidence": 0.3},
             {"original_label": "X", "canonical_name": "some_item", "confidence": 0.5},
@@ -137,7 +137,7 @@ class TestBuildEntityContext:
 
     def test_limits_to_10_patterns(self):
         """Should include at most 10 high-confidence patterns."""
-        context = MagicMock(spec=PipelineContext)
+        context = MagicMock(spec=PipelineContext, entity_id=None)
         mappings = [
             {"original_label": f"Item{i}", "canonical_name": f"item_{i}", "confidence": 0.95}
             for i in range(20)
@@ -149,7 +149,7 @@ class TestBuildEntityContext:
 
     def test_excludes_below_threshold(self):
         """Items with confidence < 0.85 should not appear as patterns."""
-        context = MagicMock(spec=PipelineContext)
+        context = MagicMock(spec=PipelineContext, entity_id=None)
         mappings = [
             {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95},
             {"original_label": "LowConf", "canonical_name": "something", "confidence": 0.80},
@@ -399,7 +399,8 @@ class TestTaxonomyHelpers:
 
     def test_load_taxonomy_missing_file(self):
         """Should return empty categories when file doesn't exist."""
-        with patch("src.extraction.stages.enhanced_mapping.TAXONOMY_PATH", Path("/nonexistent/path.json")):
+        with patch("src.extraction.taxonomy_loader.TAXONOMY_PATH", Path("/nonexistent/path.json")), \
+             patch("src.extraction.taxonomy_loader._taxonomy_cache", {}):
             result = _load_taxonomy()
             assert result == {"categories": {}}
 

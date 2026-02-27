@@ -30,6 +30,21 @@ from src.db.session import (
 from src.core.exceptions import DatabaseError
 
 
+@pytest.fixture(autouse=True)
+async def _dispose_async_pool():
+    """Dispose async engine pool before each test.
+
+    The async_engine is created at module level and its connection pool
+    binds to the event loop active at import time. pytest-asyncio creates
+    a new event loop per test function, so stale pool connections cause
+    "Future attached to a different loop" errors. Disposing forces fresh
+    connections on the current loop.
+    """
+    await async_engine.dispose()
+    yield
+    await async_engine.dispose()
+
+
 # ============================================================================
 # ENGINE AND FACTORY VERIFICATION
 # ============================================================================
@@ -95,10 +110,6 @@ class TestAsyncSession:
             result = await session.execute(text("SELECT 1 as value"))
             assert result.scalar() == 1
 
-    @pytest.mark.skipif(
-        __import__("sys").version_info < (3, 10),
-        reason="Event loop binding issue with module-level asyncpg engine on Python <3.10"
-    )
     async def test_get_db_async_auto_commits(self):
         """get_db_async should auto-commit on successful exit."""
         async with get_db_async() as session:
@@ -133,10 +144,6 @@ class TestFastAPIDependency:
             assert db.is_active
             break
 
-    @pytest.mark.skipif(
-        __import__("sys").version_info < (3, 10),
-        reason="Event loop binding issue with module-level asyncpg engine on Python <3.10"
-    )
     async def test_dependency_executes_query(self):
         """Session from dependency should execute queries."""
         async for db in get_db_dependency():
@@ -221,10 +228,6 @@ class TestConcurrentSessions:
         results = await asyncio.gather(*[query_value(i) for i in range(10)])
         assert results == list(range(10))
 
-    @pytest.mark.skipif(
-        __import__("sys").version_info < (3, 10),
-        reason="Event loop binding issue with module-level asyncpg engine on Python <3.10"
-    )
     async def test_pool_handles_burst(self):
         """Connection pool should handle burst of concurrent requests."""
         import asyncio

@@ -10,7 +10,7 @@ from typing import Optional, List
 from uuid import UUID
 from datetime import datetime, timezone
 
-from src.db.models import File, ExtractionJob, JobStatusEnum, LineageEvent
+from src.db.models import File, ExtractionJob, JobStatusEnum, LineageEvent, DLQEntry, EntityPattern
 from src.core.logging import database_logger as logger
 from src.core.exceptions import DatabaseError
 
@@ -506,4 +506,302 @@ def get_job_lineage(db: Session, job_id: UUID) -> List[LineageEvent]:
             f"Failed to get lineage: {str(e)}",
             operation="read",
             table="lineage_events"
+        )
+
+
+# ============================================================================
+# ENTITY PATTERN OPERATIONS
+# ============================================================================
+
+def get_entity_patterns(
+    db: Session,
+    entity_id: UUID,
+    min_confidence: float = 0.0,
+    limit: int = 100,
+) -> List[EntityPattern]:
+    """
+    Get learned patterns for an entity, ordered by confidence descending.
+
+    Args:
+        db: Database session
+        entity_id: Entity UUID
+        min_confidence: Minimum confidence threshold (default 0.0)
+        limit: Maximum patterns to return
+
+    Returns:
+        List of EntityPattern records
+    """
+    try:
+        query = (
+            db.query(EntityPattern)
+            .filter(EntityPattern.entity_id == entity_id)
+            .filter(EntityPattern.confidence >= min_confidence)
+            .order_by(EntityPattern.confidence.desc())
+            .limit(limit)
+        )
+        return query.all()
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to get entity patterns for {entity_id}: {str(e)}")
+        raise DatabaseError(
+            f"Failed to get entity patterns: {str(e)}",
+            operation="read",
+            table="entity_patterns"
+        )
+
+
+def upsert_entity_pattern(
+    db: Session,
+    entity_id: UUID,
+    original_label: str,
+    canonical_name: str,
+    confidence: float,
+    created_by: str = "claude",
+) -> EntityPattern:
+    """
+    Create or update an entity pattern (upsert by entity_id + original_label).
+
+    If a pattern already exists for this entity/label pair:
+    - Updates confidence if new confidence is higher
+    - Increments occurrence_count
+    - Updates last_seen timestamp
+
+    Args:
+        db: Database session
+        entity_id: Entity UUID
+        original_label: Raw label from document
+        canonical_name: Mapped canonical name
+        confidence: Confidence score (0.0-1.0)
+        created_by: Source ('claude' or 'user_correction')
+
+    Returns:
+        EntityPattern: Created or updated record
+    """
+    try:
+        existing = (
+            db.query(EntityPattern)
+            .filter(
+                EntityPattern.entity_id == entity_id,
+                EntityPattern.original_label == original_label,
+            )
+            .first()
+        )
+
+        if existing:
+            if confidence > float(existing.confidence):
+                existing.confidence = confidence
+                existing.canonical_name = canonical_name
+            existing.occurrence_count += 1
+            existing.last_seen = datetime.now(timezone.utc)
+            db.commit()
+            db.refresh(existing)
+            return existing
+
+        pattern = EntityPattern(
+            entity_id=entity_id,
+            original_label=original_label,
+            canonical_name=canonical_name,
+            confidence=confidence,
+            created_by=created_by,
+            last_seen=datetime.now(timezone.utc),
+        )
+        db.add(pattern)
+        db.commit()
+        db.refresh(pattern)
+        logger.debug(
+            f"Entity pattern created: entity={entity_id}, "
+            f"'{original_label}' -> '{canonical_name}' ({confidence:.2f})"
+        )
+        return pattern
+
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Failed to upsert entity pattern: {str(e)}")
+        raise DatabaseError(
+            f"Failed to upsert entity pattern: {str(e)}",
+            operation="upsert",
+            table="entity_patterns"
+        )
+
+
+def bulk_upsert_entity_patterns(
+    db: Session,
+    entity_id: UUID,
+    mappings: List[dict],
+    min_confidence: float = 0.8,
+    created_by: str = "claude",
+) -> int:
+    """
+    Bulk upsert entity patterns from extraction mappings.
+
+    Only persists mappings above the confidence threshold.
+
+    Args:
+        db: Database session
+        entity_id: Entity UUID
+        mappings: List of mapping dicts with original_label, canonical_name, confidence
+        min_confidence: Minimum confidence to persist (default 0.8)
+        created_by: Source identifier
+
+    Returns:
+        Number of patterns upserted
+    """
+    count = 0
+    for m in mappings:
+        confidence = m.get("confidence", 0)
+        canonical = m.get("canonical_name", "")
+        label = m.get("original_label", "")
+
+        if confidence < min_confidence or canonical == "unmapped" or not label:
+            continue
+
+        upsert_entity_pattern(
+            db=db,
+            entity_id=entity_id,
+            original_label=label,
+            canonical_name=canonical,
+            confidence=confidence,
+            created_by=created_by,
+        )
+        count += 1
+
+    logger.info(f"Bulk upserted {count} entity patterns for entity {entity_id}")
+    return count
+
+
+# ============================================================================
+# DLQ OPERATIONS
+# ============================================================================
+
+def create_dlq_entry(
+    db: Session,
+    task_id: str,
+    task_name: str,
+    task_args: list,
+    task_kwargs: dict,
+    error: str,
+    traceback: str,
+) -> DLQEntry:
+    """
+    Create a Dead Letter Queue entry for a failed task.
+
+    Args:
+        db: Database session
+        task_id: Celery task ID
+        task_name: Task name
+        task_args: Task positional arguments
+        task_kwargs: Task keyword arguments
+        error: Error message
+        traceback: Full traceback string
+
+    Returns:
+        Created DLQ entry
+    """
+    try:
+        dlq_entry = DLQEntry(
+            task_id=task_id,
+            task_name=task_name,
+            task_args=task_args,
+            task_kwargs=task_kwargs,
+            error=error,
+            traceback=traceback,
+        )
+        db.add(dlq_entry)
+        db.commit()
+        db.refresh(dlq_entry)
+
+        logger.info(f"DLQ entry created: dlq_id={dlq_entry.dlq_id}, task_id={task_id}")
+        return dlq_entry
+
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Failed to create DLQ entry for task {task_id}: {str(e)}")
+        raise DatabaseError(
+            f"Failed to create DLQ entry: {str(e)}",
+            operation="create",
+            table="dlq_entries"
+        )
+
+
+def get_dlq_entry(db: Session, dlq_id: UUID) -> Optional[DLQEntry]:
+    """Get a DLQ entry by ID."""
+    try:
+        return db.query(DLQEntry).filter(DLQEntry.dlq_id == dlq_id).first()
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to get DLQ entry {dlq_id}: {str(e)}")
+        raise DatabaseError(
+            f"Failed to get DLQ entry: {str(e)}",
+            operation="read",
+            table="dlq_entries"
+        )
+
+
+def list_dlq_entries(
+    db: Session,
+    limit: int = 100,
+    offset: int = 0,
+    only_unreplayed: bool = False
+) -> List[DLQEntry]:
+    """List DLQ entries with pagination."""
+    try:
+        query = db.query(DLQEntry).order_by(DLQEntry.created_at.desc())
+        if only_unreplayed:
+            query = query.filter(DLQEntry.replayed == 0)
+        return query.limit(limit).offset(offset).all()
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to list DLQ entries: {str(e)}")
+        raise DatabaseError(
+            f"Failed to list DLQ entries: {str(e)}",
+            operation="read",
+            table="dlq_entries"
+        )
+
+
+def mark_dlq_entry_replayed(
+    db: Session,
+    dlq_id: UUID,
+    new_task_id: str
+) -> DLQEntry:
+    """Mark a DLQ entry as replayed with the new task ID."""
+    try:
+        dlq_entry = db.query(DLQEntry).filter(DLQEntry.dlq_id == dlq_id).first()
+        if not dlq_entry:
+            raise DatabaseError(
+                f"DLQ entry {dlq_id} not found",
+                operation="update",
+                table="dlq_entries"
+            )
+        dlq_entry.replayed += 1
+        dlq_entry.replayed_at = datetime.now(timezone.utc)
+        dlq_entry.replayed_task_id = new_task_id
+        db.commit()
+        db.refresh(dlq_entry)
+        logger.info(f"DLQ entry {dlq_id} marked as replayed (task {new_task_id})")
+        return dlq_entry
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Failed to mark DLQ entry {dlq_id} as replayed: {str(e)}")
+        raise DatabaseError(
+            f"Failed to update DLQ entry: {str(e)}",
+            operation="update",
+            table="dlq_entries"
+        )
+
+
+def delete_dlq_entry(db: Session, dlq_id: UUID) -> bool:
+    """Delete a DLQ entry. Returns True if deleted, False if not found."""
+    try:
+        dlq_entry = db.query(DLQEntry).filter(DLQEntry.dlq_id == dlq_id).first()
+        if not dlq_entry:
+            return False
+        db.delete(dlq_entry)
+        db.commit()
+        logger.info(f"DLQ entry {dlq_id} deleted")
+        return True
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Failed to delete DLQ entry {dlq_id}: {str(e)}")
+        raise DatabaseError(
+            f"Failed to delete DLQ entry: {str(e)}",
+            operation="delete",
+            table="dlq_entries"
         )

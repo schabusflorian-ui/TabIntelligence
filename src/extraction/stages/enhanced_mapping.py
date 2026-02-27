@@ -1,7 +1,6 @@
 """Stage 5: Enhanced Mapping - Re-map with full taxonomy context and entity patterns."""
 import json
 import time
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import anthropic
@@ -13,21 +12,30 @@ from src.extraction.base import ExtractionStage, PipelineContext
 from src.extraction.claude_client import get_claude_client
 from src.extraction.prompts import get_prompt
 from src.extraction.utils import extract_json
+from src.extraction.taxonomy_loader import (
+    load_taxonomy_json,
+    format_taxonomy_detailed,
+    TAXONOMY_PATH,  # Re-exported for backward compat with tests that patch it
+)
 
-# Path to full taxonomy JSON
-TAXONOMY_PATH = Path(__file__).parent.parent.parent.parent / "data" / "taxonomy.json"
 
-
+# Backward-compatible aliases for tests
 def _load_taxonomy() -> Dict:
     """Load the full taxonomy JSON file."""
-    if TAXONOMY_PATH.exists():
-        with open(TAXONOMY_PATH) as f:
-            return json.load(f)
-    return {"categories": {}}
+    # Check module-level TAXONOMY_PATH to support test patching
+    import src.extraction.stages.enhanced_mapping as _self
+    path = getattr(_self, "TAXONOMY_PATH", TAXONOMY_PATH)
+    if not path.exists():
+        return {"categories": {}}
+    return load_taxonomy_json()
 
 
 def _format_taxonomy_for_prompt(taxonomy: Dict) -> str:
-    """Format taxonomy into a concise prompt-ready string."""
+    """Format taxonomy dict into a concise prompt-ready string.
+
+    Args:
+        taxonomy: Dict with 'categories' key mapping to lists of items.
+    """
     lines = []
     for category, items in taxonomy.get("categories", {}).items():
         category_display = category.replace("_", " ").title()
@@ -67,6 +75,8 @@ class EnhancedMappingStage(ExtractionStage):
 
         if not items_to_remap:
             logger.info("Stage 5: No items need re-mapping, all confidently mapped")
+            # Still persist patterns even when no remapping needed
+            self._persist_entity_patterns(context, basic_mappings)
             return {
                 "enhanced_mappings": basic_mappings,
                 "remapped_count": 0,
@@ -79,8 +89,7 @@ class EnhancedMappingStage(ExtractionStage):
             }
 
         # Load full taxonomy for context
-        taxonomy = _load_taxonomy()
-        taxonomy_str = _format_taxonomy_for_prompt(taxonomy)
+        taxonomy_str = format_taxonomy_detailed()
 
         # Build entity context if available
         entity_context = self._build_entity_context(context, basic_mappings)
@@ -140,9 +149,13 @@ class EnhancedMappingStage(ExtractionStage):
                 },
             )
 
+            # Persist learned patterns for future entity extractions
+            patterns_saved = self._persist_entity_patterns(context, final_mappings)
+
             logger.info(
                 f"Stage 5: Enhanced Mapping completed - "
-                f"{len(items_to_remap)} candidates, {remapped_count} improved"
+                f"{len(items_to_remap)} candidates, {remapped_count} improved, "
+                f"{patterns_saved} patterns saved"
             )
 
             return {
@@ -192,20 +205,75 @@ class EnhancedMappingStage(ExtractionStage):
     def _build_entity_context(
         self, context: PipelineContext, mappings: List[Dict]
     ) -> str:
-        """Build entity context string for the prompt."""
-        # Summarize what we already know about this entity's naming patterns
-        high_conf = [m for m in mappings if m.get("confidence", 0) >= 0.85]
-        if not high_conf:
-            return "No entity-specific patterns available."
-
+        """Build entity context string from DB patterns + current high-confidence mappings."""
         patterns = []
-        for m in high_conf[:10]:  # Top 10 confident mappings as context
-            patterns.append(f"  '{m['original_label']}' -> {m['canonical_name']} ({m['confidence']:.0%})")
+
+        # Load learned patterns from database if entity_id is available
+        entity_id = getattr(context, "entity_id", None)
+        if entity_id:
+            try:
+                from src.db.session import get_db_sync
+                from src.db import crud
+                from uuid import UUID
+
+                with get_db_sync() as db:
+                    db_patterns = crud.get_entity_patterns(
+                        db, UUID(context.entity_id), min_confidence=0.7, limit=20
+                    )
+                    for p in db_patterns:
+                        patterns.append(
+                            f"  '{p.original_label}' -> {p.canonical_name} "
+                            f"({float(p.confidence):.0%}, seen {p.occurrence_count}x)"
+                        )
+                if patterns:
+                    logger.info(f"Stage 5: Loaded {len(patterns)} learned patterns from DB")
+            except Exception as e:
+                logger.warning(f"Stage 5: Could not load entity patterns from DB: {e}")
+
+        # Supplement with high-confidence mappings from current extraction
+        high_conf = [m for m in mappings if m.get("confidence", 0) >= 0.85]
+        existing_labels = {line.split("'")[1] for line in patterns if "'" in line}
+
+        for m in high_conf[:10]:
+            if m["original_label"] not in existing_labels:
+                patterns.append(
+                    f"  '{m['original_label']}' -> {m['canonical_name']} ({m['confidence']:.0%})"
+                )
+
+        if not patterns:
+            return "No entity-specific patterns available."
 
         return (
             f"Known patterns from this entity (high-confidence mappings):\n"
-            + "\n".join(patterns)
+            + "\n".join(patterns[:20])
         )
+
+    def _persist_entity_patterns(
+        self, context: PipelineContext, final_mappings: List[Dict]
+    ) -> int:
+        """Persist high-confidence mappings as entity patterns for future use."""
+        entity_id = getattr(context, "entity_id", None)
+        if not entity_id:
+            return 0
+
+        try:
+            from src.db.session import get_db_sync
+            from src.db import crud
+            from uuid import UUID
+
+            with get_db_sync() as db:
+                count = crud.bulk_upsert_entity_patterns(
+                    db=db,
+                    entity_id=UUID(context.entity_id),
+                    mappings=final_mappings,
+                    min_confidence=0.8,
+                    created_by="claude",
+                )
+            logger.info(f"Stage 5: Persisted {count} entity patterns to DB")
+            return count
+        except Exception as e:
+            logger.warning(f"Stage 5: Could not persist entity patterns: {e}")
+            return 0
 
     def _build_hierarchy_context(
         self, parsed: Dict, candidates: List[Dict]

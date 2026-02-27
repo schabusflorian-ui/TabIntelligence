@@ -1,7 +1,6 @@
 """Stage 3: Guided Mapping - Map line items to canonical taxonomy."""
 import json
 import time
-from pathlib import Path
 from typing import Any, Dict
 
 import anthropic
@@ -13,43 +12,13 @@ from src.extraction.base import ExtractionStage, PipelineContext
 from src.extraction.claude_client import get_claude_client
 from src.extraction.prompts import get_prompt
 from src.extraction.utils import extract_json
-
-# Path to consolidated taxonomy JSON
-TAXONOMY_PATH = Path(__file__).parent.parent.parent.parent / "data" / "taxonomy.json"
+from src.extraction.taxonomy_loader import format_taxonomy_for_prompt, TAXONOMY_PATH
 
 
-def _load_taxonomy_for_prompt() -> str:
+# Backward-compatible alias for tests that import this directly
+def _load_taxonomy_for_prompt(include_aliases: bool = True) -> str:
     """Load taxonomy from JSON and format as a concise prompt string."""
-    if not TAXONOMY_PATH.exists():
-        logger.warning(f"Taxonomy file not found: {TAXONOMY_PATH}, using fallback")
-        return (
-            "Income Statement: revenue, cogs, gross_profit, opex, sga, rd_expense, "
-            "ebitda, depreciation, amortization, ebit, interest_expense, ebt, "
-            "tax_expense, net_income\n"
-            "Balance Sheet: cash, accounts_receivable, inventory, current_assets, "
-            "ppe, intangibles, goodwill, total_assets, accounts_payable, "
-            "short_term_debt, current_liabilities, long_term_debt, total_liabilities, "
-            "total_equity\n"
-            "Cash Flow: cfo, capex, cfi, cff, fcf, net_change_cash"
-        )
-
-    with open(TAXONOMY_PATH) as f:
-        data = json.load(f)
-
-    category_display = {
-        "income_statement": "Income Statement",
-        "balance_sheet": "Balance Sheet",
-        "cash_flow": "Cash Flow",
-        "debt_schedule": "Debt Schedule",
-        "metrics": "Metrics",
-    }
-
-    lines = []
-    for category, items in data.get("categories", {}).items():
-        display = category_display.get(category, category.replace("_", " ").title())
-        names = [item["canonical_name"] for item in items]
-        lines.append(f"{display}: {', '.join(names)}")
-    return "\n".join(lines)
+    return format_taxonomy_for_prompt(include_aliases=include_aliases)
 
 
 class MappingStage(ExtractionStage):

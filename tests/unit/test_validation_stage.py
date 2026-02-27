@@ -31,11 +31,12 @@ class TestDerivationRules:
         assert "fcf" in rule_names
 
     def test_balance_sheet_rule_is_critical(self):
-        """The BS balance check should be a critical (non-optional) error."""
+        """The BS balance check (A=L+E) should be a critical (non-optional) error."""
         bs_rule = next(r for r in DERIVATION_RULES if r["canonical_name"] == "total_assets")
-        rel = bs_rule["validation_rules"]["cross_item_validation"]["relationships"][0]
-        assert rel.get("critical") is True
-        assert rel.get("warning_only") is not True
+        rels = bs_rule["validation_rules"]["cross_item_validation"]["relationships"]
+        critical_rel = next(r for r in rels if r.get("critical"))
+        assert critical_rel.get("critical") is True
+        assert critical_rel.get("warning_only") is not True
 
     def test_revenue_must_be_positive(self):
         """Revenue rule should enforce positive values."""

@@ -30,6 +30,7 @@ except ImportError:
 from src.api.middleware import RequestIDMiddleware, log_audit_event, get_client_ip
 from src.api.metrics import MetricsMiddleware, metrics_endpoint, file_uploads_total, file_upload_bytes, duplicate_uploads_total
 from src.api.health import router as health_router
+from src.api.taxonomy import router as taxonomy_router
 from src.db.session import get_db, get_db_context
 from src.db import crud
 from src.db.models import JobStatusEnum, ExtractionJob
@@ -79,6 +80,9 @@ app.add_api_route("/metrics", metrics_endpoint, methods=["GET"], include_in_sche
 
 # Kubernetes-style health probes (liveness, readiness, database health)
 app.include_router(health_router)
+
+# Taxonomy browsing and search endpoints
+app.include_router(taxonomy_router)
 
 
 @app.on_event("startup")
@@ -378,6 +382,171 @@ async def get_job_status(
     except DatabaseError as e:
         logger.error(f"Database error retrieving job: {str(e)}")
         raise HTTPException(500, "Database error retrieving job status")
+
+
+@app.get("/api/v1/jobs/{job_id}/export")
+@limiter.limit("500/hour")
+async def export_job_result(
+    request: Request,
+    job_id: str,
+    format: str = "json",
+    min_confidence: Optional[float] = None,
+    canonical_name: Optional[str] = None,
+    sheet: Optional[str] = None,
+    db: Session = Depends(get_db),
+    api_key: APIKey = Depends(get_current_api_key),
+):
+    """
+    Export extraction results in JSON or CSV format.
+
+    Query parameters:
+        format: "json" (default) or "csv"
+        min_confidence: Filter line items by minimum confidence (0.0 - 1.0)
+        canonical_name: Filter by canonical name (e.g. "revenue")
+        sheet: Filter by sheet name
+    """
+    # Validate format
+    if format not in ("json", "csv"):
+        raise HTTPException(400, "format must be 'json' or 'csv'")
+
+    if min_confidence is not None and not (0.0 <= min_confidence <= 1.0):
+        raise HTTPException(400, "min_confidence must be between 0.0 and 1.0")
+
+    # Validate job_id
+    try:
+        job_uuid = UUID(job_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid job_id format")
+
+    # Fetch job
+    try:
+        job = crud.get_job(db, job_uuid)
+    except DatabaseError as e:
+        logger.error(f"Database error exporting job: {str(e)}")
+        raise HTTPException(500, "Database error")
+
+    if not job:
+        raise HTTPException(404, "Job not found")
+
+    if job.status != JobStatusEnum.COMPLETED:
+        raise HTTPException(
+            409,
+            f"Job is not completed (status: {job.status.value}). "
+            f"Export is only available for completed jobs."
+        )
+
+    if not job.result:
+        raise HTTPException(404, "Job has no results")
+
+    result = job.result
+    line_items = result.get("line_items", [])
+
+    # Apply filters
+    if min_confidence is not None:
+        line_items = [
+            li for li in line_items
+            if li.get("confidence", 0) >= min_confidence
+        ]
+
+    if canonical_name:
+        line_items = [
+            li for li in line_items
+            if li.get("canonical_name") == canonical_name
+        ]
+
+    if sheet:
+        line_items = [
+            li for li in line_items
+            if li.get("sheet") == sheet
+        ]
+
+    # Audit trail
+    log_audit_event(
+        db=db,
+        action="export",
+        resource_type="job",
+        resource_id=job_uuid,
+        api_key_id=api_key.id,
+        ip_address=get_client_ip(request),
+        user_agent=request.headers.get("User-Agent"),
+        details={
+            "format": format,
+            "min_confidence": min_confidence,
+            "line_items_exported": len(line_items),
+        },
+        status_code=200,
+    )
+
+    if format == "csv":
+        return _build_csv_response(result, line_items, job_id)
+
+    # JSON export — return filtered result
+    return {
+        "job_id": str(job.job_id),
+        "file_id": str(job.file_id),
+        "sheets": result.get("sheets", []),
+        "line_items": line_items,
+        "line_items_count": len(line_items),
+        "tokens_used": result.get("tokens_used", 0),
+        "cost_usd": result.get("cost_usd", 0.0),
+        "validation": result.get("validation"),
+        "filters_applied": {
+            "min_confidence": min_confidence,
+            "canonical_name": canonical_name,
+            "sheet": sheet,
+        },
+    }
+
+
+def _build_csv_response(result: dict, line_items: list, job_id: str):
+    """Build a CSV response from extraction line items."""
+    import csv
+    import io
+    from starlette.responses import StreamingResponse
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Collect all period columns from values across all line items
+    period_columns = set()
+    for li in line_items:
+        period_columns.update(li.get("values", {}).keys())
+    period_columns = sorted(period_columns)
+
+    # Write header
+    header = [
+        "sheet",
+        "row",
+        "original_label",
+        "canonical_name",
+        "confidence",
+        "hierarchy_level",
+    ] + period_columns
+    writer.writerow(header)
+
+    # Write data rows
+    for li in line_items:
+        values = li.get("values", {})
+        row = [
+            li.get("sheet", ""),
+            li.get("row", ""),
+            li.get("original_label", ""),
+            li.get("canonical_name", ""),
+            li.get("confidence", ""),
+            li.get("hierarchy_level", ""),
+        ] + [values.get(period, "") for period in period_columns]
+        writer.writerow(row)
+
+    csv_content = output.getvalue()
+    output.close()
+
+    return StreamingResponse(
+        iter([csv_content]),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f'attachment; filename="extraction_{job_id}.csv"',
+        },
+    )
 
 
 if __name__ == "__main__":

@@ -13,121 +13,12 @@ from src.extraction.base import ExtractionStage, PipelineContext
 from src.extraction.claude_client import get_claude_client
 from src.extraction.prompts import get_prompt
 from src.extraction.utils import extract_json
+from src.extraction.taxonomy_loader import get_validation_rules
 from src.validation.accounting_validator import AccountingValidator, ValidationSummary
 
 
-# Taxonomy derivation rules for deterministic validation
-DERIVATION_RULES = [
-    {
-        "canonical_name": "gross_profit",
-        "validation_rules": {
-            "cross_item_validation": {
-                "relationships": [
-                    {
-                        "rule": "gross_profit == revenue - cogs",
-                        "tolerance": 0.02,
-                        "error_message": "Gross profit should equal revenue minus COGS",
-                        "warning_only": False,
-                    }
-                ]
-            }
-        },
-    },
-    {
-        "canonical_name": "ebit",
-        "validation_rules": {
-            "cross_item_validation": {
-                "relationships": [
-                    {
-                        "rule": "ebit == ebitda - depreciation - amortization",
-                        "tolerance": 0.02,
-                        "error_message": "EBIT should equal EBITDA minus D&A",
-                        "warning_only": True,
-                        "optional": True,
-                    }
-                ]
-            }
-        },
-    },
-    {
-        "canonical_name": "ebt",
-        "validation_rules": {
-            "cross_item_validation": {
-                "relationships": [
-                    {
-                        "rule": "ebt == ebit - interest_expense",
-                        "tolerance": 0.02,
-                        "error_message": "EBT should equal EBIT minus interest expense",
-                        "warning_only": True,
-                        "optional": True,
-                    }
-                ]
-            }
-        },
-    },
-    {
-        "canonical_name": "net_income",
-        "validation_rules": {
-            "cross_item_validation": {
-                "relationships": [
-                    {
-                        "rule": "net_income == ebt - tax_expense",
-                        "tolerance": 0.02,
-                        "error_message": "Net income should equal EBT minus taxes",
-                        "warning_only": True,
-                        "optional": True,
-                    }
-                ]
-            }
-        },
-    },
-    {
-        "canonical_name": "total_assets",
-        "validation_rules": {
-            "cross_item_validation": {
-                "relationships": [
-                    {
-                        "rule": "total_assets == total_liabilities + total_equity",
-                        "tolerance": 0.01,
-                        "error_message": "Balance sheet must balance: Assets = Liabilities + Equity",
-                        "critical": True,
-                    }
-                ]
-            }
-        },
-    },
-    {
-        "canonical_name": "revenue",
-        "validation_rules": {
-            "cross_item_validation": {
-                "must_be_positive": True,
-                "relationships": [
-                    {
-                        "rule": "revenue >= gross_profit",
-                        "error_message": "Revenue must be >= gross profit",
-                        "optional": True,
-                    }
-                ],
-            }
-        },
-    },
-    {
-        "canonical_name": "fcf",
-        "validation_rules": {
-            "cross_item_validation": {
-                "relationships": [
-                    {
-                        "rule": "fcf == cfo - capex",
-                        "tolerance": 0.05,
-                        "error_message": "FCF should approximately equal CFO minus CapEx",
-                        "warning_only": True,
-                        "optional": True,
-                    }
-                ]
-            }
-        },
-    },
-]
+# Load validation rules from taxonomy.json (29 rules vs. old 7 hardcoded)
+DERIVATION_RULES = get_validation_rules()
 
 
 class ValidationStage(ExtractionStage):

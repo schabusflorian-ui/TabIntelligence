@@ -1,5 +1,5 @@
 {
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Consolidated canonical financial taxonomy for DebtFund extraction pipeline",
   "categories": {
     "balance_sheet": [
@@ -24,7 +24,23 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "ocr_variants": [
+          "Accounts Pay able",
+          "Accounts-Payable",
+          "ACCOUNTS PAYABLE",
+          "A/P"
+        ],
+        "format_examples": [
+          {
+            "value": "1,800,000",
+            "context": "Trade payables"
+          }
+        ],
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "accounts_receivable",
@@ -84,7 +100,23 @@
               }
             ]
           }
-        }
+        },
+        "ocr_variants": [
+          "Accounts Receiv able",
+          "Accounts-Receivable",
+          "ACCOUNTS RECEIVABLE",
+          "A/R"
+        ],
+        "format_examples": [
+          {
+            "value": "2,500,000",
+            "context": "Trade receivables"
+          }
+        ],
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "accrued_expenses",
@@ -101,7 +133,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "accrued_liabilities",
@@ -119,7 +155,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "accumulated_depreciation",
@@ -134,7 +174,11 @@
         "parent_canonical": "ppe",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "accumulated_other_comprehensive_income",
@@ -151,7 +195,11 @@
         "parent_canonical": "aoci",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "additional_paid_in_capital",
@@ -168,7 +216,11 @@
         "parent_canonical": "apic",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "allowance_doubtful_accounts",
@@ -184,7 +236,11 @@
         "parent_canonical": "accounts_receivable",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "aoci",
@@ -200,7 +256,11 @@
         "parent_canonical": "total_equity",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "ap",
@@ -218,7 +278,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "apic",
@@ -235,7 +299,11 @@
         "parent_canonical": "total_equity",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "ar",
@@ -253,7 +321,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "cash",
@@ -296,7 +368,28 @@
               }
             ]
           }
-        }
+        },
+        "ocr_variants": [
+          "Ca sh",
+          "C ash",
+          "CASH",
+          "Cash.",
+          "C\u0251sh"
+        ],
+        "format_examples": [
+          {
+            "value": "5,000,000",
+            "context": "Cash on hand"
+          },
+          {
+            "value": "$5.0M",
+            "context": "Millions"
+          }
+        ],
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "cash_and_equivalents",
@@ -315,7 +408,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "common_stock",
@@ -332,7 +429,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "current_assets",
@@ -359,7 +460,11 @@
             "current_assets = sum of all current asset line items",
             "current_assets > cash"
           ]
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "current_liabilities",
@@ -383,7 +488,11 @@
           "validation_checks": [
             "current_liabilities = sum of all current liability line items"
           ]
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "current_portion_debt",
@@ -401,7 +510,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "current_portion_lt_debt",
@@ -418,7 +531,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "debt",
@@ -434,7 +551,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "deferred_revenue",
@@ -452,7 +573,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "deferred_tax_assets",
@@ -468,7 +593,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "deferred_tax_liabilities",
@@ -484,7 +613,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "fixed_assets",
@@ -502,7 +635,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "goodwill",
@@ -520,6 +657,27 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
+        },
+        "industry_tags": [
+          "all",
+          "rollup",
+          "private_equity"
+        ],
+        "accounting_standards": {
+          "us_gaap": {
+            "guidance": "ASC 350-20 - Goodwill",
+            "treatment": "Impairment testing only"
+          },
+          "ifrs": {
+            "guidance": "IAS 36 - Impairment of Assets",
+            "differences": "IFRS prohibits reversal of goodwill impairment"
+          }
+        },
+        "regulatory_context": {
+          "sec_forms": [
+            "10-K"
+          ],
+          "audit_sensitivity": "high"
         }
       },
       {
@@ -536,7 +694,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "intangible_assets",
@@ -554,7 +716,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "intangibles",
@@ -571,7 +737,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "inventories",
@@ -589,7 +759,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "inventory",
@@ -647,6 +821,42 @@
               }
             ]
           }
+        },
+        "ocr_variants": [
+          "Invent ory",
+          "Inven tory",
+          "INVENTORY",
+          "lnventory"
+        ],
+        "format_examples": [
+          {
+            "value": "3,000,000",
+            "context": "Finished goods + WIP"
+          }
+        ],
+        "industry_tags": [
+          "manufacturing",
+          "retail",
+          "wholesale",
+          "ecommerce"
+        ],
+        "accounting_standards": {
+          "us_gaap": {
+            "guidance": "ASC 330 - Inventory",
+            "methods": [
+              "FIFO",
+              "LIFO",
+              "Weighted Average"
+            ]
+          },
+          "ifrs": {
+            "guidance": "IAS 2 - Inventories",
+            "methods": [
+              "FIFO",
+              "Weighted Average"
+            ],
+            "differences": "IFRS prohibits LIFO"
+          }
         }
       },
       {
@@ -665,7 +875,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "long_term_debt",
@@ -689,7 +903,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "long_term_investments",
@@ -706,7 +924,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "marketable_securities",
@@ -723,7 +945,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "net_ppe",
@@ -741,7 +967,11 @@
         "validation_rules": {
           "type": "currency",
           "derivation": "gross_ppe - accumulated_depreciation"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "non_current_assets",
@@ -758,7 +988,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "non_current_liabilities",
@@ -775,7 +1009,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "other_current_assets",
@@ -791,7 +1029,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "other_current_liabilities",
@@ -807,7 +1049,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "other_non_current_assets",
@@ -824,7 +1070,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "other_non_current_liabilities",
@@ -840,7 +1090,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "other_noncurrent_assets",
@@ -852,7 +1106,11 @@
         ],
         "definition": "Long-term assets not classified elsewhere",
         "typical_sign": "positive",
-        "parent_canonical": "total_assets"
+        "parent_canonical": "total_assets",
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "other_noncurrent_liabilities",
@@ -864,7 +1122,11 @@
         ],
         "definition": "Long-term liabilities not classified elsewhere",
         "typical_sign": "positive",
-        "parent_canonical": "total_liabilities"
+        "parent_canonical": "total_liabilities",
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "payables",
@@ -882,7 +1144,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "pension_liabilities",
@@ -898,7 +1164,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "ppe",
@@ -925,7 +1195,12 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "manufacturing",
+          "real_estate",
+          "capital_intensive"
+        ]
       },
       {
         "canonical_name": "ppe_gross",
@@ -938,7 +1213,11 @@
         ],
         "definition": "Original cost of tangible long-term assets used in operations",
         "typical_sign": "positive",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "preferred_stock",
@@ -954,7 +1233,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "prepaid_expenses",
@@ -971,7 +1254,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "property_plant_equipment",
@@ -989,7 +1276,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "receivables",
@@ -1007,7 +1298,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "retained_earnings",
@@ -1029,7 +1324,11 @@
         "parent_canonical": "total_equity",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "shareholders_equity",
@@ -1046,7 +1345,11 @@
         "parent_canonical": "total_equity",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "short_term_debt",
@@ -1063,7 +1366,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "short_term_investments",
@@ -1079,7 +1386,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "stockholders_equity",
@@ -1096,7 +1407,11 @@
         "parent_canonical": "total_equity",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "total_assets",
@@ -1142,6 +1457,33 @@
               }
             ]
           }
+        },
+        "ocr_variants": [
+          "Total Ass ets",
+          "Total-Assets",
+          "TOTAL ASSETS",
+          "Tot\u0251l Assets"
+        ],
+        "format_examples": [
+          {
+            "value": "50,000,000",
+            "context": "Enterprise balance sheet"
+          }
+        ],
+        "industry_tags": [
+          "all",
+          "corporate"
+        ],
+        "confidence_scoring": {
+          "high_confidence_signals": [
+            "Labeled as 'Total Assets'",
+            "Last line of assets section",
+            "Equals liabilities + equity"
+          ],
+          "validation_boosters": [
+            "Satisfies A = L + E equation",
+            "Equals sum of current + non-current assets"
+          ]
         }
       },
       {
@@ -1160,7 +1502,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "total_current_liabilities",
@@ -1178,7 +1524,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "total_equity",
@@ -1223,7 +1573,23 @@
               }
             ]
           }
-        }
+        },
+        "ocr_variants": [
+          "Total Equ ity",
+          "Total-Equity",
+          "TOTAL EQUITY",
+          "Tot\u0251l Equity"
+        ],
+        "format_examples": [
+          {
+            "value": "20,000,000",
+            "context": "Shareholder equity"
+          }
+        ],
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "total_liabilities",
@@ -1252,7 +1618,22 @@
               }
             ]
           }
-        }
+        },
+        "ocr_variants": [
+          "Total Liabil ities",
+          "Total-Liabilities",
+          "TOTAL LIABILITIES"
+        ],
+        "format_examples": [
+          {
+            "value": "30,000,000",
+            "context": "All obligations"
+          }
+        ],
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "treasury_stock",
@@ -1267,7 +1648,11 @@
         "parent_canonical": "total_equity",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "unearned_revenue",
@@ -1285,7 +1670,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "wip_inventory",
@@ -1302,7 +1691,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       }
     ],
     "cash_flow": [
@@ -1320,7 +1713,11 @@
         "parent_canonical": "cfi",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "amortization_cf",
@@ -1335,7 +1732,11 @@
         "parent_canonical": "cfo",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "asset_sales",
@@ -1351,7 +1752,11 @@
         "parent_canonical": "cfi",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "beginning_cash",
@@ -1367,7 +1772,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "business_acquisitions",
@@ -1384,7 +1793,11 @@
         "parent_canonical": "acquisitions",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "capex",
@@ -1439,7 +1852,30 @@
               "description": "Real estate CapEx typically 15-30% of revenue"
             }
           }
-        }
+        },
+        "ocr_variants": [
+          "Cap ex",
+          "CAPEX",
+          "CapEx",
+          "Cap-Ex",
+          "C\u0251pex"
+        ],
+        "format_examples": [
+          {
+            "value": "(2,500,000)",
+            "context": "Capital investments"
+          },
+          {
+            "value": "2,500,000",
+            "context": "Positive format"
+          }
+        ],
+        "industry_tags": [
+          "all",
+          "manufacturing",
+          "real_estate",
+          "capital_intensive"
+        ]
       },
       {
         "canonical_name": "capital_expenditures",
@@ -1456,7 +1892,11 @@
         "parent_canonical": "capex",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "cash_from_operations",
@@ -1473,7 +1913,11 @@
         "parent_canonical": "cfo",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "cff",
@@ -1492,7 +1936,11 @@
         "parent_canonical": null,
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "cfi",
@@ -1512,7 +1960,11 @@
         "parent_canonical": null,
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "cfo",
@@ -1569,7 +2021,11 @@
               }
             ]
           }
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "change_accounts_payable",
@@ -1585,7 +2041,11 @@
         "parent_canonical": "cfo",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "change_accounts_receivable",
@@ -1601,7 +2061,11 @@
         "parent_canonical": "cfo",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "change_ap",
@@ -1618,7 +2082,11 @@
         "parent_canonical": "change_accounts_payable",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "change_ar",
@@ -1635,7 +2103,11 @@
         "parent_canonical": "change_accounts_receivable",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "change_in_ap",
@@ -1647,7 +2119,11 @@
         ],
         "definition": "Change in accounts payable from prior period",
         "typical_sign": "positive",
-        "parent_canonical": "change_in_working_capital"
+        "parent_canonical": "change_in_working_capital",
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "change_in_ar",
@@ -1659,7 +2135,11 @@
         ],
         "definition": "Change in accounts receivable from prior period",
         "typical_sign": "negative",
-        "parent_canonical": "change_in_working_capital"
+        "parent_canonical": "change_in_working_capital",
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "change_in_cash",
@@ -1676,7 +2156,11 @@
         "parent_canonical": "net_change_cash",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "change_in_inventory",
@@ -1688,7 +2172,11 @@
         ],
         "definition": "Change in inventory levels from prior period",
         "typical_sign": "negative",
-        "parent_canonical": "change_in_working_capital"
+        "parent_canonical": "change_in_working_capital",
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "change_in_working_capital",
@@ -1701,7 +2189,11 @@
         ],
         "definition": "Net change in current assets minus current liabilities",
         "typical_sign": "positive",
-        "parent_canonical": "cfo"
+        "parent_canonical": "cfo",
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "change_inventory",
@@ -1716,7 +2208,11 @@
         "parent_canonical": "cfo",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "change_working_capital",
@@ -1732,7 +2228,11 @@
         "parent_canonical": "cfo",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "debt_issuance",
@@ -1749,7 +2249,11 @@
         "parent_canonical": "cff",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "debt_proceeds",
@@ -1766,7 +2270,11 @@
         "parent_canonical": "debt_issuance",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "debt_repayment",
@@ -1782,7 +2290,11 @@
         "parent_canonical": "cff",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "depreciation_cf",
@@ -1797,7 +2309,11 @@
         "parent_canonical": "cfo",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "dividends",
@@ -1813,7 +2329,11 @@
         "parent_canonical": "cff",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "dividends_paid",
@@ -1830,7 +2350,11 @@
         "parent_canonical": "dividends",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "ending_cash",
@@ -1863,7 +2387,11 @@
               }
             ]
           }
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "equity_issuance",
@@ -1879,7 +2407,11 @@
         "parent_canonical": "cff",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "fcf",
@@ -1935,6 +2467,35 @@
               }
             ]
           }
+        },
+        "ocr_variants": [
+          "FC F",
+          "F CF",
+          "FCF.",
+          "FC\u0191"
+        ],
+        "format_examples": [
+          {
+            "value": "3,500,000",
+            "context": "CFO - Capex"
+          }
+        ],
+        "industry_tags": [
+          "all",
+          "private_equity",
+          "valuation"
+        ],
+        "confidence_scoring": {
+          "high_confidence_signals": [
+            "Explicitly labeled as 'Free Cash Flow' or 'FCF'",
+            "Can derive from CFO - capex",
+            "Disclosed in management discussion"
+          ],
+          "validation_boosters": [
+            "Matches CFO - capex calculation",
+            "Consistent FCF conversion with prior periods"
+          ],
+          "ambiguity_notes": "Some companies use levered vs unlevered FCF; check definition"
         }
       },
       {
@@ -1952,7 +2513,11 @@
         "parent_canonical": "cff",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "free_cash_flow",
@@ -1969,7 +2534,11 @@
         "parent_canonical": "fcf",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "investing_cash_flow",
@@ -1986,7 +2555,11 @@
         "parent_canonical": "cfi",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "investment_purchases",
@@ -1998,7 +2571,11 @@
         ],
         "definition": "Cash spent on purchasing marketable securities or investments",
         "typical_sign": "negative",
-        "parent_canonical": "cfi"
+        "parent_canonical": "cfi",
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "investment_sales",
@@ -2010,7 +2587,11 @@
         ],
         "definition": "Cash received from selling investments",
         "typical_sign": "positive",
-        "parent_canonical": "cfi"
+        "parent_canonical": "cfi",
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "net_change_cash",
@@ -2027,7 +2608,11 @@
         "validation_rules": {
           "type": "currency",
           "derivation": "cfo + cfi + cff"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "net_income_cf",
@@ -2042,7 +2627,11 @@
         "parent_canonical": "cfo",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "operating_cash_flow",
@@ -2059,7 +2648,11 @@
         "parent_canonical": "cfo",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "other_operating_activities",
@@ -2074,7 +2667,11 @@
         "parent_canonical": "cfo",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "proceeds_asset_sales",
@@ -2091,7 +2688,11 @@
         "parent_canonical": "asset_sales",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "share_buyback",
@@ -2104,7 +2705,11 @@
         ],
         "definition": "Cash used to repurchase company shares",
         "typical_sign": "negative",
-        "parent_canonical": "cff"
+        "parent_canonical": "cff",
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "share_repurchase",
@@ -2121,7 +2726,11 @@
         "parent_canonical": "cff",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "stock_based_comp",
@@ -2137,7 +2746,11 @@
         "parent_canonical": "cfo",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "stock_based_compensation",
@@ -2150,7 +2763,11 @@
         ],
         "definition": "Non-cash compensation expense from stock options and grants",
         "typical_sign": "positive",
-        "parent_canonical": "cfo"
+        "parent_canonical": "cfo",
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "stock_buyback",
@@ -2167,7 +2784,11 @@
         "parent_canonical": "share_repurchase",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "unlevered_fcf",
@@ -2182,7 +2803,11 @@
         "parent_canonical": "fcf",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       }
     ],
     "debt_schedule": [
@@ -2201,7 +2826,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "coupon_rate",
@@ -2220,7 +2849,11 @@
           "type": "percentage",
           "min_value": 0,
           "max_value": 1
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "debt_closing_balance",
@@ -2233,7 +2866,11 @@
         ],
         "definition": "Total debt at the end of the period",
         "typical_sign": "positive",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "debt_covenants",
@@ -2245,7 +2882,11 @@
         ],
         "definition": "Contractual restrictions on financial metrics",
         "typical_sign": "positive",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "debt_drawdown",
@@ -2258,7 +2899,11 @@
         ],
         "definition": "New debt issued during the period",
         "typical_sign": "positive",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "debt_mandatory_repayment",
@@ -2270,7 +2915,11 @@
         ],
         "definition": "Contractually required principal repayment",
         "typical_sign": "negative",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "debt_maturity_date",
@@ -2283,7 +2932,11 @@
         ],
         "definition": "Date when debt principal is due for full repayment",
         "typical_sign": "positive",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "debt_opening_balance",
@@ -2295,7 +2948,11 @@
         ],
         "definition": "Total debt at the beginning of the period",
         "typical_sign": "positive",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "debt_optional_repayment",
@@ -2308,7 +2965,11 @@
         ],
         "definition": "Optional principal repayment beyond mandatory requirements",
         "typical_sign": "negative",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "debt_service",
@@ -2329,7 +2990,11 @@
         "validation_rules": {
           "type": "currency",
           "derivation": "principal_payment + interest_payment"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "debt_service_coverage_ratio",
@@ -2347,7 +3012,11 @@
         "validation_rules": {
           "type": "ratio",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "dscr",
@@ -2385,7 +3054,11 @@
               "description": "Minimum DSCR 1.1-1.25x"
             }
           }
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "gross_debt",
@@ -2403,7 +3076,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "interest_expense_debt",
@@ -2415,7 +3092,11 @@
         ],
         "definition": "Interest expense calculated on average debt balance",
         "typical_sign": "positive",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "interest_payment",
@@ -2430,7 +3111,11 @@
         "parent_canonical": null,
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "interest_rate",
@@ -2483,7 +3168,32 @@
               "description": "Distressed 12-25%"
             }
           }
-        }
+        },
+        "ocr_variants": [
+          "Interest Ra te",
+          "Interest-Rate",
+          "INTEREST RATE",
+          "lnterest Rate"
+        ],
+        "format_examples": [
+          {
+            "value": "0.065",
+            "context": "6.5% as decimal"
+          },
+          {
+            "value": "6.5%",
+            "context": "Percentage format"
+          },
+          {
+            "value": "650 bps",
+            "context": "Basis points"
+          }
+        ],
+        "industry_tags": [
+          "all",
+          "leveraged",
+          "banking"
+        ]
       },
       {
         "canonical_name": "mandatory_prepayment",
@@ -2498,7 +3208,11 @@
         "parent_canonical": "principal_payment",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "maturity_date",
@@ -2514,7 +3228,11 @@
         "parent_canonical": null,
         "validation_rules": {
           "type": "date"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "net_debt",
@@ -2537,7 +3255,12 @@
             "net_debt = total_debt - cash",
             "net_debt can be negative (net cash position)"
           ]
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged",
+          "private_equity"
+        ]
       },
       {
         "canonical_name": "notes_payable",
@@ -2553,7 +3276,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "principal_payment",
@@ -2575,7 +3302,11 @@
         "parent_canonical": null,
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "revolver_balance",
@@ -2592,7 +3323,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "revolving_credit",
@@ -2610,7 +3345,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "senior_debt",
@@ -2626,7 +3365,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "subordinated_debt",
@@ -2643,7 +3386,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "term_loan_a",
@@ -2659,7 +3406,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "term_loan_b",
@@ -2675,7 +3426,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "total_debt",
@@ -2701,7 +3456,11 @@
             "total_debt >= 0",
             "total_debt = short_term_debt + long_term_debt"
           ]
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       },
       {
         "canonical_name": "weighted_avg_interest_rate",
@@ -2719,7 +3478,11 @@
           "type": "percentage",
           "min_value": 0,
           "max_value": 1
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       }
     ],
     "income_statement": [
@@ -2737,7 +3500,22 @@
         "parent_canonical": null,
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "ocr_variants": [
+          "Amort ization",
+          "Amorti zation",
+          "AMORTIZATION"
+        ],
+        "format_examples": [
+          {
+            "value": "(50,000)",
+            "context": "Intangible amortization"
+          }
+        ],
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "cogs",
@@ -2784,7 +3562,31 @@
               }
             ]
           }
-        }
+        },
+        "ocr_variants": [
+          "COG S",
+          "C0GS",
+          "COGS.",
+          "Co GS",
+          "CDGS",
+          "C O G S"
+        ],
+        "format_examples": [
+          {
+            "value": "(234,567)",
+            "context": "Parentheses for expense"
+          },
+          {
+            "value": "234,567",
+            "context": "Positive number"
+          }
+        ],
+        "industry_tags": [
+          "manufacturing",
+          "retail",
+          "ecommerce",
+          "wholesale"
+        ]
       },
       {
         "canonical_name": "cost_of_sales",
@@ -2799,7 +3601,11 @@
         "parent_canonical": "cogs",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "depreciation",
@@ -2815,6 +3621,35 @@
         "parent_canonical": null,
         "validation_rules": {
           "type": "currency"
+        },
+        "ocr_variants": [
+          "Depreciat ion",
+          "Depre ciation",
+          "DEPRECIATION",
+          "Deprecia\u01abon"
+        ],
+        "format_examples": [
+          {
+            "value": "(100,000)",
+            "context": "Non-cash expense"
+          }
+        ],
+        "industry_tags": [
+          "all",
+          "manufacturing",
+          "real_estate",
+          "capital_intensive"
+        ],
+        "accounting_standards": {
+          "us_gaap": {
+            "guidance": "ASC 360 - Property, Plant, and Equipment",
+            "component_depreciation": "optional"
+          },
+          "ifrs": {
+            "guidance": "IAS 16 - Property, Plant and Equipment",
+            "component_depreciation": "required",
+            "differences": "IFRS requires component depreciation"
+          }
         }
       },
       {
@@ -2837,7 +3672,11 @@
             "depreciation_and_amortization = depreciation + amortization",
             "depreciation_and_amortization < 0 (expense)"
           ]
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "discontinued_operations",
@@ -2849,7 +3688,11 @@
         ],
         "definition": "Results from business units that have been sold or shut down",
         "typical_sign": "positive",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "dividends_declared",
@@ -2862,7 +3705,11 @@
         ],
         "definition": "Cash or stock distributions to shareholders",
         "typical_sign": "positive",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "earnings_before_tax",
@@ -2880,7 +3727,11 @@
         "parent_canonical": "ebt",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "ebit",
@@ -2928,7 +3779,26 @@
               }
             ]
           }
-        }
+        },
+        "ocr_variants": [
+          "EB IT",
+          "E BIT",
+          "EB1T",
+          "EBIT.",
+          "Ebit",
+          "EBlT"
+        ],
+        "format_examples": [
+          {
+            "value": "4,500,000",
+            "context": "Operating profit"
+          }
+        ],
+        "industry_tags": [
+          "all",
+          "corporate",
+          "public_companies"
+        ]
       },
       {
         "canonical_name": "ebitda",
@@ -2978,6 +3848,52 @@
               }
             ]
           }
+        },
+        "ocr_variants": [
+          "EBIT DA",
+          "E BITDA",
+          "EB1TDA",
+          "EBITDA.",
+          "Ebitda",
+          "EBlTDA",
+          "E-BITDA"
+        ],
+        "format_examples": [
+          {
+            "value": "5,000,000",
+            "context": "Strong EBITDA"
+          },
+          {
+            "value": "(500,000)",
+            "context": "Negative EBITDA"
+          }
+        ],
+        "industry_tags": [
+          "all",
+          "private_equity",
+          "leveraged_finance"
+        ],
+        "confidence_scoring": {
+          "high_confidence_signals": [
+            "Explicitly labeled as 'EBITDA' or 'Adjusted EBITDA'",
+            "Can derive from EBIT + D&A",
+            "Appears in management discussion section"
+          ],
+          "validation_boosters": [
+            "Matches EBIT + depreciation + amortization",
+            "Consistent EBITDA margin with prior periods"
+          ],
+          "ambiguity_notes": "EBITDA is non-GAAP; definitions vary by company. Always check footnotes for adjustments."
+        },
+        "regulatory_context": {
+          "sec_forms": [
+            "8-K",
+            "10-K"
+          ],
+          "is_non_gaap": true,
+          "disclosure_requirements": [
+            "Must reconcile to GAAP net income"
+          ]
         }
       },
       {
@@ -3009,7 +3925,11 @@
             "ebt = ebit - interest_expense + interest_income",
             "ebt is pre-tax income"
           ]
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "effective_tax_rate",
@@ -3058,7 +3978,11 @@
               "description": "UK corporate rate 19-25%"
             }
           }
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "eps_basic",
@@ -3071,7 +3995,11 @@
         ],
         "definition": "Net income divided by weighted average shares outstanding",
         "typical_sign": "positive",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "eps_diluted",
@@ -3084,7 +4012,11 @@
         ],
         "definition": "Net income divided by fully diluted shares outstanding",
         "typical_sign": "positive",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "extraordinary_items",
@@ -3097,7 +4029,11 @@
         ],
         "definition": "Unusual, infrequent items affecting net income",
         "typical_sign": "positive",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "gain_on_sale",
@@ -3113,7 +4049,11 @@
         "parent_canonical": null,
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "general_admin",
@@ -3130,7 +4070,11 @@
         "parent_canonical": "sga",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "gross_margin_pct",
@@ -3184,7 +4128,11 @@
             "gross_margin_pct = gross_profit / revenue",
             "0 < gross_margin_pct < 1.0"
           ]
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "gross_profit",
@@ -3229,7 +4177,28 @@
               }
             ]
           }
-        }
+        },
+        "ocr_variants": [
+          "Gross Prof it",
+          "Gr oss Profit",
+          "GROSS PROFIT",
+          "Gross-Profit",
+          "GrossProfit"
+        ],
+        "format_examples": [
+          {
+            "value": "1,000,000",
+            "context": "Positive profit"
+          },
+          {
+            "value": "(50,000)",
+            "context": "Loss in parentheses"
+          }
+        ],
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "impairment_charges",
@@ -3242,7 +4211,11 @@
         ],
         "definition": "Reduction in value of assets when carrying value exceeds recoverable amount",
         "typical_sign": "positive",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "income_tax",
@@ -3259,7 +4232,11 @@
         "parent_canonical": "tax_expense",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "interest_expense",
@@ -3296,7 +4273,23 @@
           "cross_validation": {
             "total_debt": "interest_expense / total_debt should be 0.02-0.15 (2-15% interest rate)"
           }
-        }
+        },
+        "ocr_variants": [
+          "Interest Exp ense",
+          "Interest-Expense",
+          "INTEREST EXPENSE",
+          "lnterest Expense"
+        ],
+        "format_examples": [
+          {
+            "value": "(250,000)",
+            "context": "Debt servicing cost"
+          }
+        ],
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "interest_income",
@@ -3317,7 +4310,11 @@
         "parent_canonical": null,
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "labor_costs",
@@ -3334,7 +4331,11 @@
         "parent_canonical": "cogs",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "manufacturing_overhead",
@@ -3350,7 +4351,11 @@
         "parent_canonical": "cogs",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "marketing_expense",
@@ -3364,7 +4369,11 @@
         ],
         "definition": "Costs related to marketing and advertising activities",
         "typical_sign": "positive",
-        "parent_canonical": "sga"
+        "parent_canonical": "sga",
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "material_costs",
@@ -3381,7 +4390,11 @@
         "parent_canonical": "cogs",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "net_income",
@@ -3436,6 +4449,45 @@
               "description": "Flag if net income changes by >500% YoY"
             }
           }
+        },
+        "ocr_variants": [
+          "Net Inc ome",
+          "Net-Income",
+          "NET INCOME",
+          "N\u0247t Income",
+          "Net lncome"
+        ],
+        "format_examples": [
+          {
+            "value": "3,150,000",
+            "context": "After-tax profit"
+          },
+          {
+            "value": "(250,000)",
+            "context": "Net loss"
+          }
+        ],
+        "industry_tags": [
+          "all",
+          "corporate"
+        ],
+        "confidence_scoring": {
+          "high_confidence_signals": [
+            "Last line of income statement",
+            "Labeled as 'Net Income' or 'Net Profit'",
+            "Can derive from EBT - taxes"
+          ],
+          "validation_boosters": [
+            "Matches EBT - tax_expense",
+            "Ties to retained earnings change on balance sheet"
+          ]
+        },
+        "regulatory_context": {
+          "sec_forms": [
+            "10-K",
+            "10-Q"
+          ],
+          "audit_sensitivity": "critical"
         }
       },
       {
@@ -3454,7 +4506,11 @@
         "validation_rules": {
           "type": "percentage",
           "derivation": "net_income / revenue"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "net_profit",
@@ -3471,7 +4527,11 @@
         "parent_canonical": "net_income",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "operating_expenses",
@@ -3486,7 +4546,11 @@
         "parent_canonical": "opex",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "operating_income",
@@ -3507,7 +4571,11 @@
         "parent_canonical": "ebit",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "operating_margin_pct",
@@ -3525,7 +4593,11 @@
         "validation_rules": {
           "type": "percentage",
           "derivation": "ebit / revenue"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "opex",
@@ -3550,7 +4622,11 @@
         "parent_canonical": null,
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "other_expense",
@@ -3566,7 +4642,11 @@
         "parent_canonical": null,
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "other_income",
@@ -3582,7 +4662,11 @@
         "parent_canonical": null,
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "other_revenue",
@@ -3599,7 +4683,11 @@
         "parent_canonical": "revenue",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "product_revenue",
@@ -3617,7 +4705,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "rd_expense",
@@ -3642,7 +4734,14 @@
         "parent_canonical": "opex",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "technology",
+          "biotech",
+          "pharma",
+          "manufacturing",
+          "saas"
+        ]
       },
       {
         "canonical_name": "restructuring_charges",
@@ -3654,7 +4753,11 @@
         ],
         "definition": "One-time costs associated with reorganizing business operations",
         "typical_sign": "positive",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "revenue",
@@ -3746,6 +4849,83 @@
               "description": "Flag if revenue changes by >300% year-over-year (likely data error)"
             }
           }
+        },
+        "ocr_variants": [
+          "Rev enue",
+          "Reyenue",
+          "RevenUe",
+          "REVENUE",
+          "revenue.",
+          "Reve\u03c0ue",
+          "Rev-enue"
+        ],
+        "format_examples": [
+          {
+            "value": "1,234,567",
+            "context": "US format with commas"
+          },
+          {
+            "value": "1.234.567",
+            "context": "European format"
+          },
+          {
+            "value": "$1.2M",
+            "context": "Abbreviated millions"
+          },
+          {
+            "value": "1234567",
+            "context": "No separators"
+          }
+        ],
+        "industry_tags": [
+          "all",
+          "saas",
+          "manufacturing",
+          "retail",
+          "services",
+          "real_estate"
+        ],
+        "confidence_scoring": {
+          "high_confidence_signals": [
+            "Appears in income statement header",
+            "Labeled as 'Revenue', 'Sales', or 'Turnover'",
+            "First line item in P&L",
+            "Largest positive income statement value"
+          ],
+          "medium_confidence_signals": [
+            "Labeled generically as 'Income'",
+            "In operating section but not at top"
+          ],
+          "low_confidence_signals": [
+            "Unlabeled number",
+            "Appears outside standard income statement"
+          ],
+          "validation_boosters": [
+            "Can derive gross_profit = revenue - cogs",
+            "Consistent with prior period trends"
+          ],
+          "common_errors": [
+            "Confusing gross revenue with net revenue",
+            "Including other income in revenue"
+          ]
+        },
+        "accounting_standards": {
+          "us_gaap": {
+            "guidance": "ASC 606 - Revenue from Contracts with Customers"
+          },
+          "ifrs": {
+            "guidance": "IFRS 15 - Revenue from Contracts with Customers",
+            "differences": "Largely aligned; minor disclosure differences"
+          }
+        },
+        "regulatory_context": {
+          "sec_forms": [
+            "10-K",
+            "10-Q",
+            "8-K"
+          ],
+          "audit_sensitivity": "high",
+          "common_fraud_area": true
         }
       },
       {
@@ -3772,7 +4952,11 @@
         "parent_canonical": "sga",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "service_revenue",
@@ -3790,7 +4974,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "sga",
@@ -3814,7 +5002,12 @@
         "parent_canonical": "opex",
         "validation_rules": {
           "type": "currency"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate",
+          "public_companies"
+        ]
       },
       {
         "canonical_name": "subscription_revenue",
@@ -3841,7 +5034,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "tax_expense",
@@ -3874,7 +5071,11 @@
           "cross_validation": {
             "ebt": "tax_expense should be 15-35% of ebt for most jurisdictions"
           }
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       }
     ],
     "metrics": [
@@ -3893,7 +5094,11 @@
         "validation_rules": {
           "type": "currency",
           "derivation": "ffo - maintenance_capex"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "arpu",
@@ -3912,7 +5117,11 @@
           "type": "currency",
           "min_value": 0,
           "derivation": "mrr / active_customers"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "arr",
@@ -3940,7 +5149,12 @@
               }
             ]
           }
-        }
+        },
+        "industry_tags": [
+          "all",
+          "saas",
+          "subscription"
+        ]
       },
       {
         "canonical_name": "basket_size",
@@ -3957,7 +5171,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "burn_multiple",
@@ -3973,7 +5191,11 @@
         "validation_rules": {
           "type": "ratio",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "cac",
@@ -3992,7 +5214,12 @@
           "type": "currency",
           "min_value": 0,
           "derivation": "sales_marketing_expense / new_customers_acquired"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "saas",
+          "subscription"
+        ]
       },
       {
         "canonical_name": "cac_payback_period",
@@ -4008,7 +5235,11 @@
         "validation_rules": {
           "type": "months",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "cap_rate",
@@ -4025,7 +5256,11 @@
           "type": "percentage",
           "min_value": 0,
           "derivation": "noi / property_value"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "capacity_utilization",
@@ -4042,7 +5277,11 @@
           "type": "percentage",
           "min_value": 0,
           "max_value": 1
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "cash_conversion_cycle",
@@ -4054,7 +5293,11 @@
         ],
         "definition": "Days to convert inventory and receivables to cash",
         "typical_sign": "positive",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "cash_on_cash_return",
@@ -4071,7 +5314,11 @@
           "type": "percentage",
           "min_value": -1,
           "derivation": "annual_cash_flow / cash_invested"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "churn_rate",
@@ -4090,7 +5337,12 @@
           "type": "percentage",
           "min_value": 0,
           "max_value": 1
-        }
+        },
+        "industry_tags": [
+          "all",
+          "saas",
+          "subscription"
+        ]
       },
       {
         "canonical_name": "conversion_rate",
@@ -4107,7 +5359,11 @@
           "type": "percentage",
           "min_value": 0,
           "max_value": 1
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "cost_per_unit",
@@ -4125,7 +5381,11 @@
           "type": "currency",
           "min_value": 0,
           "derivation": "total_production_cost / production_volume"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "current_ratio",
@@ -4165,7 +5425,11 @@
               "description": "Minimum current ratio 1.0-1.5"
             }
           }
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "cycle_time",
@@ -4181,7 +5445,11 @@
         "validation_rules": {
           "type": "time",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "days_inventory_outstanding",
@@ -4199,7 +5467,11 @@
           "type": "days",
           "min_value": 0,
           "derivation": "(average_inventory / cogs) * 365"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "days_payable_outstanding",
@@ -4211,7 +5483,11 @@
         ],
         "definition": "Average days to pay suppliers",
         "typical_sign": "positive",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "days_sales_outstanding",
@@ -4224,7 +5500,11 @@
         ],
         "definition": "Average days to collect accounts receivable",
         "typical_sign": "positive",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "debt_to_ebitda",
@@ -4285,6 +5565,38 @@
               }
             ]
           }
+        },
+        "ocr_variants": [
+          "Debt / EB ITDA",
+          "Debt-to-EBITDA",
+          "DEBT TO EBITDA",
+          "Debt/EB1TDA"
+        ],
+        "format_examples": [
+          {
+            "value": "3.5",
+            "context": "3.5x leverage"
+          },
+          {
+            "value": "3.5x",
+            "context": "With x suffix"
+          }
+        ],
+        "industry_tags": [
+          "all",
+          "private_equity",
+          "leveraged_finance"
+        ],
+        "confidence_scoring": {
+          "high_confidence_signals": [
+            "Labeled as 'Leverage' or 'Debt/EBITDA'",
+            "Can calculate from balance sheet and P&L",
+            "Disclosed in debt covenants section"
+          ],
+          "validation_boosters": [
+            "Matches total_debt / ebitda calculation",
+            "Consistent with bank covenant definitions"
+          ]
         }
       },
       {
@@ -4303,7 +5615,11 @@
           "type": "ratio",
           "min_value": 0,
           "derivation": "total_debt / total_equity"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "direct_labor_efficiency",
@@ -4319,7 +5635,11 @@
         "validation_rules": {
           "type": "percentage",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "dscr_real_estate",
@@ -4336,7 +5656,11 @@
           "type": "ratio",
           "min_value": 0,
           "derivation": "noi / debt_service"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "ebitda_margin",
@@ -4398,7 +5722,31 @@
               }
             ]
           }
-        }
+        },
+        "ocr_variants": [
+          "EBITDA Mar gin",
+          "EBITDA-Margin",
+          "EBITDA MARGIN",
+          "EB1TDA Margin"
+        ],
+        "format_examples": [
+          {
+            "value": "0.25",
+            "context": "25% as decimal"
+          },
+          {
+            "value": "25%",
+            "context": "Percentage"
+          },
+          {
+            "value": "25.0",
+            "context": "Percentage without symbol"
+          }
+        ],
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "expansion_revenue",
@@ -4415,7 +5763,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "ffo",
@@ -4431,7 +5783,11 @@
         "validation_rules": {
           "type": "currency",
           "derivation": "net_income + depreciation + amortization - gains_on_property_sales"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "first_pass_yield",
@@ -4449,7 +5805,11 @@
           "type": "percentage",
           "min_value": 0,
           "max_value": 1
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "gmroi",
@@ -4467,7 +5827,11 @@
           "type": "ratio",
           "min_value": 0,
           "derivation": "gross_profit / average_inventory_cost"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "gross_margin",
@@ -4498,7 +5862,11 @@
               }
             ]
           }
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "gross_retention",
@@ -4515,7 +5883,11 @@
           "type": "percentage",
           "min_value": 0,
           "max_value": 1
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "interest_coverage",
@@ -4576,7 +5948,12 @@
               }
             ]
           }
-        }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged",
+          "credit_analysis"
+        ]
       },
       {
         "canonical_name": "inventory_turnover",
@@ -4594,7 +5971,11 @@
           "type": "ratio",
           "min_value": 0,
           "derivation": "cogs / average_inventory"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "ltv",
@@ -4614,7 +5995,12 @@
           "type": "currency",
           "min_value": 0,
           "derivation": "arpu / churn_rate"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "saas",
+          "subscription"
+        ]
       },
       {
         "canonical_name": "ltv_cac_ratio",
@@ -4632,7 +6018,11 @@
           "type": "ratio",
           "min_value": 0,
           "derivation": "ltv / cac"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "ltv_real_estate",
@@ -4650,7 +6040,11 @@
           "min_value": 0,
           "max_value": 1.5,
           "derivation": "loan_balance / property_value"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "magic_number",
@@ -4666,7 +6060,11 @@
         "validation_rules": {
           "type": "ratio",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "markdown_rate",
@@ -4682,7 +6080,11 @@
         "validation_rules": {
           "type": "percentage",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "material_yield",
@@ -4699,7 +6101,11 @@
           "type": "percentage",
           "min_value": 0,
           "max_value": 1
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "mrr",
@@ -4716,7 +6122,12 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "saas",
+          "subscription"
+        ]
       },
       {
         "canonical_name": "net_leverage_ratio",
@@ -4738,7 +6149,11 @@
             "net_leverage = net_debt / ebitda",
             "net_leverage can be negative (net cash position)"
           ]
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "net_margin",
@@ -4786,7 +6201,11 @@
               "description": "Retail typically 2-8%"
             }
           }
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "net_revenue_retention",
@@ -4804,7 +6223,11 @@
         "validation_rules": {
           "type": "percentage",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "noi",
@@ -4821,7 +6244,11 @@
         "validation_rules": {
           "type": "currency",
           "derivation": "rental_income - operating_expenses"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "occupancy_rate",
@@ -4838,7 +6265,11 @@
           "type": "percentage",
           "min_value": 0,
           "max_value": 1
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "oee",
@@ -4848,14 +6279,18 @@
           "OEE",
           "Equipment Effectiveness"
         ],
-        "definition": "Availability × Performance × Quality; measures manufacturing productivity",
+        "definition": "Availability \u00d7 Performance \u00d7 Quality; measures manufacturing productivity",
         "typical_sign": "positive",
         "parent_canonical": null,
         "validation_rules": {
           "type": "percentage",
           "min_value": 0,
           "max_value": 1
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "operating_expense_ratio",
@@ -4873,7 +6308,11 @@
           "min_value": 0,
           "max_value": 1,
           "derivation": "operating_expenses / gross_operating_income"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "operating_margin",
@@ -4889,7 +6328,11 @@
         "validation_rules": {
           "type": "percentage",
           "derivation": "ebit / revenue"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "production_volume",
@@ -4906,7 +6349,11 @@
         "validation_rules": {
           "type": "units",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "quick_ratio",
@@ -4917,7 +6364,11 @@
         ],
         "definition": "Liquid assets divided by current liabilities",
         "typical_sign": "positive",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "quick_ratio_saas",
@@ -4933,7 +6384,11 @@
         "validation_rules": {
           "type": "ratio",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "rent_per_square_foot",
@@ -4949,7 +6404,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "return_on_assets",
@@ -4966,7 +6425,11 @@
         "parent_canonical": "roa",
         "validation_rules": {
           "type": "percentage"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "return_on_equity",
@@ -4983,7 +6446,11 @@
         "parent_canonical": "roe",
         "validation_rules": {
           "type": "percentage"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "return_on_invested_capital",
@@ -5000,7 +6467,11 @@
         "parent_canonical": "roic",
         "validation_rules": {
           "type": "percentage"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "revenue_growth",
@@ -5013,7 +6484,11 @@
         ],
         "definition": "Percentage change in revenue from prior period",
         "typical_sign": "positive",
-        "parent_canonical": null
+        "parent_canonical": null,
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "roa",
@@ -5055,7 +6530,11 @@
               "description": "Manufacturing ROA typically 3-10%"
             }
           }
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "roe",
@@ -5104,7 +6583,11 @@
               "description": "Adequate ROE 8-12%"
             }
           }
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "roic",
@@ -5142,7 +6625,11 @@
               "description": "Good ROIC 10-15%"
             }
           }
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "rule_of_40",
@@ -5158,7 +6645,11 @@
         "validation_rules": {
           "type": "percentage",
           "derivation": "revenue_growth_rate + ebitda_margin"
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "sales_per_square_foot",
@@ -5175,7 +6666,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "same_store_sales",
@@ -5193,7 +6688,11 @@
         "validation_rules": {
           "type": "currency",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "scrap_rate",
@@ -5209,7 +6708,11 @@
         "validation_rules": {
           "type": "percentage",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "sell_through_rate",
@@ -5227,7 +6730,11 @@
           "type": "percentage",
           "min_value": 0,
           "max_value": 1
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       },
       {
         "canonical_name": "shrinkage_rate",
@@ -5244,7 +6751,11 @@
         "validation_rules": {
           "type": "percentage",
           "min_value": 0
-        }
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
       }
     ]
   }

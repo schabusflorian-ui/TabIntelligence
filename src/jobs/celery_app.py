@@ -57,17 +57,8 @@ celery_app.conf.update(
     # Result backend
     result_expires=3600,              # Keep results for 1 hour
 
-    # Retry configuration with exponential backoff
-    task_autoretry_for=(Exception,),  # Auto-retry on any exception
+    # Retry defaults (individual tasks override via decorator)
     task_retry_backoff=True,          # Exponential backoff
     task_retry_backoff_max=600,       # 10 minutes max
     task_retry_jitter=True,           # Add jitter to prevent thundering herd
 )
-
-# Task-specific configuration
-celery_app.conf.task_annotations = {
-    'src.jobs.tasks.run_extraction_task': {
-        'max_retries': 3,
-        'default_retry_delay': 60,  # 1 minute base delay
-    }
-}

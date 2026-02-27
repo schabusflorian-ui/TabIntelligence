@@ -388,5 +388,45 @@ class AuditLog(Base):
         )
 
 
+# ============================================================================
+# DLQ (Dead Letter Queue)
+# ============================================================================
+
+class DLQEntry(Base):
+    """
+    Dead Letter Queue entry for failed Celery tasks.
+
+    Records task failures for inspection and replay.
+    Prevents data loss when tasks fail after all retries.
+    """
+    __tablename__ = "dlq_entries"
+
+    dlq_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid4
+    )
+    task_id: Mapped[str] = mapped_column(String(255), index=True)  # Celery task ID
+    task_name: Mapped[str] = mapped_column(String(255))
+    task_args: Mapped[Optional[dict]] = mapped_column(JSON)
+    task_kwargs: Mapped[Optional[dict]] = mapped_column(JSON)
+    error: Mapped[str] = mapped_column(Text)
+    traceback: Mapped[Optional[str]] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        index=True
+    )
+    replayed: Mapped[int] = mapped_column(Integer, default=0)
+    replayed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True
+    )
+    replayed_task_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
+    def __repr__(self):
+        return f"<DLQEntry(dlq_id={self.dlq_id}, task_id='{self.task_id}', replayed={self.replayed})>"
+
+
 # Late import to register APIKey with Base metadata (avoids circular imports)
 from src.auth.models import APIKey  # noqa: E402, F401
