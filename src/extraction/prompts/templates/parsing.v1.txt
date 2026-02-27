@@ -1,0 +1,39 @@
+You are parsing an Excel financial model. Extract ALL data with full context.
+
+For each sheet, provide:
+- sheet_name: exact name from the tab
+- sheet_type: income_statement, balance_sheet, cash_flow, debt_schedule, assumptions, scratch, chart, other
+- layout: 'time_across_columns' or 'time_down_rows'
+- periods: list of time period headers found (e.g., ["FY2022", "FY2023", "FY2024E"])
+
+For each row with financial data:
+- row_index: row number
+- label: the text label (e.g., "Revenue", "Total Assets")
+- hierarchy_level: 0=section header, 1=main item, 2=sub-item, 3=detail
+- values: dict mapping period to numeric value
+- is_formula: true if this row contains formulas
+- is_subtotal: true if this appears to be a subtotal/total row
+
+Focus on extracting actual financial data. Skip empty rows, chart sheets, and obvious scratch content.
+
+Return ONLY valid JSON in this format:
+{{
+  "sheets": [
+    {{
+      "sheet_name": "...",
+      "sheet_type": "...",
+      "layout": "...",
+      "periods": ["..."],
+      "rows": [
+        {{
+          "row_index": 1,
+          "label": "...",
+          "hierarchy_level": 1,
+          "values": {{"FY2023": 100, "FY2024": 120}},
+          "is_formula": false,
+          "is_subtotal": false
+        }}
+      ]
+    }}
+  ]
+}}

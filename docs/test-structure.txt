@@ -1,0 +1,50 @@
+# DebtFund Test Structure (After Agent 1D)
+
+tests/
+├── __init__.py
+├── conftest.py                          # Shared fixtures (mocks, db, client)
+│
+├── fixtures/
+│   └── sample_model.xlsx                # Test Excel file
+│
+├── unit/                                # Unit tests (fast, isolated)
+│   ├── test_crud.py                     # Database CRUD operations (25 tests - ERROR due to schema)
+│   ├── test_lineage.py                  # Lineage tracker (4 tests - ✅ PASS)
+│   └── test_orchestrator.py             # Extraction pipeline (14 tests - ✅ 13/14 PASS)
+│
+├── integration/                         # Integration tests (slower, with dependencies)
+│   ├── test_api_endpoints.py            # Existing API tests
+│   ├── test_extraction_with_lineage.py  # Existing extraction tests
+│   ├── test_api_security.py             # NEW: Auth, validation, rate limiting (6 tests)
+│   └── test_extraction_e2e.py           # NEW: End-to-end pipeline (6 tests)
+│
+└── load/                                # NEW: Load and performance tests
+    ├── __init__.py
+    └── test_concurrent_uploads.py       # NEW: Concurrent users, pool exhaustion (7 tests)
+
+scripts/
+└── verify_week1.sh                      # NEW: Automated verification script
+
+docs/
+├── week1-verification-report.md         # NEW: Detailed verification report
+└── test-structure.txt                   # NEW: This file
+
+AGENT_1D_COMPLETION_SUMMARY.md           # NEW: Quick reference summary
+
+---
+
+Test Status:
+- Unit tests: 18 total, 17 passing (94%)
+- Integration tests: 12 total, 0 running (blocked by slowapi dependency)
+- Load tests: 7 total, 0 running (blocked by slowapi dependency)
+- Coverage: 31% (target: 70%)
+
+Critical Files Created by Agent 1D:
+1. tests/integration/test_api_security.py      (274 lines)
+2. tests/integration/test_extraction_e2e.py    (165 lines)
+3. tests/load/test_concurrent_uploads.py       (227 lines)
+4. scripts/verify_week1.sh                     (166 lines)
+5. docs/week1-verification-report.md           (456 lines)
+6. AGENT_1D_COMPLETION_SUMMARY.md             (380 lines)
+
+Total: 1,668+ lines of test code and documentation

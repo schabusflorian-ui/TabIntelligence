@@ -1,0 +1,104 @@
+"""
+Integration test for extraction pipeline with lineage tracking.
+"""
+import pytest
+from sqlalchemy import select, text
+
+from src.extraction.orchestrator import extract
+from src.models.lineage import LineageEvent
+from src.models.base import get_async_session, init_db
+from src.core.exceptions import LineageIncompleteError
+
+
+@pytest.fixture(scope="module")
+async def db_setup():
+    """Initialize test database."""
+    await init_db()
+    yield
+
+
+@pytest.fixture
+async def clean_db():
+    """Clean database before each test."""
+    async with get_async_session() as session:
+        await session.execute(text("DELETE FROM lineage_events"))
+        await session.commit()
+    yield
+
+
+@pytest.mark.asyncio
+async def test_extraction_emits_complete_lineage(mock_anthropic, sample_xlsx, db_setup, clean_db):
+    """Test that full extraction emits lineage for all 3 stages."""
+    result = await extract(sample_xlsx, file_id="test-123")
+
+    # Check lineage summary in result
+    assert "lineage_summary" in result
+    assert "final_lineage_id" in result
+    assert "job_id" in result
+
+    summary = result["lineage_summary"]
+    assert summary["total_events"] == 3
+    assert summary["stages_covered"] == [1, 2, 3]
+
+    # Verify events in database
+    job_id = result["job_id"]
+    async with get_async_session() as session:
+        stmt = select(LineageEvent).where(
+            LineageEvent.job_id == job_id
+        ).order_by(LineageEvent.stage)
+        result_db = await session.execute(stmt)
+        events = result_db.scalars().all()
+
+    assert len(events) == 3
+    assert events[0].stage == 1
+    assert events[0].event_type == "parse"
+    assert events[1].stage == 2
+    assert events[1].event_type == "triage"
+    assert events[2].stage == 3
+    assert events[2].event_type == "map"
+
+
+@pytest.mark.asyncio
+async def test_extraction_lineage_metadata(mock_anthropic, sample_xlsx, db_setup, clean_db):
+    """Test that lineage events contain proper metadata."""
+    result = await extract(sample_xlsx, file_id="test-123")
+
+    job_id = result["job_id"]
+    async with get_async_session() as session:
+        stmt = select(LineageEvent).where(
+            LineageEvent.job_id == job_id
+        ).order_by(LineageEvent.stage)
+        result_db = await session.execute(stmt)
+        events = result_db.scalars().all()
+
+    # Stage 1 metadata
+    assert "sheets_count" in events[0].event_metadata
+    assert "tokens" in events[0].event_metadata
+    assert "file_size_bytes" in events[0].event_metadata
+
+    # Stage 2 metadata
+    assert "tier_1_count" in events[1].event_metadata
+    assert "tokens" in events[1].event_metadata
+
+    # Stage 3 metadata
+    assert "mappings_count" in events[2].event_metadata
+    assert "tokens" in events[2].event_metadata
+
+
+@pytest.mark.asyncio
+async def test_extraction_lineage_chain_integrity(mock_anthropic, sample_xlsx, db_setup, clean_db):
+    """Test that lineage chain is properly linked."""
+    result = await extract(sample_xlsx, file_id="test-123")
+
+    job_id = result["job_id"]
+    async with get_async_session() as session:
+        stmt = select(LineageEvent).where(
+            LineageEvent.job_id == job_id
+        ).order_by(LineageEvent.stage)
+        result_db = await session.execute(stmt)
+        events = result_db.scalars().all()
+
+    # Verify chain: stage_1_output → stage_2_input → stage_2_output → stage_3_input
+    assert events[0].input_lineage_id is None  # Stage 1 has no input
+    assert events[1].input_lineage_id == events[0].output_lineage_id
+    assert events[2].input_lineage_id == events[1].output_lineage_id

@@ -1,0 +1,517 @@
+"""
+Comprehensive test suite for async database session management.
+
+Tests cover:
+- URL conversion logic
+- Session lifecycle (creation, commit, rollback, cleanup)
+- FastAPI dependency injection (get_db)
+- Context manager for background tasks (get_db_context)
+- Database utilities (init_db, close_db)
+- Error handling and rollback behavior
+"""
+import pytest
+from unittest.mock import AsyncMock, patch, MagicMock
+from sqlalchemy import text, select
+from sqlalchemy.exc import SQLAlchemyError, OperationalError
+
+from src.database.session import (
+    get_db,
+    get_db_context,
+)
+from src.core.exceptions import DatabaseError
+
+
+class TestAsyncDatabaseURL:
+    """Test URL conversion logic for async PostgreSQL driver."""
+
+    def test_convert_sync_to_async(self):
+        """PostgreSQL URL should be converted to asyncpg driver."""
+        url = "postgresql://user:pass@localhost:5432/db"
+        result = get_async_database_url(url)
+        assert result == "postgresql+asyncpg://user:pass@localhost:5432/db"
+
+    def test_convert_sync_to_async_with_complex_password(self):
+        """Handle complex passwords with special characters."""
+        url = "postgresql://user:p@ss!word@localhost:5432/db"
+        result = get_async_database_url(url)
+        assert result == "postgresql+asyncpg://user:p@ss!word@localhost:5432/db"
+
+    def test_already_async_url_unchanged(self):
+        """Already async URL should not be modified."""
+        url = "postgresql+asyncpg://user:pass@localhost:5432/db"
+        result = get_async_database_url(url)
+        assert result == url
+
+    def test_invalid_url_raises_error(self):
+        """Invalid database URL should raise ValueError."""
+        with pytest.raises(ValueError, match="Invalid database URL"):
+            get_async_database_url("mysql://localhost/db")
+
+    def test_invalid_url_type_raises_error(self):
+        """Non-PostgreSQL URL should raise ValueError."""
+        with pytest.raises(ValueError, match="Invalid database URL"):
+            get_async_database_url("sqlite:///db.sqlite3")
+
+
+@pytest.mark.asyncio
+class TestAsyncSessionLifecycle:
+    """Test session creation, usage, and cleanup."""
+
+    async def test_session_creation(self):
+        """Session should be created successfully."""
+        async with AsyncSessionLocal() as session:
+            assert session is not None
+            assert session.is_active
+
+    async def test_session_executes_simple_query(self):
+        """Session should execute simple queries."""
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(text("SELECT 1 as value"))
+            assert result.scalar() == 1
+
+    async def test_session_executes_version_query(self):
+        """Session should connect to PostgreSQL and get version."""
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(text("SELECT version()"))
+            version = result.scalar()
+            assert version is not None
+            assert "PostgreSQL" in version
+
+    async def test_multiple_sessions_independent(self):
+        """Multiple sessions should be independent."""
+        async with AsyncSessionLocal() as session1:
+            result1 = await session1.execute(text("SELECT 1"))
+            value1 = result1.scalar()
+
+        async with AsyncSessionLocal() as session2:
+            result2 = await session2.execute(text("SELECT 2"))
+            value2 = result2.scalar()
+
+        assert value1 == 1
+        assert value2 == 2
+
+    async def test_session_cleanup_on_normal_exit(self):
+        """Session should be cleaned up on normal exit."""
+        session_id = None
+        async with AsyncSessionLocal() as session:
+            session_id = id(session)
+            assert session.is_active
+
+        # Session should be closed after context exit
+        # (Can't directly verify, but context manager guarantees cleanup)
+        assert session_id is not None
+
+    async def test_session_cleanup_on_exception(self):
+        """Session should be cleaned up even on exception."""
+        session_id = None
+        with pytest.raises(Exception):
+            async with AsyncSessionLocal() as session:
+                session_id = id(session)
+                raise Exception("Test error")
+
+        # Session should still be cleaned up
+        assert session_id is not None
+
+
+@pytest.mark.asyncio
+class TestTransactionBehavior:
+    """Test transaction commit and rollback behavior."""
+
+    async def test_transaction_commits_on_success(self, async_test_db):
+        """Transaction should commit on successful completion."""
+        from src.db.models import ExtractionJob
+
+        # Create job in transaction
+        async with AsyncSessionLocal() as session:
+            job = ExtractionJob(
+                file_id="test-commit-123",
+                status="pending",
+                current_stage=0,
+                progress_percent=0,
+            )
+            session.add(job)
+            # Commit happens automatically on context exit
+
+        # Verify committed by querying in new session
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                select(ExtractionJob).where(
+                    ExtractionJob.file_id == "test-commit-123"
+                )
+            )
+            found = result.scalar_one_or_none()
+            assert found is not None
+            assert found.status == "pending"
+
+    async def test_transaction_rolls_back_on_error(self, async_test_db):
+        """Transaction should rollback on error."""
+        from src.db.models import ExtractionJob
+
+        # Attempt to create job but raise error
+        with pytest.raises(SQLAlchemyError):
+            async with AsyncSessionLocal() as session:
+                job = ExtractionJob(
+                    file_id="test-rollback-456",
+                    status="pending",
+                    current_stage=0,
+                    progress_percent=0,
+                )
+                session.add(job)
+                # Force error by querying nonexistent table
+                await session.execute(text("SELECT * FROM nonexistent_table"))
+
+        # Verify not committed (rolled back)
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                select(ExtractionJob).where(
+                    ExtractionJob.file_id == "test-rollback-456"
+                )
+            )
+            found = result.scalar_one_or_none()
+            assert found is None
+
+    async def test_explicit_rollback(self, async_test_db):
+        """Explicit rollback should work."""
+        from src.db.models import ExtractionJob
+
+        async with AsyncSessionLocal() as session:
+            job = ExtractionJob(
+                file_id="test-explicit-rollback",
+                status="pending",
+                current_stage=0,
+                progress_percent=0,
+            )
+            session.add(job)
+
+            # Explicit rollback
+            await session.rollback()
+
+        # Verify not committed
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                select(ExtractionJob).where(
+                    ExtractionJob.file_id == "test-explicit-rollback"
+                )
+            )
+            assert result.scalar_one_or_none() is None
+
+
+@pytest.mark.asyncio
+class TestFastAPIDependency:
+    """Test get_db() FastAPI dependency."""
+
+    async def test_get_db_yields_session(self):
+        """get_db() should yield valid session."""
+        async for db in get_db():
+            assert db is not None
+            assert db.is_active
+            break  # Only need first yield
+
+    async def test_get_db_session_is_functional(self):
+        """Session from get_db() should execute queries."""
+        async for db in get_db():
+            result = await db.execute(text("SELECT 1"))
+            assert result.scalar() == 1
+            break
+
+    async def test_get_db_commits_on_success(self, async_test_db):
+        """get_db() should commit automatically on success."""
+        from src.db.models import ExtractionJob
+
+        async for db in get_db():
+            job = ExtractionJob(
+                file_id="test-fastapi-commit",
+                status="pending",
+                current_stage=0,
+                progress_percent=0,
+            )
+            db.add(job)
+            break  # Exit context to trigger commit
+
+        # Verify committed
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                select(ExtractionJob).where(
+                    ExtractionJob.file_id == "test-fastapi-commit"
+                )
+            )
+            assert result.scalar_one_or_none() is not None
+
+    async def test_get_db_rolls_back_on_error(self, async_test_db):
+        """get_db() should rollback on error."""
+        from src.db.models import ExtractionJob
+
+        with pytest.raises(DatabaseError):
+            async for db in get_db():
+                job = ExtractionJob(
+                    file_id="test-fastapi-rollback",
+                    status="pending",
+                    current_stage=0,
+                    progress_percent=0,
+                )
+                db.add(job)
+                # Force error
+                raise Exception("Test error")
+
+        # Verify rolled back
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                select(ExtractionJob).where(
+                    ExtractionJob.file_id == "test-fastapi-rollback"
+                )
+            )
+            assert result.scalar_one_or_none() is None
+
+    async def test_get_db_exception_handling(self):
+        """get_db() should raise DatabaseError on exception."""
+        with pytest.raises(DatabaseError) as exc_info:
+            async for db in get_db():
+                raise OperationalError("Test DB error", None, None)
+
+        assert "Database session error" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+class TestContextManager:
+    """Test get_db_context() for background tasks."""
+
+    async def test_context_manager_commits(self, async_test_db):
+        """Context manager should commit on success."""
+        from src.db.models import ExtractionJob
+
+        async with get_db_context() as db:
+            job = ExtractionJob(
+                file_id="test-context-commit",
+                status="pending",
+                current_stage=0,
+                progress_percent=0,
+            )
+            db.add(job)
+
+        # Verify committed
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                select(ExtractionJob).where(
+                    ExtractionJob.file_id == "test-context-commit"
+                )
+            )
+            assert result.scalar_one_or_none() is not None
+
+    async def test_context_manager_rolls_back_on_error(self, async_test_db):
+        """Context manager should rollback on error."""
+        from src.db.models import ExtractionJob
+
+        with pytest.raises(DatabaseError):
+            async with get_db_context() as db:
+                job = ExtractionJob(
+                    file_id="test-context-rollback",
+                    status="pending",
+                    current_stage=0,
+                    progress_percent=0,
+                )
+                db.add(job)
+                raise Exception("Test error")
+
+        # Verify rolled back
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                select(ExtractionJob).where(
+                    ExtractionJob.file_id == "test-context-rollback"
+                )
+            )
+            assert result.scalar_one_or_none() is None
+
+    async def test_context_manager_functional(self):
+        """Context manager should execute queries."""
+        async with get_db_context() as db:
+            result = await db.execute(text("SELECT 1"))
+            assert result.scalar() == 1
+
+
+@pytest.mark.asyncio
+class TestDatabaseUtilities:
+    """Test init_db() and close_db() utilities."""
+
+    async def test_init_db_creates_tables(self):
+        """init_db() should create all tables."""
+        await init_db()
+
+        # Verify tables exist
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(text(
+                "SELECT table_name FROM information_schema.tables "
+                "WHERE table_schema = 'public' "
+                "ORDER BY table_name"
+            ))
+            tables = [row[0] for row in result]
+
+            # Check for expected tables
+            expected_tables = [
+                'extraction_jobs',
+                'files',
+                'lineage_events',
+            ]
+
+            for expected in expected_tables:
+                assert expected in tables, f"Table {expected} not found"
+
+    async def test_close_db_closes_connections(self):
+        """close_db() should close all connections."""
+        # Create session to open connection
+        async with AsyncSessionLocal() as session:
+            await session.execute(text("SELECT 1"))
+
+        # Close all connections
+        await close_db()
+
+        # Should still be able to create new sessions after close
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(text("SELECT 1"))
+            assert result.scalar() == 1
+
+    async def test_init_db_idempotent(self):
+        """init_db() should be idempotent (can run multiple times)."""
+        await init_db()
+        # Run again - should not error
+        await init_db()
+
+
+@pytest.mark.asyncio
+class TestErrorHandling:
+    """Test error handling and exception propagation."""
+
+    async def test_database_error_contains_operation(self):
+        """DatabaseError should include operation context."""
+        with pytest.raises(DatabaseError) as exc_info:
+            async for db in get_db():
+                raise OperationalError("Connection failed", None, None)
+
+        error = exc_info.value
+        assert hasattr(error, 'operation')
+        assert error.operation == "session_transaction"
+
+    async def test_database_error_on_connection_failure(self):
+        """Connection failure should raise DatabaseError."""
+        # This test would require mocking the engine
+        # For now, we verify the error type is correct
+        with pytest.raises(DatabaseError):
+            async for db in get_db():
+                raise OperationalError("Could not connect", None, None)
+
+    async def test_sqlalchemy_error_wrapped(self):
+        """SQLAlchemy errors should be wrapped in DatabaseError."""
+        with pytest.raises(DatabaseError):
+            async for db in get_db():
+                raise SQLAlchemyError("Generic SQL error")
+
+
+@pytest.mark.asyncio
+class TestConcurrentSessions:
+    """Test concurrent session handling."""
+
+    async def test_multiple_concurrent_sessions(self):
+        """Multiple concurrent sessions should work independently."""
+        import asyncio
+
+        async def query_session(value: int):
+            async with AsyncSessionLocal() as session:
+                result = await session.execute(text(f"SELECT {value}"))
+                return result.scalar()
+
+        # Run 10 concurrent sessions
+        results = await asyncio.gather(*[
+            query_session(i) for i in range(10)
+        ])
+
+        assert results == list(range(10))
+
+    async def test_connection_pool_handles_concurrency(self):
+        """Connection pool should handle concurrent requests."""
+        import asyncio
+
+        async def create_session():
+            async with AsyncSessionLocal() as session:
+                await session.execute(text("SELECT 1"))
+                await asyncio.sleep(0.01)  # Simulate work
+                return True
+
+        # Run 20 concurrent sessions (more than pool size)
+        results = await asyncio.gather(*[
+            create_session() for _ in range(20)
+        ])
+
+        assert all(results)
+        assert len(results) == 20
+
+
+@pytest.mark.asyncio
+class TestSyncSessionSupport:
+    """Test synchronous session support for Alembic migrations."""
+
+    def test_get_db_sync_exists(self):
+        """Sync session support should exist for migrations."""
+        from src.db.session import get_db_sync, SyncSessionLocal
+
+        assert get_db_sync is not None
+        assert SyncSessionLocal is not None
+
+    def test_sync_session_context_manager(self):
+        """Sync session should work as context manager."""
+        from src.db.session import get_db_sync
+        from sqlalchemy import text
+
+        with get_db_sync() as db:
+            result = db.execute(text("SELECT 1"))
+            assert result.scalar() == 1
+
+    def test_sync_session_commits(self):
+        """Sync session should commit changes."""
+        from src.db.session import get_db_sync
+        from src.db.models import ExtractionJob
+        from sqlalchemy import select
+
+        # Create job in sync session
+        with get_db_sync() as db:
+            job = ExtractionJob(
+                file_id="test-sync-commit",
+                status="pending",
+                current_stage=0,
+                progress_percent=0,
+            )
+            db.add(job)
+
+        # Verify committed
+        with get_db_sync() as db:
+            result = db.execute(
+                select(ExtractionJob).where(
+                    ExtractionJob.file_id == "test-sync-commit"
+                )
+            )
+            found = result.scalar_one_or_none()
+            assert found is not None
+
+    def test_sync_session_rolls_back_on_error(self):
+        """Sync session should rollback on error."""
+        from src.db.session import get_db_sync
+        from src.db.models import ExtractionJob
+        from sqlalchemy import select
+
+        with pytest.raises(DatabaseError):
+            with get_db_sync() as db:
+                job = ExtractionJob(
+                    file_id="test-sync-rollback",
+                    status="pending",
+                    current_stage=0,
+                    progress_percent=0,
+                )
+                db.add(job)
+                raise Exception("Test error")
+
+        # Verify rolled back
+        with get_db_sync() as db:
+            result = db.execute(
+                select(ExtractionJob).where(
+                    ExtractionJob.file_id == "test-sync-rollback"
+                )
+            )
+            assert result.scalar_one_or_none() is None

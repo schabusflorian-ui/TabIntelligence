@@ -1,0 +1,6832 @@
+{
+  "version": "1.5.0",
+  "last_updated": "2026-02-24",
+  "description": "Canonical financial taxonomy for DebtFund extraction platform",
+  "categories": {
+    "income_statement": "Income Statement / P&L items",
+    "balance_sheet": "Balance Sheet items",
+    "cash_flow": "Cash Flow Statement items",
+    "debt_schedule": "Debt Schedule items",
+    "metrics": "Calculated financial metrics"
+  },
+  "items": [
+    {
+      "canonical_name": "revenue",
+      "category": "income_statement",
+      "display_name": "Revenue",
+      "aliases": [
+        "ARR",
+        "Annual Recurring Revenue",
+        "Chiffre d'affaires",
+        "Consolidated Revenue",
+        "Gross Revenue",
+        "Gross Sales",
+        "Income from Sales",
+        "MRR",
+        "Monthly Recurring Revenue",
+        "Net Revenue",
+        "Net Sales",
+        "Operating Revenue",
+        "Premium Income",
+        "Rental Income",
+        "Revenue (Gross)",
+        "Revenue (Net)",
+        "Revenues",
+        "Sales",
+        "Sales Income",
+        "Sales Revenue",
+        "Subscription Income",
+        "Top Line",
+        "Total Operating Revenue",
+        "Total Revenue",
+        "Total Sales",
+        "Turnover",
+        "Turnover (UK)",
+        "Umsatz",
+        "revenu",
+        "reveneu",
+        "revanue",
+        "reveue",
+        "revnue"
+      ],
+      "definition": "Total income generated from primary business activities before any deductions",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0,
+        "typical_sign": "positive",
+        "industry_benchmarks": {
+          "saas": {
+            "yoy_growth": [
+              0.2,
+              0.8
+            ],
+            "description": "20-80% annual growth typical for SaaS"
+          },
+          "real_estate": {
+            "yoy_growth": [
+              0.03,
+              0.15
+            ],
+            "description": "3-15% annual growth for real estate"
+          },
+          "manufacturing": {
+            "yoy_growth": [
+              0.05,
+              0.2
+            ],
+            "description": "5-20% annual growth for manufacturing"
+          }
+        },
+        "validation_checks": [
+          "revenue > 0 for operating companies",
+          "revenue_growth within industry benchmarks"
+        ],
+        "cross_item_validation": {
+          "must_be_positive": true,
+          "relationships": [
+            {
+              "rule": "revenue >= gross_profit",
+              "error_message": "Revenue cannot be less than gross profit"
+            },
+            {
+              "rule": "revenue >= cogs",
+              "error_message": "Revenue should typically exceed COGS (check for negative margins)"
+            }
+          ],
+          "time_series": {
+            "max_yoy_change_pct": 300,
+            "description": "Flag if revenue changes by >300% year-over-year (likely data error)"
+          }
+        }
+      },
+      "ocr_variants": [
+        "Rev enue",
+        "Reyenue",
+        "RevenUe",
+        "REVENUE",
+        "revenue.",
+        "Reve\u03c0ue",
+        "Rev-enue",
+        "R\u0247venue",
+        "Revenu\u0247"
+      ],
+      "format_examples": [
+        {
+          "value": "1,234,567",
+          "context": "US format with commas"
+        },
+        {
+          "value": "1.234.567",
+          "context": "European format"
+        },
+        {
+          "value": "$1.2M",
+          "context": "Abbreviated millions"
+        },
+        {
+          "value": "1234567",
+          "context": "No separators"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "saas",
+        "manufacturing",
+        "retail",
+        "services",
+        "real_estate"
+      ],
+      "confidence_scoring": {
+        "high_confidence_signals": [
+          "Appears in income statement header",
+          "Labeled as 'Revenue', 'Sales', or 'Turnover'",
+          "First line item in P&L",
+          "Largest positive income statement value"
+        ],
+        "medium_confidence_signals": [
+          "Labeled generically as 'Income'",
+          "In operating section but not at top",
+          "Requires inference from context"
+        ],
+        "low_confidence_signals": [
+          "Unlabeled number",
+          "Appears outside standard income statement",
+          "Similar magnitude to other items"
+        ],
+        "validation_boosters": [
+          "Can derive gross_profit = revenue - cogs",
+          "Consistent with prior period trends",
+          "Matches reported total revenue"
+        ],
+        "common_errors": [
+          "Confusing gross revenue with net revenue",
+          "Including other income in revenue",
+          "Missing revenue from discontinued operations"
+        ]
+      },
+      "accounting_standards": {
+        "us_gaap": {
+          "guidance": "ASC 606 - Revenue from Contracts with Customers",
+          "key_principles": [
+            "Five-step model for revenue recognition",
+            "Performance obligations must be distinct"
+          ]
+        },
+        "ifrs": {
+          "guidance": "IFRS 15 - Revenue from Contracts with Customers",
+          "key_principles": [
+            "Converged with US GAAP in 2018",
+            "Minor differences in implementation"
+          ],
+          "differences": "Largely aligned with US GAAP; minor differences in disclosure requirements"
+        }
+      },
+      "regulatory_context": {
+        "sec_forms": [
+          "10-K",
+          "10-Q",
+          "8-K"
+        ],
+        "required_for": [
+          "public_companies"
+        ],
+        "audit_sensitivity": "high",
+        "common_fraud_area": true,
+        "footnote_triggers": [
+          "Revenue recognition policy changes",
+          "Multiple performance obligations",
+          "Variable consideration"
+        ]
+      }
+    },
+    {
+      "canonical_name": "product_revenue",
+      "category": "income_statement",
+      "display_name": "Product Revenue",
+      "aliases": [
+        "Product Sales",
+        "Goods Revenue",
+        "Merchandise Sales",
+        "Product Income"
+      ],
+      "definition": "Revenue from sale of physical products or goods",
+      "typical_sign": "positive",
+      "parent_canonical": "revenue",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "service_revenue",
+      "category": "income_statement",
+      "display_name": "Service Revenue",
+      "aliases": [
+        "Service Sales",
+        "Professional Services Revenue",
+        "Service Income",
+        "Consulting Revenue"
+      ],
+      "definition": "Revenue from provision of services",
+      "typical_sign": "positive",
+      "parent_canonical": "revenue",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "subscription_revenue",
+      "category": "income_statement",
+      "display_name": "Subscription Revenue",
+      "aliases": [
+        "ARR",
+        "Annual Recurring Revenue",
+        "CRR",
+        "Contracted Recurring Revenue",
+        "MRR",
+        "Membership Fees",
+        "Monthly Recurring Revenue",
+        "Recurring Revenue",
+        "Recurring Sales",
+        "Recurring Subscription Revenue",
+        "SaaS Revenue",
+        "Subscription Income",
+        "Subscription Sales"
+      ],
+      "definition": "Revenue from recurring subscription or membership arrangements",
+      "typical_sign": "positive",
+      "parent_canonical": "revenue",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "other_revenue",
+      "category": "income_statement",
+      "display_name": "Other Revenue",
+      "aliases": [
+        "Miscellaneous Revenue",
+        "Other Income",
+        "Other Sales",
+        "Sundry Income"
+      ],
+      "definition": "Revenue from other minor or miscellaneous sources",
+      "typical_sign": "positive",
+      "parent_canonical": "revenue",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "cogs",
+      "category": "income_statement",
+      "display_name": "Cost of Goods Sold",
+      "aliases": [
+        "COGS",
+        "COS",
+        "Cost of Goods Sold",
+        "Cost of Revenue",
+        "Cost of Sales",
+        "Cost of Services",
+        "Cost of Services Sold",
+        "Cost of Subscriptions",
+        "Direct Costs",
+        "Direct Production Costs",
+        "Direct Variable Costs",
+        "Hosting Costs",
+        "Production Costs",
+        "Property Operating Expenses",
+        "Unit Costs",
+        "Variable Costs",
+        "cog",
+        "cosg",
+        "cogss",
+        "cost of good sold"
+      ],
+      "definition": "Direct costs attributable to production of goods sold",
+      "typical_sign": "negative",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency",
+        "cross_item_validation": {
+          "must_be_positive": true,
+          "relationships": [
+            {
+              "rule": "cogs <= revenue",
+              "error_message": "COGS cannot exceed revenue (check for negative gross margin)"
+            },
+            {
+              "rule": "gross_profit == revenue - cogs",
+              "tolerance": 0.01,
+              "error_message": "Gross profit should equal revenue minus COGS"
+            }
+          ]
+        }
+      },
+      "ocr_variants": [
+        "COG S",
+        "C0GS",
+        "COGS.",
+        "cogs",
+        "Co GS",
+        "CDGS",
+        "COGS:",
+        "C O G S"
+      ],
+      "format_examples": [
+        {
+          "value": "(234,567)",
+          "context": "Parentheses for expense"
+        },
+        {
+          "value": "234,567",
+          "context": "Positive number"
+        },
+        {
+          "value": "($234.5K)",
+          "context": "Abbreviated with currency"
+        }
+      ],
+      "industry_tags": [
+        "manufacturing",
+        "retail",
+        "ecommerce",
+        "wholesale"
+      ],
+      "confidence_scoring": {
+        "high_confidence_signals": [
+          "Labeled as 'COGS' or 'Cost of Sales'",
+          "Directly below revenue in income statement",
+          "Can derive gross_profit from revenue - cogs"
+        ],
+        "ambiguity_notes": "Some companies include D&A in COGS, others exclude it"
+      }
+    },
+    {
+      "canonical_name": "cost_of_sales",
+      "category": "income_statement",
+      "display_name": "Cost of Sales",
+      "aliases": [
+        "COS",
+        "Sales Costs"
+      ],
+      "definition": "Cost of sales (synonym for COGS)",
+      "typical_sign": "negative",
+      "parent_canonical": "cogs",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "material_costs",
+      "category": "income_statement",
+      "display_name": "Material Costs",
+      "aliases": [
+        "Raw Materials",
+        "Materials",
+        "Direct Materials",
+        "Raw Material Costs"
+      ],
+      "definition": "Cost of raw materials used in production",
+      "typical_sign": "negative",
+      "parent_canonical": "cogs",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "labor_costs",
+      "category": "income_statement",
+      "display_name": "Labor Costs",
+      "aliases": [
+        "Direct Labor",
+        "Labor Expense",
+        "Production Labor",
+        "Manufacturing Labor"
+      ],
+      "definition": "Cost of direct labor involved in production",
+      "typical_sign": "negative",
+      "parent_canonical": "cogs",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "manufacturing_overhead",
+      "category": "income_statement",
+      "display_name": "Manufacturing Overhead",
+      "aliases": [
+        "Factory Overhead",
+        "Production Overhead",
+        "Indirect Manufacturing Costs"
+      ],
+      "definition": "Indirect costs related to manufacturing process",
+      "typical_sign": "negative",
+      "parent_canonical": "cogs",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "gross_profit",
+      "category": "income_statement",
+      "display_name": "Gross Profit",
+      "aliases": [
+        "Contribution Margin",
+        "GP",
+        "Gross Contribution",
+        "Gross Earnings",
+        "Gross Income",
+        "Gross Margin",
+        "Gross Operating Profit",
+        "Gross Profit Before OpEx",
+        "Gross Trading Profit",
+        "Trading Profit",
+        "gros profit",
+        "gross profi",
+        "grofit"
+      ],
+      "definition": "Revenue minus cost of goods sold",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency",
+        "derivation": "revenue - cogs",
+        "typical_sign": "positive",
+        "validation_checks": [
+          "gross_profit = revenue - cogs",
+          "0 < gross_profit < revenue"
+        ],
+        "cross_item_validation": {
+          "relationships": [
+            {
+              "rule": "gross_profit == revenue - cogs",
+              "tolerance": 0.01,
+              "error_message": "Gross profit must equal revenue minus COGS"
+            },
+            {
+              "rule": "gross_profit <= revenue",
+              "error_message": "Gross profit cannot exceed revenue"
+            }
+          ]
+        }
+      },
+      "ocr_variants": [
+        "Gross Prof it",
+        "Gr oss Profit",
+        "GROSS PROFIT",
+        "Gross-Profit",
+        "GrossProfit",
+        "Gross Pro\u03d0t"
+      ],
+      "format_examples": [
+        {
+          "value": "1,000,000",
+          "context": "Positive profit"
+        },
+        {
+          "value": "(50,000)",
+          "context": "Loss shown in parentheses"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "manufacturing",
+        "retail",
+        "services"
+      ],
+      "confidence_scoring": {
+        "validation_boosters": [
+          "Matches revenue - cogs calculation",
+          "Consistent gross margin with prior periods"
+        ]
+      }
+    },
+    {
+      "canonical_name": "gross_margin_pct",
+      "category": "income_statement",
+      "display_name": "Gross Margin %",
+      "aliases": [
+        "Gross Profit Margin",
+        "Gross Margin Percentage",
+        "GM%",
+        "Gross Profit %"
+      ],
+      "definition": "Gross profit as a percentage of revenue",
+      "typical_sign": "positive",
+      "parent_canonical": "gross_profit",
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0,
+        "max_value": 1.0,
+        "derivation": "gross_profit / revenue",
+        "industry_benchmarks": {
+          "saas": {
+            "typical_range": [
+              0.7,
+              0.9
+            ],
+            "description": "SaaS companies typically 70-90%"
+          },
+          "manufacturing": {
+            "typical_range": [
+              0.2,
+              0.4
+            ],
+            "description": "Manufacturing typically 20-40%"
+          },
+          "retail": {
+            "typical_range": [
+              0.25,
+              0.5
+            ],
+            "description": "Retail typically 25-50%"
+          },
+          "real_estate": {
+            "typical_range": [
+              0.4,
+              0.65
+            ],
+            "description": "Real estate typically 40-65%"
+          }
+        },
+        "validation_checks": [
+          "gross_margin_pct = gross_profit / revenue",
+          "0 < gross_margin_pct < 1.0"
+        ]
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "opex",
+      "category": "income_statement",
+      "display_name": "Operating Expenses",
+      "aliases": [
+        "General Operating Expenses",
+        "OPEX",
+        "Op Ex",
+        "OpEx",
+        "Operating Costs",
+        "Operating Expenditure",
+        "Operating Expense",
+        "Operating Expenses",
+        "Operational Expenditure",
+        "Operational Expenses",
+        "Total OpEx",
+        "Total Operating Expenses"
+      ],
+      "definition": "Expenses incurred in normal business operations excluding COGS",
+      "typical_sign": "negative",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency"
+      },
+      "ocr_variants": [
+        "Op ex",
+        "OPEX",
+        "0pex",
+        "OpEx",
+        "Op-Ex",
+        "\u039fpEx"
+      ],
+      "format_examples": [
+        {
+          "value": "(500,000)",
+          "context": "Expense in parentheses"
+        },
+        {
+          "value": "500,000",
+          "context": "Positive number"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "saas",
+        "technology",
+        "services"
+      ]
+    },
+    {
+      "canonical_name": "operating_expenses",
+      "category": "income_statement",
+      "display_name": "Operating Expenses",
+      "aliases": [
+        "Total Operating Expenses",
+        "Total OpEx"
+      ],
+      "definition": "Total operating expenses (synonym for opex)",
+      "typical_sign": "negative",
+      "parent_canonical": "opex",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "sga",
+      "category": "income_statement",
+      "display_name": "SG&A",
+      "aliases": [
+        "Administrative and Selling Expenses",
+        "G&A",
+        "General & Administrative Expenses",
+        "General and Administrative",
+        "S&A",
+        "SG&A Expenses",
+        "SGA",
+        "Sales General Administrative",
+        "Selling G&A",
+        "Selling General and Administrative",
+        "Selling and Administrative"
+      ],
+      "definition": "Selling, general, and administrative expenses",
+      "typical_sign": "negative",
+      "parent_canonical": "opex",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "ocr_variants": [
+        "SG A",
+        "S G A",
+        "SGA.",
+        "S&G&A",
+        "SG&A",
+        "SGA:",
+        "5GA"
+      ],
+      "format_examples": [
+        {
+          "value": "(1,234,567)",
+          "context": "Expense format"
+        },
+        {
+          "value": "$1.2M",
+          "context": "Abbreviated"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "corporate",
+        "public_companies"
+      ]
+    },
+    {
+      "canonical_name": "sales_marketing",
+      "category": "income_statement",
+      "display_name": "Sales and Marketing",
+      "aliases": [
+        "Business Development Expenses",
+        "CAC",
+        "Customer Acquisition Cost",
+        "Marketing Costs",
+        "Marketing Expense",
+        "Marketing and Sales",
+        "S&M",
+        "Sales & Marketing",
+        "Sales Costs",
+        "Sales Expense",
+        "Sales and Marketing Expenses",
+        "Selling Expenses",
+        "Selling and Marketing"
+      ],
+      "definition": "Expenses related to sales and marketing activities",
+      "typical_sign": "negative",
+      "parent_canonical": "sga",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "general_admin",
+      "category": "income_statement",
+      "display_name": "General and Administrative",
+      "aliases": [
+        "G&A",
+        "Administrative Expenses",
+        "General Expenses",
+        "Admin Costs"
+      ],
+      "definition": "General and administrative overhead expenses",
+      "typical_sign": "negative",
+      "parent_canonical": "sga",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "rd_expense",
+      "category": "income_statement",
+      "display_name": "Research and Development",
+      "aliases": [
+        "Development Costs",
+        "Development Expenditure",
+        "Engineering Expense",
+        "Innovation Expense",
+        "Product Development",
+        "R & D",
+        "R&D",
+        "R&D Expense",
+        "Research & Development",
+        "Research Costs",
+        "Research and Development Expense",
+        "Technology and Development"
+      ],
+      "definition": "Expenses for research and product development activities",
+      "typical_sign": "negative",
+      "parent_canonical": "opex",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "ocr_variants": [
+        "R&D",
+        "R &D",
+        "R&D.",
+        "R & D",
+        "RandD",
+        "R\u0241D",
+        "R+D"
+      ],
+      "format_examples": [
+        {
+          "value": "(2,500,000)",
+          "context": "High R&D spend"
+        },
+        {
+          "value": "0",
+          "context": "No R&D"
+        }
+      ],
+      "industry_tags": [
+        "technology",
+        "biotech",
+        "pharma",
+        "manufacturing",
+        "saas"
+      ]
+    },
+    {
+      "canonical_name": "ebitda",
+      "category": "income_statement",
+      "display_name": "EBITDA",
+      "aliases": [
+        "Adjusted EBITDA",
+        "Core EBITDA",
+        "EBITDA (Adjusted)",
+        "EBITDA (Normalized)",
+        "EBITDA (Reported)",
+        "Earnings Before Interest Taxes Depreciation and Amortization",
+        "LTM EBITDA",
+        "Normalized EBITDA",
+        "Operating EBITDA",
+        "Operating Income Before D&A",
+        "Reported EBITDA",
+        "Run-Rate EBITDA",
+        "Underlying EBITDA",
+        "ebitada",
+        "ebida",
+        "ebtda",
+        "ebitdaa"
+      ],
+      "definition": "Earnings before interest, taxes, depreciation, and amortization",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency",
+        "derivation": "gross_profit - opex",
+        "typical_sign": "positive",
+        "validation_checks": [
+          "ebitda = ebit + depreciation + amortization",
+          "ebitda = gross_profit - opex"
+        ],
+        "cross_validation": {
+          "ebit": "ebitda should be >= ebit",
+          "gross_profit": "ebitda should be < gross_profit"
+        },
+        "cross_item_validation": {
+          "relationships": [
+            {
+              "rule": "ebitda == ebit + depreciation + amortization",
+              "tolerance": 0.02,
+              "error_message": "EBITDA should equal EBIT + D&A",
+              "optional": true
+            }
+          ]
+        }
+      },
+      "ocr_variants": [
+        "EBIT DA",
+        "E BITDA",
+        "EB1TDA",
+        "EBITDA.",
+        "Ebitda",
+        "EBlTDA",
+        "EBITDA:",
+        "E-BITDA"
+      ],
+      "format_examples": [
+        {
+          "value": "5,000,000",
+          "context": "Strong EBITDA"
+        },
+        {
+          "value": "(500,000)",
+          "context": "Negative EBITDA"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "private_equity",
+        "leveraged_finance"
+      ],
+      "confidence_scoring": {
+        "high_confidence_signals": [
+          "Explicitly labeled as 'EBITDA' or 'Adjusted EBITDA'",
+          "Can derive from EBIT + D&A",
+          "Appears in management discussion section"
+        ],
+        "medium_confidence_signals": [
+          "Labeled as 'Operating Profit before D&A'",
+          "Requires adding back D&A from notes"
+        ],
+        "ambiguity_notes": "EBITDA is non-GAAP; definitions vary. Always check footnotes for adjustments."
+      },
+      "regulatory_context": {
+        "sec_forms": [
+          "8-K",
+          "10-K (MD&A)"
+        ],
+        "required_for": [],
+        "is_non_gaap": true,
+        "disclosure_requirements": [
+          "Must reconcile to GAAP net income",
+          "Must explain why management uses this metric",
+          "Cannot be more prominent than GAAP measures"
+        ]
+      }
+    },
+    {
+      "canonical_name": "depreciation",
+      "category": "income_statement",
+      "display_name": "Depreciation",
+      "aliases": [
+        "Depreciation Expense",
+        "D&A - Depreciation",
+        "Depreciation of Assets"
+      ],
+      "definition": "Systematic allocation of tangible asset costs over useful life",
+      "typical_sign": "negative",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency"
+      },
+      "ocr_variants": [
+        "Depreciat ion",
+        "Depre ciation",
+        "DEPRECIATION",
+        "Deprecia\u01abon",
+        "Dep reciation",
+        "Depreciation."
+      ],
+      "format_examples": [
+        {
+          "value": "(100,000)",
+          "context": "Non-cash expense"
+        },
+        {
+          "value": "100,000",
+          "context": "Positive format"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "manufacturing",
+        "real_estate",
+        "capital_intensive"
+      ],
+      "accounting_standards": {
+        "us_gaap": {
+          "guidance": "ASC 360 - Property, Plant, and Equipment",
+          "methods": [
+            "Straight-line",
+            "Declining balance",
+            "Units of production"
+          ],
+          "component_depreciation": "Optional"
+        },
+        "ifrs": {
+          "guidance": "IAS 16 - Property, Plant and Equipment",
+          "methods": [
+            "Straight-line",
+            "Declining balance",
+            "Units of production"
+          ],
+          "component_depreciation": "Required",
+          "differences": "IFRS requires component depreciation; US GAAP is optional"
+        }
+      }
+    },
+    {
+      "canonical_name": "amortization",
+      "category": "income_statement",
+      "display_name": "Amortization",
+      "aliases": [
+        "Amortization Expense",
+        "D&A - Amortization",
+        "Amortization of Intangibles"
+      ],
+      "definition": "Systematic allocation of intangible asset costs over useful life",
+      "typical_sign": "negative",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency"
+      },
+      "ocr_variants": [
+        "Amort ization",
+        "Amorti zation",
+        "AMORTIZATION",
+        "Amortiza\u01abon",
+        "Amor tization",
+        "Amortization."
+      ],
+      "format_examples": [
+        {
+          "value": "(50,000)",
+          "context": "Intangible amortization"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "technology",
+        "saas",
+        "media"
+      ]
+    },
+    {
+      "canonical_name": "depreciation_and_amortization",
+      "category": "income_statement",
+      "display_name": "Depreciation and Amortization",
+      "aliases": [
+        "D&A",
+        "Depreciation & Amortization",
+        "Total D&A"
+      ],
+      "definition": "Combined depreciation and amortization expense",
+      "typical_sign": "negative",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency",
+        "derivation": "depreciation + amortization",
+        "typical_sign": "negative",
+        "validation_checks": [
+          "depreciation_and_amortization = depreciation + amortization",
+          "depreciation_and_amortization < 0 (expense)"
+        ]
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "ebit",
+      "category": "income_statement",
+      "display_name": "EBIT",
+      "aliases": [
+        "EBIT",
+        "Earnings Before Interest & Tax",
+        "Earnings Before Interest and Taxes",
+        "Income from Operations",
+        "Op Income",
+        "Operating Earnings",
+        "Operating Income",
+        "Operating Profit",
+        "Operational Profit",
+        "PBIT",
+        "Profit Before Interest and Tax",
+        "Trading Profit",
+        "ebt",
+        "ebitt",
+        "eibt"
+      ],
+      "definition": "Earnings before interest and taxes; operating profitability measure",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency",
+        "derivation": "ebitda - depreciation - amortization",
+        "typical_sign": "positive",
+        "validation_checks": [
+          "ebit = ebitda - depreciation - amortization",
+          "ebit = gross_profit - opex - depreciation - amortization"
+        ],
+        "cross_item_validation": {
+          "relationships": [
+            {
+              "rule": "ebit == ebitda - depreciation - amortization",
+              "tolerance": 0.02,
+              "optional": true
+            },
+            {
+              "rule": "ebit == operating_income",
+              "tolerance": 0.01,
+              "error_message": "EBIT should equal operating income"
+            }
+          ]
+        }
+      },
+      "ocr_variants": [
+        "EB IT",
+        "E BIT",
+        "EB1T",
+        "EBIT.",
+        "Ebit",
+        "EBlT",
+        "EBIT:"
+      ],
+      "format_examples": [
+        {
+          "value": "4,500,000",
+          "context": "Operating profit"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "corporate",
+        "public_companies"
+      ]
+    },
+    {
+      "canonical_name": "operating_income",
+      "category": "income_statement",
+      "display_name": "Operating Income",
+      "aliases": [
+        "EBIT",
+        "Income from Operations",
+        "Income from Operations Before Tax",
+        "Op Income",
+        "Operating Earnings",
+        "Operating Profit",
+        "Operational Income",
+        "Trading Income"
+      ],
+      "definition": "Operating income (synonym for EBIT)",
+      "typical_sign": "positive",
+      "parent_canonical": "ebit",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "ocr_variants": [
+        "Operating Inc ome",
+        "Operating-Income",
+        "OPERATING INCOME",
+        "Opera\u01abng Income",
+        "Operating lncome"
+      ],
+      "format_examples": [
+        {
+          "value": "3,000,000",
+          "context": "Positive operating income"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "public_companies"
+      ]
+    },
+    {
+      "canonical_name": "operating_margin_pct",
+      "category": "income_statement",
+      "display_name": "Operating Margin %",
+      "aliases": [
+        "Operating Margin",
+        "Operating Profit Margin",
+        "EBIT Margin",
+        "Op Margin %"
+      ],
+      "definition": "Operating income as a percentage of revenue",
+      "typical_sign": "positive",
+      "parent_canonical": "ebit",
+      "validation_rules": {
+        "type": "percentage",
+        "derivation": "ebit / revenue"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "interest_expense",
+      "category": "income_statement",
+      "display_name": "Interest Expense",
+      "aliases": [
+        "Borrowing Costs",
+        "Cost of Debt",
+        "Debt Interest",
+        "Debt Service Interest",
+        "Finance Charges",
+        "Finance Costs",
+        "Financing Costs",
+        "Interest Charges",
+        "Interest Cost",
+        "Interest Costs",
+        "Interest Expense (Net)",
+        "Interest Paid",
+        "Interest Payable",
+        "Interest on Borrowings",
+        "Interest on Debt",
+        "Net Interest Expense"
+      ],
+      "definition": "Cost of borrowed funds; interest paid on debt",
+      "typical_sign": "negative",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency",
+        "typical_sign": "negative",
+        "validation_checks": [
+          "interest_expense < 0 (it's an expense)",
+          "interest_expense should be reasonable % of debt"
+        ],
+        "cross_validation": {
+          "total_debt": "interest_expense / total_debt should be 0.02-0.15 (2-15% interest rate)"
+        }
+      },
+      "ocr_variants": [
+        "Interest Exp ense",
+        "Interest-Expense",
+        "INTEREST EXPENSE",
+        "lnterest Expense",
+        "Interest Exp\u0247nse"
+      ],
+      "format_examples": [
+        {
+          "value": "(250,000)",
+          "context": "Debt servicing cost"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "leveraged",
+        "real_estate"
+      ]
+    },
+    {
+      "canonical_name": "interest_income",
+      "category": "income_statement",
+      "display_name": "Interest Income",
+      "aliases": [
+        "Finance Income",
+        "Interest Earned",
+        "Interest Received",
+        "Interest Revenue",
+        "Interest and Investment Income",
+        "Interest on Cash",
+        "Interest on Investments",
+        "Investment Income"
+      ],
+      "definition": "Income earned from interest-bearing assets and investments",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency"
+      },
+      "ocr_variants": [
+        "Interest Inc ome",
+        "Interest-Income",
+        "INTEREST INCOME",
+        "lnterest Income"
+      ],
+      "format_examples": [
+        {
+          "value": "10,000",
+          "context": "Cash interest earned"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "financial_services",
+        "cash_rich"
+      ]
+    },
+    {
+      "canonical_name": "other_income",
+      "category": "income_statement",
+      "display_name": "Other Income",
+      "aliases": [
+        "Other Income (Expense)",
+        "Non-Operating Income",
+        "Miscellaneous Income"
+      ],
+      "definition": "Income from non-operating activities",
+      "typical_sign": "varies",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "other_expense",
+      "category": "income_statement",
+      "display_name": "Other Expense",
+      "aliases": [
+        "Other Expenses",
+        "Non-Operating Expenses",
+        "Miscellaneous Expenses"
+      ],
+      "definition": "Expenses from non-operating activities",
+      "typical_sign": "negative",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "gain_on_sale",
+      "category": "income_statement",
+      "display_name": "Gain on Sale of Assets",
+      "aliases": [
+        "Asset Sale Gain",
+        "Gain on Disposal",
+        "Disposal Gain"
+      ],
+      "definition": "Profit from sale of assets above book value",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "ebt",
+      "category": "income_statement",
+      "display_name": "EBT",
+      "aliases": [
+        "Earnings Before Income Tax",
+        "Earnings Before Tax",
+        "Earnings Before Taxes",
+        "Income Before Income Tax",
+        "Income Before Taxes",
+        "PBT",
+        "Pre-Tax Income",
+        "Pre-Tax Profit",
+        "Pretax Earnings",
+        "Pretax Profit",
+        "Profit Before Tax",
+        "Profit Before Taxation"
+      ],
+      "definition": "Earnings before income tax expense",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency",
+        "derivation": "ebit - interest_expense + interest_income + other_income - other_expense",
+        "typical_sign": "positive",
+        "validation_checks": [
+          "ebt = ebit - interest_expense + interest_income",
+          "ebt is pre-tax income"
+        ]
+      },
+      "ocr_variants": [
+        "E BT",
+        "EB T",
+        "EBT.",
+        "Ebt",
+        "EBT:",
+        "\u0395BT"
+      ],
+      "format_examples": [
+        {
+          "value": "4,200,000",
+          "context": "Pre-tax earnings"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "earnings_before_tax",
+      "category": "income_statement",
+      "display_name": "Earnings Before Tax",
+      "aliases": [
+        "Pre-Tax Earnings",
+        "Pre-Tax Income",
+        "Earnings Before Taxes",
+        "Income Before Tax",
+        "Pretax Earnings"
+      ],
+      "definition": "Earnings before tax (synonym for EBT)",
+      "typical_sign": "positive",
+      "parent_canonical": "ebt",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "tax_expense",
+      "category": "income_statement",
+      "display_name": "Tax Expense",
+      "aliases": [
+        "Corporate Tax",
+        "Current Tax",
+        "Income Tax",
+        "Income Tax Expense",
+        "Income Tax Provision",
+        "Provision for Income Taxes",
+        "Provision for Taxes",
+        "Tax Charge",
+        "Tax Expense",
+        "Tax Provision",
+        "Taxation",
+        "Taxes"
+      ],
+      "definition": "Income tax expense for the period",
+      "typical_sign": "negative",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency",
+        "typical_sign": "negative",
+        "validation_checks": [
+          "tax_expense < 0 (it's an expense)",
+          "effective_tax_rate = tax_expense / ebt should be 0.15-0.35"
+        ],
+        "cross_validation": {
+          "ebt": "tax_expense should be 15-35% of ebt for most jurisdictions"
+        }
+      },
+      "ocr_variants": [
+        "Tax Exp ense",
+        "Tax-Expense",
+        "TAX EXPENSE",
+        "\u01acax Expense",
+        "Tax Exp\u0247nse"
+      ],
+      "format_examples": [
+        {
+          "value": "(1,050,000)",
+          "context": "25% effective rate"
+        },
+        {
+          "value": "1,050,000",
+          "context": "Positive format"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "corporate",
+        "public_companies"
+      ]
+    },
+    {
+      "canonical_name": "income_tax",
+      "category": "income_statement",
+      "display_name": "Income Tax",
+      "aliases": [
+        "Corporate Tax",
+        "Tax Expense",
+        "Income Taxes",
+        "Provision for Income Tax"
+      ],
+      "definition": "Income tax (synonym for tax_expense)",
+      "typical_sign": "negative",
+      "parent_canonical": "tax_expense",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "effective_tax_rate",
+      "category": "income_statement",
+      "display_name": "Effective Tax Rate",
+      "aliases": [
+        "Tax Rate",
+        "Effective Tax Rate %",
+        "ETR"
+      ],
+      "definition": "Actual tax rate paid as percentage of pre-tax income",
+      "typical_sign": "positive",
+      "parent_canonical": "tax_expense",
+      "validation_rules": {
+        "type": "percentage",
+        "derivation": "tax_expense / ebt",
+        "min_value": 0,
+        "max_value": 0.5,
+        "industry_benchmarks": {
+          "us_federal": {
+            "typical_range": [
+              0.21,
+              0.21
+            ],
+            "description": "US federal corporate rate 21%"
+          },
+          "us_combined": {
+            "typical_range": [
+              0.25,
+              0.3
+            ],
+            "description": "US federal + state typically 25-30%"
+          },
+          "ireland": {
+            "typical_range": [
+              0.125,
+              0.125
+            ],
+            "description": "Ireland corporate rate 12.5%"
+          },
+          "uk": {
+            "typical_range": [
+              0.19,
+              0.25
+            ],
+            "description": "UK corporate rate 19-25%"
+          }
+        }
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "net_income",
+      "category": "income_statement",
+      "display_name": "Net Income",
+      "aliases": [
+        "Bottom Line",
+        "Comprehensive Income",
+        "Earnings",
+        "NPAT",
+        "Net",
+        "Net Earnings",
+        "Net Income After Tax",
+        "Net Income Attributable to Shareholders",
+        "Net Profit",
+        "Net Profit After Tax",
+        "Net Result",
+        "PAT",
+        "Profit After Tax",
+        "Profit for the Period",
+        "Profit for the Year",
+        "net incom",
+        "net incme",
+        "netincome",
+        "net inncome"
+      ],
+      "definition": "Final profit after all expenses, interest, and taxes",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency",
+        "derivation": "ebt - tax_expense",
+        "typical_sign": "positive",
+        "validation_checks": [
+          "net_income = ebt - tax_expense",
+          "net_income is the bottom line"
+        ],
+        "cross_item_validation": {
+          "relationships": [
+            {
+              "rule": "net_income == ebt - tax_expense",
+              "tolerance": 0.01,
+              "error_message": "Net income should equal EBT minus taxes"
+            },
+            {
+              "rule": "net_income <= revenue",
+              "error_message": "Net income cannot exceed revenue"
+            }
+          ],
+          "time_series": {
+            "max_yoy_change_pct": 500,
+            "description": "Flag if net income changes by >500% YoY"
+          }
+        }
+      },
+      "ocr_variants": [
+        "Net Inc ome",
+        "Net-Income",
+        "NET INCOME",
+        "N\u0247t Income",
+        "Net lncome",
+        "Netincome"
+      ],
+      "format_examples": [
+        {
+          "value": "3,150,000",
+          "context": "After-tax profit"
+        },
+        {
+          "value": "(250,000)",
+          "context": "Net loss"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "corporate",
+        "public_companies"
+      ],
+      "confidence_scoring": {
+        "high_confidence_signals": [
+          "Last line of income statement",
+          "Labeled as 'Net Income' or 'Net Profit'",
+          "Can derive from EBT - taxes"
+        ],
+        "validation_boosters": [
+          "Matches EBT - tax_expense",
+          "Ties to retained earnings change on balance sheet"
+        ]
+      },
+      "regulatory_context": {
+        "sec_forms": [
+          "10-K",
+          "10-Q"
+        ],
+        "required_for": [
+          "public_companies"
+        ],
+        "audit_sensitivity": "critical",
+        "reconciliation_requirements": {
+          "gaap_to_non_gaap": "Must reconcile adjusted net income to GAAP net income in MD&A"
+        }
+      }
+    },
+    {
+      "canonical_name": "net_profit",
+      "category": "income_statement",
+      "display_name": "Net Profit",
+      "aliases": [
+        "Profit",
+        "Net Earnings",
+        "Bottom Line",
+        "Profit After Tax"
+      ],
+      "definition": "Net profit (synonym for net_income)",
+      "typical_sign": "positive",
+      "parent_canonical": "net_income",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "net_margin_pct",
+      "category": "income_statement",
+      "display_name": "Net Margin %",
+      "aliases": [
+        "Net Profit Margin",
+        "Net Margin Percentage",
+        "Profit Margin",
+        "Net Margin"
+      ],
+      "definition": "Net income as a percentage of revenue",
+      "typical_sign": "positive",
+      "parent_canonical": "net_income",
+      "validation_rules": {
+        "type": "percentage",
+        "derivation": "net_income / revenue"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "cash",
+      "category": "balance_sheet",
+      "display_name": "Cash and Cash Equivalents",
+      "aliases": [
+        "Available Cash",
+        "Cash",
+        "Cash & Equivalents",
+        "Cash (Unrestricted)",
+        "Cash Balance",
+        "Cash and Bank Balances",
+        "Cash and Cash Equivalents",
+        "Cash and Short-Term Investments",
+        "Cash at Bank",
+        "Cash on Hand",
+        "Liquid Assets",
+        "Unrestricted Cash",
+        "cahs",
+        "cashs",
+        "csh"
+      ],
+      "definition": "Cash on hand and demand deposits, plus highly liquid short-term investments",
+      "typical_sign": "positive",
+      "parent_canonical": "current_assets",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0,
+        "typical_sign": "positive",
+        "validation_checks": [
+          "cash >= 0",
+          "cash should be part of current_assets"
+        ],
+        "cross_item_validation": {
+          "must_be_positive": true,
+          "relationships": [
+            {
+              "rule": "cash <= current_assets",
+              "error_message": "Cash cannot exceed current assets"
+            }
+          ]
+        }
+      },
+      "ocr_variants": [
+        "Ca sh",
+        "C ash",
+        "CASH",
+        "Cash.",
+        "C\u0251sh",
+        "Cash:"
+      ],
+      "format_examples": [
+        {
+          "value": "5,000,000",
+          "context": "Cash on hand"
+        },
+        {
+          "value": "$5.0M",
+          "context": "Millions"
+        }
+      ],
+      "industry_tags": [
+        "all"
+      ]
+    },
+    {
+      "canonical_name": "cash_and_equivalents",
+      "category": "balance_sheet",
+      "display_name": "Cash and Cash Equivalents",
+      "aliases": [
+        "Cash & Cash Equivalents",
+        "Cash",
+        "Cash and Cash Equiv",
+        "Cash & Equiv",
+        "C&CE"
+      ],
+      "definition": "Cash and cash equivalents (synonym for cash)",
+      "typical_sign": "positive",
+      "parent_canonical": "cash",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "marketable_securities",
+      "category": "balance_sheet",
+      "display_name": "Marketable Securities",
+      "aliases": [
+        "Short-Term Securities",
+        "Trading Securities",
+        "Available-for-Sale Securities"
+      ],
+      "definition": "Liquid financial instruments that can be quickly converted to cash",
+      "typical_sign": "positive",
+      "parent_canonical": "current_assets",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "short_term_investments",
+      "category": "balance_sheet",
+      "display_name": "Short-Term Investments",
+      "aliases": [
+        "ST Investments",
+        "Temporary Investments"
+      ],
+      "definition": "Investments with maturity less than one year",
+      "typical_sign": "positive",
+      "parent_canonical": "current_assets",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "accounts_receivable",
+      "category": "balance_sheet",
+      "display_name": "Accounts Receivable",
+      "aliases": [
+        "A/R",
+        "A/R (Net of Allowance)",
+        "AR",
+        "Accounts Receivable (Net)",
+        "Customer Receivables",
+        "Debtors",
+        "Net Receivables",
+        "Receivables",
+        "Receivables (Net)",
+        "Trade Accounts Receivable",
+        "Trade Debtors",
+        "Trade Receivables",
+        "accounts recievable",
+        "account receivable",
+        "accts receivable"
+      ],
+      "definition": "Amounts owed by customers for goods or services delivered on credit",
+      "typical_sign": "positive",
+      "parent_canonical": "current_assets",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0,
+        "typical_sign": "positive",
+        "validation_checks": [
+          "accounts_receivable >= 0",
+          "DSO = (accounts_receivable / revenue) * 365 should be 30-90 days"
+        ],
+        "industry_benchmarks": {
+          "saas": {
+            "dso_days": [
+              30,
+              60
+            ],
+            "description": "SaaS DSO typically 30-60 days"
+          },
+          "manufacturing": {
+            "dso_days": [
+              45,
+              75
+            ],
+            "description": "Manufacturing DSO typically 45-75 days"
+          }
+        },
+        "cross_item_validation": {
+          "must_be_positive": true,
+          "relationships": [
+            {
+              "rule": "accounts_receivable <= revenue * 0.5",
+              "error_message": "AR >50% of revenue may indicate collection issues",
+              "warning_only": true
+            }
+          ]
+        }
+      },
+      "ocr_variants": [
+        "Accounts Receiv able",
+        "Accounts-Receivable",
+        "ACCOUNTS RECEIVABLE",
+        "Accounts R\u0247ceivable",
+        "Accts Receivable",
+        "A/R"
+      ],
+      "format_examples": [
+        {
+          "value": "2,500,000",
+          "context": "Trade receivables"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "manufacturing",
+        "services",
+        "wholesale"
+      ]
+    },
+    {
+      "canonical_name": "ar",
+      "category": "balance_sheet",
+      "display_name": "AR",
+      "aliases": [
+        "A/R",
+        "Accounts Rec",
+        "Trade Receivables",
+        "Accts Receivable"
+      ],
+      "definition": "Accounts receivable (abbreviation)",
+      "typical_sign": "positive",
+      "parent_canonical": "accounts_receivable",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "receivables",
+      "category": "balance_sheet",
+      "display_name": "Receivables",
+      "aliases": [
+        "Total Receivables",
+        "All Receivables",
+        "Receivables Total",
+        "Sum of Receivables"
+      ],
+      "definition": "Receivables (synonym for accounts_receivable)",
+      "typical_sign": "positive",
+      "parent_canonical": "accounts_receivable",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "allowance_doubtful_accounts",
+      "category": "balance_sheet",
+      "display_name": "Allowance for Doubtful Accounts",
+      "aliases": [
+        "Bad Debt Reserve",
+        "Allowance for Bad Debts",
+        "Doubtful Accounts"
+      ],
+      "definition": "Estimated uncollectible accounts receivable",
+      "typical_sign": "negative",
+      "parent_canonical": "accounts_receivable",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "inventory",
+      "category": "balance_sheet",
+      "display_name": "Inventory",
+      "aliases": [
+        "Finished Goods",
+        "Inventories",
+        "Inventory (Net)",
+        "Inventory Stock",
+        "Merchandise Inventory",
+        "Raw Materials",
+        "Stock",
+        "Total Inventory",
+        "WIP",
+        "Work in Process",
+        "Work in Progress",
+        "inventroy",
+        "inventry",
+        "inventoyr"
+      ],
+      "definition": "Goods held for sale or raw materials for production",
+      "typical_sign": "positive",
+      "parent_canonical": "current_assets",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0,
+        "typical_sign": "positive",
+        "validation_checks": [
+          "inventory >= 0",
+          "Days_Inventory = (inventory / cogs) * 365 should be reasonable"
+        ],
+        "industry_benchmarks": {
+          "manufacturing": {
+            "days_inventory": [
+              30,
+              90
+            ],
+            "description": "Manufacturing inventory 30-90 days"
+          },
+          "retail": {
+            "days_inventory": [
+              45,
+              90
+            ],
+            "description": "Retail inventory 45-90 days"
+          }
+        },
+        "cross_item_validation": {
+          "must_be_positive": true,
+          "relationships": [
+            {
+              "rule": "inventory <= current_assets",
+              "error_message": "Inventory cannot exceed current assets"
+            }
+          ]
+        }
+      },
+      "ocr_variants": [
+        "Invent ory",
+        "Inven tory",
+        "INVENTORY",
+        "lnventory",
+        "Invent\u03bfry",
+        "Inventory."
+      ],
+      "format_examples": [
+        {
+          "value": "3,000,000",
+          "context": "Finished goods + WIP"
+        }
+      ],
+      "industry_tags": [
+        "manufacturing",
+        "retail",
+        "wholesale",
+        "ecommerce"
+      ],
+      "accounting_standards": {
+        "us_gaap": {
+          "guidance": "ASC 330 - Inventory",
+          "valuation_methods": [
+            "FIFO",
+            "LIFO",
+            "Weighted Average"
+          ],
+          "lower_of": "cost or market (NRV after 2015)"
+        },
+        "ifrs": {
+          "guidance": "IAS 2 - Inventories",
+          "valuation_methods": [
+            "FIFO",
+            "Weighted Average"
+          ],
+          "lower_of": "cost or net realizable value",
+          "differences": "IFRS prohibits LIFO; US GAAP allows LIFO"
+        }
+      }
+    },
+    {
+      "canonical_name": "inventories",
+      "category": "balance_sheet",
+      "display_name": "Inventories",
+      "aliases": [
+        "Total Inventory",
+        "Inventory Total",
+        "Stock",
+        "Merchandise Inventory"
+      ],
+      "definition": "Inventories (synonym for inventory)",
+      "typical_sign": "positive",
+      "parent_canonical": "inventory",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "prepaid_expenses",
+      "category": "balance_sheet",
+      "display_name": "Prepaid Expenses",
+      "aliases": [
+        "Prepaid Assets",
+        "Prepaids",
+        "Prepayments"
+      ],
+      "definition": "Expenses paid in advance for future periods",
+      "typical_sign": "positive",
+      "parent_canonical": "current_assets",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "other_current_assets",
+      "category": "balance_sheet",
+      "display_name": "Other Current Assets",
+      "aliases": [
+        "Other CA",
+        "Miscellaneous Current Assets"
+      ],
+      "definition": "Other current assets not classified elsewhere",
+      "typical_sign": "positive",
+      "parent_canonical": "current_assets",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "current_assets",
+      "category": "balance_sheet",
+      "display_name": "Current Assets",
+      "aliases": [
+        "CA",
+        "Current Assets Total",
+        "Liquid Assets",
+        "Short Term Assets",
+        "Short-Term Assets",
+        "Total Current Assets",
+        "Working Assets"
+      ],
+      "definition": "Assets expected to be converted to cash within one year",
+      "typical_sign": "positive",
+      "parent_canonical": "total_assets",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0,
+        "typical_sign": "positive",
+        "derivation": "cash + accounts_receivable + inventory + other_current_assets",
+        "validation_checks": [
+          "current_assets = sum of all current asset line items",
+          "current_assets > cash"
+        ]
+      },
+      "ocr_variants": [
+        "Current Ass ets",
+        "Current-Assets",
+        "CURRENT ASSETS",
+        "Curr\u0247nt Assets",
+        "Current Ass\u0247ts"
+      ],
+      "format_examples": [
+        {
+          "value": "12,000,000",
+          "context": "Liquid assets"
+        }
+      ],
+      "industry_tags": [
+        "all"
+      ]
+    },
+    {
+      "canonical_name": "total_current_assets",
+      "category": "balance_sheet",
+      "display_name": "Total Current Assets",
+      "aliases": [
+        "Sum of Current Assets",
+        "Current Assets Total",
+        "TCA",
+        "All Current Assets"
+      ],
+      "definition": "Total current assets (synonym for current_assets)",
+      "typical_sign": "positive",
+      "parent_canonical": "current_assets",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "ppe",
+      "category": "balance_sheet",
+      "display_name": "Property, Plant & Equipment",
+      "aliases": [
+        "Capital Assets",
+        "Fixed Assets",
+        "Gross PP&E",
+        "Net PP&E",
+        "Net PPE",
+        "PP&E",
+        "PP&E (Net)",
+        "Plant and Equipment",
+        "Property Plant & Equipment",
+        "Property Plant and Equipment",
+        "Property and Equipment",
+        "Tangible Assets",
+        "Tangible Fixed Assets"
+      ],
+      "definition": "Net value of tangible long-term assets used in operations",
+      "typical_sign": "positive",
+      "parent_canonical": "non_current_assets",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "ocr_variants": [
+        "PP E",
+        "P P E",
+        "PP&E",
+        "PPE.",
+        "PP\u0246",
+        "PP+E"
+      ],
+      "format_examples": [
+        {
+          "value": "15,000,000",
+          "context": "Net property value"
+        }
+      ],
+      "industry_tags": [
+        "manufacturing",
+        "real_estate",
+        "capital_intensive"
+      ]
+    },
+    {
+      "canonical_name": "property_plant_equipment",
+      "category": "balance_sheet",
+      "display_name": "Property, Plant & Equipment",
+      "aliases": [
+        "PPE",
+        "PP&E",
+        "Property Plant and Equipment",
+        "Plant Property Equipment"
+      ],
+      "definition": "Property, plant, and equipment (synonym for ppe)",
+      "typical_sign": "positive",
+      "parent_canonical": "ppe",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "fixed_assets",
+      "category": "balance_sheet",
+      "display_name": "Fixed Assets",
+      "aliases": [
+        "Net Fixed Assets",
+        "Fixed Asset",
+        "FA",
+        "Long-Term Assets"
+      ],
+      "definition": "Fixed assets (synonym for ppe)",
+      "typical_sign": "positive",
+      "parent_canonical": "ppe",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "gross_ppe",
+      "category": "balance_sheet",
+      "display_name": "Gross PP&E",
+      "aliases": [
+        "Gross Property Plant Equipment",
+        "PPE at Cost"
+      ],
+      "definition": "Original cost of property, plant, and equipment before depreciation",
+      "typical_sign": "positive",
+      "parent_canonical": "ppe",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "accumulated_depreciation",
+      "category": "balance_sheet",
+      "display_name": "Accumulated Depreciation",
+      "aliases": [
+        "Accum Depreciation",
+        "Total Depreciation"
+      ],
+      "definition": "Cumulative depreciation of property, plant, and equipment",
+      "typical_sign": "negative",
+      "parent_canonical": "ppe",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "net_ppe",
+      "category": "balance_sheet",
+      "display_name": "Net PP&E",
+      "aliases": [
+        "Net Property Plant Equipment",
+        "Net PPE",
+        "PP&E Net",
+        "Property Plant Equipment Net"
+      ],
+      "definition": "Net PP&E after accumulated depreciation",
+      "typical_sign": "positive",
+      "parent_canonical": "ppe",
+      "validation_rules": {
+        "type": "currency",
+        "derivation": "gross_ppe - accumulated_depreciation"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "intangibles",
+      "category": "balance_sheet",
+      "display_name": "Intangible Assets",
+      "aliases": [
+        "Intangibles",
+        "Intangible Assets (excl. Goodwill)",
+        "Other Intangibles"
+      ],
+      "definition": "Non-physical assets such as patents, trademarks, and software",
+      "typical_sign": "positive",
+      "parent_canonical": "non_current_assets",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "ocr_variants": [
+        "Intang ibles",
+        "Intangi bles",
+        "INTANGIBLES",
+        "lntangibles",
+        "Int\u0251ngibles"
+      ],
+      "format_examples": [
+        {
+          "value": "5,000,000",
+          "context": "Patents, trademarks"
+        }
+      ],
+      "industry_tags": [
+        "technology",
+        "pharma",
+        "biotech",
+        "media"
+      ]
+    },
+    {
+      "canonical_name": "intangible_assets",
+      "category": "balance_sheet",
+      "display_name": "Intangible Assets",
+      "aliases": [
+        "Intangibles Net",
+        "Intangibles",
+        "Intangible Asset",
+        "Net Intangibles"
+      ],
+      "definition": "Intangible assets (synonym for intangibles)",
+      "typical_sign": "positive",
+      "parent_canonical": "intangibles",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "goodwill",
+      "category": "balance_sheet",
+      "display_name": "Goodwill",
+      "aliases": [
+        "Goodwill and Intangibles",
+        "GW",
+        "Goodwill & Intangible Assets",
+        "Acquired Goodwill"
+      ],
+      "definition": "Excess of purchase price over fair value of acquired net assets",
+      "typical_sign": "positive",
+      "parent_canonical": "non_current_assets",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "ocr_variants": [
+        "Good will",
+        "Good-will",
+        "GOODWILL",
+        "Goodwill.",
+        "G\u03bfodwill"
+      ],
+      "format_examples": [
+        {
+          "value": "20,000,000",
+          "context": "Acquisition premium"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "rollup",
+        "private_equity"
+      ],
+      "accounting_standards": {
+        "us_gaap": {
+          "guidance": "ASC 350-20 - Goodwill",
+          "treatment": "Impairment testing only (no amortization)",
+          "testing_frequency": "Annual or when triggering event occurs"
+        },
+        "ifrs": {
+          "guidance": "IAS 36 - Impairment of Assets",
+          "treatment": "Impairment testing only (no amortization)",
+          "testing_frequency": "Annual",
+          "differences": "IFRS prohibits reversal of goodwill impairment; US GAAP also prohibits reversal"
+        }
+      },
+      "regulatory_context": {
+        "sec_forms": [
+          "10-K"
+        ],
+        "required_for": [
+          "public_companies",
+          "companies_with_acquisitions"
+        ],
+        "audit_sensitivity": "high",
+        "footnote_triggers": [
+          "Goodwill impairment",
+          "Acquisitions",
+          "Annual impairment testing results"
+        ]
+      }
+    },
+    {
+      "canonical_name": "long_term_investments",
+      "category": "balance_sheet",
+      "display_name": "Long-Term Investments",
+      "aliases": [
+        "LT Investments",
+        "Non-Current Investments",
+        "Investments"
+      ],
+      "definition": "Investments held for more than one year",
+      "typical_sign": "positive",
+      "parent_canonical": "non_current_assets",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "investments",
+      "category": "balance_sheet",
+      "display_name": "Investments",
+      "aliases": [
+        "Total Investments",
+        "Long-Term Investments",
+        "Investment Portfolio",
+        "LT Investments"
+      ],
+      "definition": "Investments (synonym for long_term_investments)",
+      "typical_sign": "positive",
+      "parent_canonical": "long_term_investments",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "deferred_tax_assets",
+      "category": "balance_sheet",
+      "display_name": "Deferred Tax Assets",
+      "aliases": [
+        "DTA",
+        "Deferred Tax Asset"
+      ],
+      "definition": "Future tax benefits from timing differences and tax loss carryforwards",
+      "typical_sign": "positive",
+      "parent_canonical": "non_current_assets",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "other_non_current_assets",
+      "category": "balance_sheet",
+      "display_name": "Other Non-Current Assets",
+      "aliases": [
+        "Other LT Assets",
+        "Other Long-Term Assets",
+        "Miscellaneous Non-Current Assets"
+      ],
+      "definition": "Other long-term assets not classified elsewhere",
+      "typical_sign": "positive",
+      "parent_canonical": "non_current_assets",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "non_current_assets",
+      "category": "balance_sheet",
+      "display_name": "Non-Current Assets",
+      "aliases": [
+        "Long-Term Assets",
+        "LT Assets",
+        "Total Non-Current Assets"
+      ],
+      "definition": "Assets not expected to be converted to cash within one year",
+      "typical_sign": "positive",
+      "parent_canonical": "total_assets",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "total_assets",
+      "category": "balance_sheet",
+      "display_name": "Total Assets",
+      "aliases": [
+        "All Assets",
+        "Asset Total",
+        "Assets",
+        "Assets Total",
+        "Sum of Assets",
+        "Total Assets",
+        "Total Consolidated Assets",
+        "total asset",
+        "toal assets",
+        "totl assets"
+      ],
+      "definition": "Sum of all current and non-current assets",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0,
+        "derivation": "current_assets + non_current_assets",
+        "typical_sign": "positive",
+        "validation_checks": [
+          "total_assets = current_assets + non_current_assets",
+          "total_assets = total_liabilities + total_equity (balance sheet equation)"
+        ],
+        "cross_item_validation": {
+          "must_be_positive": true,
+          "relationships": [
+            {
+              "rule": "total_assets == current_assets + non_current_assets",
+              "tolerance": 0.01,
+              "error_message": "Total assets must equal current + non-current assets"
+            },
+            {
+              "rule": "total_assets == total_liabilities + total_equity",
+              "tolerance": 0.01,
+              "error_message": "Fundamental accounting equation: Assets = Liabilities + Equity",
+              "critical": true
+            }
+          ]
+        }
+      },
+      "ocr_variants": [
+        "Total Ass ets",
+        "Total-Assets",
+        "TOTAL ASSETS",
+        "Tot\u0251l Assets",
+        "Total Ass\u0247ts",
+        "Total Assets."
+      ],
+      "format_examples": [
+        {
+          "value": "50,000,000",
+          "context": "Enterprise balance sheet"
+        }
+      ],
+      "industry_tags": [
+        "all"
+      ],
+      "confidence_scoring": {
+        "high_confidence_signals": [
+          "Labeled as 'Total Assets'",
+          "Last line of assets section",
+          "Equals liabilities + equity"
+        ],
+        "validation_boosters": [
+          "Satisfies A = L + E equation",
+          "Equals sum of current + non-current assets"
+        ]
+      }
+    },
+    {
+      "canonical_name": "accounts_payable",
+      "category": "balance_sheet",
+      "display_name": "Accounts Payable",
+      "aliases": [
+        "A/P",
+        "AP",
+        "Accounts Payable (Trade)",
+        "Creditors",
+        "Payables",
+        "Supplier Payables",
+        "Trade Accounts Payable",
+        "Trade Creditors",
+        "Trade Payables"
+      ],
+      "definition": "Amounts owed to suppliers for goods or services received on credit",
+      "typical_sign": "positive",
+      "parent_canonical": "current_liabilities",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "ocr_variants": [
+        "Accounts Pay able",
+        "Accounts-Payable",
+        "ACCOUNTS PAYABLE",
+        "Accounts P\u0251yable",
+        "Accts Payable",
+        "A/P"
+      ],
+      "format_examples": [
+        {
+          "value": "1,800,000",
+          "context": "Trade payables"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "manufacturing",
+        "retail"
+      ]
+    },
+    {
+      "canonical_name": "ap",
+      "category": "balance_sheet",
+      "display_name": "AP",
+      "aliases": [
+        "A/P",
+        "Accounts Pay",
+        "Trade Payables",
+        "Accts Payable"
+      ],
+      "definition": "Accounts payable (abbreviation)",
+      "typical_sign": "positive",
+      "parent_canonical": "accounts_payable",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "payables",
+      "category": "balance_sheet",
+      "display_name": "Payables",
+      "aliases": [
+        "Total Payables",
+        "All Payables",
+        "Payables Total",
+        "Sum of Payables"
+      ],
+      "definition": "Payables (synonym for accounts_payable)",
+      "typical_sign": "positive",
+      "parent_canonical": "accounts_payable",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "accrued_expenses",
+      "category": "balance_sheet",
+      "display_name": "Accrued Expenses",
+      "aliases": [
+        "Accrued Liabilities",
+        "Accruals",
+        "Accrued Expenses and Other Liabilities"
+      ],
+      "definition": "Expenses incurred but not yet paid",
+      "typical_sign": "positive",
+      "parent_canonical": "current_liabilities",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "ocr_variants": [
+        "Accrued Exp enses",
+        "Accrued-Expenses",
+        "ACCRUED EXPENSES",
+        "Accru\u0247d Expenses",
+        "Accrued Exp\u0247nses"
+      ],
+      "format_examples": [
+        {
+          "value": "500,000",
+          "context": "Wages, interest accrued"
+        }
+      ],
+      "industry_tags": [
+        "all"
+      ]
+    },
+    {
+      "canonical_name": "accrued_liabilities",
+      "category": "balance_sheet",
+      "display_name": "Accrued Liabilities",
+      "aliases": [
+        "Accrued Expenses Payable",
+        "Accrued Liabs",
+        "Accruals",
+        "Accrued Expenses"
+      ],
+      "definition": "Accrued liabilities (synonym for accrued_expenses)",
+      "typical_sign": "positive",
+      "parent_canonical": "accrued_expenses",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "short_term_debt",
+      "category": "balance_sheet",
+      "display_name": "Short-Term Debt",
+      "aliases": [
+        "ST Debt",
+        "Short Term Borrowings",
+        "Current Debt"
+      ],
+      "definition": "Debt obligations due within one year",
+      "typical_sign": "positive",
+      "parent_canonical": "current_liabilities",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "ocr_variants": [
+        "Short-Term De bt",
+        "Short Term Debt",
+        "SHORT-TERM DEBT",
+        "Sh\u03bfrt-Term Debt",
+        "ST Debt"
+      ],
+      "format_examples": [
+        {
+          "value": "2,000,000",
+          "context": "Debt due within 1 year"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "leveraged"
+      ]
+    },
+    {
+      "canonical_name": "current_portion_lt_debt",
+      "category": "balance_sheet",
+      "display_name": "Current Portion of Long-Term Debt",
+      "aliases": [
+        "Current Portion LT Debt",
+        "CPLTD",
+        "Current Maturities"
+      ],
+      "definition": "Portion of long-term debt due within one year",
+      "typical_sign": "positive",
+      "parent_canonical": "current_liabilities",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "current_portion_debt",
+      "category": "balance_sheet",
+      "display_name": "Current Portion of Debt",
+      "aliases": [
+        "CP Debt",
+        "Current Debt",
+        "Short-Term Portion of LT Debt",
+        "CPLTD"
+      ],
+      "definition": "Current portion of debt (synonym for current_portion_lt_debt)",
+      "typical_sign": "positive",
+      "parent_canonical": "current_portion_lt_debt",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "deferred_revenue",
+      "category": "balance_sheet",
+      "display_name": "Deferred Revenue",
+      "aliases": [
+        "Unearned Revenue",
+        "Deferred Income",
+        "Customer Deposits",
+        "Advance Payments"
+      ],
+      "definition": "Revenue received in advance for goods or services not yet delivered",
+      "typical_sign": "positive",
+      "parent_canonical": "current_liabilities",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "unearned_revenue",
+      "category": "balance_sheet",
+      "display_name": "Unearned Revenue",
+      "aliases": [
+        "Prepaid Revenue",
+        "Deferred Revenue",
+        "Advance Payments",
+        "Customer Deposits"
+      ],
+      "definition": "Unearned revenue (synonym for deferred_revenue)",
+      "typical_sign": "positive",
+      "parent_canonical": "deferred_revenue",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "other_current_liabilities",
+      "category": "balance_sheet",
+      "display_name": "Other Current Liabilities",
+      "aliases": [
+        "Other CL",
+        "Miscellaneous Current Liabilities"
+      ],
+      "definition": "Other current liabilities not classified elsewhere",
+      "typical_sign": "positive",
+      "parent_canonical": "current_liabilities",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "current_liabilities",
+      "category": "balance_sheet",
+      "display_name": "Current Liabilities",
+      "aliases": [
+        "CL",
+        "Current Liabilities Total",
+        "Short Term Liabilities",
+        "Short-Term Liabilities",
+        "Total Current Liabilities"
+      ],
+      "definition": "Liabilities due within one year",
+      "typical_sign": "positive",
+      "parent_canonical": "total_liabilities",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0,
+        "typical_sign": "positive",
+        "derivation": "accounts_payable + short_term_debt + other_current_liabilities",
+        "validation_checks": [
+          "current_liabilities = sum of all current liability line items"
+        ]
+      },
+      "ocr_variants": [
+        "Current Liabil ities",
+        "Current-Liabilities",
+        "CURRENT LIABILITIES",
+        "Curr\u0247nt Liabilities",
+        "Current Li\u0251bilities"
+      ],
+      "format_examples": [
+        {
+          "value": "8,000,000",
+          "context": "Short-term obligations"
+        }
+      ],
+      "industry_tags": [
+        "all"
+      ]
+    },
+    {
+      "canonical_name": "total_current_liabilities",
+      "category": "balance_sheet",
+      "display_name": "Total Current Liabilities",
+      "aliases": [
+        "Sum of Current Liabilities",
+        "Current Liabilities Total",
+        "TCL",
+        "All Current Liabilities"
+      ],
+      "definition": "Total current liabilities (synonym for current_liabilities)",
+      "typical_sign": "positive",
+      "parent_canonical": "current_liabilities",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "long_term_debt",
+      "category": "balance_sheet",
+      "display_name": "Long-Term Debt",
+      "aliases": [
+        "Bank Debt",
+        "Debt",
+        "Debt (Long-Term)",
+        "LT Debt",
+        "LTD",
+        "Long Term Borrowings",
+        "Long Term Debt",
+        "Long-Term Borrowings",
+        "Non-Current Debt",
+        "Term Debt"
+      ],
+      "definition": "Debt obligations due after one year",
+      "typical_sign": "positive",
+      "parent_canonical": "non_current_liabilities",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "ocr_variants": [
+        "Long-Term De bt",
+        "Long Term Debt",
+        "LONG-TERM DEBT",
+        "L\u03bfng-Term Debt",
+        "LT Debt"
+      ],
+      "format_examples": [
+        {
+          "value": "15,000,000",
+          "context": "Debt due after 1 year"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "leveraged",
+        "real_estate"
+      ]
+    },
+    {
+      "canonical_name": "debt",
+      "category": "balance_sheet",
+      "display_name": "Debt",
+      "aliases": [
+        "Total Debt",
+        "Borrowings"
+      ],
+      "definition": "Total debt (synonym for long_term_debt in balance sheet context)",
+      "typical_sign": "positive",
+      "parent_canonical": "long_term_debt",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "pension_liabilities",
+      "category": "balance_sheet",
+      "display_name": "Pension Liabilities",
+      "aliases": [
+        "Pension Obligations",
+        "Retirement Benefit Obligations"
+      ],
+      "definition": "Unfunded pension obligations",
+      "typical_sign": "positive",
+      "parent_canonical": "non_current_liabilities",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "deferred_tax_liabilities",
+      "category": "balance_sheet",
+      "display_name": "Deferred Tax Liabilities",
+      "aliases": [
+        "DTL",
+        "Deferred Tax Liability"
+      ],
+      "definition": "Future tax obligations from timing differences",
+      "typical_sign": "positive",
+      "parent_canonical": "non_current_liabilities",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "other_non_current_liabilities",
+      "category": "balance_sheet",
+      "display_name": "Other Non-Current Liabilities",
+      "aliases": [
+        "Other LT Liabilities",
+        "Other Long-Term Liabilities"
+      ],
+      "definition": "Other long-term liabilities not classified elsewhere",
+      "typical_sign": "positive",
+      "parent_canonical": "non_current_liabilities",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "non_current_liabilities",
+      "category": "balance_sheet",
+      "display_name": "Non-Current Liabilities",
+      "aliases": [
+        "Long-Term Liabilities",
+        "LT Liabilities",
+        "Total Non-Current Liabilities"
+      ],
+      "definition": "Liabilities due after one year",
+      "typical_sign": "positive",
+      "parent_canonical": "total_liabilities",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "total_liabilities",
+      "category": "balance_sheet",
+      "display_name": "Total Liabilities",
+      "aliases": [
+        "Liabilities",
+        "Total Liabilities",
+        "total liabilites",
+        "total liabilitie",
+        "toal liabilities"
+      ],
+      "definition": "Sum of all current and non-current liabilities",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0,
+        "derivation": "current_liabilities + non_current_liabilities",
+        "cross_item_validation": {
+          "must_be_positive": true,
+          "relationships": [
+            {
+              "rule": "total_liabilities == current_liabilities + non_current_liabilities",
+              "tolerance": 0.01
+            }
+          ]
+        }
+      },
+      "ocr_variants": [
+        "Total Liabil ities",
+        "Total-Liabilities",
+        "TOTAL LIABILITIES",
+        "Tot\u0251l Liabilities",
+        "Total Li\u0251bilities"
+      ],
+      "format_examples": [
+        {
+          "value": "30,000,000",
+          "context": "All obligations"
+        }
+      ],
+      "industry_tags": [
+        "all"
+      ]
+    },
+    {
+      "canonical_name": "common_stock",
+      "category": "balance_sheet",
+      "display_name": "Common Stock",
+      "aliases": [
+        "Common Shares",
+        "Ordinary Shares",
+        "Common Equity"
+      ],
+      "definition": "Par value of common stock issued",
+      "typical_sign": "positive",
+      "parent_canonical": "total_equity",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "ocr_variants": [
+        "Common St ock",
+        "Common-Stock",
+        "COMMON STOCK",
+        "Comm\u03bfn Stock",
+        "Common St\u03bfck"
+      ],
+      "format_examples": [
+        {
+          "value": "1,000,000",
+          "context": "Par value"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "public_companies"
+      ]
+    },
+    {
+      "canonical_name": "preferred_stock",
+      "category": "balance_sheet",
+      "display_name": "Preferred Stock",
+      "aliases": [
+        "Preferred Shares",
+        "Preference Shares"
+      ],
+      "definition": "Par value of preferred stock issued",
+      "typical_sign": "positive",
+      "parent_canonical": "total_equity",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "apic",
+      "category": "balance_sheet",
+      "display_name": "Additional Paid-In Capital",
+      "aliases": [
+        "APIC",
+        "Additional Paid in Capital",
+        "Capital in Excess of Par",
+        "Share Premium"
+      ],
+      "definition": "Amount received from stock issuances above par value",
+      "typical_sign": "positive",
+      "parent_canonical": "total_equity",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "additional_paid_in_capital",
+      "category": "balance_sheet",
+      "display_name": "Additional Paid-In Capital",
+      "aliases": [
+        "Paid-In Capital",
+        "APIC",
+        "Capital in Excess of Par",
+        "Share Premium"
+      ],
+      "definition": "Additional paid-in capital (synonym for apic)",
+      "typical_sign": "positive",
+      "parent_canonical": "apic",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "retained_earnings",
+      "category": "balance_sheet",
+      "display_name": "Retained Earnings",
+      "aliases": [
+        "Accumulated Earnings",
+        "Accumulated Profits",
+        "Accumulated Retained Earnings",
+        "Earnings Retained",
+        "RE",
+        "Retained Income",
+        "Retained Profits",
+        "Retained Surplus",
+        "Undistributed Profits"
+      ],
+      "definition": "Cumulative net income retained in the business",
+      "typical_sign": "positive",
+      "parent_canonical": "total_equity",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "ocr_variants": [
+        "Retained Earn ings",
+        "Retained-Earnings",
+        "RETAINED EARNINGS",
+        "Ret\u0251ined Earnings",
+        "Retained \u0246arnings"
+      ],
+      "format_examples": [
+        {
+          "value": "8,000,000",
+          "context": "Accumulated profits"
+        },
+        {
+          "value": "(2,000,000)",
+          "context": "Accumulated deficit"
+        }
+      ],
+      "industry_tags": [
+        "all"
+      ]
+    },
+    {
+      "canonical_name": "treasury_stock",
+      "category": "balance_sheet",
+      "display_name": "Treasury Stock",
+      "aliases": [
+        "Treasury Shares",
+        "Repurchased Stock"
+      ],
+      "definition": "Company's own stock repurchased and held (contra-equity)",
+      "typical_sign": "negative",
+      "parent_canonical": "total_equity",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "aoci",
+      "category": "balance_sheet",
+      "display_name": "Accumulated Other Comprehensive Income",
+      "aliases": [
+        "AOCI",
+        "Other Comprehensive Income (Loss)",
+        "OCI"
+      ],
+      "definition": "Cumulative gains and losses excluded from net income",
+      "typical_sign": "varies",
+      "parent_canonical": "total_equity",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "accumulated_other_comprehensive_income",
+      "category": "balance_sheet",
+      "display_name": "Accumulated Other Comprehensive Income",
+      "aliases": [
+        "Accumulated OCI",
+        "AOCI",
+        "Other Comprehensive Income Accumulated",
+        "Cumulative OCI"
+      ],
+      "definition": "Accumulated other comprehensive income (synonym for aoci)",
+      "typical_sign": "varies",
+      "parent_canonical": "aoci",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "total_equity",
+      "category": "balance_sheet",
+      "display_name": "Total Equity",
+      "aliases": [
+        "Book Value",
+        "Equity",
+        "Net Worth",
+        "Owners Equity",
+        "SE",
+        "Shareholders Equity",
+        "Shareholders' Equity",
+        "Shareholders' Funds",
+        "Stockholders Equity",
+        "Stockholders' Equity",
+        "Total Equity",
+        "Total Shareholders' Equity",
+        "Total Stockholders' Equity",
+        "total equty",
+        "toal equity",
+        "total equiity"
+      ],
+      "definition": "Residual interest in assets after deducting liabilities",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency",
+        "derivation": "total_assets - total_liabilities",
+        "typical_sign": "positive",
+        "validation_checks": [
+          "total_equity = total_assets - total_liabilities",
+          "total_equity can be negative (insolvent)"
+        ],
+        "cross_item_validation": {
+          "relationships": [
+            {
+              "rule": "total_equity == total_assets - total_liabilities",
+              "tolerance": 0.01,
+              "error_message": "Equity must equal assets minus liabilities",
+              "critical": true
+            }
+          ]
+        }
+      },
+      "ocr_variants": [
+        "Total Equ ity",
+        "Total-Equity",
+        "TOTAL EQUITY",
+        "Tot\u0251l Equity",
+        "Total Equi\u01ady"
+      ],
+      "format_examples": [
+        {
+          "value": "20,000,000",
+          "context": "Shareholder equity"
+        }
+      ],
+      "industry_tags": [
+        "all"
+      ],
+      "confidence_scoring": {
+        "validation_boosters": [
+          "Satisfies A = L + E equation",
+          "Change in equity matches net income - dividends"
+        ]
+      }
+    },
+    {
+      "canonical_name": "shareholders_equity",
+      "category": "balance_sheet",
+      "display_name": "Shareholders' Equity",
+      "aliases": [
+        "Shareholder Equity",
+        "Shareholders Equity",
+        "Equity of Shareholders",
+        "SE"
+      ],
+      "definition": "Shareholders' equity (synonym for total_equity)",
+      "typical_sign": "positive",
+      "parent_canonical": "total_equity",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "stockholders_equity",
+      "category": "balance_sheet",
+      "display_name": "Stockholders' Equity",
+      "aliases": [
+        "Stockholder Equity",
+        "Stockholders Equity",
+        "Equity of Stockholders",
+        "SHE"
+      ],
+      "definition": "Stockholders' equity (synonym for total_equity)",
+      "typical_sign": "positive",
+      "parent_canonical": "total_equity",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "cfo",
+      "category": "cash_flow",
+      "display_name": "Cash Flow from Operations",
+      "aliases": [
+        "CFO",
+        "Cash Flow from Operations",
+        "Cash Generated from Operations",
+        "Cash from Operating Activities",
+        "Cash from Operations",
+        "Net Cash from Operations",
+        "OCF",
+        "Operating Activities",
+        "Operating Activities Cash Flow",
+        "Operating CF",
+        "Operating Cash Flow",
+        "cash from operation",
+        "operating cash",
+        "cash flow operations"
+      ],
+      "definition": "Cash generated or used by core operating activities",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency",
+        "typical_sign": "positive",
+        "validation_checks": [
+          "cfo should correlate with net_income",
+          "cfo typically > net_income (non-cash charges)"
+        ],
+        "industry_benchmarks": {
+          "saas": {
+            "cfo_to_revenue": [
+              0.15,
+              0.35
+            ],
+            "description": "SaaS CFO typically 15-35% of revenue"
+          },
+          "manufacturing": {
+            "cfo_to_revenue": [
+              0.08,
+              0.15
+            ],
+            "description": "Manufacturing CFO typically 8-15% of revenue"
+          }
+        },
+        "cross_item_validation": {
+          "relationships": [
+            {
+              "rule": "net_change_cash == cfo + cfi + cff",
+              "tolerance": 0.01,
+              "error_message": "Net change in cash should equal sum of CFO + CFI + CFF"
+            }
+          ]
+        }
+      },
+      "ocr_variants": [
+        "CF O",
+        "C FO",
+        "CFO.",
+        "CF0",
+        "C\u0191O",
+        "CFO:"
+      ],
+      "format_examples": [
+        {
+          "value": "6,000,000",
+          "context": "Positive operating cash"
+        },
+        {
+          "value": "(500,000)",
+          "context": "Cash burn"
+        }
+      ],
+      "industry_tags": [
+        "all"
+      ]
+    },
+    {
+      "canonical_name": "operating_cash_flow",
+      "category": "cash_flow",
+      "display_name": "Operating Cash Flow",
+      "aliases": [
+        "Op Cash Flow",
+        "OCF",
+        "Cash Flow from Operating Activities",
+        "Operating CF"
+      ],
+      "definition": "Operating cash flow (synonym for cfo)",
+      "typical_sign": "positive",
+      "parent_canonical": "cfo",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "cash_from_operations",
+      "category": "cash_flow",
+      "display_name": "Cash from Operations",
+      "aliases": [
+        "Cash Generated by Operations",
+        "Operating Cash",
+        "Cash from Ops",
+        "CFO"
+      ],
+      "definition": "Cash from operations (synonym for cfo)",
+      "typical_sign": "positive",
+      "parent_canonical": "cfo",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "net_income_cf",
+      "category": "cash_flow",
+      "display_name": "Net Income (CF)",
+      "aliases": [
+        "Net Income - CF Statement",
+        "Net Earnings - CF"
+      ],
+      "definition": "Net income as starting point for cash flow statement",
+      "typical_sign": "positive",
+      "parent_canonical": "cfo",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "depreciation_cf",
+      "category": "cash_flow",
+      "display_name": "Depreciation (CF)",
+      "aliases": [
+        "Add: Depreciation",
+        "Depreciation Add-Back"
+      ],
+      "definition": "Depreciation added back to net income (non-cash expense)",
+      "typical_sign": "positive",
+      "parent_canonical": "cfo",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "amortization_cf",
+      "category": "cash_flow",
+      "display_name": "Amortization (CF)",
+      "aliases": [
+        "Add: Amortization",
+        "Amortization Add-Back"
+      ],
+      "definition": "Amortization added back to net income (non-cash expense)",
+      "typical_sign": "positive",
+      "parent_canonical": "cfo",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "stock_based_comp",
+      "category": "cash_flow",
+      "display_name": "Stock-Based Compensation",
+      "aliases": [
+        "Stock Based Compensation",
+        "Share-Based Compensation",
+        "Equity Compensation"
+      ],
+      "definition": "Non-cash compensation expense from stock options and grants",
+      "typical_sign": "positive",
+      "parent_canonical": "cfo",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "change_accounts_receivable",
+      "category": "cash_flow",
+      "display_name": "Change in Accounts Receivable",
+      "aliases": [
+        "Change in AR",
+        "Increase (Decrease) in AR",
+        "Working Capital - AR"
+      ],
+      "definition": "Change in accounts receivable (negative = increase in AR, positive = decrease)",
+      "typical_sign": "varies",
+      "parent_canonical": "cfo",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "change_ar",
+      "category": "cash_flow",
+      "display_name": "Change in AR",
+      "aliases": [
+        "Delta AR",
+        "Change in Receivables",
+        "AR Change",
+        "Increase (Decrease) in AR"
+      ],
+      "definition": "Change in accounts receivable (abbreviation)",
+      "typical_sign": "varies",
+      "parent_canonical": "change_accounts_receivable",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "change_inventory",
+      "category": "cash_flow",
+      "display_name": "Change in Inventory",
+      "aliases": [
+        "Increase (Decrease) in Inventory",
+        "Working Capital - Inventory"
+      ],
+      "definition": "Change in inventory (negative = increase, positive = decrease)",
+      "typical_sign": "varies",
+      "parent_canonical": "cfo",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "change_accounts_payable",
+      "category": "cash_flow",
+      "display_name": "Change in Accounts Payable",
+      "aliases": [
+        "Change in AP",
+        "Increase (Decrease) in AP",
+        "Working Capital - AP"
+      ],
+      "definition": "Change in accounts payable (positive = increase, negative = decrease)",
+      "typical_sign": "varies",
+      "parent_canonical": "cfo",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "change_ap",
+      "category": "cash_flow",
+      "display_name": "Change in AP",
+      "aliases": [
+        "Delta AP",
+        "Change in Payables",
+        "AP Change",
+        "Increase (Decrease) in AP"
+      ],
+      "definition": "Change in accounts payable (abbreviation)",
+      "typical_sign": "varies",
+      "parent_canonical": "change_accounts_payable",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "change_working_capital",
+      "category": "cash_flow",
+      "display_name": "Change in Working Capital",
+      "aliases": [
+        "Working Capital Changes",
+        "Change in NWC",
+        "Net Working Capital Change"
+      ],
+      "definition": "Net change in current operating assets and liabilities",
+      "typical_sign": "varies",
+      "parent_canonical": "cfo",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "ocr_variants": [
+        "Change in Work ing Capital",
+        "Change-WC",
+        "CHANGE IN WC",
+        "\u0394WC",
+        "Working Capital Change"
+      ],
+      "format_examples": [
+        {
+          "value": "(500,000)",
+          "context": "WC increase (use of cash)"
+        },
+        {
+          "value": "200,000",
+          "context": "WC decrease (source of cash)"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "manufacturing",
+        "retail"
+      ]
+    },
+    {
+      "canonical_name": "other_operating_activities",
+      "category": "cash_flow",
+      "display_name": "Other Operating Activities",
+      "aliases": [
+        "Other Operating CF",
+        "Miscellaneous Operating Items"
+      ],
+      "definition": "Other cash flows from operating activities",
+      "typical_sign": "varies",
+      "parent_canonical": "cfo",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "cfi",
+      "category": "cash_flow",
+      "display_name": "Cash Flow from Investing",
+      "aliases": [
+        "CFI",
+        "Cash Flow from Investing",
+        "Cash from Investing Activities",
+        "Investing Activities",
+        "Investing Activities Cash Flow",
+        "Investing Cash Flow",
+        "Investment Cash Flow"
+      ],
+      "definition": "Cash generated or used by investment activities",
+      "typical_sign": "negative",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency"
+      },
+      "ocr_variants": [
+        "CF I",
+        "C FI",
+        "CFI.",
+        "CFl",
+        "C\u0191I",
+        "CFI:"
+      ],
+      "format_examples": [
+        {
+          "value": "(3,000,000)",
+          "context": "Capex outflow"
+        }
+      ],
+      "industry_tags": [
+        "all"
+      ]
+    },
+    {
+      "canonical_name": "investing_cash_flow",
+      "category": "cash_flow",
+      "display_name": "Investing Cash Flow",
+      "aliases": [
+        "Inv Cash Flow",
+        "ICF",
+        "Cash Flow from Investing Activities",
+        "Investing CF"
+      ],
+      "definition": "Investing cash flow (synonym for cfi)",
+      "typical_sign": "negative",
+      "parent_canonical": "cfi",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "capex",
+      "category": "cash_flow",
+      "display_name": "Capital Expenditures",
+      "aliases": [
+        "CAPEX",
+        "Cap Ex",
+        "CapEx",
+        "Capital Expenditure",
+        "Capital Expenditures",
+        "Capital Investments",
+        "Capital Spending",
+        "Fixed Asset Additions",
+        "Investment in PP&E",
+        "PP&E Additions",
+        "PP&E Purchases",
+        "Property Additions",
+        "Purchase of Fixed Assets",
+        "Purchases of PP&E"
+      ],
+      "definition": "Cash spent on property, plant, and equipment",
+      "typical_sign": "negative",
+      "parent_canonical": "cfi",
+      "validation_rules": {
+        "type": "currency",
+        "typical_sign": "negative",
+        "validation_checks": [
+          "capex < 0 (it's a cash outflow)",
+          "capex should be reasonable % of revenue"
+        ],
+        "industry_benchmarks": {
+          "saas": {
+            "capex_to_revenue": [
+              0.01,
+              0.05
+            ],
+            "description": "SaaS CapEx typically 1-5% of revenue"
+          },
+          "manufacturing": {
+            "capex_to_revenue": [
+              0.03,
+              0.08
+            ],
+            "description": "Manufacturing CapEx typically 3-8% of revenue"
+          },
+          "real_estate": {
+            "capex_to_revenue": [
+              0.15,
+              0.3
+            ],
+            "description": "Real estate CapEx typically 15-30% of revenue"
+          }
+        }
+      },
+      "ocr_variants": [
+        "Cap ex",
+        "CAPEX",
+        "CapEx",
+        "Cap-Ex",
+        "C\u0251pex",
+        "CAPEX."
+      ],
+      "format_examples": [
+        {
+          "value": "(2,500,000)",
+          "context": "Capital investments"
+        },
+        {
+          "value": "2,500,000",
+          "context": "Positive format"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "manufacturing",
+        "real_estate",
+        "capital_intensive"
+      ]
+    },
+    {
+      "canonical_name": "capital_expenditures",
+      "category": "cash_flow",
+      "display_name": "Capital Expenditures",
+      "aliases": [
+        "Capital Investments",
+        "CapEx",
+        "Cap Ex",
+        "PP&E Purchases"
+      ],
+      "definition": "Capital expenditures (synonym for capex)",
+      "typical_sign": "negative",
+      "parent_canonical": "capex",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "asset_sales",
+      "category": "cash_flow",
+      "display_name": "Proceeds from Asset Sales",
+      "aliases": [
+        "Sale of Assets",
+        "Asset Disposals",
+        "PP&E Sales"
+      ],
+      "definition": "Cash received from sale of property, plant, and equipment",
+      "typical_sign": "positive",
+      "parent_canonical": "cfi",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "proceeds_asset_sales",
+      "category": "cash_flow",
+      "display_name": "Proceeds from Asset Sales",
+      "aliases": [
+        "Proceeds from Sale of PP&E",
+        "Asset Sale Proceeds",
+        "PP&E Sales",
+        "Disposals of Assets"
+      ],
+      "definition": "Proceeds from asset sales (synonym for asset_sales)",
+      "typical_sign": "positive",
+      "parent_canonical": "asset_sales",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "acquisitions",
+      "category": "cash_flow",
+      "display_name": "Acquisitions",
+      "aliases": [
+        "Business Acquisitions",
+        "Purchase of Businesses",
+        "M&A Cash Outflows"
+      ],
+      "definition": "Cash paid for business acquisitions",
+      "typical_sign": "negative",
+      "parent_canonical": "cfi",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "business_acquisitions",
+      "category": "cash_flow",
+      "display_name": "Business Acquisitions",
+      "aliases": [
+        "Acquisitions of Businesses",
+        "M&A Spend",
+        "Acquisition Payments",
+        "Purchase of Businesses"
+      ],
+      "definition": "Business acquisitions (synonym for acquisitions)",
+      "typical_sign": "negative",
+      "parent_canonical": "acquisitions",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "cff",
+      "category": "cash_flow",
+      "display_name": "Cash Flow from Financing",
+      "aliases": [
+        "CFF",
+        "Cash Flow from Financing",
+        "Cash from Financing Activities",
+        "Financing Activities",
+        "Financing Activities Cash Flow",
+        "Financing Cash Flow"
+      ],
+      "definition": "Cash generated or used by financing activities",
+      "typical_sign": "varies",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency"
+      },
+      "ocr_variants": [
+        "CF F",
+        "C FF",
+        "CFF.",
+        "C\u0191F",
+        "CFF:"
+      ],
+      "format_examples": [
+        {
+          "value": "5,000,000",
+          "context": "Debt issuance"
+        },
+        {
+          "value": "(1,000,000)",
+          "context": "Debt repayment"
+        }
+      ],
+      "industry_tags": [
+        "all"
+      ]
+    },
+    {
+      "canonical_name": "financing_cash_flow",
+      "category": "cash_flow",
+      "display_name": "Financing Cash Flow",
+      "aliases": [
+        "Fin Cash Flow",
+        "FCF",
+        "Cash Flow from Financing Activities",
+        "Financing CF"
+      ],
+      "definition": "Financing cash flow (synonym for cff)",
+      "typical_sign": "varies",
+      "parent_canonical": "cff",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "debt_issuance",
+      "category": "cash_flow",
+      "display_name": "Debt Issuance",
+      "aliases": [
+        "Proceeds from Debt",
+        "Debt Proceeds",
+        "Borrowings",
+        "Debt Raised"
+      ],
+      "definition": "Cash received from issuing debt",
+      "typical_sign": "positive",
+      "parent_canonical": "cff",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "debt_proceeds",
+      "category": "cash_flow",
+      "display_name": "Debt Proceeds",
+      "aliases": [
+        "Proceeds from Borrowings",
+        "Debt Issuance",
+        "New Borrowings",
+        "Proceeds from Debt"
+      ],
+      "definition": "Debt proceeds (synonym for debt_issuance)",
+      "typical_sign": "positive",
+      "parent_canonical": "debt_issuance",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "debt_repayment",
+      "category": "cash_flow",
+      "display_name": "Debt Repayment",
+      "aliases": [
+        "Repayment of Debt",
+        "Debt Paydown",
+        "Principal Repayments"
+      ],
+      "definition": "Cash used to repay debt principal",
+      "typical_sign": "negative",
+      "parent_canonical": "cff",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "equity_issuance",
+      "category": "cash_flow",
+      "display_name": "Equity Issuance",
+      "aliases": [
+        "Proceeds from Equity",
+        "Stock Issuance",
+        "Share Issuance"
+      ],
+      "definition": "Cash received from issuing equity",
+      "typical_sign": "positive",
+      "parent_canonical": "cff",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "dividends",
+      "category": "cash_flow",
+      "display_name": "Dividends Paid",
+      "aliases": [
+        "Dividends",
+        "Cash Dividends",
+        "Dividend Payments"
+      ],
+      "definition": "Cash paid as dividends to shareholders",
+      "typical_sign": "negative",
+      "parent_canonical": "cff",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "dividends_paid",
+      "category": "cash_flow",
+      "display_name": "Dividends Paid",
+      "aliases": [
+        "Payment of Dividends",
+        "Dividend Payments",
+        "Cash Dividends",
+        "Dividends"
+      ],
+      "definition": "Dividends paid (synonym for dividends)",
+      "typical_sign": "negative",
+      "parent_canonical": "dividends",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "share_repurchase",
+      "category": "cash_flow",
+      "display_name": "Share Repurchase",
+      "aliases": [
+        "Stock Buyback",
+        "Share Buyback",
+        "Repurchase of Common Stock",
+        "Treasury Stock Purchases"
+      ],
+      "definition": "Cash used to repurchase company's own shares",
+      "typical_sign": "negative",
+      "parent_canonical": "cff",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "stock_buyback",
+      "category": "cash_flow",
+      "display_name": "Stock Buyback",
+      "aliases": [
+        "Buyback",
+        "Share Repurchase",
+        "Stock Repurchase",
+        "Treasury Stock Purchases"
+      ],
+      "definition": "Stock buyback (synonym for share_repurchase)",
+      "typical_sign": "negative",
+      "parent_canonical": "share_repurchase",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "net_change_cash",
+      "category": "cash_flow",
+      "display_name": "Net Change in Cash",
+      "aliases": [
+        "Change in Cash",
+        "Net Increase (Decrease) in Cash",
+        "Net Cash Flow"
+      ],
+      "definition": "Total change in cash from all activities",
+      "typical_sign": "varies",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency",
+        "derivation": "cfo + cfi + cff"
+      },
+      "ocr_variants": [
+        "Net Change in Ca sh",
+        "Net-Change-Cash",
+        "NET CHANGE IN CASH",
+        "Net \u0394 Cash",
+        "Change in Cash"
+      ],
+      "format_examples": [
+        {
+          "value": "2,500,000",
+          "context": "Cash increased"
+        }
+      ],
+      "industry_tags": [
+        "all"
+      ]
+    },
+    {
+      "canonical_name": "change_in_cash",
+      "category": "cash_flow",
+      "display_name": "Change in Cash",
+      "aliases": [
+        "Delta Cash",
+        "Net Change in Cash",
+        "Cash Change",
+        "Increase (Decrease) in Cash"
+      ],
+      "definition": "Change in cash (synonym for net_change_cash)",
+      "typical_sign": "varies",
+      "parent_canonical": "net_change_cash",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "beginning_cash",
+      "category": "cash_flow",
+      "display_name": "Beginning Cash",
+      "aliases": [
+        "Cash at Beginning of Period",
+        "Opening Cash Balance"
+      ],
+      "definition": "Cash balance at start of period",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "ocr_variants": [
+        "Beginning Ca sh",
+        "Beginning-Cash",
+        "BEGINNING CASH",
+        "Cash - Beginning",
+        "Beg. Cash"
+      ],
+      "format_examples": [
+        {
+          "value": "3,000,000",
+          "context": "Starting balance"
+        }
+      ],
+      "industry_tags": [
+        "all"
+      ]
+    },
+    {
+      "canonical_name": "ending_cash",
+      "category": "cash_flow",
+      "display_name": "Ending Cash",
+      "aliases": [
+        "Cash at End of Period",
+        "Closing Cash Balance",
+        "ending cahs",
+        "end cash"
+      ],
+      "definition": "Cash balance at end of period",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0,
+        "derivation": "beginning_cash + net_change_cash",
+        "cross_item_validation": {
+          "relationships": [
+            {
+              "rule": "ending_cash == beginning_cash + net_change_cash",
+              "tolerance": 0.01,
+              "error_message": "Ending cash must equal beginning cash + net change"
+            },
+            {
+              "rule": "ending_cash == cash",
+              "tolerance": 0.01,
+              "error_message": "Ending cash on cash flow should equal cash on balance sheet"
+            }
+          ]
+        }
+      },
+      "ocr_variants": [
+        "Ending Ca sh",
+        "Ending-Cash",
+        "ENDING CASH",
+        "Cash - Ending",
+        "End. Cash"
+      ],
+      "format_examples": [
+        {
+          "value": "5,500,000",
+          "context": "Ending balance"
+        }
+      ],
+      "industry_tags": [
+        "all"
+      ]
+    },
+    {
+      "canonical_name": "fcf",
+      "category": "cash_flow",
+      "display_name": "Free Cash Flow",
+      "aliases": [
+        "Cash Flow After CapEx",
+        "FCF",
+        "FCF (Unlevered)",
+        "Free CF",
+        "Free Cash Flow",
+        "Free Cash Flow to Firm",
+        "Net Free Cash Flow",
+        "Operating Free Cash Flow",
+        "Unlevered Free Cash Flow",
+        "free cash flow",
+        "freecashflow",
+        "fcff"
+      ],
+      "definition": "Operating cash flow minus capital expenditures",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency",
+        "derivation": "cfo + capex",
+        "typical_sign": "positive",
+        "validation_checks": [
+          "fcf = cfo + capex",
+          "fcf = cfo - abs(capex)"
+        ],
+        "industry_benchmarks": {
+          "saas": {
+            "fcf_margin": [
+              0.1,
+              0.3
+            ],
+            "description": "SaaS FCF margin typically 10-30%"
+          },
+          "manufacturing": {
+            "fcf_margin": [
+              0.05,
+              0.12
+            ],
+            "description": "Manufacturing FCF margin typically 5-12%"
+          }
+        },
+        "cross_item_validation": {
+          "relationships": [
+            {
+              "rule": "fcf == cfo - capex",
+              "tolerance": 0.02,
+              "error_message": "FCF should equal CFO minus capex"
+            }
+          ]
+        }
+      },
+      "ocr_variants": [
+        "FC F",
+        "F CF",
+        "FCF.",
+        "FC\u0191",
+        "FCF:"
+      ],
+      "format_examples": [
+        {
+          "value": "3,500,000",
+          "context": "CFO - Capex"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "private_equity",
+        "valuation"
+      ],
+      "confidence_scoring": {
+        "high_confidence_signals": [
+          "Explicitly labeled as 'Free Cash Flow' or 'FCF'",
+          "Can derive from CFO - capex",
+          "Disclosed in management discussion"
+        ],
+        "validation_boosters": [
+          "Matches CFO - capex calculation",
+          "Consistent FCF conversion with prior periods"
+        ],
+        "ambiguity_notes": "Some companies use unlevered FCF; check definition"
+      }
+    },
+    {
+      "canonical_name": "free_cash_flow",
+      "category": "cash_flow",
+      "display_name": "Free Cash Flow",
+      "aliases": [
+        "Free CF",
+        "Unlevered Free Cash Flow",
+        "FCF",
+        "Free Cashflow"
+      ],
+      "definition": "Free cash flow (synonym for fcf)",
+      "typical_sign": "positive",
+      "parent_canonical": "fcf",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "unlevered_fcf",
+      "category": "cash_flow",
+      "display_name": "Unlevered Free Cash Flow",
+      "aliases": [
+        "Unlevered FCF",
+        "FCFF"
+      ],
+      "definition": "Free cash flow before debt payments (to all investors)",
+      "typical_sign": "positive",
+      "parent_canonical": "fcf",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "total_debt",
+      "category": "debt_schedule",
+      "display_name": "Total Debt",
+      "aliases": [
+        "Aggregate Debt",
+        "All Debt",
+        "Consolidated Debt",
+        "Debt Total",
+        "Gross Debt",
+        "Total Borrowings",
+        "Total Debt Outstanding"
+      ],
+      "definition": "Total outstanding debt (short-term + long-term)",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0,
+        "typical_sign": "positive",
+        "validation_checks": [
+          "total_debt >= 0",
+          "total_debt = short_term_debt + long_term_debt"
+        ]
+      },
+      "ocr_variants": [
+        "Total De bt",
+        "Total-Debt",
+        "TOTAL DEBT",
+        "Tot\u0251l Debt",
+        "Total Debt."
+      ],
+      "format_examples": [
+        {
+          "value": "17,000,000",
+          "context": "ST + LT debt"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "leveraged"
+      ]
+    },
+    {
+      "canonical_name": "gross_debt",
+      "category": "debt_schedule",
+      "display_name": "Gross Debt",
+      "aliases": [
+        "Total Gross Debt",
+        "Total Debt",
+        "Aggregate Debt",
+        "Total Borrowings"
+      ],
+      "definition": "Gross debt (synonym for total_debt)",
+      "typical_sign": "positive",
+      "parent_canonical": "total_debt",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "leveraged"
+      ]
+    },
+    {
+      "canonical_name": "net_debt",
+      "category": "debt_schedule",
+      "display_name": "Net Debt",
+      "aliases": [
+        "Net Debt Position",
+        "Net Financial Debt",
+        "Debt Net of Cash",
+        "Net Borrowings"
+      ],
+      "definition": "Total debt minus cash and cash equivalents",
+      "typical_sign": "positive",
+      "parent_canonical": "total_debt",
+      "validation_rules": {
+        "type": "currency",
+        "derivation": "total_debt - cash",
+        "typical_sign": "positive",
+        "validation_checks": [
+          "net_debt = total_debt - cash",
+          "net_debt can be negative (net cash position)"
+        ]
+      },
+      "ocr_variants": [
+        "Net De bt",
+        "Net-Debt",
+        "NET DEBT",
+        "N\u0247t Debt"
+      ],
+      "format_examples": [
+        {
+          "value": "12,000,000",
+          "context": "Total debt - cash"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "leveraged",
+        "private_equity"
+      ]
+    },
+    {
+      "canonical_name": "senior_debt",
+      "category": "debt_schedule",
+      "display_name": "Senior Debt",
+      "aliases": [
+        "Senior Secured Debt",
+        "First Lien Debt"
+      ],
+      "definition": "Debt with priority claim on assets in bankruptcy",
+      "typical_sign": "positive",
+      "parent_canonical": "total_debt",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "leveraged"
+      ]
+    },
+    {
+      "canonical_name": "subordinated_debt",
+      "category": "debt_schedule",
+      "display_name": "Subordinated Debt",
+      "aliases": [
+        "Junior Debt",
+        "Mezzanine Debt",
+        "Second Lien Debt"
+      ],
+      "definition": "Debt with lower priority claim than senior debt",
+      "typical_sign": "positive",
+      "parent_canonical": "total_debt",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "leveraged"
+      ]
+    },
+    {
+      "canonical_name": "revolver_balance",
+      "category": "debt_schedule",
+      "display_name": "Revolver Balance",
+      "aliases": [
+        "Revolving Credit Facility",
+        "Revolver Outstanding",
+        "RCF Balance"
+      ],
+      "definition": "Outstanding balance on revolving credit facility",
+      "typical_sign": "positive",
+      "parent_canonical": "total_debt",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "leveraged"
+      ]
+    },
+    {
+      "canonical_name": "revolving_credit",
+      "category": "debt_schedule",
+      "display_name": "Revolving Credit",
+      "aliases": [
+        "Revolver",
+        "Revolving Credit Facility",
+        "RCF",
+        "Revolving Loan"
+      ],
+      "definition": "Revolving credit (synonym for revolver_balance)",
+      "typical_sign": "positive",
+      "parent_canonical": "revolver_balance",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "leveraged"
+      ]
+    },
+    {
+      "canonical_name": "term_loan_a",
+      "category": "debt_schedule",
+      "display_name": "Term Loan A",
+      "aliases": [
+        "TLA",
+        "Term Loan A Balance"
+      ],
+      "definition": "Term Loan A tranche balance",
+      "typical_sign": "positive",
+      "parent_canonical": "total_debt",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "leveraged"
+      ]
+    },
+    {
+      "canonical_name": "term_loan_b",
+      "category": "debt_schedule",
+      "display_name": "Term Loan B",
+      "aliases": [
+        "TLB",
+        "Term Loan B Balance"
+      ],
+      "definition": "Term Loan B tranche balance",
+      "typical_sign": "positive",
+      "parent_canonical": "total_debt",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "leveraged"
+      ]
+    },
+    {
+      "canonical_name": "bonds_payable",
+      "category": "debt_schedule",
+      "display_name": "Bonds Payable",
+      "aliases": [
+        "Bonds",
+        "Bond Debt",
+        "Notes Payable"
+      ],
+      "definition": "Outstanding bonds or notes payable",
+      "typical_sign": "positive",
+      "parent_canonical": "total_debt",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "leveraged"
+      ]
+    },
+    {
+      "canonical_name": "notes_payable",
+      "category": "debt_schedule",
+      "display_name": "Notes Payable",
+      "aliases": [
+        "Notes",
+        "Promissory Notes"
+      ],
+      "definition": "Notes payable (synonym for bonds_payable)",
+      "typical_sign": "positive",
+      "parent_canonical": "bonds_payable",
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "leveraged"
+      ]
+    },
+    {
+      "canonical_name": "interest_rate",
+      "category": "debt_schedule",
+      "display_name": "Interest Rate",
+      "aliases": [
+        "APR",
+        "Annual Percentage Rate",
+        "Borrowing Rate",
+        "Cost of Debt",
+        "Coupon Rate",
+        "Interest %",
+        "Interest Rate (%)",
+        "Interest Rate (Annual)",
+        "Lending Rate",
+        "Rate",
+        "Yield"
+      ],
+      "definition": "Annual interest rate charged on debt instrument",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0,
+        "max_value": 0.25,
+        "validation_checks": [
+          "0.01 < interest_rate < 0.25 for most corporate debt",
+          "interest_rate should align with interest_expense / total_debt"
+        ],
+        "industry_benchmarks": {
+          "investment_grade": {
+            "typical_range": [
+              0.02,
+              0.06
+            ],
+            "description": "Investment grade 2-6%"
+          },
+          "high_yield": {
+            "typical_range": [
+              0.06,
+              0.12
+            ],
+            "description": "High yield 6-12%"
+          },
+          "distressed": {
+            "typical_range": [
+              0.12,
+              0.25
+            ],
+            "description": "Distressed 12-25%"
+          }
+        }
+      },
+      "ocr_variants": [
+        "Interest Ra te",
+        "Interest-Rate",
+        "INTEREST RATE",
+        "lnterest Rate",
+        "Int. Rate"
+      ],
+      "format_examples": [
+        {
+          "value": "0.065",
+          "context": "6.5% as decimal"
+        },
+        {
+          "value": "6.5%",
+          "context": "Percentage format"
+        },
+        {
+          "value": "650 bps",
+          "context": "Basis points"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "leveraged",
+        "banking"
+      ]
+    },
+    {
+      "canonical_name": "coupon_rate",
+      "category": "debt_schedule",
+      "display_name": "Coupon Rate",
+      "aliases": [
+        "Coupon",
+        "Interest Rate",
+        "Fixed Rate",
+        "Stated Rate"
+      ],
+      "definition": "Coupon rate (synonym for interest_rate)",
+      "typical_sign": "positive",
+      "parent_canonical": "interest_rate",
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0,
+        "max_value": 1
+      },
+      "industry_tags": [
+        "all",
+        "leveraged"
+      ]
+    },
+    {
+      "canonical_name": "weighted_avg_interest_rate",
+      "category": "debt_schedule",
+      "display_name": "Weighted Average Interest Rate",
+      "aliases": [
+        "Blended Interest Rate",
+        "Weighted Interest Rate",
+        "Avg Interest Rate"
+      ],
+      "definition": "Weighted average interest rate across all debt instruments",
+      "typical_sign": "positive",
+      "parent_canonical": "interest_rate",
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0,
+        "max_value": 1
+      },
+      "industry_tags": [
+        "all",
+        "leveraged"
+      ]
+    },
+    {
+      "canonical_name": "maturity_date",
+      "category": "debt_schedule",
+      "display_name": "Maturity Date",
+      "aliases": [
+        "Maturity",
+        "Expiration Date",
+        "Due Date"
+      ],
+      "definition": "Date when debt principal is due",
+      "typical_sign": null,
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "date"
+      },
+      "industry_tags": [
+        "all",
+        "leveraged"
+      ]
+    },
+    {
+      "canonical_name": "principal_payment",
+      "category": "debt_schedule",
+      "display_name": "Principal Payment",
+      "aliases": [
+        "Debt Amortization",
+        "Debt Principal Payment",
+        "Debt Repayment",
+        "Mandatory Principal Payment",
+        "Principal",
+        "Principal Portion",
+        "Principal Reduction",
+        "Principal Repayment",
+        "Scheduled Principal"
+      ],
+      "definition": "Amount of debt principal repaid in period",
+      "typical_sign": "negative",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency"
+      },
+      "ocr_variants": [
+        "Principal Pay ment",
+        "Principal-Payment",
+        "PRINCIPAL PAYMENT",
+        "Princip\u0251l Payment",
+        "Prin. Payment"
+      ],
+      "format_examples": [
+        {
+          "value": "1,000,000",
+          "context": "Annual amortization"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "leveraged",
+        "real_estate"
+      ]
+    },
+    {
+      "canonical_name": "interest_payment",
+      "category": "debt_schedule",
+      "display_name": "Interest Payment",
+      "aliases": [
+        "Interest Portion",
+        "Coupon Payment"
+      ],
+      "definition": "Amount of interest paid on debt in period",
+      "typical_sign": "negative",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency"
+      },
+      "ocr_variants": [
+        "Interest Pay ment",
+        "Interest-Payment",
+        "INTEREST PAYMENT",
+        "lnterest Payment",
+        "Int. Payment"
+      ],
+      "format_examples": [
+        {
+          "value": "780,000",
+          "context": "Annual interest"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "leveraged"
+      ]
+    },
+    {
+      "canonical_name": "mandatory_prepayment",
+      "category": "debt_schedule",
+      "display_name": "Mandatory Prepayment",
+      "aliases": [
+        "Mandatory Amortization",
+        "Required Prepayment"
+      ],
+      "definition": "Required prepayment of debt principal before maturity",
+      "typical_sign": "negative",
+      "parent_canonical": "principal_payment",
+      "validation_rules": {
+        "type": "currency"
+      },
+      "industry_tags": [
+        "all",
+        "leveraged"
+      ]
+    },
+    {
+      "canonical_name": "debt_service",
+      "category": "debt_schedule",
+      "display_name": "Debt Service",
+      "aliases": [
+        "Debt Obligation",
+        "Debt Payment",
+        "Debt Service Payment",
+        "Debt Servicing",
+        "P&I",
+        "Principal and Interest",
+        "Total Debt Service"
+      ],
+      "definition": "Total debt payments (principal + interest) in period",
+      "typical_sign": "negative",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "currency",
+        "derivation": "principal_payment + interest_payment"
+      },
+      "industry_tags": [
+        "all",
+        "leveraged"
+      ]
+    },
+    {
+      "canonical_name": "dscr",
+      "category": "debt_schedule",
+      "display_name": "Debt Service Coverage Ratio",
+      "aliases": [
+        "DSCR",
+        "Debt Coverage Ratio"
+      ],
+      "definition": "Ratio of cash available to debt service payments",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "ratio",
+        "min_value": 0,
+        "max_value": 10.0,
+        "derivation": "cfo / debt_service",
+        "validation_checks": [
+          "dscr = cfo / debt_service",
+          "dscr > 1.25 typically required by lenders"
+        ],
+        "industry_benchmarks": {
+          "strong": {
+            "typical_range": [
+              1.5,
+              3.0
+            ],
+            "description": "Strong DSCR 1.5-3.0x"
+          },
+          "minimum": {
+            "typical_range": [
+              1.1,
+              1.25
+            ],
+            "description": "Minimum DSCR 1.1-1.25x"
+          }
+        }
+      },
+      "industry_tags": [
+        "all",
+        "leveraged"
+      ]
+    },
+    {
+      "canonical_name": "debt_service_coverage_ratio",
+      "category": "debt_schedule",
+      "display_name": "Debt Service Coverage Ratio",
+      "aliases": [
+        "Debt Coverage",
+        "DSCR",
+        "Debt Service Coverage",
+        "DS Coverage Ratio"
+      ],
+      "definition": "Debt service coverage ratio (synonym for dscr)",
+      "typical_sign": "positive",
+      "parent_canonical": "dscr",
+      "validation_rules": {
+        "type": "ratio",
+        "min_value": 0
+      },
+      "industry_tags": [
+        "all",
+        "leveraged"
+      ]
+    },
+    {
+      "canonical_name": "ebitda_margin",
+      "category": "metrics",
+      "display_name": "EBITDA Margin",
+      "aliases": [
+        "EBITDA %",
+        "EBITDA / Revenue",
+        "EBITDA Margin %",
+        "EBITDA Margin Percentage",
+        "Operating Margin (EBITDA)",
+        "ebitda margen",
+        "ebitda margn"
+      ],
+      "definition": "EBITDA as a percentage of revenue",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "percentage",
+        "derivation": "ebitda / revenue",
+        "min_value": -0.5,
+        "max_value": 1.0,
+        "industry_benchmarks": {
+          "saas": {
+            "typical_range": [
+              0.1,
+              0.4
+            ],
+            "description": "SaaS typically 10-40%"
+          },
+          "manufacturing": {
+            "typical_range": [
+              0.08,
+              0.2
+            ],
+            "description": "Manufacturing typically 8-20%"
+          },
+          "real_estate": {
+            "typical_range": [
+              0.3,
+              0.6
+            ],
+            "description": "Real estate typically 30-60%"
+          }
+        },
+        "validation_checks": [
+          "ebitda_margin = ebitda / revenue",
+          "-0.50 < ebitda_margin < 1.0"
+        ],
+        "cross_item_validation": {
+          "relationships": [
+            {
+              "rule": "ebitda_margin == ebitda / revenue",
+              "tolerance": 0.005
+            },
+            {
+              "rule": "-1 <= ebitda_margin <= 1",
+              "error_message": "EBITDA margin typically between -100% and 100%"
+            }
+          ]
+        }
+      },
+      "ocr_variants": [
+        "EBITDA Mar gin",
+        "EBITDA-Margin",
+        "EBITDA MARGIN",
+        "EB1TDA Margin",
+        "EBITDA %"
+      ],
+      "format_examples": [
+        {
+          "value": "0.25",
+          "context": "25% as decimal"
+        },
+        {
+          "value": "25%",
+          "context": "Percentage"
+        },
+        {
+          "value": "25.0",
+          "context": "Percentage without symbol"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "private_equity",
+        "valuation"
+      ]
+    },
+    {
+      "canonical_name": "operating_margin",
+      "category": "metrics",
+      "display_name": "Operating Margin",
+      "aliases": [
+        "EBIT Margin",
+        "Operating Margin %"
+      ],
+      "definition": "Operating income (EBIT) as a percentage of revenue",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "percentage",
+        "derivation": "ebit / revenue"
+      },
+      "ocr_variants": [
+        "Operating Mar gin",
+        "Operating-Margin",
+        "OPERATING MARGIN",
+        "Op. Margin",
+        "Operating %"
+      ],
+      "format_examples": [
+        {
+          "value": "0.18",
+          "context": "18% as decimal"
+        },
+        {
+          "value": "18%",
+          "context": "Percentage"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "public_companies"
+      ]
+    },
+    {
+      "canonical_name": "net_margin",
+      "category": "metrics",
+      "display_name": "Net Margin",
+      "aliases": [
+        "Bottom Line Margin",
+        "NPM",
+        "Net Income Margin",
+        "Net Margin %",
+        "Net Margin Percentage",
+        "Net Profit %",
+        "Net Profit Margin",
+        "Net Profit Margin %",
+        "Profit Margin"
+      ],
+      "definition": "Net income as a percentage of revenue",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "percentage",
+        "derivation": "net_income / revenue",
+        "min_value": -0.5,
+        "max_value": 1.0,
+        "industry_benchmarks": {
+          "saas": {
+            "typical_range": [
+              0.05,
+              0.25
+            ],
+            "description": "SaaS typically 5-25%"
+          },
+          "manufacturing": {
+            "typical_range": [
+              0.03,
+              0.1
+            ],
+            "description": "Manufacturing typically 3-10%"
+          },
+          "retail": {
+            "typical_range": [
+              0.02,
+              0.08
+            ],
+            "description": "Retail typically 2-8%"
+          }
+        }
+      },
+      "ocr_variants": [
+        "Net Mar gin",
+        "Net-Margin",
+        "NET MARGIN",
+        "Net Profit Margin",
+        "Net %"
+      ],
+      "format_examples": [
+        {
+          "value": "0.12",
+          "context": "12% as decimal"
+        },
+        {
+          "value": "12%",
+          "context": "Percentage"
+        }
+      ],
+      "industry_tags": [
+        "all"
+      ]
+    },
+    {
+      "canonical_name": "gross_margin",
+      "category": "metrics",
+      "display_name": "Gross Margin",
+      "aliases": [
+        "Gross Profit Margin",
+        "Gross Margin %",
+        "gros margin",
+        "gross margen"
+      ],
+      "definition": "Gross profit as a percentage of revenue",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "percentage",
+        "derivation": "gross_profit / revenue",
+        "cross_item_validation": {
+          "relationships": [
+            {
+              "rule": "gross_margin == gross_profit / revenue",
+              "tolerance": 0.005,
+              "error_message": "Gross margin should equal gross profit / revenue"
+            },
+            {
+              "rule": "0 <= gross_margin <= 1",
+              "error_message": "Gross margin should be between 0 and 1 (or 0-100%)"
+            }
+          ]
+        }
+      },
+      "ocr_variants": [
+        "Gross Mar gin",
+        "Gross-Margin",
+        "GROSS MARGIN",
+        "Gross Profit Margin",
+        "Gross %"
+      ],
+      "format_examples": [
+        {
+          "value": "0.65",
+          "context": "65% as decimal"
+        },
+        {
+          "value": "65%",
+          "context": "Percentage"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "saas",
+        "software"
+      ]
+    },
+    {
+      "canonical_name": "roa",
+      "category": "metrics",
+      "display_name": "Return on Assets",
+      "aliases": [
+        "Asset Return",
+        "ROA",
+        "ROA %",
+        "Return on Assets",
+        "Return on Assets %",
+        "Return on Total Assets"
+      ],
+      "definition": "Net income divided by total assets",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "percentage",
+        "derivation": "net_income / total_assets",
+        "min_value": -0.2,
+        "max_value": 0.5,
+        "validation_checks": [
+          "roa = net_income / total_assets",
+          "roa typically 2-15%"
+        ],
+        "industry_benchmarks": {
+          "saas": {
+            "typical_range": [
+              0.05,
+              0.2
+            ],
+            "description": "SaaS ROA typically 5-20%"
+          },
+          "manufacturing": {
+            "typical_range": [
+              0.03,
+              0.1
+            ],
+            "description": "Manufacturing ROA typically 3-10%"
+          }
+        }
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "return_on_assets",
+      "category": "metrics",
+      "display_name": "Return on Assets",
+      "aliases": [
+        "Asset Return",
+        "ROA",
+        "Return on Total Assets",
+        "Asset Efficiency"
+      ],
+      "definition": "Return on assets (synonym for roa)",
+      "typical_sign": "positive",
+      "parent_canonical": "roa",
+      "validation_rules": {
+        "type": "percentage"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "roe",
+      "category": "metrics",
+      "display_name": "Return on Equity",
+      "aliases": [
+        "Equity Return",
+        "ROE",
+        "ROE %",
+        "Return on Equity",
+        "Return on Equity %",
+        "Return on Shareholders Equity"
+      ],
+      "definition": "Net income divided by shareholders' equity",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "percentage",
+        "derivation": "net_income / total_equity",
+        "min_value": -0.5,
+        "max_value": 1.0,
+        "validation_checks": [
+          "roe = net_income / total_equity",
+          "roe typically 10-25% for healthy companies"
+        ],
+        "industry_benchmarks": {
+          "excellent": {
+            "typical_range": [
+              0.2,
+              0.4
+            ],
+            "description": "Excellent ROE 20-40%"
+          },
+          "good": {
+            "typical_range": [
+              0.12,
+              0.2
+            ],
+            "description": "Good ROE 12-20%"
+          },
+          "adequate": {
+            "typical_range": [
+              0.08,
+              0.12
+            ],
+            "description": "Adequate ROE 8-12%"
+          }
+        }
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "return_on_equity",
+      "category": "metrics",
+      "display_name": "Return on Equity",
+      "aliases": [
+        "Equity Return",
+        "ROE",
+        "Return on Shareholder Equity",
+        "Equity Efficiency"
+      ],
+      "definition": "Return on equity (synonym for roe)",
+      "typical_sign": "positive",
+      "parent_canonical": "roe",
+      "validation_rules": {
+        "type": "percentage"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "roic",
+      "category": "metrics",
+      "display_name": "Return on Invested Capital",
+      "aliases": [
+        "ROIC",
+        "Return on Invested Capital %"
+      ],
+      "definition": "Net operating profit after tax divided by invested capital",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": -0.2,
+        "max_value": 0.6,
+        "derivation": "(ebit * (1 - tax_rate)) / invested_capital",
+        "validation_checks": [
+          "roic = nopat / invested_capital",
+          "roic > wacc for value creation"
+        ],
+        "industry_benchmarks": {
+          "excellent": {
+            "typical_range": [
+              0.15,
+              0.4
+            ],
+            "description": "Excellent ROIC 15-40%"
+          },
+          "good": {
+            "typical_range": [
+              0.1,
+              0.15
+            ],
+            "description": "Good ROIC 10-15%"
+          }
+        }
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "return_on_invested_capital",
+      "category": "metrics",
+      "display_name": "Return on Invested Capital",
+      "aliases": [
+        "Invested Capital Return",
+        "ROIC",
+        "Return on Capital",
+        "Capital Efficiency"
+      ],
+      "definition": "Return on invested capital (synonym for roic)",
+      "typical_sign": "positive",
+      "parent_canonical": "roic",
+      "validation_rules": {
+        "type": "percentage"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "debt_to_ebitda",
+      "category": "metrics",
+      "display_name": "Debt to EBITDA",
+      "aliases": [
+        "Debt / EBITDA",
+        "Debt-to-EBITDA",
+        "Gross Leverage",
+        "Leverage Ratio",
+        "Net Debt / EBITDA",
+        "Net Leverage",
+        "Total Debt to EBITDA",
+        "debt to ebitada",
+        "debt/ebitda"
+      ],
+      "definition": "Total debt divided by EBITDA; measures leverage",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "ratio",
+        "min_value": 0,
+        "derivation": "total_debt / ebitda",
+        "max_value": 15.0,
+        "validation_checks": [
+          "debt_to_ebitda = total_debt / ebitda",
+          "debt_to_ebitda < 6.0 for healthy companies"
+        ],
+        "industry_benchmarks": {
+          "investment_grade": {
+            "typical_range": [
+              1.0,
+              3.0
+            ],
+            "description": "Investment grade typically 1-3x"
+          },
+          "leveraged": {
+            "typical_range": [
+              3.0,
+              6.0
+            ],
+            "description": "Leveraged companies typically 3-6x"
+          },
+          "highly_leveraged": {
+            "typical_range": [
+              6.0,
+              10.0
+            ],
+            "description": "Highly leveraged 6-10x"
+          }
+        },
+        "cross_item_validation": {
+          "relationships": [
+            {
+              "rule": "debt_to_ebitda == total_debt / ebitda",
+              "tolerance": 0.1,
+              "error_message": "Debt/EBITDA should equal total debt / EBITDA"
+            }
+          ]
+        }
+      },
+      "ocr_variants": [
+        "Debt / EB ITDA",
+        "Debt-to-EBITDA",
+        "DEBT TO EBITDA",
+        "Debt/EB1TDA",
+        "Leverage"
+      ],
+      "format_examples": [
+        {
+          "value": "3.5",
+          "context": "3.5x leverage"
+        },
+        {
+          "value": "3.5x",
+          "context": "With 'x' suffix"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "private_equity",
+        "leveraged_finance"
+      ],
+      "confidence_scoring": {
+        "high_confidence_signals": [
+          "Labeled as 'Leverage' or 'Debt/EBITDA'",
+          "Can calculate from balance sheet and P&L",
+          "Disclosed in debt covenants section"
+        ],
+        "validation_boosters": [
+          "Matches total_debt / ebitda calculation",
+          "Consistent with bank covenant definitions"
+        ]
+      }
+    },
+    {
+      "canonical_name": "debt_to_equity",
+      "category": "metrics",
+      "display_name": "Debt to Equity",
+      "aliases": [
+        "D/E Ratio",
+        "Debt / Equity",
+        "Gearing Ratio"
+      ],
+      "definition": "Total debt divided by total equity",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "ratio",
+        "min_value": 0,
+        "derivation": "total_debt / total_equity"
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "interest_coverage",
+      "category": "metrics",
+      "display_name": "Interest Coverage",
+      "aliases": [
+        "Interest Coverage Ratio",
+        "Times Interest Earned",
+        "EBIT / Interest",
+        "intrest coverage",
+        "interest coverge"
+      ],
+      "definition": "EBIT divided by interest expense; ability to pay interest",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "ratio",
+        "min_value": 0,
+        "derivation": "ebitda / interest_expense",
+        "max_value": 100.0,
+        "validation_checks": [
+          "interest_coverage = ebitda / abs(interest_expense)",
+          "interest_coverage > 2.0 for healthy companies"
+        ],
+        "industry_benchmarks": {
+          "strong": {
+            "typical_range": [
+              5.0,
+              20.0
+            ],
+            "description": "Strong coverage 5-20x"
+          },
+          "adequate": {
+            "typical_range": [
+              2.5,
+              5.0
+            ],
+            "description": "Adequate coverage 2.5-5x"
+          },
+          "weak": {
+            "typical_range": [
+              1.0,
+              2.5
+            ],
+            "description": "Weak coverage 1-2.5x"
+          }
+        },
+        "cross_item_validation": {
+          "relationships": [
+            {
+              "rule": "interest_coverage == ebit / interest_expense",
+              "tolerance": 0.1
+            },
+            {
+              "rule": "interest_coverage >= 1",
+              "error_message": "Interest coverage <1x indicates inability to service debt",
+              "warning_only": true
+            }
+          ]
+        }
+      },
+      "ocr_variants": [
+        "Interest Cover age",
+        "Interest-Coverage",
+        "INTEREST COVERAGE",
+        "lnterest Coverage",
+        "ICR"
+      ],
+      "format_examples": [
+        {
+          "value": "5.5",
+          "context": "5.5x coverage"
+        },
+        {
+          "value": "5.5x",
+          "context": "With 'x' suffix"
+        }
+      ],
+      "industry_tags": [
+        "all",
+        "leveraged",
+        "credit_analysis"
+      ]
+    },
+    {
+      "canonical_name": "net_leverage_ratio",
+      "category": "metrics",
+      "display_name": "Net Leverage Ratio",
+      "aliases": [
+        "Net Debt / EBITDA",
+        "Net Leverage"
+      ],
+      "definition": "Net debt divided by EBITDA",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "ratio",
+        "min_value": -5.0,
+        "derivation": "net_debt / ebitda",
+        "max_value": 15.0,
+        "validation_checks": [
+          "net_leverage = net_debt / ebitda",
+          "net_leverage can be negative (net cash position)"
+        ]
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "current_ratio",
+      "category": "metrics",
+      "display_name": "Current Ratio",
+      "aliases": [
+        "Working Capital Ratio",
+        "CA / CL",
+        "Current Assets to Liabilities",
+        "Liquidity Ratio"
+      ],
+      "definition": "Current assets divided by current liabilities; measures short-term liquidity",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "validation_rules": {
+        "type": "ratio",
+        "min_value": 0,
+        "derivation": "current_assets / current_liabilities",
+        "max_value": 10.0,
+        "validation_checks": [
+          "current_ratio = current_assets / current_liabilities",
+          "current_ratio > 1.0 indicates liquidity"
+        ],
+        "industry_benchmarks": {
+          "healthy": {
+            "typical_range": [
+              1.5,
+              3.0
+            ],
+            "description": "Healthy current ratio 1.5-3.0"
+          },
+          "minimum": {
+            "typical_range": [
+              1.0,
+              1.5
+            ],
+            "description": "Minimum current ratio 1.0-1.5"
+          }
+        }
+      },
+      "industry_tags": [
+        "all",
+        "corporate"
+      ]
+    },
+    {
+      "canonical_name": "arr",
+      "category": "metrics",
+      "display_name": "Annual Recurring Revenue",
+      "aliases": [
+        "ARR",
+        "Annualized Recurring Revenue",
+        "Annual Contract Value",
+        "Recurring Revenue ARR"
+      ],
+      "definition": "Annualized value of active recurring revenue contracts",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "saas",
+        "subscription",
+        "technology"
+      ],
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0,
+        "derivation": "mrr * 12",
+        "cross_item_validation": {
+          "relationships": [
+            {
+              "rule": "arr == mrr * 12",
+              "tolerance": 0.02,
+              "optional": true
+            }
+          ]
+        }
+      },
+      "format_examples": [
+        {
+          "value": "12,000,000",
+          "context": "ARR in dollars"
+        },
+        {
+          "value": "$12M ARR",
+          "context": "Abbreviated format"
+        }
+      ]
+    },
+    {
+      "canonical_name": "mrr",
+      "category": "metrics",
+      "display_name": "Monthly Recurring Revenue",
+      "aliases": [
+        "MRR",
+        "Monthly Recurring Rev",
+        "Recurring Revenue MRR"
+      ],
+      "definition": "Monthly value of recurring revenue from active subscriptions",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "saas",
+        "subscription",
+        "technology"
+      ],
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      }
+    },
+    {
+      "canonical_name": "cac",
+      "category": "metrics",
+      "display_name": "Customer Acquisition Cost",
+      "aliases": [
+        "CAC",
+        "Acquisition Cost",
+        "Cost per Acquisition",
+        "CPA"
+      ],
+      "definition": "Average cost to acquire a new customer (sales & marketing expense / new customers)",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "saas",
+        "subscription",
+        "ecommerce",
+        "technology"
+      ],
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0,
+        "derivation": "sales_marketing_expense / new_customers_acquired"
+      }
+    },
+    {
+      "canonical_name": "ltv",
+      "category": "metrics",
+      "display_name": "Customer Lifetime Value",
+      "aliases": [
+        "LTV",
+        "CLV",
+        "Customer LTV",
+        "Lifetime Value",
+        "CLTV"
+      ],
+      "definition": "Total revenue expected from a customer over their lifetime",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "saas",
+        "subscription",
+        "ecommerce"
+      ],
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0,
+        "derivation": "arpu / churn_rate"
+      }
+    },
+    {
+      "canonical_name": "ltv_cac_ratio",
+      "category": "metrics",
+      "display_name": "LTV to CAC Ratio",
+      "aliases": [
+        "LTV/CAC",
+        "LTV:CAC",
+        "Lifetime Value to CAC"
+      ],
+      "definition": "Ratio of customer lifetime value to acquisition cost; healthy SaaS target is 3:1",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "saas",
+        "subscription"
+      ],
+      "validation_rules": {
+        "type": "ratio",
+        "min_value": 0,
+        "derivation": "ltv / cac"
+      }
+    },
+    {
+      "canonical_name": "churn_rate",
+      "category": "metrics",
+      "display_name": "Churn Rate",
+      "aliases": [
+        "Churn",
+        "Customer Churn",
+        "Attrition Rate",
+        "Logo Churn"
+      ],
+      "definition": "Percentage of customers who cancel subscriptions in a period",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "saas",
+        "subscription"
+      ],
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0,
+        "max_value": 1
+      }
+    },
+    {
+      "canonical_name": "net_revenue_retention",
+      "category": "metrics",
+      "display_name": "Net Revenue Retention",
+      "aliases": [
+        "NRR",
+        "Net Retention",
+        "NDR",
+        "Net Dollar Retention"
+      ],
+      "definition": "Revenue retention from existing customers including expansions and downgrades; >100% indicates growth from existing base",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "saas",
+        "subscription"
+      ],
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0
+      }
+    },
+    {
+      "canonical_name": "magic_number",
+      "category": "metrics",
+      "display_name": "Magic Number",
+      "aliases": [
+        "SaaS Magic Number",
+        "Sales Efficiency"
+      ],
+      "definition": "Net new ARR / sales & marketing spend; measures sales efficiency",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "saas"
+      ],
+      "validation_rules": {
+        "type": "ratio",
+        "min_value": 0
+      }
+    },
+    {
+      "canonical_name": "rule_of_40",
+      "category": "metrics",
+      "display_name": "Rule of 40",
+      "aliases": [
+        "Rule of 40 Score",
+        "R40"
+      ],
+      "definition": "Growth rate + profit margin; healthy SaaS companies should exceed 40%",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "saas"
+      ],
+      "validation_rules": {
+        "type": "percentage",
+        "derivation": "revenue_growth_rate + ebitda_margin"
+      }
+    },
+    {
+      "canonical_name": "arpu",
+      "category": "metrics",
+      "display_name": "Average Revenue Per User",
+      "aliases": [
+        "ARPU",
+        "Revenue per Customer",
+        "ARPC",
+        "Average Revenue per Customer"
+      ],
+      "definition": "Average monthly or annual revenue per active user/customer",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "saas",
+        "subscription",
+        "technology"
+      ],
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0,
+        "derivation": "mrr / active_customers"
+      }
+    },
+    {
+      "canonical_name": "gross_retention",
+      "category": "metrics",
+      "display_name": "Gross Revenue Retention",
+      "aliases": [
+        "GRR",
+        "Gross Retention"
+      ],
+      "definition": "Revenue retention from existing customers excluding expansions; measures pure retention",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "saas",
+        "subscription"
+      ],
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0,
+        "max_value": 1
+      }
+    },
+    {
+      "canonical_name": "cac_payback_period",
+      "category": "metrics",
+      "display_name": "CAC Payback Period",
+      "aliases": [
+        "Payback Period",
+        "Months to Recover CAC"
+      ],
+      "definition": "Months required to recover customer acquisition cost from gross margin",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "saas",
+        "subscription"
+      ],
+      "validation_rules": {
+        "type": "months",
+        "min_value": 0
+      }
+    },
+    {
+      "canonical_name": "expansion_revenue",
+      "category": "metrics",
+      "display_name": "Expansion Revenue",
+      "aliases": [
+        "Upsell Revenue",
+        "Cross-sell Revenue",
+        "Expansion MRR"
+      ],
+      "definition": "Additional revenue from existing customers through upsells, cross-sells, or usage growth",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "saas",
+        "subscription"
+      ],
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      }
+    },
+    {
+      "canonical_name": "quick_ratio_saas",
+      "category": "metrics",
+      "display_name": "Quick Ratio (SaaS)",
+      "aliases": [
+        "SaaS Quick Ratio",
+        "Growth Efficiency"
+      ],
+      "definition": "(New MRR + Expansion MRR) / (Churned MRR + Contraction MRR); measures growth efficiency",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "saas"
+      ],
+      "validation_rules": {
+        "type": "ratio",
+        "min_value": 0
+      }
+    },
+    {
+      "canonical_name": "burn_multiple",
+      "category": "metrics",
+      "display_name": "Burn Multiple",
+      "aliases": [
+        "Cash Burn Multiple",
+        "Efficiency Score"
+      ],
+      "definition": "Net burn / net new ARR; measures capital efficiency",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "saas",
+        "venture"
+      ],
+      "validation_rules": {
+        "type": "ratio",
+        "min_value": 0
+      }
+    },
+    {
+      "canonical_name": "same_store_sales",
+      "category": "metrics",
+      "display_name": "Same Store Sales",
+      "aliases": [
+        "SSS",
+        "Comp Store Sales",
+        "Comparable Store Sales",
+        "Like-for-Like Sales"
+      ],
+      "definition": "Revenue from stores open for at least one year; excludes new store growth",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "retail"
+      ],
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      }
+    },
+    {
+      "canonical_name": "inventory_turnover",
+      "category": "metrics",
+      "display_name": "Inventory Turnover",
+      "aliases": [
+        "Inventory Turns",
+        "Stock Turnover",
+        "Turns"
+      ],
+      "definition": "COGS / average inventory; measures how quickly inventory is sold",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "retail",
+        "wholesale",
+        "manufacturing"
+      ],
+      "validation_rules": {
+        "type": "ratio",
+        "min_value": 0,
+        "derivation": "cogs / average_inventory"
+      }
+    },
+    {
+      "canonical_name": "gmroi",
+      "category": "metrics",
+      "display_name": "Gross Margin Return on Investment",
+      "aliases": [
+        "GMROI",
+        "GMROII",
+        "Gross Margin ROI"
+      ],
+      "definition": "Gross margin / average inventory cost; measures profitability of inventory investment",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "retail"
+      ],
+      "validation_rules": {
+        "type": "ratio",
+        "min_value": 0,
+        "derivation": "gross_profit / average_inventory_cost"
+      }
+    },
+    {
+      "canonical_name": "sell_through_rate",
+      "category": "metrics",
+      "display_name": "Sell-Through Rate",
+      "aliases": [
+        "Sell Through",
+        "STR",
+        "Sell Through Percentage"
+      ],
+      "definition": "Units sold / units received; measures product demand",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "retail",
+        "ecommerce"
+      ],
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0,
+        "max_value": 1
+      }
+    },
+    {
+      "canonical_name": "sales_per_square_foot",
+      "category": "metrics",
+      "display_name": "Sales per Square Foot",
+      "aliases": [
+        "Revenue per Sq Ft",
+        "Sales/SF",
+        "Productivity per Sq Ft"
+      ],
+      "definition": "Annual sales / retail square footage; measures store productivity",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "retail"
+      ],
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      }
+    },
+    {
+      "canonical_name": "basket_size",
+      "category": "metrics",
+      "display_name": "Average Basket Size",
+      "aliases": [
+        "Average Transaction Value",
+        "ATV",
+        "Basket Value"
+      ],
+      "definition": "Total sales / number of transactions; average purchase amount per customer visit",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "retail",
+        "ecommerce"
+      ],
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      }
+    },
+    {
+      "canonical_name": "conversion_rate",
+      "category": "metrics",
+      "display_name": "Conversion Rate",
+      "aliases": [
+        "Sales Conversion",
+        "Traffic Conversion"
+      ],
+      "definition": "Transactions / store traffic; percentage of visitors who make a purchase",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "retail",
+        "ecommerce"
+      ],
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0,
+        "max_value": 1
+      }
+    },
+    {
+      "canonical_name": "shrinkage_rate",
+      "category": "metrics",
+      "display_name": "Shrinkage Rate",
+      "aliases": [
+        "Inventory Shrink",
+        "Shrink",
+        "Loss Rate"
+      ],
+      "definition": "Value of inventory lost to theft, damage, or error / total inventory value",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "retail"
+      ],
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0
+      }
+    },
+    {
+      "canonical_name": "days_inventory_outstanding",
+      "category": "metrics",
+      "display_name": "Days Inventory Outstanding",
+      "aliases": [
+        "DIO",
+        "Days in Inventory",
+        "Inventory Days"
+      ],
+      "definition": "(Average inventory / COGS) * 365; days to sell inventory",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "retail",
+        "manufacturing",
+        "wholesale"
+      ],
+      "validation_rules": {
+        "type": "days",
+        "min_value": 0,
+        "derivation": "(average_inventory / cogs) * 365"
+      }
+    },
+    {
+      "canonical_name": "markdown_rate",
+      "category": "metrics",
+      "display_name": "Markdown Rate",
+      "aliases": [
+        "Discount Rate",
+        "Promotional Discount %"
+      ],
+      "definition": "Value of markdowns / total sales; measures promotional intensity",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "retail"
+      ],
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0
+      }
+    },
+    {
+      "canonical_name": "capacity_utilization",
+      "category": "metrics",
+      "display_name": "Capacity Utilization",
+      "aliases": [
+        "Plant Utilization",
+        "Utilization Rate"
+      ],
+      "definition": "Actual output / maximum potential output; measures efficiency of production capacity",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "manufacturing",
+        "capital_intensive"
+      ],
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0,
+        "max_value": 1
+      }
+    },
+    {
+      "canonical_name": "oee",
+      "category": "metrics",
+      "display_name": "Overall Equipment Effectiveness",
+      "aliases": [
+        "OEE",
+        "Equipment Effectiveness"
+      ],
+      "definition": "Availability \u00d7 Performance \u00d7 Quality; measures manufacturing productivity",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "manufacturing"
+      ],
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0,
+        "max_value": 1
+      }
+    },
+    {
+      "canonical_name": "cycle_time",
+      "category": "metrics",
+      "display_name": "Cycle Time",
+      "aliases": [
+        "Production Cycle Time",
+        "Manufacturing Lead Time"
+      ],
+      "definition": "Total time from start to finish of production process",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "manufacturing"
+      ],
+      "validation_rules": {
+        "type": "time",
+        "min_value": 0
+      }
+    },
+    {
+      "canonical_name": "scrap_rate",
+      "category": "metrics",
+      "display_name": "Scrap Rate",
+      "aliases": [
+        "Waste Rate",
+        "Defect Rate"
+      ],
+      "definition": "Value of scrapped materials / total production value; measures quality and waste",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "manufacturing"
+      ],
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0
+      }
+    },
+    {
+      "canonical_name": "first_pass_yield",
+      "category": "metrics",
+      "display_name": "First Pass Yield",
+      "aliases": [
+        "FPY",
+        "Quality Yield",
+        "Right First Time"
+      ],
+      "definition": "Units passing quality inspection without rework / total units produced",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "manufacturing"
+      ],
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0,
+        "max_value": 1
+      }
+    },
+    {
+      "canonical_name": "direct_labor_efficiency",
+      "category": "metrics",
+      "display_name": "Direct Labor Efficiency",
+      "aliases": [
+        "Labor Productivity",
+        "Workforce Efficiency"
+      ],
+      "definition": "Standard hours / actual hours worked; measures labor productivity",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "manufacturing"
+      ],
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0
+      }
+    },
+    {
+      "canonical_name": "material_yield",
+      "category": "metrics",
+      "display_name": "Material Yield",
+      "aliases": [
+        "Raw Material Efficiency",
+        "Material Utilization"
+      ],
+      "definition": "Usable output / raw material input; measures material efficiency",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "manufacturing"
+      ],
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0,
+        "max_value": 1
+      }
+    },
+    {
+      "canonical_name": "production_volume",
+      "category": "metrics",
+      "display_name": "Production Volume",
+      "aliases": [
+        "Units Produced",
+        "Output Volume",
+        "Manufacturing Output"
+      ],
+      "definition": "Total units manufactured in a period",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "manufacturing"
+      ],
+      "validation_rules": {
+        "type": "units",
+        "min_value": 0
+      }
+    },
+    {
+      "canonical_name": "cost_per_unit",
+      "category": "metrics",
+      "display_name": "Cost per Unit",
+      "aliases": [
+        "Unit Cost",
+        "Per Unit Cost",
+        "Manufacturing Cost per Unit"
+      ],
+      "definition": "Total production cost / units produced",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "manufacturing"
+      ],
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0,
+        "derivation": "total_production_cost / production_volume"
+      }
+    },
+    {
+      "canonical_name": "wip_inventory",
+      "category": "balance_sheet",
+      "display_name": "Work in Process Inventory",
+      "aliases": [
+        "WIP",
+        "Work in Progress",
+        "In-Process Inventory"
+      ],
+      "definition": "Value of partially completed goods in production",
+      "typical_sign": "positive",
+      "parent_canonical": "inventory",
+      "industry_tags": [
+        "manufacturing"
+      ],
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      }
+    },
+    {
+      "canonical_name": "noi",
+      "category": "metrics",
+      "display_name": "Net Operating Income",
+      "aliases": [
+        "NOI",
+        "Operating Income (RE)",
+        "Net Operating Profit"
+      ],
+      "definition": "Rental income minus operating expenses; excludes financing and depreciation",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "real_estate"
+      ],
+      "validation_rules": {
+        "type": "currency",
+        "derivation": "rental_income - operating_expenses"
+      }
+    },
+    {
+      "canonical_name": "cap_rate",
+      "category": "metrics",
+      "display_name": "Capitalization Rate",
+      "aliases": [
+        "Cap Rate",
+        "NOI Yield"
+      ],
+      "definition": "NOI / property value; measures return on real estate investment",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "real_estate"
+      ],
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0,
+        "derivation": "noi / property_value"
+      }
+    },
+    {
+      "canonical_name": "occupancy_rate",
+      "category": "metrics",
+      "display_name": "Occupancy Rate",
+      "aliases": [
+        "Physical Occupancy",
+        "Leased Percentage"
+      ],
+      "definition": "Occupied units / total units; measures property utilization",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "real_estate"
+      ],
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0,
+        "max_value": 1
+      }
+    },
+    {
+      "canonical_name": "ffo",
+      "category": "metrics",
+      "display_name": "Funds from Operations",
+      "aliases": [
+        "FFO",
+        "REIT FFO"
+      ],
+      "definition": "Net income + depreciation + amortization - gains on sales; REIT earnings metric",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "real_estate",
+        "reit"
+      ],
+      "validation_rules": {
+        "type": "currency",
+        "derivation": "net_income + depreciation + amortization - gains_on_property_sales"
+      }
+    },
+    {
+      "canonical_name": "affo",
+      "category": "metrics",
+      "display_name": "Adjusted Funds from Operations",
+      "aliases": [
+        "AFFO",
+        "Cash Available for Distribution",
+        "CAD"
+      ],
+      "definition": "FFO - recurring capex; measures cash available for dividends",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "real_estate",
+        "reit"
+      ],
+      "validation_rules": {
+        "type": "currency",
+        "derivation": "ffo - maintenance_capex"
+      }
+    },
+    {
+      "canonical_name": "dscr_real_estate",
+      "category": "metrics",
+      "display_name": "Debt Service Coverage Ratio (RE)",
+      "aliases": [
+        "DSCR",
+        "NOI / Debt Service"
+      ],
+      "definition": "NOI / total debt service; measures ability to service property debt",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "real_estate"
+      ],
+      "validation_rules": {
+        "type": "ratio",
+        "min_value": 0,
+        "derivation": "noi / debt_service"
+      }
+    },
+    {
+      "canonical_name": "ltv_real_estate",
+      "category": "metrics",
+      "display_name": "Loan to Value Ratio",
+      "aliases": [
+        "LTV",
+        "Loan-to-Value"
+      ],
+      "definition": "Loan amount / property value; measures leverage",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "real_estate"
+      ],
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0,
+        "max_value": 1.5,
+        "derivation": "loan_balance / property_value"
+      }
+    },
+    {
+      "canonical_name": "rent_per_square_foot",
+      "category": "metrics",
+      "display_name": "Rent per Square Foot",
+      "aliases": [
+        "Rent/SF",
+        "Rental Rate per Sq Ft"
+      ],
+      "definition": "Annual rent / rentable square feet; measures rental rates",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "real_estate"
+      ],
+      "validation_rules": {
+        "type": "currency",
+        "min_value": 0
+      }
+    },
+    {
+      "canonical_name": "operating_expense_ratio",
+      "category": "metrics",
+      "display_name": "Operating Expense Ratio",
+      "aliases": [
+        "OER",
+        "OpEx Ratio (RE)"
+      ],
+      "definition": "Operating expenses / gross operating income; measures efficiency",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "real_estate"
+      ],
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": 0,
+        "max_value": 1,
+        "derivation": "operating_expenses / gross_operating_income"
+      }
+    },
+    {
+      "canonical_name": "cash_on_cash_return",
+      "category": "metrics",
+      "display_name": "Cash on Cash Return",
+      "aliases": [
+        "CoC Return",
+        "Cash Yield"
+      ],
+      "definition": "Annual pre-tax cash flow / total cash invested; measures equity return",
+      "typical_sign": "positive",
+      "parent_canonical": null,
+      "industry_tags": [
+        "real_estate"
+      ],
+      "validation_rules": {
+        "type": "percentage",
+        "min_value": -1,
+        "derivation": "annual_cash_flow / cash_invested"
+      }
+    }
+  ],
+  "changelog": [
+    {
+      "version": "1.2.0",
+      "date": "2026-02-24",
+      "changes": [
+        "Added comprehensive validation rules to 34 items",
+        "Added industry benchmarks (SaaS, Manufacturing, Real Estate, Retail)",
+        "Added derivation formulas for calculated metrics",
+        "Added cross-validation relationships",
+        "Added typical value ranges for all key metrics"
+      ]
+    },
+    {
+      "version": "1.1.0",
+      "date": "2026-02-24",
+      "changes": [
+        "Enhanced 41 high-impact items with comprehensive aliases",
+        "Added 273 new aliases across all enhanced items",
+        "Added industry-specific variants (SaaS, Real Estate, Manufacturing)",
+        "Added international terminology (UK, European)",
+        "Added common abbreviations and misspellings"
+      ]
+    }
+  ]
+}

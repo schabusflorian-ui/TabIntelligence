@@ -1,0 +1,1108 @@
+{
+  "version": "1.0.0",
+  "description": "Canonical taxonomy of financial line items for debt fund modeling",
+  "created_date": "2026-02-24",
+  "total_items": 107,
+  "categories": {
+    "income_statement": [
+      {
+        "canonical_name": "revenue",
+        "display_name": "Revenue",
+        "aliases": ["Sales", "Net Sales", "Turnover", "Total Revenue", "Net Revenue", "Sales Revenue", "Operating Revenue"],
+        "definition": "Total income from primary business activities before any deductions",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "income_statement",
+        "derivation": null
+      },
+      {
+        "canonical_name": "cogs",
+        "display_name": "Cost of Goods Sold",
+        "aliases": ["Cost of Sales", "COS", "Direct Costs", "Cost of Revenue", "COGS"],
+        "definition": "Direct costs attributable to the production of goods or services sold",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "income_statement",
+        "derivation": null
+      },
+      {
+        "canonical_name": "gross_profit",
+        "display_name": "Gross Profit",
+        "aliases": ["Gross Margin", "GP", "Gross Income"],
+        "definition": "Revenue minus cost of goods sold",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "income_statement",
+        "derivation": "revenue - cogs"
+      },
+      {
+        "canonical_name": "opex",
+        "display_name": "Operating Expenses",
+        "aliases": ["Operating Costs", "OPEX", "Operational Expenses", "Operating Expenditure"],
+        "definition": "Expenses incurred through normal business operations",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "income_statement",
+        "derivation": "sga + rd_expense + depreciation + amortization"
+      },
+      {
+        "canonical_name": "sga",
+        "display_name": "Selling, General & Administrative",
+        "aliases": ["SG&A", "S,G&A", "Selling & Admin", "General & Administrative", "Admin Expenses"],
+        "definition": "Overhead expenses related to selling and general administration",
+        "typical_sign": "positive",
+        "parent": "opex",
+        "category": "income_statement",
+        "derivation": null
+      },
+      {
+        "canonical_name": "rd_expense",
+        "display_name": "Research & Development",
+        "aliases": ["R&D", "R&D Expense", "Research and Development", "Development Costs"],
+        "definition": "Expenses for innovation and product development",
+        "typical_sign": "positive",
+        "parent": "opex",
+        "category": "income_statement",
+        "derivation": null
+      },
+      {
+        "canonical_name": "marketing_expense",
+        "display_name": "Marketing Expense",
+        "aliases": ["Marketing", "Marketing Costs", "Advertising Expense", "Marketing & Advertising"],
+        "definition": "Costs related to marketing and advertising activities",
+        "typical_sign": "positive",
+        "parent": "sga",
+        "category": "income_statement",
+        "derivation": null
+      },
+      {
+        "canonical_name": "ebitda",
+        "display_name": "EBITDA",
+        "aliases": ["Earnings Before Interest, Taxes, Depreciation, and Amortization", "Operating EBITDA"],
+        "definition": "Earnings before interest, taxes, depreciation, and amortization",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "income_statement",
+        "derivation": "gross_profit - opex + depreciation + amortization"
+      },
+      {
+        "canonical_name": "depreciation",
+        "display_name": "Depreciation",
+        "aliases": ["Depreciation Expense", "D&A - Depreciation", "Depreciation of Assets"],
+        "definition": "Systematic allocation of the cost of tangible assets over their useful lives",
+        "typical_sign": "positive",
+        "parent": "opex",
+        "category": "income_statement",
+        "derivation": null
+      },
+      {
+        "canonical_name": "amortization",
+        "display_name": "Amortization",
+        "aliases": ["Amortization Expense", "D&A - Amortization", "Amortization of Intangibles"],
+        "definition": "Systematic allocation of the cost of intangible assets over their useful lives",
+        "typical_sign": "positive",
+        "parent": "opex",
+        "category": "income_statement",
+        "derivation": null
+      },
+      {
+        "canonical_name": "ebit",
+        "display_name": "EBIT",
+        "aliases": ["Earnings Before Interest and Taxes", "Operating Income", "Operating Profit", "PBIT"],
+        "definition": "Earnings before interest and taxes",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "income_statement",
+        "derivation": "ebitda - depreciation - amortization"
+      },
+      {
+        "canonical_name": "interest_expense",
+        "display_name": "Interest Expense",
+        "aliases": ["Interest Paid", "Finance Costs", "Interest on Debt", "Debt Service Interest"],
+        "definition": "Cost of borrowed funds during the period",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "income_statement",
+        "derivation": null
+      },
+      {
+        "canonical_name": "interest_income",
+        "display_name": "Interest Income",
+        "aliases": ["Interest Earned", "Investment Income", "Interest Revenue"],
+        "definition": "Income earned from interest-bearing accounts and investments",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "income_statement",
+        "derivation": null
+      },
+      {
+        "canonical_name": "other_income",
+        "display_name": "Other Income",
+        "aliases": ["Other Revenue", "Miscellaneous Income", "Non-Operating Income"],
+        "definition": "Income from non-core business activities",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "income_statement",
+        "derivation": null
+      },
+      {
+        "canonical_name": "other_expense",
+        "display_name": "Other Expense",
+        "aliases": ["Other Costs", "Miscellaneous Expense", "Non-Operating Expense"],
+        "definition": "Expenses from non-core business activities",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "income_statement",
+        "derivation": null
+      },
+      {
+        "canonical_name": "ebt",
+        "display_name": "Earnings Before Tax",
+        "aliases": ["EBT", "Pre-Tax Income", "Profit Before Tax", "PBT", "Income Before Tax"],
+        "definition": "Earnings before income taxes",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "income_statement",
+        "derivation": "ebit - interest_expense + interest_income + other_income - other_expense"
+      },
+      {
+        "canonical_name": "tax_expense",
+        "display_name": "Income Tax Expense",
+        "aliases": ["Taxes", "Tax", "Income Taxes", "Provision for Taxes", "Corporate Tax"],
+        "definition": "Current and deferred income tax expense for the period",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "income_statement",
+        "derivation": null
+      },
+      {
+        "canonical_name": "net_income",
+        "display_name": "Net Income",
+        "aliases": ["Net Profit", "Bottom Line", "Earnings", "Net Earnings", "Profit After Tax", "PAT"],
+        "definition": "Final profit after all expenses and taxes",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "income_statement",
+        "derivation": "ebt - tax_expense"
+      },
+      {
+        "canonical_name": "extraordinary_items",
+        "display_name": "Extraordinary Items",
+        "aliases": ["One-Time Items", "Special Items", "Non-Recurring Items"],
+        "definition": "Unusual, infrequent items affecting net income",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "income_statement",
+        "derivation": null
+      },
+      {
+        "canonical_name": "discontinued_operations",
+        "display_name": "Discontinued Operations",
+        "aliases": ["Discontinued Business", "Disposed Operations"],
+        "definition": "Results from business units that have been sold or shut down",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "income_statement",
+        "derivation": null
+      },
+      {
+        "canonical_name": "restructuring_charges",
+        "display_name": "Restructuring Charges",
+        "aliases": ["Restructuring Costs", "Reorganization Costs"],
+        "definition": "One-time costs associated with reorganizing business operations",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "income_statement",
+        "derivation": null
+      },
+      {
+        "canonical_name": "impairment_charges",
+        "display_name": "Impairment Charges",
+        "aliases": ["Asset Impairment", "Goodwill Impairment", "Write-downs"],
+        "definition": "Reduction in value of assets when carrying value exceeds recoverable amount",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "income_statement",
+        "derivation": null
+      },
+      {
+        "canonical_name": "dividends_declared",
+        "display_name": "Dividends Declared",
+        "aliases": ["Dividends", "Dividend Payment", "Shareholder Dividends"],
+        "definition": "Cash or stock distributions to shareholders",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "income_statement",
+        "derivation": null
+      },
+      {
+        "canonical_name": "eps_basic",
+        "display_name": "EPS (Basic)",
+        "aliases": ["Basic EPS", "Earnings Per Share - Basic", "Basic Earnings Per Share"],
+        "definition": "Net income divided by weighted average shares outstanding",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "income_statement",
+        "derivation": "net_income / shares_outstanding"
+      },
+      {
+        "canonical_name": "eps_diluted",
+        "display_name": "EPS (Diluted)",
+        "aliases": ["Diluted EPS", "Earnings Per Share - Diluted", "Fully Diluted EPS"],
+        "definition": "Net income divided by fully diluted shares outstanding",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "income_statement",
+        "derivation": "net_income / diluted_shares_outstanding"
+      }
+    ],
+    "balance_sheet": [
+      {
+        "canonical_name": "cash",
+        "display_name": "Cash and Cash Equivalents",
+        "aliases": ["Cash", "Cash & Equivalents", "Cash on Hand", "Liquid Assets"],
+        "definition": "Cash and highly liquid short-term investments",
+        "typical_sign": "positive",
+        "parent": "current_assets",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "marketable_securities",
+        "display_name": "Marketable Securities",
+        "aliases": ["Short-Term Investments", "Trading Securities", "Investment Securities"],
+        "definition": "Short-term financial instruments that can be quickly converted to cash",
+        "typical_sign": "positive",
+        "parent": "current_assets",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "accounts_receivable",
+        "display_name": "Accounts Receivable",
+        "aliases": ["AR", "Trade Receivables", "Debtors", "Receivables"],
+        "definition": "Money owed by customers for goods or services delivered",
+        "typical_sign": "positive",
+        "parent": "current_assets",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "inventory",
+        "display_name": "Inventory",
+        "aliases": ["Stock", "Inventories", "Merchandise"],
+        "definition": "Raw materials, work-in-progress, and finished goods held for sale",
+        "typical_sign": "positive",
+        "parent": "current_assets",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "prepaid_expenses",
+        "display_name": "Prepaid Expenses",
+        "aliases": ["Prepaids", "Prepayments", "Deferred Expenses"],
+        "definition": "Payments made in advance for goods or services to be received",
+        "typical_sign": "positive",
+        "parent": "current_assets",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "other_current_assets",
+        "display_name": "Other Current Assets",
+        "aliases": ["Other CA", "Miscellaneous Current Assets"],
+        "definition": "Current assets not classified elsewhere",
+        "typical_sign": "positive",
+        "parent": "current_assets",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "current_assets",
+        "display_name": "Total Current Assets",
+        "aliases": ["Current Assets", "CA", "Short-Term Assets"],
+        "definition": "Assets expected to be converted to cash within one year",
+        "typical_sign": "positive",
+        "parent": "total_assets",
+        "category": "balance_sheet",
+        "derivation": "cash + marketable_securities + accounts_receivable + inventory + prepaid_expenses + other_current_assets"
+      },
+      {
+        "canonical_name": "ppe_gross",
+        "display_name": "Property, Plant & Equipment (Gross)",
+        "aliases": ["PP&E Gross", "Fixed Assets Gross", "Gross PPE"],
+        "definition": "Original cost of tangible long-term assets used in operations",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "accumulated_depreciation",
+        "display_name": "Accumulated Depreciation",
+        "aliases": ["Accum. Depreciation", "Depreciation Reserve"],
+        "definition": "Total depreciation charged against PP&E since acquisition",
+        "typical_sign": "negative",
+        "parent": null,
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "ppe",
+        "display_name": "Property, Plant & Equipment (Net)",
+        "aliases": ["PP&E", "Net PPE", "Fixed Assets", "Net Fixed Assets", "Tangible Assets"],
+        "definition": "Net book value of tangible long-term assets",
+        "typical_sign": "positive",
+        "parent": "total_assets",
+        "category": "balance_sheet",
+        "derivation": "ppe_gross - accumulated_depreciation"
+      },
+      {
+        "canonical_name": "intangibles",
+        "display_name": "Intangible Assets",
+        "aliases": ["Intangible Assets", "Intangibles", "IP Assets"],
+        "definition": "Non-physical assets such as patents, trademarks, and licenses",
+        "typical_sign": "positive",
+        "parent": "total_assets",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "goodwill",
+        "display_name": "Goodwill",
+        "aliases": ["Goodwill"],
+        "definition": "Premium paid over fair value of net assets in acquisitions",
+        "typical_sign": "positive",
+        "parent": "total_assets",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "long_term_investments",
+        "display_name": "Long-Term Investments",
+        "aliases": ["LT Investments", "Non-Current Investments"],
+        "definition": "Investments held for more than one year",
+        "typical_sign": "positive",
+        "parent": "total_assets",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "deferred_tax_assets",
+        "display_name": "Deferred Tax Assets",
+        "aliases": ["DTA", "Deferred Tax Asset"],
+        "definition": "Future tax benefits from timing differences or tax loss carryforwards",
+        "typical_sign": "positive",
+        "parent": "total_assets",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "other_noncurrent_assets",
+        "display_name": "Other Non-Current Assets",
+        "aliases": ["Other NCA", "Other Long-Term Assets"],
+        "definition": "Long-term assets not classified elsewhere",
+        "typical_sign": "positive",
+        "parent": "total_assets",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "total_assets",
+        "display_name": "Total Assets",
+        "aliases": ["Assets", "Total Assets"],
+        "definition": "Sum of all assets owned by the entity",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "balance_sheet",
+        "derivation": "current_assets + ppe + intangibles + goodwill + long_term_investments + deferred_tax_assets + other_noncurrent_assets"
+      },
+      {
+        "canonical_name": "accounts_payable",
+        "display_name": "Accounts Payable",
+        "aliases": ["AP", "Trade Payables", "Creditors", "Payables"],
+        "definition": "Money owed to suppliers for goods or services received",
+        "typical_sign": "positive",
+        "parent": "current_liabilities",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "accrued_expenses",
+        "display_name": "Accrued Expenses",
+        "aliases": ["Accruals", "Accrued Liabilities", "Accrued Expenses"],
+        "definition": "Expenses incurred but not yet paid",
+        "typical_sign": "positive",
+        "parent": "current_liabilities",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "short_term_debt",
+        "display_name": "Short-Term Debt",
+        "aliases": ["ST Debt", "Current Portion of LT Debt", "Short-Term Borrowings", "Current Debt"],
+        "definition": "Debt obligations due within one year",
+        "typical_sign": "positive",
+        "parent": "current_liabilities",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "deferred_revenue",
+        "display_name": "Deferred Revenue",
+        "aliases": ["Unearned Revenue", "Deferred Income", "Contract Liabilities"],
+        "definition": "Payments received before goods or services are delivered",
+        "typical_sign": "positive",
+        "parent": "current_liabilities",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "other_current_liabilities",
+        "display_name": "Other Current Liabilities",
+        "aliases": ["Other CL", "Miscellaneous Current Liabilities"],
+        "definition": "Current liabilities not classified elsewhere",
+        "typical_sign": "positive",
+        "parent": "current_liabilities",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "current_liabilities",
+        "display_name": "Total Current Liabilities",
+        "aliases": ["Current Liabilities", "CL", "Short-Term Liabilities"],
+        "definition": "Obligations due within one year",
+        "typical_sign": "positive",
+        "parent": "total_liabilities",
+        "category": "balance_sheet",
+        "derivation": "accounts_payable + accrued_expenses + short_term_debt + deferred_revenue + other_current_liabilities"
+      },
+      {
+        "canonical_name": "long_term_debt",
+        "display_name": "Long-Term Debt",
+        "aliases": ["LT Debt", "Long-Term Borrowings", "Non-Current Debt", "Senior Debt", "Term Loans"],
+        "definition": "Debt obligations due beyond one year",
+        "typical_sign": "positive",
+        "parent": "total_liabilities",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "deferred_tax_liabilities",
+        "display_name": "Deferred Tax Liabilities",
+        "aliases": ["DTL", "Deferred Tax Liability"],
+        "definition": "Future tax obligations from timing differences",
+        "typical_sign": "positive",
+        "parent": "total_liabilities",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "pension_liabilities",
+        "display_name": "Pension Liabilities",
+        "aliases": ["Pension Obligations", "Retirement Benefits Obligation"],
+        "definition": "Present value of defined benefit pension obligations",
+        "typical_sign": "positive",
+        "parent": "total_liabilities",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "other_noncurrent_liabilities",
+        "display_name": "Other Non-Current Liabilities",
+        "aliases": ["Other NCL", "Other Long-Term Liabilities"],
+        "definition": "Long-term liabilities not classified elsewhere",
+        "typical_sign": "positive",
+        "parent": "total_liabilities",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "total_liabilities",
+        "display_name": "Total Liabilities",
+        "aliases": ["Liabilities", "Total Liabilities"],
+        "definition": "Sum of all obligations owed by the entity",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "balance_sheet",
+        "derivation": "current_liabilities + long_term_debt + deferred_tax_liabilities + pension_liabilities + other_noncurrent_liabilities"
+      },
+      {
+        "canonical_name": "common_stock",
+        "display_name": "Common Stock",
+        "aliases": ["Share Capital", "Common Shares", "Ordinary Shares"],
+        "definition": "Par value of common equity shares issued",
+        "typical_sign": "positive",
+        "parent": "total_equity",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "preferred_stock",
+        "display_name": "Preferred Stock",
+        "aliases": ["Preferred Shares", "Preference Shares"],
+        "definition": "Par value of preferred equity shares issued",
+        "typical_sign": "positive",
+        "parent": "total_equity",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "additional_paid_in_capital",
+        "display_name": "Additional Paid-In Capital",
+        "aliases": ["APIC", "Share Premium", "Capital Surplus"],
+        "definition": "Amount received from shareholders above par value",
+        "typical_sign": "positive",
+        "parent": "total_equity",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "retained_earnings",
+        "display_name": "Retained Earnings",
+        "aliases": ["Accumulated Earnings", "Earned Surplus", "Retained Profits"],
+        "definition": "Cumulative net income retained in the business",
+        "typical_sign": "positive",
+        "parent": "total_equity",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "treasury_stock",
+        "display_name": "Treasury Stock",
+        "aliases": ["Treasury Shares", "Own Shares Held"],
+        "definition": "Company's own shares repurchased from shareholders",
+        "typical_sign": "negative",
+        "parent": "total_equity",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "accumulated_other_comprehensive_income",
+        "display_name": "Accumulated Other Comprehensive Income",
+        "aliases": ["AOCI", "Other Comprehensive Income", "Comprehensive Income Reserve"],
+        "definition": "Cumulative gains and losses not yet realized through net income",
+        "typical_sign": "positive",
+        "parent": "total_equity",
+        "category": "balance_sheet",
+        "derivation": null
+      },
+      {
+        "canonical_name": "total_equity",
+        "display_name": "Total Shareholders' Equity",
+        "aliases": ["Equity", "Shareholders' Equity", "Total Equity", "Stockholders' Equity", "Net Worth"],
+        "definition": "Residual interest in assets after deducting liabilities",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "balance_sheet",
+        "derivation": "common_stock + preferred_stock + additional_paid_in_capital + retained_earnings - treasury_stock + accumulated_other_comprehensive_income"
+      }
+    ],
+    "cash_flow": [
+      {
+        "canonical_name": "net_income_cf",
+        "display_name": "Net Income (CF Starting Point)",
+        "aliases": ["Net Income for CF", "Net Profit - CF"],
+        "definition": "Net income as starting point for cash flow statement",
+        "typical_sign": "positive",
+        "parent": "cfo",
+        "category": "cash_flow",
+        "derivation": null
+      },
+      {
+        "canonical_name": "depreciation_cf",
+        "display_name": "Depreciation (Add Back)",
+        "aliases": ["Depreciation - CF", "D&A Add Back"],
+        "definition": "Non-cash depreciation expense added back to net income",
+        "typical_sign": "positive",
+        "parent": "cfo",
+        "category": "cash_flow",
+        "derivation": null
+      },
+      {
+        "canonical_name": "amortization_cf",
+        "display_name": "Amortization (Add Back)",
+        "aliases": ["Amortization - CF", "Amortization Add Back"],
+        "definition": "Non-cash amortization expense added back to net income",
+        "typical_sign": "positive",
+        "parent": "cfo",
+        "category": "cash_flow",
+        "derivation": null
+      },
+      {
+        "canonical_name": "stock_based_compensation",
+        "display_name": "Stock-Based Compensation",
+        "aliases": ["SBC", "Equity Compensation", "Share-Based Payments"],
+        "definition": "Non-cash compensation expense from stock options and grants",
+        "typical_sign": "positive",
+        "parent": "cfo",
+        "category": "cash_flow",
+        "derivation": null
+      },
+      {
+        "canonical_name": "change_in_working_capital",
+        "display_name": "Change in Working Capital",
+        "aliases": ["WC Change", "Working Capital Movement", "Net Working Capital Change"],
+        "definition": "Net change in current assets minus current liabilities",
+        "typical_sign": "positive",
+        "parent": "cfo",
+        "category": "cash_flow",
+        "derivation": null
+      },
+      {
+        "canonical_name": "change_in_ar",
+        "display_name": "Change in Accounts Receivable",
+        "aliases": ["AR Change", "Receivables Change"],
+        "definition": "Change in accounts receivable from prior period",
+        "typical_sign": "negative",
+        "parent": "change_in_working_capital",
+        "category": "cash_flow",
+        "derivation": null
+      },
+      {
+        "canonical_name": "change_in_inventory",
+        "display_name": "Change in Inventory",
+        "aliases": ["Inventory Change", "Stock Change"],
+        "definition": "Change in inventory levels from prior period",
+        "typical_sign": "negative",
+        "parent": "change_in_working_capital",
+        "category": "cash_flow",
+        "derivation": null
+      },
+      {
+        "canonical_name": "change_in_ap",
+        "display_name": "Change in Accounts Payable",
+        "aliases": ["AP Change", "Payables Change"],
+        "definition": "Change in accounts payable from prior period",
+        "typical_sign": "positive",
+        "parent": "change_in_working_capital",
+        "category": "cash_flow",
+        "derivation": null
+      },
+      {
+        "canonical_name": "cfo",
+        "display_name": "Cash Flow from Operations",
+        "aliases": ["Operating Cash Flow", "CFO", "Operating CF", "OCF"],
+        "definition": "Net cash generated from core business operations",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "cash_flow",
+        "derivation": "net_income_cf + depreciation_cf + amortization_cf + stock_based_compensation - change_in_working_capital"
+      },
+      {
+        "canonical_name": "capex",
+        "display_name": "Capital Expenditures",
+        "aliases": ["CapEx", "CAPEX", "PP&E Purchases", "Fixed Asset Purchases"],
+        "definition": "Cash spent on acquiring or upgrading physical assets",
+        "typical_sign": "negative",
+        "parent": "cfi",
+        "category": "cash_flow",
+        "derivation": null
+      },
+      {
+        "canonical_name": "acquisitions",
+        "display_name": "Acquisitions",
+        "aliases": ["Business Acquisitions", "M&A Spending", "Purchase of Business"],
+        "definition": "Cash spent on acquiring other businesses",
+        "typical_sign": "negative",
+        "parent": "cfi",
+        "category": "cash_flow",
+        "derivation": null
+      },
+      {
+        "canonical_name": "asset_sales",
+        "display_name": "Proceeds from Asset Sales",
+        "aliases": ["Asset Disposals", "Sale of Assets", "Divestiture Proceeds"],
+        "definition": "Cash received from selling assets or businesses",
+        "typical_sign": "positive",
+        "parent": "cfi",
+        "category": "cash_flow",
+        "derivation": null
+      },
+      {
+        "canonical_name": "investment_purchases",
+        "display_name": "Purchase of Investments",
+        "aliases": ["Investment Spending", "Securities Purchases"],
+        "definition": "Cash spent on purchasing marketable securities or investments",
+        "typical_sign": "negative",
+        "parent": "cfi",
+        "category": "cash_flow",
+        "derivation": null
+      },
+      {
+        "canonical_name": "investment_sales",
+        "display_name": "Sale of Investments",
+        "aliases": ["Investment Proceeds", "Securities Sales"],
+        "definition": "Cash received from selling investments",
+        "typical_sign": "positive",
+        "parent": "cfi",
+        "category": "cash_flow",
+        "derivation": null
+      },
+      {
+        "canonical_name": "cfi",
+        "display_name": "Cash Flow from Investing",
+        "aliases": ["Investing Cash Flow", "CFI", "Investing CF"],
+        "definition": "Net cash used in investment activities",
+        "typical_sign": "negative",
+        "parent": null,
+        "category": "cash_flow",
+        "derivation": "capex + acquisitions - asset_sales + investment_purchases - investment_sales"
+      },
+      {
+        "canonical_name": "debt_issuance",
+        "display_name": "Debt Issuance",
+        "aliases": ["New Debt", "Borrowings", "Debt Proceeds"],
+        "definition": "Cash received from issuing new debt",
+        "typical_sign": "positive",
+        "parent": "cff",
+        "category": "cash_flow",
+        "derivation": null
+      },
+      {
+        "canonical_name": "debt_repayment",
+        "display_name": "Debt Repayment",
+        "aliases": ["Debt Paydown", "Principal Repayment", "Debt Reduction"],
+        "definition": "Cash used to repay debt principal",
+        "typical_sign": "negative",
+        "parent": "cff",
+        "category": "cash_flow",
+        "derivation": null
+      },
+      {
+        "canonical_name": "equity_issuance",
+        "display_name": "Equity Issuance",
+        "aliases": ["New Shares Issued", "Stock Issuance", "Equity Proceeds"],
+        "definition": "Cash received from issuing new equity shares",
+        "typical_sign": "positive",
+        "parent": "cff",
+        "category": "cash_flow",
+        "derivation": null
+      },
+      {
+        "canonical_name": "share_buyback",
+        "display_name": "Share Buyback",
+        "aliases": ["Stock Repurchase", "Treasury Stock Purchase", "Share Repurchase"],
+        "definition": "Cash used to repurchase company shares",
+        "typical_sign": "negative",
+        "parent": "cff",
+        "category": "cash_flow",
+        "derivation": null
+      },
+      {
+        "canonical_name": "dividends_paid",
+        "display_name": "Dividends Paid",
+        "aliases": ["Dividend Payments", "Cash Dividends"],
+        "definition": "Cash distributed to shareholders as dividends",
+        "typical_sign": "negative",
+        "parent": "cff",
+        "category": "cash_flow",
+        "derivation": null
+      },
+      {
+        "canonical_name": "cff",
+        "display_name": "Cash Flow from Financing",
+        "aliases": ["Financing Cash Flow", "CFF", "Financing CF"],
+        "definition": "Net cash from financing activities",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "cash_flow",
+        "derivation": "debt_issuance - debt_repayment + equity_issuance - share_buyback - dividends_paid"
+      },
+      {
+        "canonical_name": "fcf",
+        "display_name": "Free Cash Flow",
+        "aliases": ["FCF", "Unlevered Free Cash Flow", "Free CF"],
+        "definition": "Cash available after capital expenditures",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "cash_flow",
+        "derivation": "cfo - capex"
+      },
+      {
+        "canonical_name": "net_change_cash",
+        "display_name": "Net Change in Cash",
+        "aliases": ["Cash Change", "Net Cash Flow", "Change in Cash"],
+        "definition": "Total change in cash and cash equivalents for the period",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "cash_flow",
+        "derivation": "cfo + cfi + cff"
+      }
+    ],
+    "debt_schedule": [
+      {
+        "canonical_name": "debt_opening_balance",
+        "display_name": "Debt Opening Balance",
+        "aliases": ["Beginning Debt Balance", "Opening Debt"],
+        "definition": "Total debt at the beginning of the period",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "debt_schedule",
+        "derivation": null
+      },
+      {
+        "canonical_name": "debt_drawdown",
+        "display_name": "Debt Drawdown",
+        "aliases": ["New Debt", "Debt Additions", "Borrowings"],
+        "definition": "New debt issued during the period",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "debt_schedule",
+        "derivation": null
+      },
+      {
+        "canonical_name": "debt_mandatory_repayment",
+        "display_name": "Mandatory Debt Repayment",
+        "aliases": ["Required Repayment", "Scheduled Amortization"],
+        "definition": "Contractually required principal repayment",
+        "typical_sign": "negative",
+        "parent": null,
+        "category": "debt_schedule",
+        "derivation": null
+      },
+      {
+        "canonical_name": "debt_optional_repayment",
+        "display_name": "Optional Debt Repayment",
+        "aliases": ["Voluntary Repayment", "Optional Prepayment", "Discretionary Paydown"],
+        "definition": "Optional principal repayment beyond mandatory requirements",
+        "typical_sign": "negative",
+        "parent": null,
+        "category": "debt_schedule",
+        "derivation": null
+      },
+      {
+        "canonical_name": "debt_closing_balance",
+        "display_name": "Debt Closing Balance",
+        "aliases": ["Ending Debt Balance", "Closing Debt", "Period End Debt"],
+        "definition": "Total debt at the end of the period",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "debt_schedule",
+        "derivation": "debt_opening_balance + debt_drawdown - debt_mandatory_repayment - debt_optional_repayment"
+      },
+      {
+        "canonical_name": "interest_rate",
+        "display_name": "Interest Rate",
+        "aliases": ["Coupon Rate", "Debt Rate", "Borrowing Rate"],
+        "definition": "Annual interest rate on debt",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "debt_schedule",
+        "derivation": null
+      },
+      {
+        "canonical_name": "interest_expense_debt",
+        "display_name": "Interest Expense (Debt Schedule)",
+        "aliases": ["Debt Interest", "Interest Payment"],
+        "definition": "Interest expense calculated on average debt balance",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "debt_schedule",
+        "derivation": "(debt_opening_balance + debt_closing_balance) / 2 * interest_rate"
+      },
+      {
+        "canonical_name": "debt_maturity_date",
+        "display_name": "Debt Maturity Date",
+        "aliases": ["Maturity", "Due Date", "Expiration Date"],
+        "definition": "Date when debt principal is due for full repayment",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "debt_schedule",
+        "derivation": null
+      },
+      {
+        "canonical_name": "debt_covenants",
+        "display_name": "Debt Covenants",
+        "aliases": ["Financial Covenants", "Loan Covenants"],
+        "definition": "Contractual restrictions on financial metrics",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "debt_schedule",
+        "derivation": null
+      },
+      {
+        "canonical_name": "debt_service",
+        "display_name": "Total Debt Service",
+        "aliases": ["Debt Payment", "Principal + Interest"],
+        "definition": "Total cash required for debt obligations (principal + interest)",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "debt_schedule",
+        "derivation": "debt_mandatory_repayment + debt_optional_repayment + interest_expense_debt"
+      }
+    ],
+    "metrics": [
+      {
+        "canonical_name": "revenue_growth",
+        "display_name": "Revenue Growth %",
+        "aliases": ["Sales Growth", "Top Line Growth", "Revenue CAGR"],
+        "definition": "Percentage change in revenue from prior period",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "metrics",
+        "derivation": "(revenue_current - revenue_prior) / revenue_prior"
+      },
+      {
+        "canonical_name": "gross_margin",
+        "display_name": "Gross Margin %",
+        "aliases": ["GP Margin", "Gross Profit Margin"],
+        "definition": "Gross profit as percentage of revenue",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "metrics",
+        "derivation": "gross_profit / revenue"
+      },
+      {
+        "canonical_name": "ebitda_margin",
+        "display_name": "EBITDA Margin %",
+        "aliases": ["EBITDA %", "Operating Margin"],
+        "definition": "EBITDA as percentage of revenue",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "metrics",
+        "derivation": "ebitda / revenue"
+      },
+      {
+        "canonical_name": "net_margin",
+        "display_name": "Net Margin %",
+        "aliases": ["Net Profit Margin", "Bottom Line Margin"],
+        "definition": "Net income as percentage of revenue",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "metrics",
+        "derivation": "net_income / revenue"
+      },
+      {
+        "canonical_name": "roa",
+        "display_name": "Return on Assets",
+        "aliases": ["ROA", "Asset Returns"],
+        "definition": "Net income as percentage of total assets",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "metrics",
+        "derivation": "net_income / total_assets"
+      },
+      {
+        "canonical_name": "roe",
+        "display_name": "Return on Equity",
+        "aliases": ["ROE", "Equity Returns"],
+        "definition": "Net income as percentage of shareholders' equity",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "metrics",
+        "derivation": "net_income / total_equity"
+      },
+      {
+        "canonical_name": "roic",
+        "display_name": "Return on Invested Capital",
+        "aliases": ["ROIC"],
+        "definition": "NOPAT as percentage of invested capital",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "metrics",
+        "derivation": "nopat / (total_equity + long_term_debt)"
+      },
+      {
+        "canonical_name": "current_ratio",
+        "display_name": "Current Ratio",
+        "aliases": ["Working Capital Ratio"],
+        "definition": "Current assets divided by current liabilities",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "metrics",
+        "derivation": "current_assets / current_liabilities"
+      },
+      {
+        "canonical_name": "quick_ratio",
+        "display_name": "Quick Ratio",
+        "aliases": ["Acid Test Ratio"],
+        "definition": "Liquid assets divided by current liabilities",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "metrics",
+        "derivation": "(cash + marketable_securities + accounts_receivable) / current_liabilities"
+      },
+      {
+        "canonical_name": "debt_to_equity",
+        "display_name": "Debt-to-Equity Ratio",
+        "aliases": ["D/E Ratio", "Leverage Ratio"],
+        "definition": "Total debt divided by shareholders' equity",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "metrics",
+        "derivation": "(short_term_debt + long_term_debt) / total_equity"
+      },
+      {
+        "canonical_name": "debt_to_ebitda",
+        "display_name": "Debt-to-EBITDA Ratio",
+        "aliases": ["Net Debt / EBITDA", "Leverage Multiple"],
+        "definition": "Net debt divided by EBITDA",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "metrics",
+        "derivation": "(short_term_debt + long_term_debt - cash) / ebitda"
+      },
+      {
+        "canonical_name": "interest_coverage",
+        "display_name": "Interest Coverage Ratio",
+        "aliases": ["ICR", "Times Interest Earned"],
+        "definition": "EBIT divided by interest expense",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "metrics",
+        "derivation": "ebit / interest_expense"
+      },
+      {
+        "canonical_name": "dscr",
+        "display_name": "Debt Service Coverage Ratio",
+        "aliases": ["DSCR", "Debt Coverage"],
+        "definition": "Cash available for debt service divided by total debt service",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "metrics",
+        "derivation": "(ebitda - capex - taxes) / debt_service"
+      },
+      {
+        "canonical_name": "days_sales_outstanding",
+        "display_name": "Days Sales Outstanding",
+        "aliases": ["DSO", "Collection Period", "Receivables Days"],
+        "definition": "Average days to collect accounts receivable",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "metrics",
+        "derivation": "(accounts_receivable / revenue) * 365"
+      },
+      {
+        "canonical_name": "days_inventory_outstanding",
+        "display_name": "Days Inventory Outstanding",
+        "aliases": ["DIO", "Inventory Days"],
+        "definition": "Average days inventory is held before sale",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "metrics",
+        "derivation": "(inventory / cogs) * 365"
+      },
+      {
+        "canonical_name": "days_payable_outstanding",
+        "display_name": "Days Payable Outstanding",
+        "aliases": ["DPO", "Payment Period"],
+        "definition": "Average days to pay suppliers",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "metrics",
+        "derivation": "(accounts_payable / cogs) * 365"
+      },
+      {
+        "canonical_name": "cash_conversion_cycle",
+        "display_name": "Cash Conversion Cycle",
+        "aliases": ["CCC", "Working Capital Cycle"],
+        "definition": "Days to convert inventory and receivables to cash",
+        "typical_sign": "positive",
+        "parent": null,
+        "category": "metrics",
+        "derivation": "days_sales_outstanding + days_inventory_outstanding - days_payable_outstanding"
+      }
+    ]
+  }
+}

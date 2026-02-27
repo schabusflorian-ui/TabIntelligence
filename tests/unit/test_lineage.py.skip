@@ -1,0 +1,260 @@
+"""
+Unit tests for lineage tracking system.
+Tests event emission, validation, persistence, and provenance queries.
+"""
+import pytest
+import uuid
+from sqlalchemy import select, text
+
+from src.agents.agent_06_lineage import LineageTracker
+from src.models.lineage import LineageEvent
+from src.models.base import get_async_session, init_db
+from src.core.exceptions import LineageError, LineageIncompleteError
+
+
+@pytest.fixture(scope="module")
+async def db_setup():
+    """Initialize test database."""
+    await init_db()
+    yield
+
+
+@pytest.fixture
+async def clean_lineage_events():
+    """Clean lineage_events table before each test."""
+    async with get_async_session() as session:
+        await session.execute(text("DELETE FROM lineage_events"))
+        await session.commit()
+    yield
+
+
+@pytest.fixture
+def job_id():
+    """Generate test job ID."""
+    return str(uuid.uuid4())
+
+
+def test_lineage_tracker_initialization(job_id):
+    """Test LineageTracker initializes correctly."""
+    tracker = LineageTracker(job_id=job_id)
+
+    assert str(tracker.job_id) == job_id
+    assert len(tracker.events) == 0
+    assert len(tracker._stage_coverage) == 0
+
+
+def test_emit_stage_1_no_input(job_id):
+    """Test Stage 1 emission with no input lineage."""
+    tracker = LineageTracker(job_id=job_id)
+
+    output_id = tracker.emit(
+        stage=1,
+        event_type="parse",
+        input_lineage_id=None,
+        metadata={"sheets_count": 5, "tokens": 1000}
+    )
+
+    assert len(tracker.events) == 1
+    assert 1 in tracker._stage_coverage
+    assert uuid.UUID(output_id)  # Valid UUID
+
+    event = tracker.events[0]
+    assert event.stage == 1
+    assert event.event_type == "parse"
+    assert event.input_lineage_id is None
+    assert event.event_metadata["sheets_count"] == 5
+
+
+def test_emit_stage_2_requires_input(job_id):
+    """Test Stage 2 requires input lineage from Stage 1."""
+    tracker = LineageTracker(job_id=job_id)
+
+    # Stage 2 without input should fail
+    with pytest.raises(LineageError, match="requires input_lineage_id"):
+        tracker.emit(
+            stage=2,
+            event_type="triage",
+            input_lineage_id=None,
+            metadata={"tokens": 500}
+        )
+
+
+def test_emit_stage_1_rejects_input(job_id):
+    """Test Stage 1 should not have input lineage."""
+    tracker = LineageTracker(job_id=job_id)
+
+    fake_input_id = str(uuid.uuid4())
+
+    with pytest.raises(LineageError, match="should not have input_lineage_id"):
+        tracker.emit(
+            stage=1,
+            event_type="parse",
+            input_lineage_id=fake_input_id,
+            metadata={"tokens": 1000}
+        )
+
+
+def test_emit_full_pipeline_chain(job_id):
+    """Test emitting complete 3-stage pipeline."""
+    tracker = LineageTracker(job_id=job_id)
+
+    # Stage 1
+    lineage_1 = tracker.emit(
+        stage=1,
+        event_type="parse",
+        input_lineage_id=None,
+        metadata={"sheets_count": 3, "tokens": 800}
+    )
+
+    # Stage 2
+    lineage_2 = tracker.emit(
+        stage=2,
+        event_type="triage",
+        input_lineage_id=lineage_1,
+        metadata={"tier_1_count": 2, "tokens": 400}
+    )
+
+    # Stage 3
+    lineage_3 = tracker.emit(
+        stage=3,
+        event_type="map",
+        input_lineage_id=lineage_2,
+        metadata={"mappings_count": 15, "tokens": 600}
+    )
+
+    assert len(tracker.events) == 3
+    assert tracker._stage_coverage == {1, 2, 3}
+
+    # Verify chain
+    assert tracker.events[0].output_lineage_id == uuid.UUID(lineage_1)
+    assert tracker.events[1].input_lineage_id == uuid.UUID(lineage_1)
+    assert tracker.events[1].output_lineage_id == uuid.UUID(lineage_2)
+    assert tracker.events[2].input_lineage_id == uuid.UUID(lineage_2)
+    assert tracker.events[2].output_lineage_id == uuid.UUID(lineage_3)
+
+
+def test_validate_completeness_success(job_id):
+    """Test validation passes when all stages present."""
+    tracker = LineageTracker(job_id=job_id)
+
+    # Emit all 3 stages
+    l1 = tracker.emit(1, "parse", None, {"tokens": 100})
+    l2 = tracker.emit(2, "triage", l1, {"tokens": 100})
+    tracker.emit(3, "map", l2, {"tokens": 100})
+
+    # Should not raise
+    tracker.validate_completeness(stages=[1, 2, 3])
+
+
+def test_validate_completeness_fails_missing_stage(job_id):
+    """Test validation fails when stage missing."""
+    tracker = LineageTracker(job_id=job_id)
+
+    # Only emit stage 1 and 2
+    l1 = tracker.emit(1, "parse", None, {"tokens": 100})
+    tracker.emit(2, "triage", l1, {"tokens": 100})
+
+    # Validation should fail for missing stage 3
+    with pytest.raises(LineageIncompleteError) as exc_info:
+        tracker.validate_completeness(stages=[1, 2, 3])
+
+    error = exc_info.value
+    assert error.missing_events == [3]
+    assert str(tracker.job_id) in str(error)
+
+
+@pytest.mark.asyncio
+async def test_save_to_db(job_id, db_setup, clean_lineage_events):
+    """Test persisting lineage events to database."""
+    tracker = LineageTracker(job_id=job_id)
+
+    # Emit events
+    l1 = tracker.emit(1, "parse", None, {"sheets_count": 2, "tokens": 500})
+    l2 = tracker.emit(2, "triage", l1, {"tier_1_count": 1, "tokens": 300})
+    tracker.emit(3, "map", l2, {"mappings_count": 10, "tokens": 400})
+
+    # Save to DB
+    await tracker.save_to_db()
+
+    # Query DB to verify
+    async with get_async_session() as session:
+        stmt = select(LineageEvent).where(LineageEvent.job_id == uuid.UUID(job_id))
+        result = await session.execute(stmt)
+        events = result.scalars().all()
+
+    assert len(events) == 3
+    assert all(e.job_id == uuid.UUID(job_id) for e in events)
+
+
+@pytest.mark.asyncio
+async def test_query_provenance(job_id, db_setup, clean_lineage_events):
+    """Test querying provenance chain."""
+    tracker = LineageTracker(job_id=job_id)
+
+    # Create chain
+    l1 = tracker.emit(1, "parse", None, {"tokens": 100})
+    l2 = tracker.emit(2, "triage", l1, {"tokens": 200})
+    l3 = tracker.emit(3, "map", l2, {"tokens": 300})
+
+    # Save to DB
+    await tracker.save_to_db()
+
+    # Query chain from final output
+    chain = await tracker.query_provenance(l3)
+
+    assert len(chain) == 3
+    assert chain[0]["stage"] == 1
+    assert chain[1]["stage"] == 2
+    assert chain[2]["stage"] == 3
+
+    # Verify metadata preserved
+    assert chain[0]["metadata"]["tokens"] == 100
+    assert chain[1]["metadata"]["tokens"] == 200
+    assert chain[2]["metadata"]["tokens"] == 300
+
+
+@pytest.mark.asyncio
+async def test_query_provenance_partial_chain(job_id, db_setup, clean_lineage_events):
+    """Test querying from middle of chain."""
+    tracker = LineageTracker(job_id=job_id)
+
+    l1 = tracker.emit(1, "parse", None, {"tokens": 100})
+    l2 = tracker.emit(2, "triage", l1, {"tokens": 200})
+    tracker.emit(3, "map", l2, {"tokens": 300})
+
+    await tracker.save_to_db()
+
+    # Query from stage 2 output
+    chain = await tracker.query_provenance(l2)
+
+    assert len(chain) == 2
+    assert chain[0]["stage"] == 1
+    assert chain[1]["stage"] == 2
+
+
+def test_get_events_summary(job_id):
+    """Test events summary generation."""
+    tracker = LineageTracker(job_id=job_id)
+
+    l1 = tracker.emit(1, "parse", None, {"tokens": 100})
+    tracker.emit(2, "triage", l1, {"tokens": 200})
+    tracker.emit(2, "triage", l1, {"tokens": 150})  # Multiple events for same stage
+
+    summary = tracker.get_events_summary()
+
+    assert summary["job_id"] == job_id
+    assert summary["total_events"] == 3
+    assert summary["stages_covered"] == [1, 2]
+    assert summary["events_by_stage"][1] == 1
+    assert summary["events_by_stage"][2] == 2
+
+
+def test_emit_invalid_stage(job_id):
+    """Test emitting event for invalid stage number."""
+    tracker = LineageTracker(job_id=job_id)
+
+    with pytest.raises(LineageError, match="Invalid stage: 0"):
+        tracker.emit(0, "parse", None, {"tokens": 100})
+
+    with pytest.raises(LineageError, match="Invalid stage: 6"):
+        tracker.emit(6, "unknown", None, {"tokens": 100})

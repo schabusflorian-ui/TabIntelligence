@@ -1,0 +1,35 @@
+Classify each sheet into processing tiers:
+
+TIER 1 - PROCESS_HIGH (Core financial statements, target 90%+ accuracy):
+- Income Statement, P&L, Profit & Loss
+- Balance Sheet, Statement of Financial Position
+- Cash Flow Statement
+
+TIER 2 - PROCESS_MEDIUM (Supporting schedules, target 80%+ accuracy):
+- Debt Schedule, Borrowings
+- Depreciation & Amortization, Fixed Assets
+- Working Capital
+
+TIER 3 - PROCESS_LOW (Analytical, target 70%+ accuracy):
+- Revenue Build, Revenue Detail
+- Assumptions, Drivers
+- Sensitivity, Scenarios
+
+TIER 4 - SKIP:
+- Names containing: scratch, temp, old, backup, draft, chart
+- Sheets with only charts, no data
+- Summary dashboards that just reference other sheets
+
+For each sheet return JSON:
+[
+  {{
+    "sheet_name": "...",
+    "tier": 1,
+    "decision": "PROCESS_HIGH",
+    "confidence": 0.95,
+    "reasoning": "Contains standard P&L structure with revenue, costs, and profitability metrics"
+  }}
+]
+
+Sheets to classify:
+{sheets}

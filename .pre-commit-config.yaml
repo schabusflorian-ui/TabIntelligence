@@ -1,0 +1,58 @@
+repos:
+  # General pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim trailing whitespace
+      - id: end-of-file-fixer
+        name: Fix end of files
+      - id: check-yaml
+        name: Check YAML syntax
+      - id: check-json
+        name: Check JSON syntax
+      - id: check-added-large-files
+        name: Check for large files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+        name: Check for merge conflicts
+      - id: detect-private-key
+        name: Detect private keys
+      - id: check-case-conflict
+        name: Check for case conflicts
+      - id: mixed-line-ending
+        name: Check for mixed line endings
+
+  # Ruff - Python linter and formatter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.15
+    hooks:
+      - id: ruff
+        name: Ruff linter
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+        name: Ruff formatter
+
+  # Local custom hooks
+  - repo: local
+    hooks:
+      - id: no-env-files
+        name: Block .env files from commits
+        entry: '\.env$'
+        language: pygrep
+        files: '^\.env.*$'
+        exclude: '\.env\.example$'
+
+      - id: no-api-keys
+        name: Block API keys from commits
+        entry: '(ANTHROPIC_API_KEY|sk-ant-)'
+        language: pygrep
+        exclude: '\.md$|\.example$'
+
+      - id: no-todo-commits
+        name: Block TODO markers in staged code
+        entry: '(TODO|FIXME|XXX):'
+        language: pygrep
+        files: '\.(py|js|ts|tsx|jsx)$'
+        exclude: 'test_.*\.py$'
+        stages: [commit]
