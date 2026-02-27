@@ -68,9 +68,7 @@ addopts = [
 ]
 
 [tool.coverage.run]
-omit = [
-    "src/extraction/llm.py",  # Unused provider abstraction (dead code)
-]
+omit = []
 
 [tool.coverage.report]
 fail_under = 80

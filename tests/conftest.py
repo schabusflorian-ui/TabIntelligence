@@ -41,6 +41,8 @@ sys.modules['botocore.exceptions'] = _mock_botocore_exceptions
 mock_celery_module = MagicMock()
 mock_celery_app = MagicMock()
 mock_celery_module.Celery.return_value = mock_celery_app
+# Ensure .task() decorated functions return objects with string .delay().id
+mock_celery_app.task.return_value.return_value.delay.return_value.id = "mock-task-id-12345"
 # celery.Task must be a real class (not MagicMock) so DLQTask can inherit
 # methods properly. MagicMock base classes swallow subclass method definitions.
 mock_celery_module.Task = type('Task', (), {})

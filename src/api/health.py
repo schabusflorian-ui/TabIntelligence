@@ -14,6 +14,7 @@ from datetime import datetime
 from typing import Dict, Any
 
 from fastapi import APIRouter, Response, status as http_status
+from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from src.db.session import get_db_async, async_engine
@@ -109,7 +110,7 @@ async def readiness():
     except Exception as e:
         logger.error(f"Readiness check failed: {e}")
 
-        return Response(
+        return JSONResponse(
             content={
                 "status": "not_ready",
                 "database": "disconnected",
@@ -117,7 +118,6 @@ async def readiness():
                 "timestamp": datetime.utcnow().isoformat(),
             },
             status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
-            media_type="application/json"
         )
 
 
@@ -261,14 +261,13 @@ async def database_health() -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
 
-        return Response(
+        return JSONResponse(
             content={
                 "status": "unhealthy",
                 "error": str(e),
                 "timestamp": datetime.utcnow().isoformat(),
             },
             status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
-            media_type="application/json"
         )
 
 

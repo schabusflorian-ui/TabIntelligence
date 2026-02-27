@@ -46,7 +46,7 @@ async def test_readiness_healthy_db():
 
 @pytest.mark.asyncio
 async def test_readiness_unhealthy_db():
-    """Test readiness handles DB disconnection (Response content must be str/bytes)."""
+    """Test readiness returns not_ready when DB is disconnected."""
     from src.api.health import readiness
 
     mock_ctx = AsyncMock()
@@ -54,10 +54,15 @@ async def test_readiness_unhealthy_db():
     mock_ctx.__aexit__ = AsyncMock(return_value=False)
 
     with patch("src.api.health.get_db_async", return_value=mock_ctx):
-        # Note: production code passes a dict to Response(content=...) which
-        # raises AttributeError. This tests the exception path is reached.
-        with pytest.raises(AttributeError):
-            await readiness()
+        result = await readiness()
+
+    # JSONResponse returned — parse the body
+    import json
+    body = json.loads(result.body.decode())
+    assert body["status"] == "not_ready"
+    assert body["database"] == "disconnected"
+    assert "connection refused" in body["error"]
+    assert result.status_code == 503
 
 
 # ============================================================================
@@ -186,7 +191,7 @@ async def test_database_health_circuit_open_with_low_success():
 
 @pytest.mark.asyncio
 async def test_database_health_exception():
-    """Test database health exception path is reached on DB failure."""
+    """Test database health returns unhealthy on DB failure."""
     from src.api.health import database_health
 
     mock_ctx = AsyncMock()
@@ -194,9 +199,14 @@ async def test_database_health_exception():
     mock_ctx.__aexit__ = AsyncMock(return_value=False)
 
     with patch("src.api.health.get_db_async", return_value=mock_ctx):
-        # Note: Response(content=dict) raises AttributeError in Starlette
-        with pytest.raises(AttributeError):
-            await database_health()
+        result = await database_health()
+
+    # JSONResponse returned — parse the body
+    import json
+    body = json.loads(result.body.decode())
+    assert body["status"] == "unhealthy"
+    assert "DB down" in body["error"]
+    assert result.status_code == 503
 
 
 # ============================================================================
