@@ -1,8 +1,12 @@
 """
 Excel Model Intelligence - API Server
 """
+from pathlib import Path
+
 from fastapi import FastAPI, UploadFile, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from typing import Optional
 import hashlib
 import uuid
@@ -30,6 +34,7 @@ from src.api.middleware import RequestIDMiddleware, log_audit_event, get_client_
 from src.api.metrics import MetricsMiddleware, metrics_endpoint, file_uploads_total, file_upload_bytes, duplicate_uploads_total
 from src.api.health import router as health_router
 from src.api.taxonomy import router as taxonomy_router
+from src.api.entities import router as entities_router
 from src.db.session import get_db, get_db_context
 from src.db import crud
 from src.db.models import JobStatusEnum, ExtractionJob
@@ -83,6 +88,14 @@ app.include_router(health_router)
 # Taxonomy browsing and search endpoints
 app.include_router(taxonomy_router)
 
+# Entity CRUD endpoints
+app.include_router(entities_router)
+
+# Serve frontend static files
+_static_dir = Path(__file__).parent.parent.parent / "static"
+if _static_dir.is_dir():
+    app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -123,7 +136,10 @@ async def startup_event():
 
 @app.get("/")
 async def root():
-    """Root endpoint with service info."""
+    """Root endpoint — serves frontend UI if available, otherwise returns service info."""
+    index = _static_dir / "index.html"
+    if index.is_file():
+        return FileResponse(str(index))
     return {
         "service": "DebtFund - Excel Model Intelligence",
         "version": "0.1.0",
@@ -329,6 +345,52 @@ async def upload_file(
         logger.error(f"File upload failed: {str(e)}")
         log_exception(logger, e, {"filename": file.filename})
         raise HTTPException(500, f"Upload failed: {str(e)}")
+
+
+@app.get("/api/v1/jobs")
+@limiter.limit("500/hour")
+async def list_jobs(
+    request: Request,
+    limit: int = 50,
+    offset: int = 0,
+    status: Optional[str] = None,
+    db: Session = Depends(get_db),
+    api_key: APIKey = Depends(get_current_api_key),
+):
+    """List extraction jobs with optional status filtering and pagination."""
+    # Validate status if provided
+    status_enum = None
+    if status:
+        try:
+            status_enum = JobStatusEnum(status)
+        except ValueError:
+            valid = [s.value for s in JobStatusEnum]
+            raise HTTPException(400, f"Invalid status. Must be one of: {valid}")
+
+    try:
+        jobs = crud.list_jobs(db, limit=min(limit, 200), offset=offset, status=status_enum)
+        return {
+            "count": len(jobs),
+            "limit": limit,
+            "offset": offset,
+            "jobs": [
+                {
+                    "job_id": str(j.job_id),
+                    "file_id": str(j.file_id),
+                    "status": j.status.value,
+                    "current_stage": j.current_stage,
+                    "progress_percent": j.progress_percent,
+                    "error": j.error,
+                    "filename": j.file.filename if j.file else None,
+                    "created_at": j.created_at.isoformat() if j.created_at else None,
+                    "updated_at": j.updated_at.isoformat() if j.updated_at else None,
+                }
+                for j in jobs
+            ],
+        }
+    except DatabaseError as e:
+        logger.error(f"Database error listing jobs: {str(e)}")
+        raise HTTPException(500, "Database error listing jobs")
 
 
 @app.get("/api/v1/jobs/{job_id}")

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DebtFund - Financial Model Extraction</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header>
+    <h1>DebtFund</h1>
+    <p class="subtitle">Financial Model Extraction Platform</p>
+  </header>
+
+  <main>
+    <!-- API Key -->
+    <section id="auth-section">
+      <label for="api-key-input">API Key</label>
+      <div class="input-row">
+        <input type="password" id="api-key-input" placeholder="Enter your API key">
+        <button id="save-key-btn" class="btn btn-secondary">Save</button>
+      </div>
+      <p id="key-status" class="status-text"></p>
+    </section>
+
+    <!-- Upload -->
+    <section id="upload-section">
+      <div id="drop-zone">
+        <p>Drag & drop an Excel file here</p>
+        <p class="hint">or click to browse (.xlsx, .xls)</p>
+        <input type="file" id="file-input" accept=".xlsx,.xls" hidden>
+      </div>
+      <p id="upload-status" class="status-text"></p>
+    </section>
+
+    <!-- Progress -->
+    <section id="progress-section" class="hidden">
+      <h2>Extraction Progress</h2>
+      <div class="progress-bar"><div id="progress-fill"></div></div>
+      <p id="progress-text">Starting...</p>
+    </section>
+
+    <!-- Error -->
+    <section id="error-section" class="hidden">
+      <div class="error-box">
+        <h3>Extraction Failed</h3>
+        <p id="error-message"></p>
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section id="results-section" class="hidden">
+      <div id="summary-bar">
+        <div class="stat"><span id="stat-sheets">0</span><label>Sheets</label></div>
+        <div class="stat"><span id="stat-items">0</span><label>Line Items</label></div>
+        <div class="stat"><span id="stat-confidence">0%</span><label>Confidence</label></div>
+        <div class="stat"><span id="stat-tokens">0</span><label>Tokens</label></div>
+        <div class="stat"><span id="stat-cost">$0.00</span><label>Cost</label></div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="line-items">Line Items</button>
+        <button class="tab" data-tab="triage">Triage</button>
+        <button class="tab" data-tab="validation">Validation</button>
+      </div>
+
+      <!-- Line Items Tab -->
+      <div id="tab-line-items" class="tab-content active">
+        <table id="line-items-table">
+          <thead>
+            <tr>
+              <th data-sort="sheet">Sheet</th>
+              <th data-sort="original_label">Label</th>
+              <th data-sort="canonical_name">Canonical Name</th>
+              <th data-sort="confidence">Confidence</th>
+              <th>Values</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Triage Tab -->
+      <div id="tab-triage" class="tab-content">
+        <table id="triage-table">
+          <thead>
+            <tr>
+              <th>Sheet</th>
+              <th>Tier</th>
+              <th>Decision</th>
+              <th>Rationale</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Validation Tab -->
+      <div id="tab-validation" class="tab-content">
+        <div id="validation-content"></div>
+      </div>
+
+      <div class="export-buttons">
+        <button id="export-json" class="btn">Download JSON</button>
+        <button id="export-csv" class="btn">Download CSV</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
