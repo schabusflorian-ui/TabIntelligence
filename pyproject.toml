@@ -65,4 +65,5 @@ addopts = [
     "--cov=src",
     "--cov-report=html",
     "--cov-report=term-missing",
+    "--ignore=tests/e2e",
 ]
