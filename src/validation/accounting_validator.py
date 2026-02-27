@@ -309,7 +309,7 @@ class AccountingValidator:
         # Literal number
         try:
             return Decimal(expr)
-        except:
+        except (ValueError, ArithmeticError):
             pass
 
         # Simple variable lookup

@@ -4,7 +4,7 @@ Application configuration using Pydantic Settings.
 Loads configuration from environment variables with validation and type checking.
 """
 from pydantic_settings import BaseSettings
-from pydantic import Field, validator, field_validator
+from pydantic import Field, field_validator
 from typing import Optional
 import os
 

@@ -13,8 +13,11 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
+from sqlalchemy.exc import IntegrityError
+
 from src.core.logging import setup_logging, api_logger as logger, log_exception
 from src.core.exceptions import ExtractionError, ClaudeAPIError, InvalidFileError, DatabaseError, FileStorageError, LineageIncompleteError
+from src.db.constraint_handler import handle_integrity_error
 from src.core.config import get_settings
 # Tracing is optional (Week 3 feature) - don't block if not installed
 try:
@@ -24,6 +27,7 @@ except ImportError:
     TRACING_AVAILABLE = False
     logger.warning("OpenTelemetry not installed - tracing disabled (install for Week 3)")
 from src.api.middleware import RequestIDMiddleware, log_audit_event, get_client_ip
+from src.api.metrics import MetricsMiddleware, metrics_endpoint, file_uploads_total, file_upload_bytes
 from src.db.session import get_db, get_db_context
 from src.db import crud
 from src.db.models import JobStatusEnum
@@ -65,6 +69,12 @@ app.add_middleware(
 # Add request ID middleware for correlation tracking
 app.add_middleware(RequestIDMiddleware)
 
+# Add Prometheus metrics middleware
+app.add_middleware(MetricsMiddleware)
+
+# Prometheus metrics endpoint (no auth required for scraping)
+app.add_api_route("/metrics", metrics_endpoint, methods=["GET"], include_in_schema=False)
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -82,6 +92,12 @@ async def startup_event():
     # Initialize database
     create_tables()
     logger.info("Database initialized successfully")
+
+    # Attach slow query logging to sync engine
+    from src.db.slow_query_log import attach_slow_query_logging
+    from src.db.session import get_sync_engine
+    attach_slow_query_logging(get_sync_engine(), threshold_ms=100)
+    logger.info("Slow query logging enabled (threshold: 100ms)")
 
     # Ensure S3 bucket exists
     try:
@@ -108,10 +124,46 @@ async def root():
 
 
 @app.get("/health")
-async def health():
-    """Health check endpoint."""
-    logger.debug("Health check requested")
-    return {"status": "healthy", "version": "0.1.0"}
+async def health(db: Session = Depends(get_db)):
+    """
+    Comprehensive health check with component status.
+
+    Returns status of all dependent services (database, S3).
+    Returns 200 if healthy, 503 if any critical component is down.
+    """
+    import time
+    from datetime import datetime, timezone as tz
+    from fastapi.responses import JSONResponse
+    from sqlalchemy import text
+
+    checks = {
+        "status": "healthy",
+        "version": "0.1.0",
+        "timestamp": datetime.now(tz.utc).isoformat(),
+        "components": {}
+    }
+
+    # Database check
+    try:
+        start = time.time()
+        db.execute(text("SELECT 1"))
+        latency_ms = round((time.time() - start) * 1000, 2)
+        checks["components"]["database"] = {"status": "up", "latency_ms": latency_ms}
+    except Exception as e:
+        checks["status"] = "degraded"
+        checks["components"]["database"] = {"status": "down", "error": str(e)}
+
+    # S3/MinIO check
+    try:
+        s3_settings = get_settings()
+        s3_client = get_s3_client(s3_settings)
+        s3_client.ensure_bucket_exists()
+        checks["components"]["s3"] = {"status": "up", "bucket": s3_settings.s3_bucket}
+    except Exception as e:
+        checks["components"]["s3"] = {"status": "down", "error": str(e)}
+
+    status_code = 200 if checks["status"] == "healthy" else 503
+    return JSONResponse(content=checks, status_code=status_code)
 
 
 @app.post("/api/v1/files/upload")
@@ -197,6 +249,10 @@ async def upload_file(
 
         logger.info(f"Celery task enqueued: task_id={task.id}, job_id={db_job.job_id}")
 
+        # Track upload metrics
+        file_uploads_total.inc()
+        file_upload_bytes.observe(file_size)
+
         # Audit trail
         log_audit_event(
             db=db,
@@ -224,6 +280,10 @@ async def upload_file(
         # Rollback database if storage fails
         db.rollback()
         raise HTTPException(500, f"Storage error: {str(e)}")
+
+    except IntegrityError as e:
+        db.rollback()
+        raise handle_integrity_error(e)
 
     except DatabaseError as e:
         logger.error(f"Database error during file upload: {str(e)}")
