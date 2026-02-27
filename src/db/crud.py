@@ -19,12 +19,35 @@ from src.core.exceptions import DatabaseError
 # FILE OPERATIONS
 # ============================================================================
 
+def get_file_by_hash(db: Session, content_hash: str) -> Optional[File]:
+    """
+    Look up file by content hash for deduplication.
+
+    Args:
+        db: Database session
+        content_hash: SHA-256 hex digest
+
+    Returns:
+        File or None if no match
+    """
+    try:
+        return db.query(File).filter(File.content_hash == content_hash).first()
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to look up file by hash: {str(e)}")
+        raise DatabaseError(
+            f"Failed to look up file: {str(e)}",
+            operation="read",
+            table="files"
+        )
+
+
 def create_file(
     db: Session,
     filename: str,
     file_size: int,
     s3_key: Optional[str] = None,
     entity_id: Optional[UUID] = None,
+    content_hash: Optional[str] = None,
 ) -> File:
     """
     Create a new file record.
@@ -35,6 +58,7 @@ def create_file(
         file_size: File size in bytes
         s3_key: S3/MinIO object key (optional)
         entity_id: Entity linking ID (optional)
+        content_hash: SHA-256 hex digest of file content (optional)
 
     Returns:
         File: Created file record
@@ -48,6 +72,7 @@ def create_file(
             file_size=file_size,
             s3_key=s3_key,
             entity_id=entity_id,
+            content_hash=content_hash,
         )
         db.add(file)
         db.commit()

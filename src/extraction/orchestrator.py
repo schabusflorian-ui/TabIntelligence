@@ -13,6 +13,13 @@ from src.core.logging import extraction_logger as logger, log_performance, log_e
 from src.core.exceptions import ExtractionError, ClaudeAPIError, LineageIncompleteError
 from src.extraction.base import PipelineContext
 from src.extraction.registry import registry
+from src.api.metrics import (
+    extraction_stage_duration_seconds,
+    extraction_stage_tokens_total,
+    extraction_cost_usd_total,
+    extraction_duration_seconds,
+    extraction_jobs_total,
+)
 
 # Import stages to trigger self-registration
 import src.extraction.stages  # noqa: F401
@@ -80,9 +87,16 @@ async def extract(
         for stage in pipeline:
             logger.info(f"Running {stage.description}...")
 
-            # Execute stage
+            # Execute stage with timing
+            stage_start = time.time()
             result = await stage.execute(context)
+            stage_duration = time.time() - stage_start
             context.set_result(stage.name, result)
+
+            # Record per-stage metrics
+            stage_tokens = result.get("tokens", 0)
+            extraction_stage_duration_seconds.labels(stage=stage.name).observe(stage_duration)
+            extraction_stage_tokens_total.labels(stage=stage.name).inc(stage_tokens)
 
             # Emit lineage event
             parent_id = lineage_ids.get(stage.stage_number - 1)
@@ -187,6 +201,11 @@ def _build_result(
     )
 
     pipeline_duration = time.time() - pipeline_start
+
+    # Record pipeline-level metrics
+    extraction_duration_seconds.observe(pipeline_duration)
+    extraction_cost_usd_total.inc(cost)
+    extraction_jobs_total.labels(status="completed").inc()
 
     log_performance(
         logger,

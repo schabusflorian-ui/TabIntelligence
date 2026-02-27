@@ -5,6 +5,7 @@ from fastapi import FastAPI, UploadFile, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
+import hashlib
 import uuid
 from sqlalchemy.orm import Session
 from uuid import UUID
@@ -27,10 +28,10 @@ except ImportError:
     TRACING_AVAILABLE = False
     logger.warning("OpenTelemetry not installed - tracing disabled (install for Week 3)")
 from src.api.middleware import RequestIDMiddleware, log_audit_event, get_client_ip
-from src.api.metrics import MetricsMiddleware, metrics_endpoint, file_uploads_total, file_upload_bytes
+from src.api.metrics import MetricsMiddleware, metrics_endpoint, file_uploads_total, file_upload_bytes, duplicate_uploads_total
 from src.db.session import get_db, get_db_context
 from src.db import crud
-from src.db.models import JobStatusEnum
+from src.db.models import JobStatusEnum, ExtractionJob
 from src.storage.s3 import get_s3_client
 from src.jobs.tasks import run_extraction_task
 from src.auth.dependencies import get_current_api_key
@@ -202,12 +203,40 @@ async def upload_file(
         # Now safe to read
         file_bytes = await file.read()
 
+        # Compute content hash for deduplication
+        content_hash = hashlib.sha256(file_bytes).hexdigest()
+
+        # Check for duplicate file
+        existing_file = crud.get_file_by_hash(db, content_hash)
+        if existing_file:
+            existing_job = (
+                db.query(ExtractionJob)
+                .filter(ExtractionJob.file_id == existing_file.file_id)
+                .order_by(ExtractionJob.created_at.desc())
+                .first()
+            )
+
+            logger.info(
+                f"Duplicate file detected: hash={content_hash[:16]}..., "
+                f"existing_file_id={existing_file.file_id}"
+            )
+            duplicate_uploads_total.inc()
+
+            return {
+                "file_id": str(existing_file.file_id),
+                "job_id": str(existing_job.job_id) if existing_job else None,
+                "status": "duplicate",
+                "message": "File with identical content already uploaded",
+                "original_upload": existing_file.uploaded_at.isoformat() if existing_file.uploaded_at else None,
+            }
+
         # Create file record in database (without s3_key initially)
         db_file = crud.create_file(
             db,
             filename=file.filename,
             file_size=file_size,
             entity_id=UUID(entity_id) if entity_id else None,
+            content_hash=content_hash,
         )
 
         # Upload to S3/MinIO

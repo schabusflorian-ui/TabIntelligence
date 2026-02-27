@@ -15,6 +15,7 @@ mock_s3_client.create_bucket.return_value = {}
 mock_boto3_module.client.return_value = mock_s3_client
 sys.modules['boto3'] = mock_boto3_module
 sys.modules['botocore'] = MagicMock()
+sys.modules['botocore.config'] = MagicMock()
 sys.modules['botocore.exceptions'] = MagicMock()
 
 # Create a mock celery module

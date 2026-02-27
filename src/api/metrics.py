@@ -64,6 +64,37 @@ file_upload_bytes = Histogram(
     buckets=[10_000, 100_000, 500_000, 1_000_000, 5_000_000, 10_000_000, 50_000_000, 100_000_000],
 )
 
+# Per-stage extraction metrics
+extraction_stage_duration_seconds = Histogram(
+    "debtfund_extraction_stage_duration_seconds",
+    "Duration of individual extraction stages",
+    ["stage"],
+    buckets=[0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0, 120.0],
+)
+
+extraction_stage_tokens_total = Counter(
+    "debtfund_extraction_stage_tokens_total",
+    "Total tokens consumed per extraction stage",
+    ["stage"],
+)
+
+extraction_cost_usd_total = Counter(
+    "debtfund_extraction_cost_usd_total",
+    "Total estimated Claude API cost in USD",
+)
+
+validation_flags_total = Counter(
+    "debtfund_validation_flags_total",
+    "Total validation flags raised",
+    ["severity"],
+)
+
+# Deduplication metrics
+duplicate_uploads_total = Counter(
+    "debtfund_duplicate_uploads_total",
+    "Total duplicate file uploads detected",
+)
+
 # Database metrics
 db_query_duration_seconds = Histogram(
     "debtfund_db_query_duration_seconds",

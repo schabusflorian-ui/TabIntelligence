@@ -215,6 +215,12 @@ class File(Base):
     filename: Mapped[str] = mapped_column(String(255))
     file_size: Mapped[int] = mapped_column(Integer)  # Size in bytes
     s3_key: Mapped[Optional[str]] = mapped_column(String(512))  # S3/MinIO object key
+    content_hash: Mapped[Optional[str]] = mapped_column(
+        String(64),  # SHA-256 hex digest
+        index=True,
+        unique=True,
+        nullable=True,
+    )
     entity_id: Mapped[Optional[UUID]] = mapped_column(
         PG_UUID(as_uuid=True),
         ForeignKey("entities.id", ondelete="CASCADE"),

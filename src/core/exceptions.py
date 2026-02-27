@@ -171,3 +171,15 @@ class InvalidFileError(DebtFundError):
         if file_type:
             details["file_type"] = file_type
         super().__init__(message, details)
+
+
+class DuplicateFileError(DebtFundError):
+    """File with identical content already uploaded."""
+
+    def __init__(self, message: str, content_hash: str = None, existing_file_id: str = None):
+        details = {}
+        if content_hash:
+            details["content_hash"] = content_hash
+        if existing_file_id:
+            details["existing_file_id"] = existing_file_id
+        super().__init__(message, details)

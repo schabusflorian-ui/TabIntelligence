@@ -1,7 +1,7 @@
 """Stage 4: Validation - Verify extracted data against accounting rules."""
 import json
 import time
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Any, Dict, List
 
 import anthropic
@@ -274,7 +274,11 @@ class ValidationStage(ExtractionStage):
                         continue
                     try:
                         decimal_val = Decimal(str(value))
-                    except Exception:
+                    except (ValueError, ArithmeticError, InvalidOperation) as e:
+                        logger.warning(
+                            f"Could not convert value to Decimal: {value!r}, "
+                            f"label={label}, period={period}, error={e}"
+                        )
                         continue
 
                     if period not in period_values:
