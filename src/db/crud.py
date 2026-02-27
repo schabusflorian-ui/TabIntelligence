@@ -10,9 +10,135 @@ from typing import Optional, List
 from uuid import UUID
 from datetime import datetime, timezone
 
-from src.db.models import File, ExtractionJob, JobStatusEnum, LineageEvent, DLQEntry, EntityPattern
+from src.db.models import Entity, File, ExtractionJob, JobStatusEnum, LineageEvent, DLQEntry, EntityPattern
 from src.core.logging import database_logger as logger
 from src.core.exceptions import DatabaseError
+
+
+# ============================================================================
+# ENTITY OPERATIONS
+# ============================================================================
+
+def create_entity(
+    db: Session,
+    name: str,
+    industry: Optional[str] = None,
+) -> Entity:
+    """
+    Create a new entity.
+
+    Args:
+        db: Database session
+        name: Entity name
+        industry: Optional industry classification
+
+    Returns:
+        Entity: Created entity record
+    """
+    try:
+        entity = Entity(name=name, industry=industry)
+        db.add(entity)
+        db.commit()
+        db.refresh(entity)
+        logger.info(f"Entity created: id={entity.id}, name={name}")
+        return entity
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Failed to create entity: {str(e)}")
+        raise DatabaseError(
+            f"Failed to create entity: {str(e)}",
+            operation="create",
+            table="entities"
+        )
+
+
+def get_entity(db: Session, entity_id: UUID) -> Optional[Entity]:
+    """Get entity by ID."""
+    try:
+        return db.query(Entity).filter(Entity.id == entity_id).first()
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to get entity {entity_id}: {str(e)}")
+        raise DatabaseError(
+            f"Failed to get entity: {str(e)}",
+            operation="read",
+            table="entities"
+        )
+
+
+def list_entities(
+    db: Session,
+    limit: int = 50,
+    offset: int = 0,
+) -> List[Entity]:
+    """List entities with pagination."""
+    try:
+        return (
+            db.query(Entity)
+            .order_by(Entity.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to list entities: {str(e)}")
+        raise DatabaseError(
+            f"Failed to list entities: {str(e)}",
+            operation="read",
+            table="entities"
+        )
+
+
+def update_entity(
+    db: Session,
+    entity_id: UUID,
+    name: Optional[str] = None,
+    industry: Optional[str] = None,
+) -> Entity:
+    """Update an entity's name and/or industry."""
+    try:
+        entity = db.query(Entity).filter(Entity.id == entity_id).first()
+        if not entity:
+            raise DatabaseError(
+                f"Entity {entity_id} not found",
+                operation="update",
+                table="entities"
+            )
+        if name is not None:
+            entity.name = name
+        if industry is not None:
+            entity.industry = industry
+        db.commit()
+        db.refresh(entity)
+        logger.info(f"Entity {entity_id} updated")
+        return entity
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Failed to update entity {entity_id}: {str(e)}")
+        raise DatabaseError(
+            f"Failed to update entity: {str(e)}",
+            operation="update",
+            table="entities"
+        )
+
+
+def delete_entity(db: Session, entity_id: UUID) -> bool:
+    """Delete an entity. Returns True if deleted, False if not found."""
+    try:
+        entity = db.query(Entity).filter(Entity.id == entity_id).first()
+        if not entity:
+            return False
+        db.delete(entity)
+        db.commit()
+        logger.info(f"Entity {entity_id} deleted")
+        return True
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Failed to delete entity {entity_id}: {str(e)}")
+        raise DatabaseError(
+            f"Failed to delete entity: {str(e)}",
+            operation="delete",
+            table="entities"
+        )
 
 
 # ============================================================================
@@ -109,6 +235,39 @@ def get_file(db: Session, file_id: UUID) -> Optional[File]:
         logger.error(f"Failed to get file {file_id}: {str(e)}")
         raise DatabaseError(
             f"Failed to get file: {str(e)}",
+            operation="read",
+            table="files"
+        )
+
+
+def list_files(
+    db: Session,
+    limit: int = 50,
+    offset: int = 0,
+) -> List[File]:
+    """
+    List files ordered by upload date (newest first).
+
+    Args:
+        db: Database session
+        limit: Maximum number of files to return
+        offset: Number of files to skip
+
+    Returns:
+        List[File]: List of file records
+    """
+    try:
+        return (
+            db.query(File)
+            .order_by(File.uploaded_at.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to list files: {str(e)}")
+        raise DatabaseError(
+            f"Failed to list files: {str(e)}",
             operation="read",
             table="files"
         )
@@ -588,7 +747,7 @@ def upsert_entity_pattern(
 
         if existing:
             if confidence > float(existing.confidence):
-                existing.confidence = confidence
+                existing.confidence = confidence  # type: ignore[assignment]
                 existing.canonical_name = canonical_name
             existing.occurrence_count += 1
             existing.last_seen = datetime.now(timezone.utc)

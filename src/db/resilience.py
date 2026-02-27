@@ -148,7 +148,7 @@ async def execute_with_retry(
             logger.debug(
                 f"Executing {operation_name} (attempt {attempt + 1}/{config.max_attempts})"
             )
-            result = await operation(*args, **kwargs)
+            result = await operation(*args, **kwargs)  # type: ignore[misc]
             logger.debug(f"Successfully executed {operation_name}")
             return result
 
@@ -224,7 +224,7 @@ def with_retry(
             )
             op_name = operation_name or func.__name__
             return await execute_with_retry(func, *args, config=config, operation_name=op_name, **kwargs)
-        return wrapper
+        return wrapper  # type: ignore[return-value]
     return decorator
 
 
@@ -414,8 +414,8 @@ class CircuitBreaker:
 
         try:
             # Execute with timeout
-            result = await asyncio.wait_for(
-                operation(*args, **kwargs),
+            result: Any = await asyncio.wait_for(
+                operation(*args, **kwargs),  # type: ignore[arg-type]
                 timeout=self.timeout
             )
             self._on_success()

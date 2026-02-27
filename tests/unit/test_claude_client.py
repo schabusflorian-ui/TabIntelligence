@@ -72,4 +72,4 @@ class TestGetClaudeClient:
             client_module.get_claude_client()
 
         call_kwargs = mock_anthropic.Anthropic.call_args[1]
-        assert "base_url" not in call_kwargs
+        assert call_kwargs.get("base_url") is None

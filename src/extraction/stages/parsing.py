@@ -63,7 +63,7 @@ class ParsingStage(ExtractionStage):
                     }],
                 )
 
-                content = response.content[0].text
+                content = response.content[0].text  # type: ignore[union-attr]
                 parsed = extract_json(content)
 
                 tokens = response.usage.input_tokens + response.usage.output_tokens
@@ -73,10 +73,10 @@ class ParsingStage(ExtractionStage):
                     logger,
                     "stage_1_parsing",
                     duration,
-                    {"tokens": tokens, "sheets": len(parsed.get("sheets", []))},
+                    {"tokens": tokens, "sheets": len(parsed.get("sheets", []) if isinstance(parsed, dict) else [])},  # type: ignore[union-attr]
                 )
 
-                sheets_count = len(parsed.get("sheets", []))
+                sheets_count = len(parsed.get("sheets", []) if isinstance(parsed, dict) else [])  # type: ignore[union-attr]
                 logger.info(f"Stage 1: Parsing completed - {sheets_count} sheets found")
 
                 return {
@@ -110,7 +110,7 @@ class ParsingStage(ExtractionStage):
 
             except anthropic.APIError as e:
                 logger.error(f"Stage 1: Claude API error - {str(e)}")
-                error = ClaudeAPIError(
+                error = ClaudeAPIError(  # type: ignore[assignment]
                     str(e),
                     stage="parsing",
                     retry_count=retry_count,
@@ -124,7 +124,7 @@ class ParsingStage(ExtractionStage):
 
             except Exception as e:
                 logger.error(f"Stage 1: Unexpected error - {str(e)}")
-                error = ExtractionError(f"Parsing failed: {str(e)}", stage="parsing")
+                error = ExtractionError(f"Parsing failed: {str(e)}", stage="parsing")  # type: ignore[assignment]
                 log_exception(logger, error)
                 raise error
 

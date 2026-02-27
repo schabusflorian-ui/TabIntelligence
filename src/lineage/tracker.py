@@ -62,7 +62,7 @@ class LineageTracker:
         }
 
         self.events.append(event)
-        self.lineage_chain[lineage_id] = input_lineage_id
+        self.lineage_chain[lineage_id] = input_lineage_id or ""
 
         logger.debug(
             f"Lineage event emitted: job={self.job_id}, stage={stage}, "

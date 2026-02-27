@@ -109,13 +109,13 @@ class AccountingValidator:
 
             # Check cross-item relationships
             for relationship in cross_val.get('relationships', []):
-                result = self._check_relationship(
+                rel_result = self._check_relationship(
                     canonical_name,
                     relationship,
                     extracted_data
                 )
-                if result:
-                    results.append(result)
+                if rel_result:
+                    results.append(rel_result)
 
             # Check time-series rules (if historical data provided)
             # TODO: Implement when historical data is available
@@ -238,7 +238,7 @@ class AccountingValidator:
                 return (True, None, None)  # Can't evaluate
 
             # Check with tolerance
-            diff_pct = abs(float(left_val - right_val) / float(max(abs(left_val), abs(right_val), 1)))
+            diff_pct = abs(float(left_val - right_val) / float(max(abs(left_val), abs(right_val), 1)))  # type: ignore[arg-type]
             passed = diff_pct <= tolerance
 
             return (passed, left_val, right_val)
@@ -279,7 +279,7 @@ class AccountingValidator:
                     return (True, None, None)
 
                 passed = lower <= value <= upper if lower is not None and upper is not None else True
-                return (passed, value, f"{lower} to {upper}")
+                return (passed, value, f"{lower} to {upper}")  # type: ignore[return-value]
 
         raise ValueError(f"Unsupported rule format: {rule_str}")
 

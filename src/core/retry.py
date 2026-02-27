@@ -52,7 +52,7 @@ def retry(max_attempts: int = 3, backoff_seconds: int = 2):
                         )
 
             # All attempts exhausted - raise the last exception
-            raise last_exception
+            raise last_exception  # type: ignore[misc]
 
         return wrapper
     return decorator

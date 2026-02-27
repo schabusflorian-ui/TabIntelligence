@@ -220,11 +220,11 @@ class TaxonomyManager:
 
         if category:
             items = self.get_by_category(session, category)
-            categories = {category: items}
+            categories: Dict[str, List[Taxonomy]] = {category: items}
         else:
             all_items = self.get_all(session)
             # Group by category
-            categories: Dict[str, List[Taxonomy]] = {}
+            categories = {}
             for item in all_items:
                 if item.category not in categories:
                     categories[item.category] = []

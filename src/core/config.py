@@ -219,7 +219,7 @@ class Settings(BaseSettings):
 # ============================================================================
 
 try:
-    settings = Settings()
+    settings = Settings()  # type: ignore[call-arg]
 except Exception as e:
     # If settings fail to load, provide helpful error message
     print(f"ERROR: Failed to load settings: {str(e)}")

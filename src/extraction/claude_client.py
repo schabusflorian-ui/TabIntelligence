@@ -16,9 +16,9 @@ def get_claude_client() -> anthropic.Anthropic:
     """Get or create the Anthropic Claude client (lazy initialization)."""
     global _client
     if _client is None:
-        kwargs = {"api_key": os.getenv("ANTHROPIC_API_KEY")}
         base_url = os.getenv("ANTHROPIC_BASE_URL")
-        if base_url:
-            kwargs["base_url"] = base_url
-        _client = anthropic.Anthropic(**kwargs)
+        _client = anthropic.Anthropic(
+            api_key=os.getenv("ANTHROPIC_API_KEY"),
+            base_url=base_url if base_url else None,
+        )
     return _client

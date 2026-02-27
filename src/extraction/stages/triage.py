@@ -57,7 +57,7 @@ class TriageStage(ExtractionStage):
                 }],
             )
 
-            content = response.content[0].text
+            content = response.content[0].text  # type: ignore[union-attr]
             triage = extract_json(content)
 
             duration = time.time() - start_time

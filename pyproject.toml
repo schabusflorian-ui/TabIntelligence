@@ -41,6 +41,7 @@ dev = [
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=4.1.0",
     "httpx>=0.25.0",
+    "mypy>=1.8.0",
     "ruff>=0.1.0",
     "pre-commit>=3.5.0",
     "safety>=2.3.0",
@@ -66,6 +67,15 @@ addopts = [
     "--cov-report=term-missing",
     "--ignore=tests/e2e",
 ]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+check_untyped_defs = true
+no_implicit_optional = true
 
 [tool.coverage.run]
 omit = []

@@ -175,3 +175,101 @@ class HierarchyNode(BaseModel):
     display_name: Optional[str] = None
     category: str
     children: List[HierarchyChild]
+
+
+# ============================================================================
+# Job Listing
+# ============================================================================
+
+class JobListItem(BaseModel):
+    job_id: str
+    file_id: str
+    status: str
+    current_stage: Optional[str] = None
+    progress_percent: Optional[int] = None
+    error: Optional[str] = None
+    filename: Optional[str] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+class JobListResponse(BaseModel):
+    count: int
+    limit: int
+    offset: int
+    jobs: List[JobListItem]
+
+
+# ============================================================================
+# Entity CRUD
+# ============================================================================
+
+class EntityCreateRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+    industry: Optional[str] = Field(None, max_length=100)
+
+class EntityResponse(BaseModel):
+    id: str
+    name: str
+    industry: Optional[str] = None
+    created_at: Optional[str] = None
+
+class EntityListResponse(BaseModel):
+    count: int
+    entities: List[EntityResponse]
+
+class EntityDetailResponse(EntityResponse):
+    patterns_count: int = 0
+    files_count: int = 0
+
+
+# ============================================================================
+# Lineage
+# ============================================================================
+
+class LineageEventItem(BaseModel):
+    event_id: str
+    stage_name: str
+    timestamp: Optional[str] = None
+    data: Optional[Dict[str, Any]] = None
+
+class LineageResponse(BaseModel):
+    job_id: str
+    status: str
+    events_count: int
+    events: List[LineageEventItem]
+
+
+# ============================================================================
+# Job Retry
+# ============================================================================
+
+class RetryResponse(BaseModel):
+    original_job_id: str
+    new_job_id: str
+    task_id: Optional[str] = None
+    status: str
+    message: str
+
+
+# ============================================================================
+# DLQ Admin
+# ============================================================================
+
+class DLQEntryListItem(BaseModel):
+    dlq_id: str
+    task_id: str
+    task_name: str
+    error: str
+    replayed: int
+    replayed_at: Optional[str] = None
+    created_at: Optional[str] = None
+
+class DLQEntryListResponse(BaseModel):
+    count: int
+    entries: List[DLQEntryListItem]
+
+class DLQEntryDetailResponse(DLQEntryListItem):
+    task_args: Optional[Any] = None
+    task_kwargs: Optional[Any] = None
+    traceback: Optional[str] = None
+    replayed_task_id: Optional[str] = None

@@ -92,6 +92,7 @@ def setup_logging(
     log_path.parent.mkdir(exist_ok=True, parents=True)
 
     # Create formatters
+    formatter: logging.Formatter
     if use_json:
         # JSON formatter for production
         formatter = CustomJsonFormatter(
@@ -188,7 +189,7 @@ class LogContext:
         self.logger.setLevel(self.original_level)
 
 
-def log_exception(logger: logging.Logger, exc: Exception, context: dict = None):
+def log_exception(logger: logging.Logger, exc: Exception, context: Optional[dict] = None):
     """
     Log an exception with additional context.
 
@@ -212,7 +213,7 @@ def log_exception(logger: logging.Logger, exc: Exception, context: dict = None):
     logger.exception(error_msg)
 
 
-def log_performance(logger: logging.Logger, operation: str, duration: float, details: dict = None):
+def log_performance(logger: logging.Logger, operation: str, duration: float, details: Optional[dict] = None):
     """
     Log performance metrics for operations.
 

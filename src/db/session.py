@@ -5,7 +5,7 @@ This is the canonical session management per Week 2 strategy.
 Provides session factories for both FastAPI (async) and Alembic (sync).
 """
 from contextlib import asynccontextmanager, contextmanager
-from typing import AsyncGenerator, Generator
+from typing import AsyncGenerator, Generator, Optional
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -97,7 +97,7 @@ async def get_db_dependency() -> AsyncGenerator[AsyncSession, None]:
 # SYNC SESSION (for Alembic migrations and tests)
 # ============================================================================
 
-def get_sync_engine(database_url: str = None):
+def get_sync_engine(database_url: Optional[str] = None):
     """
     Get synchronous SQLAlchemy engine for Alembic migrations.
 

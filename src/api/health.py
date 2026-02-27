@@ -195,10 +195,10 @@ async def database_health() -> Dict[str, Any]:
         # Get connection pool status
         pool = async_engine.pool
         pool_info = {
-            "size": pool.size(),
-            "checked_out": pool.checkedout(),
-            "overflow": pool.overflow(),
-            "total_connections": pool.size() + pool.overflow(),
+            "size": pool.size(),  # type: ignore[attr-defined]
+            "checked_out": pool.checkedout(),  # type: ignore[attr-defined]
+            "overflow": pool.overflow(),  # type: ignore[attr-defined]
+            "total_connections": pool.size() + pool.overflow(),  # type: ignore[attr-defined]
         }
 
         # Get circuit breaker stats
@@ -261,7 +261,7 @@ async def database_health() -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
 
-        return JSONResponse(
+        return JSONResponse(  # type: ignore[return-value]
             content={
                 "status": "unhealthy",
                 "error": str(e),
@@ -338,9 +338,9 @@ async def db_metrics():
 
         # Get pool info
         pool = async_engine.pool
-        pool_size = pool.size()
-        pool_checked_out = pool.checkedout()
-        pool_overflow = pool.overflow()
+        pool_size = pool.size()  # type: ignore[attr-defined]
+        pool_checked_out = pool.checkedout()  # type: ignore[attr-defined]
+        pool_overflow = pool.overflow()  # type: ignore[attr-defined]
 
         # Get circuit breaker stats
         breaker_stats = db_circuit_breaker.get_stats()

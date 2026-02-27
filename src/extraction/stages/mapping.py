@@ -54,6 +54,11 @@ class MappingStage(ExtractionStage):
         # Load taxonomy dynamically from JSON
         taxonomy_str = _load_taxonomy_for_prompt()
 
+        # Inject entity-specific pattern hints if available
+        entity_hints = self._build_entity_hints(context)
+        if entity_hints:
+            taxonomy_str = taxonomy_str + "\n\n" + entity_hints
+
         try:
             logger.debug(
                 f"Calling Claude API for mapping {len(labels)} items (attempt {attempt}/3)"
@@ -71,7 +76,7 @@ class MappingStage(ExtractionStage):
                 }],
             )
 
-            content = response.content[0].text
+            content = response.content[0].text  # type: ignore[union-attr]
             mappings = extract_json(content)
 
             duration = time.time() - start_time
@@ -136,6 +141,44 @@ class MappingStage(ExtractionStage):
                 f"Stage 3: Unexpected error on attempt {attempt}/3 - {str(e)}"
             )
             raise ExtractionError(f"Mapping failed: {str(e)}", stage="mapping")
+
+    def _build_entity_hints(self, context: PipelineContext) -> str:
+        """Load learned entity patterns from DB as mapping hints.
+
+        Uses the same lazy-import + get_db_sync() pattern as Stage 5.
+        Gracefully returns empty string if no entity_id or DB unavailable.
+        """
+        entity_id = getattr(context, "entity_id", None)
+        if not entity_id:
+            return ""
+
+        try:
+            from src.db.session import get_db_sync
+            from src.db import crud
+            from uuid import UUID
+
+            with get_db_sync() as db:
+                patterns = crud.get_entity_patterns(
+                    db, UUID(entity_id), min_confidence=0.8, limit=15
+                )
+
+            if not patterns:
+                return ""
+
+            lines = [
+                f"  '{p.original_label}' -> {p.canonical_name} "
+                f"({float(p.confidence):.0%}, seen {p.occurrence_count}x)"
+                for p in patterns
+            ]
+            logger.info(f"Stage 3: Loaded {len(patterns)} entity pattern hints from DB")
+            return (
+                "Known patterns from prior extractions for this entity:\n"
+                + "\n".join(lines)
+            )
+
+        except Exception as e:
+            logger.warning(f"Stage 3: Could not load entity patterns: {e}")
+            return ""
 
 
 # Self-register at import time

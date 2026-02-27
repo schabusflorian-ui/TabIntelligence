@@ -80,7 +80,7 @@ async def extract(
 
     # Get pipeline stages from registry (sorted by stage_number)
     pipeline = registry.get_pipeline()
-    lineage_ids = {}
+    lineage_ids: dict[int, str] = {}
     last_lineage_id = None
 
     try:
@@ -135,9 +135,9 @@ async def extract(
         raise error
 
     # Build final result from stage outputs
-    result = _build_result(context, last_lineage_id, pipeline_start)
+    extraction_result = _build_result(context, last_lineage_id, pipeline_start)
 
-    return result.to_dict()
+    return extraction_result.to_dict()
 
 
 def _build_result(
@@ -174,7 +174,8 @@ def _build_result(
             {"tier": 4, "decision": "SKIP"},
         )
 
-        if sheet_triage.get("tier", 4) <= 3:  # Process tiers 1-3
+        tier: int = sheet_triage.get("tier", 4)  # type: ignore[assignment]
+        if tier <= 3:  # Process tiers 1-3
             for row in sheet.get("rows", []):
                 mapping = mapping_lookup.get(row.get("label", ""), {})
                 line_items.append({

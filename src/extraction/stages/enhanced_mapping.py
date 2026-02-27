@@ -112,7 +112,7 @@ class EnhancedMappingStage(ExtractionStage):
                 }],
             )
 
-            content = response.content[0].text
+            content = response.content[0].text  # type: ignore[union-attr]
             enhanced = extract_json(content)
             tokens = response.usage.input_tokens + response.usage.output_tokens
 

@@ -103,6 +103,8 @@ async def async_extraction_wrapper(
         # Update to PROCESSING status
         with get_db_context() as db:
             job = crud.get_job(db, job_uuid)
+            if job is None:
+                raise ValueError(f"Job {job_id} not found")
             file_id_str = str(job.file_id)
 
             crud.update_job_status(

@@ -11,7 +11,7 @@ from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.jaeger.thrift import JaegerExporter
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentator
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.celery import CeleryInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.sdk.resources import Resource, SERVICE_NAME
@@ -62,7 +62,7 @@ def instrument_fastapi(app):
     Args:
         app: FastAPI application instance
     """
-    FastAPIInstrumentator().instrument_app(app)
+    FastAPIInstrumentor().instrument_app(app)
 
 
 def get_current_trace_id() -> str:

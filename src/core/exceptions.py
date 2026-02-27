@@ -3,12 +3,13 @@ Custom exception hierarchy for DebtFund.
 
 All DebtFund exceptions inherit from DebtFundError for easy catching.
 """
+from typing import Optional
 
 
 class DebtFundError(Exception):
     """Base exception for all DebtFund errors."""
 
-    def __init__(self, message: str, details: dict = None):
+    def __init__(self, message: str, details: Optional[dict] = None):
         self.message = message
         self.details = details or {}
         super().__init__(self.message)
@@ -22,7 +23,7 @@ class DebtFundError(Exception):
 class ConfigurationError(DebtFundError):
     """Configuration or environment setup issues."""
 
-    def __init__(self, message: str, missing_vars: list = None):
+    def __init__(self, message: str, missing_vars: Optional[list] = None):
         details = {"missing_vars": missing_vars} if missing_vars else {}
         super().__init__(message, details)
 
@@ -30,7 +31,7 @@ class ConfigurationError(DebtFundError):
 class ExtractionError(DebtFundError):
     """Base exception for extraction pipeline errors."""
 
-    def __init__(self, message: str, stage: str = None, file_id: str = None):
+    def __init__(self, message: str, stage: Optional[str] = None, file_id: Optional[str] = None):
         details = {}
         if stage:
             details["stage"] = stage
@@ -54,8 +55,8 @@ class ClaudeAPIError(ExtractionError):
         message: str,
         stage: str,
         retry_count: int = 0,
-        status_code: int = None,
-        file_id: str = None,
+        status_code: Optional[int] = None,
+        file_id: Optional[str] = None,
     ):
         self.stage = stage
         self.retry_count = retry_count
@@ -78,7 +79,7 @@ class ClaudeAPIError(ExtractionError):
 class ValidationError(ExtractionError):
     """Validation failures (Stage 4)."""
 
-    def __init__(self, message: str, validation_type: str = None, file_id: str = None):
+    def __init__(self, message: str, validation_type: Optional[str] = None, file_id: Optional[str] = None):
         details = {}
         if validation_type:
             details["validation_type"] = validation_type
@@ -89,7 +90,7 @@ class ValidationError(ExtractionError):
 class LineageError(DebtFundError):
     """Lineage system errors."""
 
-    def __init__(self, message: str, job_id: str = None):
+    def __init__(self, message: str, job_id: Optional[str] = None):
         details = {}
         if job_id:
             details["job_id"] = job_id
@@ -107,7 +108,7 @@ class LineageIncompleteError(LineageError):
         job_id: ID of the job with incomplete lineage
     """
 
-    def __init__(self, missing_events: list, job_id: str = None):
+    def __init__(self, missing_events: list, job_id: Optional[str] = None):
         self.missing_events = missing_events
         message = f"Lineage incomplete: {len(missing_events)} missing events (stages: {missing_events})"
         super().__init__(message, job_id=job_id)
@@ -117,7 +118,7 @@ class LineageIncompleteError(LineageError):
 class DatabaseError(DebtFundError):
     """Database operation failures."""
 
-    def __init__(self, message: str, operation: str = None, table: str = None):
+    def __init__(self, message: str, operation: Optional[str] = None, table: Optional[str] = None):
         details = {}
         if operation:
             details["operation"] = operation
@@ -129,7 +130,7 @@ class DatabaseError(DebtFundError):
 class FileStorageError(DebtFundError):
     """S3/MinIO storage operation failures."""
 
-    def __init__(self, message: str, bucket: str = None, key: str = None):
+    def __init__(self, message: str, bucket: Optional[str] = None, key: Optional[str] = None):
         details = {}
         if bucket:
             details["bucket"] = bucket
@@ -141,7 +142,7 @@ class FileStorageError(DebtFundError):
 class AuthenticationError(DebtFundError):
     """Authentication/authorization failures."""
 
-    def __init__(self, message: str, user_id: str = None):
+    def __init__(self, message: str, user_id: Optional[str] = None):
         details = {}
         if user_id:
             details["user_id"] = user_id
@@ -155,7 +156,7 @@ class RateLimitError(ClaudeAPIError):
     This is a specific case of ClaudeAPIError for retry handling.
     """
 
-    def __init__(self, message: str, stage: str, retry_after: int = None):
+    def __init__(self, message: str, stage: str, retry_after: Optional[int] = None):
         super().__init__(message, stage=stage, status_code=429)
         if retry_after:
             self.details["retry_after"] = retry_after
@@ -164,7 +165,7 @@ class RateLimitError(ClaudeAPIError):
 class InvalidFileError(DebtFundError):
     """Invalid or corrupted file uploaded."""
 
-    def __init__(self, message: str, filename: str = None, file_type: str = None):
+    def __init__(self, message: str, filename: Optional[str] = None, file_type: Optional[str] = None):
         details = {}
         if filename:
             details["filename"] = filename
@@ -176,7 +177,7 @@ class InvalidFileError(DebtFundError):
 class DuplicateFileError(DebtFundError):
     """File with identical content already uploaded."""
 
-    def __init__(self, message: str, content_hash: str = None, existing_file_id: str = None):
+    def __init__(self, message: str, content_hash: Optional[str] = None, existing_file_id: Optional[str] = None):
         details = {}
         if content_hash:
             details["content_hash"] = content_hash

@@ -554,7 +554,7 @@ class S3Client:
 # Factory Function for Dependency Injection
 # ============================================================================
 
-def get_s3_client(settings: Settings = None) -> S3Client:
+def get_s3_client(settings: Optional[Settings] = None) -> S3Client:
     """
     Factory function to create S3Client with settings.
 

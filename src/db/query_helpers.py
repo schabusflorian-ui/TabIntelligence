@@ -168,7 +168,7 @@ def get_lineage_chain(db: Session, job_id: UUID) -> List[LineageEvent]:
 
 
 def validate_lineage_completeness(
-    db: Session, job_id: UUID, required_stages: List[str] = None
+    db: Session, job_id: UUID, required_stages: Optional[List[str]] = None
 ) -> bool:
     """
     Validate that all required lineage stages are present for a job.
@@ -312,7 +312,7 @@ def bulk_update_pattern_confidence(
             .where(EntityPattern.id == update_data["pattern_id"])
             .values(confidence=update_data["new_confidence"])
         )
-        count += result.rowcount
+        count += result.rowcount  # type: ignore[attr-defined]
 
     db.commit()
     logger.info(f"Bulk updated {count} pattern confidence scores")

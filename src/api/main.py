@@ -35,6 +35,9 @@ from src.api.metrics import MetricsMiddleware, metrics_endpoint, file_uploads_to
 from src.api.health import router as health_router
 from src.api.taxonomy import router as taxonomy_router
 from src.api.entities import router as entities_router
+from src.api.files import router as files_router
+from src.api.jobs import router as jobs_router
+from src.api.dlq import router as dlq_router
 from src.db.session import get_db, get_db_context
 from src.db import crud
 from src.db.models import JobStatusEnum, ExtractionJob
@@ -63,7 +66,7 @@ settings = get_settings()
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 app.add_middleware(
     CORSMiddleware,
@@ -90,6 +93,15 @@ app.include_router(taxonomy_router)
 
 # Entity CRUD endpoints
 app.include_router(entities_router)
+
+# File browsing endpoints
+app.include_router(files_router)
+
+# Job management endpoints (lineage, retry)
+app.include_router(jobs_router)
+
+# DLQ admin endpoints
+app.include_router(dlq_router)
 
 # Serve frontend static files
 _static_dir = Path(__file__).parent.parent.parent / "static"
@@ -172,19 +184,19 @@ async def health(db: Session = Depends(get_db)):
         start = time.time()
         db.execute(text("SELECT 1"))
         latency_ms = round((time.time() - start) * 1000, 2)
-        checks["components"]["database"] = {"status": "up", "latency_ms": latency_ms}
+        checks["components"]["database"] = {"status": "up", "latency_ms": latency_ms}  # type: ignore[index]
     except Exception as e:
         checks["status"] = "degraded"
-        checks["components"]["database"] = {"status": "down", "error": str(e)}
+        checks["components"]["database"] = {"status": "down", "error": str(e)}  # type: ignore[index]
 
     # S3/MinIO check
     try:
         s3_settings = get_settings()
         s3_client = get_s3_client(s3_settings)
         s3_client.ensure_bucket_exists()
-        checks["components"]["s3"] = {"status": "up", "bucket": s3_settings.s3_bucket}
+        checks["components"]["s3"] = {"status": "up", "bucket": s3_settings.s3_bucket}  # type: ignore[index]
     except Exception as e:
-        checks["components"]["s3"] = {"status": "down", "error": str(e)}
+        checks["components"]["s3"] = {"status": "down", "error": str(e)}  # type: ignore[index]
 
     status_code = 200 if checks["status"] == "healthy" else 503
     return JSONResponse(content=checks, status_code=status_code)
@@ -203,7 +215,7 @@ async def upload_file(
     logger.info(f"File upload requested: {file.filename}, entity_id: {entity_id}")
 
     # Validate file type
-    if not file.filename.endswith(('.xlsx', '.xls')):
+    if not file.filename or not file.filename.endswith(('.xlsx', '.xls')):
         logger.warning(f"Invalid file type rejected: {file.filename}")
         raise HTTPException(400, "File must be an Excel file (.xlsx or .xls)")
 
@@ -254,9 +266,10 @@ async def upload_file(
             }
 
         # Create file record in database (without s3_key initially)
+        filename = file.filename or "unknown.xlsx"
         db_file = crud.create_file(
             db,
-            filename=file.filename,
+            filename=filename,
             file_size=file_size,
             entity_id=UUID(entity_id) if entity_id else None,
             content_hash=content_hash,
@@ -268,7 +281,7 @@ async def upload_file(
 
         s3_key = s3_client.generate_s3_key(
             file_id=db_file.file_id,
-            filename=file.filename
+            filename=filename
         )
 
         s3_client.upload_file(
@@ -276,7 +289,7 @@ async def upload_file(
             s3_key=s3_key,
             metadata={
                 "file_id": str(db_file.file_id),
-                "filename": file.filename,
+                "filename": filename,
                 "entity_id": str(entity_id) if entity_id else ""
             }
         )
@@ -559,6 +572,124 @@ async def export_job_result(
     }
 
 
+@app.get("/api/v1/jobs/{job_id}/lineage")
+@limiter.limit("500/hour")
+async def get_job_lineage(
+    request: Request,
+    job_id: str,
+    db: Session = Depends(get_db),
+    api_key: APIKey = Depends(get_current_api_key),
+):
+    """Get lineage events for a job — stage-by-stage extraction audit trail."""
+    try:
+        job_uuid = UUID(job_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid job_id format")
+
+    job = crud.get_job(db, job_uuid)
+    if not job:
+        raise HTTPException(404, "Job not found")
+
+    try:
+        events = crud.get_job_lineage(db, job_uuid)
+        return {
+            "job_id": job_id,
+            "status": job.status.value,
+            "events_count": len(events),
+            "events": [
+                {
+                    "event_id": str(e.event_id),
+                    "stage_name": e.stage_name,
+                    "timestamp": e.timestamp.isoformat() if e.timestamp else None,
+                    "data": e.data,
+                }
+                for e in events
+            ],
+        }
+    except DatabaseError as e:
+        logger.error(f"Database error getting lineage: {str(e)}")
+        raise HTTPException(500, "Database error getting lineage")
+
+
+@app.post("/api/v1/jobs/{job_id}/retry")
+@limiter.limit("20/hour")
+async def retry_job(
+    request: Request,
+    job_id: str,
+    db: Session = Depends(get_db),
+    api_key: APIKey = Depends(get_current_api_key),
+):
+    """
+    Retry a failed extraction job.
+
+    Creates a new job for the same file and enqueues a new Celery task.
+    Only failed jobs can be retried.
+    """
+    try:
+        job_uuid = UUID(job_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid job_id format")
+
+    job = crud.get_job(db, job_uuid)
+    if not job:
+        raise HTTPException(404, "Job not found")
+
+    if job.status != JobStatusEnum.FAILED:
+        raise HTTPException(
+            409,
+            f"Only failed jobs can be retried (current status: {job.status.value})"
+        )
+
+    # Download file from S3 for re-extraction
+    try:
+        file_record = crud.get_file(db, job.file_id)
+        if not file_record or not file_record.s3_key:
+            raise HTTPException(404, "Original file not found in storage")
+
+        settings = get_settings()
+        s3_client = get_s3_client(settings)
+        file_bytes = s3_client.download_file(file_record.s3_key)
+    except FileStorageError as e:
+        logger.error(f"Failed to download file for retry: {str(e)}")
+        raise HTTPException(500, f"Storage error: {str(e)}")
+
+    # Create new job for the same file
+    new_job = crud.create_extraction_job(db, file_id=job.file_id)
+
+    # Enqueue Celery task
+    entity_id = str(file_record.entity_id) if file_record.entity_id else None
+    task = run_extraction_task.delay(
+        job_id=str(new_job.job_id),
+        file_bytes=file_bytes,
+        entity_id=entity_id,
+    )
+
+    logger.info(
+        f"Job retry: original={job_id}, new_job={new_job.job_id}, task={task.id}"
+    )
+
+    # Audit trail
+    log_audit_event(
+        db=db,
+        action="retry",
+        resource_type="job",
+        resource_id=job_uuid,
+        api_key_id=api_key.id,
+        ip_address=get_client_ip(request),
+        user_agent=request.headers.get("User-Agent"),
+        details={"original_job_id": job_id, "new_job_id": str(new_job.job_id)},
+        status_code=201,
+    )
+
+    return {
+        "original_job_id": job_id,
+        "new_job_id": str(new_job.job_id),
+        "task_id": task.id,
+        "status": "processing",
+        "message": "Re-extraction started",
+    }
+
+
 def _build_csv_response(result: dict, line_items: list, job_id: str):
     """Build a CSV response from extraction line items."""
     import csv
@@ -569,13 +700,13 @@ def _build_csv_response(result: dict, line_items: list, job_id: str):
     writer = csv.writer(output)
 
     # Collect all period columns from values across all line items
-    period_columns = set()
+    period_columns_set: set[str] = set()
     for li in line_items:
-        period_columns.update(li.get("values", {}).keys())
-    period_columns = sorted(period_columns)
+        period_columns_set.update(li.get("values", {}).keys())
+    period_columns = sorted(period_columns_set)
 
     # Write header
-    header = [
+    header: list[str] = [
         "sheet",
         "row",
         "original_label",
