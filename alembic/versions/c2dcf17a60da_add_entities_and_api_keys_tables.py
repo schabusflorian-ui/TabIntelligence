@@ -1,9 +1,11 @@
-"""add entities and api_keys tables
+"""add api_keys table and files FK
 
 Revision ID: c2dcf17a60da
 Revises: f9417a796465
 Create Date: 2026-02-24 21:51:26.772420
 
+NOTE: The entities table was already created in migration 345956f5d313.
+This migration only creates api_keys and adds the FK from files to entities.
 """
 from typing import Sequence, Union
 
@@ -19,32 +21,13 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    """Upgrade schema: Add entities and api_keys tables for API key authentication."""
+    """Add api_keys table and foreign key from files to entities."""
 
-    # Create entities table
-    op.create_table(
-        'entities',
-        sa.Column('entity_id', postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column('name', sa.String(length=255), nullable=False),
-        sa.Column('industry', sa.String(length=100), nullable=True),
-        sa.Column(
-            'created_at',
-            sa.DateTime(timezone=True),
-            server_default=sa.text('now()'),
-            nullable=False
-        ),
-        sa.PrimaryKeyConstraint('entity_id'),
-        comment='Company or asset entities being tracked'
-    )
-
-    # Create indexes on entities
-    op.create_index('ix_entities_name', 'entities', ['name'])
-
-    # Update files table to add foreign key to entities
+    # Add foreign key from files.entity_id to entities.id
     op.create_foreign_key(
         'fk_files_entity_id',
         'files', 'entities',
-        ['entity_id'], ['entity_id'],
+        ['entity_id'], ['id'],
         ondelete='CASCADE'
     )
     op.create_index('ix_files_entity_id', 'files', ['entity_id'])
@@ -71,7 +54,7 @@ def upgrade() -> None:
             nullable=True,
             comment='Last successful use'
         ),
-        sa.ForeignKeyConstraint(['entity_id'], ['entities.entity_id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['entity_id'], ['entities.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('key_hash'),
         comment='API keys for authentication'
@@ -84,7 +67,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Downgrade schema: Remove entities and api_keys tables."""
+    """Remove api_keys table and files FK."""
 
     # Drop api_keys table and its indexes
     op.drop_index('ix_api_keys_entity_id', table_name='api_keys')
@@ -95,7 +78,3 @@ def downgrade() -> None:
     # Remove foreign key from files to entities
     op.drop_index('ix_files_entity_id', table_name='files')
     op.drop_constraint('fk_files_entity_id', 'files', type_='foreignkey')
-
-    # Drop entities table and its indexes
-    op.drop_index('ix_entities_name', table_name='entities')
-    op.drop_table('entities')

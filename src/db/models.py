@@ -136,6 +136,7 @@ class Taxonomy(Base):
     definition: Mapped[Optional[str]] = mapped_column(Text)
     typical_sign: Mapped[Optional[str]] = mapped_column(String(10))
     parent_canonical: Mapped[Optional[str]] = mapped_column(String(100))
+    validation_rules: Mapped[Optional[dict]] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now()

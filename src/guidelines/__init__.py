@@ -6,14 +6,13 @@ for the guided hybrid extraction approach (Agent 4: Guidelines Manager).
 
 Components:
     - TaxonomyManager: Canonical taxonomy operations
-    - EntityPatternManager: Entity-specific pattern learning (STUB for Week 4)
+    - EntityPatternManager: Entity-specific pattern learning
     - load_taxonomy_for_stage3: Convenience function for Stage 3 mapping
-    - augment_taxonomy_with_patterns: Entity-specific taxonomy augmentation (STUB)
+    - augment_taxonomy_with_patterns: Entity-specific taxonomy augmentation
 """
 
 from src.guidelines.taxonomy import TaxonomyManager, load_taxonomy_for_stage3
 from src.guidelines.entity_patterns import (
-    EntityPattern,
     EntityPatternManager,
     augment_taxonomy_with_patterns
 )
@@ -21,7 +20,6 @@ from src.guidelines.entity_patterns import (
 __all__ = [
     "TaxonomyManager",
     "load_taxonomy_for_stage3",
-    "EntityPattern",
     "EntityPatternManager",
-    "augment_taxonomy_with_patterns"
+    "augment_taxonomy_with_patterns",
 ]

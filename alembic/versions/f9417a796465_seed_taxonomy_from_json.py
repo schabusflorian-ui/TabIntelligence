@@ -33,6 +33,7 @@ def upgrade() -> None:
     conn = op.get_bind()
 
     # Define taxonomy table for insertions
+    # Note: aliases is ARRAY here; migration d3cdfafa1ded later converts to JSON
     taxonomy_table = sa.table(
         'taxonomy',
         sa.column('id', postgresql.UUID),
@@ -41,9 +42,8 @@ def upgrade() -> None:
         sa.column('aliases', postgresql.ARRAY(sa.String)),
         sa.column('definition', sa.Text),
         sa.column('typical_sign', sa.String),
-        sa.column('parent', sa.String),
+        sa.column('parent_canonical', sa.String),
         sa.column('category', sa.String),
-        sa.column('derivation', sa.String),
     )
 
     # Insert all taxonomy items
@@ -53,23 +53,22 @@ def upgrade() -> None:
             items_to_insert.append({
                 'id': uuid.uuid4(),
                 'canonical_name': item['canonical_name'],
-                'display_name': item['display_name'],
-                'aliases': item['aliases'],
-                'definition': item['definition'],
-                'typical_sign': item['typical_sign'],
-                'parent': item['parent'],
-                'category': item['category'],
-                'derivation': item['derivation'],
+                'display_name': item.get('display_name', ''),
+                'aliases': item.get('aliases', []),
+                'definition': item.get('definition', ''),
+                'typical_sign': item.get('typical_sign'),
+                'parent_canonical': item.get('parent_canonical'),
+                'category': item.get('category', category),
             })
 
     # Bulk insert all items
     op.bulk_insert(taxonomy_table, items_to_insert)
 
-    print(f"✅ Inserted {len(items_to_insert)} taxonomy items from {taxonomy_path}")
+    print(f"Inserted {len(items_to_insert)} taxonomy items from {taxonomy_path}")
 
 
 def downgrade() -> None:
     """Remove all taxonomy seed data."""
     # Delete all rows from taxonomy table
     op.execute("DELETE FROM taxonomy")
-    print("✅ Removed all taxonomy seed data")
+    print("Removed all taxonomy seed data")

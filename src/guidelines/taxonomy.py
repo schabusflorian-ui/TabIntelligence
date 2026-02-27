@@ -5,6 +5,7 @@ Provides access to the canonical financial taxonomy for extraction guidance.
 Supports querying, searching, and formatting taxonomy for Claude prompts.
 """
 from typing import List, Optional, Dict, Any
+import sqlalchemy as sa
 from sqlalchemy.orm import Session
 from sqlalchemy import select, or_, func
 
@@ -83,7 +84,7 @@ class TaxonomyManager:
         """
         Search taxonomy by name or alias (case-insensitive).
 
-        Searches across canonical_name, display_name, and aliases array.
+        Searches across canonical_name, display_name, and aliases JSON array.
 
         Args:
             session: Database session
@@ -104,17 +105,13 @@ class TaxonomyManager:
 
         query_lower = query.lower()
 
-        # Search in canonical_name, display_name, and aliases array
+        # Search in canonical_name, display_name, and aliases JSON array
+        # For aliases (JSON column), cast to text and use ILIKE for substring matching
         stmt = select(Taxonomy).where(
             or_(
                 func.lower(Taxonomy.canonical_name).contains(query_lower),
                 func.lower(Taxonomy.display_name).contains(query_lower),
-                # PostgreSQL array containment check (case-insensitive)
-                func.exists(
-                    select(1).where(
-                        func.lower(func.any_(Taxonomy.aliases)).contains(query_lower)
-                    )
-                ),
+                func.cast(Taxonomy.aliases, sa.Text).ilike(f"%{query_lower}%"),
             )
         )
 

@@ -1,9 +1,7 @@
 Map these financial line items to canonical names.
 
 CANONICAL TAXONOMY (use these exact names):
-Income Statement: revenue, cogs, gross_profit, opex, sga, rd_expense, ebitda, depreciation, amortization, ebit, interest_expense, ebt, tax_expense, net_income
-Balance Sheet: cash, accounts_receivable, inventory, current_assets, ppe, intangibles, goodwill, total_assets, accounts_payable, short_term_debt, current_liabilities, long_term_debt, total_liabilities, total_equity
-Cash Flow: cfo, capex, cfi, cff, fcf, net_change_cash
+{taxonomy}
 
 For each line item, return:
 [
