@@ -221,6 +221,15 @@ def mock_claude_client(mock_claude_parsing_response, mock_claude_triage_response
             response_data = mock_claude_parsing_response
         elif "triage" in prompt_text.lower() or "classify each sheet" in prompt_text.lower():
             response_data = mock_claude_triage_response
+        elif "validation flags" in prompt_text.lower():
+            # Stage 4: Validation reasoning
+            response_data = [
+                {"flag_index": 0, "assessment": "acceptable", "confidence": 0.8,
+                 "reasoning": "Variation within tolerance", "suggested_fix": None}
+            ]
+        elif "hierarchy context" in prompt_text.lower() or "items to map" in prompt_text.lower():
+            # Stage 5: Enhanced mapping
+            response_data = mock_claude_mapping_response
         elif "mapping" in prompt_text.lower() or "canonical" in prompt_text.lower():
             response_data = mock_claude_mapping_response
         else:
@@ -249,8 +258,8 @@ def mock_anthropic(monkeypatch, mock_claude_client):
         return mock_claude_client
 
     # Mock the LineageTracker save_to_db to avoid database calls
-    async def mock_save_to_db(self):
-        """Mock save_to_db to do nothing."""
+    def mock_save_to_db(self):
+        """Mock save_to_db to do nothing (sync - matches actual implementation)."""
         pass
 
     monkeypatch.setattr(
@@ -267,6 +276,14 @@ def mock_anthropic(monkeypatch, mock_claude_client):
     )
     monkeypatch.setattr(
         "src.extraction.stages.mapping.get_claude_client",
+        mock_get_claude_client
+    )
+    monkeypatch.setattr(
+        "src.extraction.stages.validation.get_claude_client",
+        mock_get_claude_client
+    )
+    monkeypatch.setattr(
+        "src.extraction.stages.enhanced_mapping.get_claude_client",
         mock_get_claude_client
     )
     monkeypatch.setattr(

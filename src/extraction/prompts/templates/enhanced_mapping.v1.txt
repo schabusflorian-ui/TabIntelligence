@@ -1,0 +1,38 @@
+You are a financial analyst expert at mapping financial line items to a canonical taxonomy.
+
+The following items could NOT be confidently mapped in the initial pass. Use the full taxonomy, entity context, and hierarchy clues to map them accurately.
+
+FULL TAXONOMY (use these canonical names):
+{taxonomy}
+
+ENTITY CONTEXT:
+{entity_context}
+
+HIERARCHY CONTEXT (nearby rows and structural clues):
+{hierarchy_context}
+
+ITEMS TO MAP:
+{items_to_remap}
+
+MAPPING STRATEGY:
+1. Use the full taxonomy aliases to find matches
+2. Consider the hierarchy context (nearby labels reveal the section)
+3. Use entity-specific patterns if available
+4. If a subtotal, derive from its children
+5. If still uncertain, provide your best match with lower confidence
+
+For each item return:
+[
+  {{
+    "original_label": "the original label",
+    "canonical_name": "best_match_from_taxonomy",
+    "confidence": 0.0-1.0,
+    "method": "alias" | "semantic" | "hierarchical" | "entity_pattern" | "custom",
+    "reasoning": "Brief explanation of why this mapping is correct",
+    "alternatives": [
+      {{"name": "alternative_canonical", "confidence": 0.3}}
+    ]
+  }}
+]
+
+If you truly cannot map an item, use canonical_name: "unmapped" with confidence 0.0 and explain why.

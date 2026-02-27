@@ -28,6 +28,7 @@ class ExtractionResult:
     tokens_used: int
     cost_usd: float
     job_id: Optional[str] = None
+    validation: Optional[dict] = None
     lineage_summary: Optional[dict] = None
     final_lineage_id: Optional[str] = None
 
@@ -140,10 +141,14 @@ def _build_result(
     parse_result = context.results.get("parsing", {})
     triage_result = context.results.get("triage", {})
     mapping_result = context.results.get("mapping", {})
+    validation_result = context.results.get("validation", {})
+    enhanced_result = context.results.get("enhanced_mapping", {})
 
     parsed_data = parse_result.get("parsed", {})
     triage_list = triage_result.get("triage", [])
-    mappings = mapping_result.get("mappings", [])
+
+    # Use enhanced mappings if available, otherwise fall back to basic mappings
+    mappings = enhanced_result.get("enhanced_mappings") or mapping_result.get("mappings", [])
 
     # Build line items with mappings
     mapping_lookup = {m["original_label"]: m for m in mappings}
@@ -176,6 +181,7 @@ def _build_result(
         tokens_used=total_tokens,
         cost_usd=cost,
         job_id=context.job_id,
+        validation=validation_result.get("validation"),
         lineage_summary=context.tracker.get_summary(),
         final_lineage_id=final_lineage_id,
     )

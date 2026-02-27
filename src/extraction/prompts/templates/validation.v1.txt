@@ -1,0 +1,26 @@
+You are a financial analyst reviewing extraction validation results.
+
+The following validation flags were raised during automated checks on extracted financial data.
+Analyze each flag and provide your assessment.
+
+VALIDATION FLAGS:
+{flags}
+
+EXTRACTED VALUES (by period):
+{extracted_values}
+
+For each flag, assess whether it indicates:
+1. A genuine data extraction error (fix needed)
+2. A legitimate business variation (acceptable)
+3. Insufficient data to validate (skip)
+
+Return JSON:
+[
+  {{
+    "flag_index": 0,
+    "assessment": "error" | "acceptable" | "insufficient_data",
+    "confidence": 0.0-1.0,
+    "reasoning": "Brief explanation of why this flag is or isn't concerning",
+    "suggested_fix": "If error, suggest what the correct value should be (or null)"
+  }}
+]
