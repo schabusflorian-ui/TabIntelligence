@@ -135,6 +135,10 @@ class ExportResponse(BaseModel):
 # Taxonomy
 # ============================================================================
 
+class TaxonomyStatsResponse(BaseModel):
+    total_items: int
+    categories: Dict[str, int]
+
 class TaxonomyItemResponse(BaseModel):
     canonical_name: str
     category: str

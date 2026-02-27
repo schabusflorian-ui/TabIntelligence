@@ -1,18 +1,25 @@
 """Taxonomy API endpoints for browsing and searching canonical line items."""
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from typing import Optional, List
+from typing import Dict, Optional, List
 
 from src.db.session import get_db
 from src.auth.dependencies import get_current_api_key
 from src.guidelines.taxonomy import TaxonomyManager
+from src.api.schemas import (
+    TaxonomyItemResponse,
+    TaxonomyListResponse,
+    TaxonomySearchResponse,
+    TaxonomyStatsResponse,
+    HierarchyNode,
+)
 
 router = APIRouter(prefix="/api/v1/taxonomy", tags=["taxonomy"])
 
 _manager = TaxonomyManager()
 
 
-@router.get("/")
+@router.get("/", response_model=TaxonomyListResponse)
 def list_taxonomy(
     category: Optional[str] = Query(None, description="Filter by category"),
     db: Session = Depends(get_db),
@@ -42,7 +49,7 @@ def list_taxonomy(
     }
 
 
-@router.get("/stats")
+@router.get("/stats", response_model=TaxonomyStatsResponse)
 def taxonomy_stats(
     db: Session = Depends(get_db),
     _api_key=Depends(get_current_api_key),
@@ -51,7 +58,7 @@ def taxonomy_stats(
     return _manager.get_statistics(db)
 
 
-@router.get("/search")
+@router.get("/search", response_model=TaxonomySearchResponse)
 def search_taxonomy(
     q: str = Query(..., min_length=1, description="Search query"),
     db: Session = Depends(get_db),
@@ -76,7 +83,7 @@ def search_taxonomy(
     }
 
 
-@router.get("/hierarchy")
+@router.get("/hierarchy", response_model=Dict[str, HierarchyNode])
 def taxonomy_hierarchy(
     category: Optional[str] = Query(None, description="Filter by category"),
     db: Session = Depends(get_db),
@@ -101,7 +108,7 @@ def taxonomy_hierarchy(
     return result
 
 
-@router.get("/{canonical_name}")
+@router.get("/{canonical_name}", response_model=TaxonomyItemResponse)
 def get_taxonomy_item(
     canonical_name: str,
     db: Session = Depends(get_db),
