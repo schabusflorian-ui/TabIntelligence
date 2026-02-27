@@ -29,6 +29,7 @@ except ImportError:
     logger.warning("OpenTelemetry not installed - tracing disabled (install for Week 3)")
 from src.api.middleware import RequestIDMiddleware, log_audit_event, get_client_ip
 from src.api.metrics import MetricsMiddleware, metrics_endpoint, file_uploads_total, file_upload_bytes, duplicate_uploads_total
+from src.api.health import router as health_router
 from src.db.session import get_db, get_db_context
 from src.db import crud
 from src.db.models import JobStatusEnum, ExtractionJob
@@ -75,6 +76,9 @@ app.add_middleware(MetricsMiddleware)
 
 # Prometheus metrics endpoint (no auth required for scraping)
 app.add_api_route("/metrics", metrics_endpoint, methods=["GET"], include_in_schema=False)
+
+# Kubernetes-style health probes (liveness, readiness, database health)
+app.include_router(health_router)
 
 
 @app.on_event("startup")

@@ -46,7 +46,7 @@ def upgrade() -> None:
         sa.Column('parent_canonical', sa.String(length=100), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.CheckConstraint(
-            "typical_sign IN ('positive', 'negative') OR typical_sign IS NULL",
+            "typical_sign IN ('positive', 'negative', 'varies') OR typical_sign IS NULL",
             name='ck_taxonomy_typical_sign'
         ),
         sa.CheckConstraint(

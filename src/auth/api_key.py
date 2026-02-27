@@ -8,7 +8,7 @@ from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from src.auth.models import APIKey
 from src.core.logging import api_logger as logger
@@ -50,7 +50,7 @@ def generate_api_key() -> tuple[str, str]:
     return plain_key, key_hash
 
 
-async def verify_api_key(key: str, db: AsyncSession) -> Optional[APIKey]:
+def verify_api_key(key: str, db: Session) -> Optional[APIKey]:
     """
     Verify an API key and return the associated record.
 
@@ -65,19 +65,12 @@ async def verify_api_key(key: str, db: AsyncSession) -> Optional[APIKey]:
         - Hashes the provided key before database lookup
         - Only returns active keys (is_active=True)
         - Constant-time comparison via database lookup (not vulnerable to timing attacks)
-
-    Example:
-        >>> api_key = await verify_api_key("emi_xJK7...", db)
-        >>> if api_key:
-        ...     print(f"Valid key: {api_key.name}")
-        ... else:
-        ...     print("Invalid or inactive key")
     """
     # Hash the provided key
     key_hash = hashlib.sha256(key.encode()).hexdigest()
 
     # Look up in database (active keys only)
-    result = await db.execute(
+    result = db.execute(
         select(APIKey)
         .where(APIKey.key_hash == key_hash)
         .where(APIKey.is_active == True)
@@ -97,8 +90,8 @@ async def verify_api_key(key: str, db: AsyncSession) -> Optional[APIKey]:
     return api_key
 
 
-async def create_api_key(
-    db: AsyncSession,
+def create_api_key(
+    db: Session,
     name: str,
     entity_id: Optional[UUID] = None,
     rate_limit_per_minute: int = 60,
@@ -116,17 +109,6 @@ async def create_api_key(
         tuple[APIKey, str]: (api_key_record, plain_key)
             - api_key_record: The database record
             - plain_key: The actual key (show this to the user ONCE!)
-
-    WARNING:
-        The plain_key is returned ONLY ONCE. It should be displayed to the user
-        immediately and then destroyed. There is no way to recover it later.
-
-    Example:
-        >>> api_key, plain_key = await create_api_key(
-        ...     db, name="Production Key", entity_id=entity_uuid
-        ... )
-        >>> print(f"Save this key: {plain_key}")
-        >>> # Store api_key.id reference, but NEVER store plain_key
     """
     # Generate key and hash
     plain_key, key_hash = generate_api_key()
@@ -141,8 +123,8 @@ async def create_api_key(
     )
 
     db.add(api_key)
-    await db.commit()
-    await db.refresh(api_key)
+    db.commit()
+    db.refresh(api_key)
 
     logger.info(
         f"API key created - id: {api_key.id}, name: {name}, entity_id: {entity_id}"
@@ -151,7 +133,7 @@ async def create_api_key(
     return api_key, plain_key
 
 
-async def revoke_api_key(db: AsyncSession, key_id: UUID) -> bool:
+def revoke_api_key(db: Session, key_id: UUID) -> bool:
     """
     Revoke (deactivate) an API key.
 
@@ -161,11 +143,8 @@ async def revoke_api_key(db: AsyncSession, key_id: UUID) -> bool:
 
     Returns:
         bool: True if key was revoked, False if not found
-
-    Note:
-        Keys are deactivated (not deleted) to preserve audit trail.
     """
-    result = await db.execute(select(APIKey).where(APIKey.id == key_id))
+    result = db.execute(select(APIKey).where(APIKey.id == key_id))
     api_key = result.scalar_one_or_none()
 
     if not api_key:
@@ -173,7 +152,7 @@ async def revoke_api_key(db: AsyncSession, key_id: UUID) -> bool:
         return False
 
     api_key.is_active = False
-    await db.commit()
+    db.commit()
 
     logger.info(f"API key revoked - id: {key_id}, name: {api_key.name}")
     return True

@@ -109,7 +109,7 @@ class Taxonomy(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "typical_sign IN ('positive', 'negative') OR typical_sign IS NULL",
+            "typical_sign IN ('positive', 'negative', 'varies') OR typical_sign IS NULL",
             name='ck_taxonomy_typical_sign'
         ),
         CheckConstraint(

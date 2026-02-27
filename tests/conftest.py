@@ -26,9 +26,12 @@ sys.modules['celery'] = mock_celery_module
 sys.modules['celery.result'] = MagicMock()
 sys.modules['celery.exceptions'] = MagicMock()
 sys.modules['redis'] = MagicMock()
+sys.modules['kombu'] = MagicMock()
+sys.modules['kombu.serialization'] = MagicMock()
 
 # Now safe to import other modules
 import pytest
+import uuid
 from pathlib import Path
 from fastapi.testclient import TestClient
 from unittest.mock import Mock, patch
@@ -68,10 +71,49 @@ def mock_celery_task():
 
 
 @pytest.fixture
-def test_client(mock_celery_task):
-    """FastAPI test client for API testing."""
+def mock_api_key():
+    """Mock API key for authenticated test requests."""
+    from src.auth.models import APIKey
+    key = Mock(spec=APIKey)
+    key.id = None  # None avoids FK violations on audit_logs.api_key_id
+    key.name = "test-key"
+    key.key_hash = "testhash"
+    key.entity_id = None
+    key.is_active = True
+    key.rate_limit_per_minute = 60
+    key.last_used_at = None
+    return key
+
+
+@pytest.fixture
+def test_client(mock_celery_task, mock_api_key):
+    """FastAPI test client for API testing (with auth bypass)."""
     from src.api.main import app
-    return TestClient(app)
+    from src.auth.dependencies import get_current_api_key
+
+    app.dependency_overrides[get_current_api_key] = lambda: mock_api_key
+    client = TestClient(app)
+    yield client
+    app.dependency_overrides.pop(get_current_api_key, None)
+
+
+@pytest.fixture
+def unauthenticated_client(mock_celery_task, test_db):
+    """FastAPI test client WITHOUT auth bypass — for testing 401 responses."""
+    from src.api.main import app
+    from src.db.session import get_db
+
+    def override_get_db():
+        db = test_db()
+        try:
+            yield db
+        finally:
+            db.close()
+
+    app.dependency_overrides[get_db] = override_get_db
+    client = TestClient(app, raise_server_exceptions=False)
+    yield client
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -340,9 +382,9 @@ def db_session(test_db):
 
 
 @pytest.fixture
-def test_client_with_db(test_db):
+def test_client_with_db(test_db, mock_api_key):
     """
-    FastAPI test client with test database override.
+    FastAPI test client with test database override and auth bypass.
 
     This fixture overrides the get_db dependency to use the test database
     instead of the production database. Use this instead of test_client
@@ -350,6 +392,7 @@ def test_client_with_db(test_db):
     """
     from src.api.main import app
     from src.db.session import get_db
+    from src.auth.dependencies import get_current_api_key
 
     def override_get_db():
         db = test_db()
@@ -359,6 +402,7 @@ def test_client_with_db(test_db):
             db.close()
 
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_api_key] = lambda: mock_api_key
 
     client = TestClient(app)
 
