@@ -35,7 +35,7 @@ import json
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-from src.database.base import Base
+from src.db.base import Base
 
 
 @pytest.fixture
@@ -254,7 +254,19 @@ def mock_anthropic(monkeypatch, mock_claude_client):
         pass
 
     monkeypatch.setattr(
-        "src.extraction.orchestrator.get_claude_client",
+        "src.extraction.claude_client.get_claude_client",
+        mock_get_claude_client
+    )
+    monkeypatch.setattr(
+        "src.extraction.stages.parsing.get_claude_client",
+        mock_get_claude_client
+    )
+    monkeypatch.setattr(
+        "src.extraction.stages.triage.get_claude_client",
+        mock_get_claude_client
+    )
+    monkeypatch.setattr(
+        "src.extraction.stages.mapping.get_claude_client",
         mock_get_claude_client
     )
     monkeypatch.setattr(
@@ -319,7 +331,7 @@ def test_client_with_db(test_db):
     for tests that interact with the database.
     """
     from src.api.main import app
-    from src.database.session import get_db
+    from src.db.session import get_db
 
     def override_get_db():
         db = test_db()
@@ -345,7 +357,7 @@ def sample_file(db_session):
 
     Useful for tests that need a file to work with.
     """
-    from src.database import crud
+    from src.db import crud
 
     file = crud.create_file(
         db_session,
@@ -362,7 +374,7 @@ def sample_job(db_session, sample_file):
 
     Useful for tests that need a job to work with.
     """
-    from src.database import crud
+    from src.db import crud
 
     job = crud.create_extraction_job(
         db_session,

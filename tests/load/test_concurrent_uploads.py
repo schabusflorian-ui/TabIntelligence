@@ -187,7 +187,7 @@ def test_database_pool_configuration():
     Test that database pool is properly configured.
     Checks pool size and overflow settings.
     """
-    from src.database.base import get_engine
+    from src.db.base import get_engine
 
     engine = get_engine()
 

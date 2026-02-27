@@ -8,6 +8,7 @@ from src.db.models import (
     File,
     ExtractionJob,
     LineageEvent,
+    AuditLog,
     JobStatusEnum,
 )
 from src.db.session import (
@@ -34,6 +35,7 @@ __all__ = [
     "File",
     "ExtractionJob",
     "LineageEvent",
+    "AuditLog",
     "JobStatusEnum",
     # Session management
     "get_db_async",

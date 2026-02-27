@@ -23,7 +23,7 @@ try:
 except ImportError:
     TRACING_AVAILABLE = False
     logger.warning("OpenTelemetry not installed - tracing disabled (install for Week 3)")
-from src.api.middleware import RequestIDMiddleware
+from src.api.middleware import RequestIDMiddleware, log_audit_event, get_client_ip
 from src.db.session import get_db, get_db_context
 from src.db import crud
 from src.db.models import JobStatusEnum
@@ -197,6 +197,19 @@ async def upload_file(
 
         logger.info(f"Celery task enqueued: task_id={task.id}, job_id={db_job.job_id}")
 
+        # Audit trail
+        log_audit_event(
+            db=db,
+            action="upload",
+            resource_type="file",
+            resource_id=db_file.file_id,
+            api_key_id=api_key.id,
+            ip_address=get_client_ip(request),
+            user_agent=request.headers.get("User-Agent"),
+            details={"filename": file.filename, "file_size": file_size, "job_id": str(db_job.job_id)},
+            status_code=200,
+        )
+
         return {
             "file_id": str(db_file.file_id),
             "job_id": str(db_job.job_id),
@@ -245,6 +258,18 @@ async def get_job_status(
         if not job:
             logger.warning(f"Job not found: {job_id}")
             raise HTTPException(404, "Job not found")
+
+        # Audit trail
+        log_audit_event(
+            db=db,
+            action="view",
+            resource_type="job",
+            resource_id=job_uuid,
+            api_key_id=api_key.id,
+            ip_address=get_client_ip(request),
+            user_agent=request.headers.get("User-Agent"),
+            status_code=200,
+        )
 
         # Convert database model to API response format
         return {

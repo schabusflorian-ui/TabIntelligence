@@ -3,9 +3,9 @@ import pytest
 import time
 from fastapi.testclient import TestClient
 from src.api.main import app
-from src.database.session import get_db_context
-from src.database import crud
-from src.database.models import JobStatusEnum
+from src.db.session import get_db_context
+from src.db import crud
+from src.db.models import JobStatusEnum
 import io
 from pathlib import Path
 

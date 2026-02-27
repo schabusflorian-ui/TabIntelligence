@@ -31,7 +31,7 @@ from sqlalchemy import (
     Text,
     func,
 )
-from sqlalchemy.dialects.postgresql import ARRAY, UUID as PG_UUID
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -84,6 +84,10 @@ class Entity(Base):
         back_populates="entity",
         cascade="all, delete-orphan"
     )
+    api_keys: Mapped[List["APIKey"]] = relationship(
+        back_populates="entity",
+        cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<Entity(id={self.id}, name='{self.name}')>"
@@ -128,7 +132,7 @@ class Taxonomy(Base):
     )
     category: Mapped[str] = mapped_column(String(50), index=True)
     display_name: Mapped[Optional[str]] = mapped_column(String(255))
-    aliases: Mapped[Optional[List[str]]] = mapped_column(ARRAY(Text))
+    aliases: Mapped[Optional[list]] = mapped_column(JSON)  # List of alias strings
     definition: Mapped[Optional[str]] = mapped_column(Text)
     typical_sign: Mapped[Optional[str]] = mapped_column(String(10))
     parent_canonical: Mapped[Optional[str]] = mapped_column(String(100))
@@ -327,3 +331,55 @@ class LineageEvent(Base):
 
     def __repr__(self):
         return f"<LineageEvent(event_id={self.event_id}, stage='{self.stage_name}')>"
+
+
+# ============================================================================
+# AUDIT MODELS
+# ============================================================================
+
+
+class AuditLog(Base):
+    """
+    Audit log for compliance tracking.
+
+    Records all significant actions performed through the API.
+    Provides complete audit trail for regulatory compliance.
+    """
+    __tablename__ = "audit_logs"
+
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid4
+    )
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        index=True
+    )
+    action: Mapped[str] = mapped_column(String(50), index=True)  # "upload", "extract", "view", "revoke_key"
+    resource_type: Mapped[str] = mapped_column(String(50), index=True)  # "file", "job", "api_key", "entity"
+    resource_id: Mapped[Optional[UUID]] = mapped_column(
+        PG_UUID(as_uuid=True),
+        nullable=True,
+        index=True
+    )
+    api_key_id: Mapped[Optional[UUID]] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("api_keys.id", ondelete="SET NULL"),
+        nullable=True
+    )
+    ip_address: Mapped[Optional[str]] = mapped_column(String(45))  # IPv6 max length
+    user_agent: Mapped[Optional[str]] = mapped_column(String(500))
+    details: Mapped[Optional[dict]] = mapped_column(JSON)  # Additional context
+    status_code: Mapped[Optional[int]] = mapped_column(Integer)  # HTTP response status
+
+    def __repr__(self):
+        return (
+            f"<AuditLog(id={self.id}, action='{self.action}', "
+            f"resource_type='{self.resource_type}', resource_id={self.resource_id})>"
+        )
+
+
+# Late import to register APIKey with Base metadata (avoids circular imports)
+from src.auth.models import APIKey  # noqa: E402, F401

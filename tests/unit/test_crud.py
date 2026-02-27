@@ -6,8 +6,8 @@ Tests all CRUD operations for File, ExtractionJob, and LineageEvent models.
 import pytest
 from uuid import uuid4
 
-from src.database import crud
-from src.database.models import JobStatusEnum
+from src.db import crud
+from src.db.models import JobStatusEnum
 from src.core.exceptions import DatabaseError
 
 
