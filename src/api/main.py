@@ -4,12 +4,6 @@ Excel Model Intelligence - API Server
 from fastapi import FastAPI, UploadFile, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
-from src.api.schemas import (
-    ServiceInfoResponse,
-    FileUploadResponse,
-    JobStatusResponse,
-    ExportResponse,
-)
 import hashlib
 import uuid
 from sqlalchemy.orm import Session
@@ -127,7 +121,7 @@ async def startup_event():
 # Database models replace in-memory storage (jobs dict removed)
 
 
-@app.get("/", response_model=ServiceInfoResponse)
+@app.get("/")
 async def root():
     """Root endpoint with service info."""
     return {
@@ -180,7 +174,7 @@ async def health(db: Session = Depends(get_db)):
     return JSONResponse(content=checks, status_code=status_code)
 
 
-@app.post("/api/v1/files/upload", response_model=FileUploadResponse)
+@app.post("/api/v1/files/upload")
 @limiter.limit("100/hour")
 async def upload_file(
     request: Request,
@@ -337,7 +331,7 @@ async def upload_file(
         raise HTTPException(500, f"Upload failed: {str(e)}")
 
 
-@app.get("/api/v1/jobs/{job_id}", response_model=JobStatusResponse)
+@app.get("/api/v1/jobs/{job_id}")
 @limiter.limit("500/hour")
 async def get_job_status(
     request: Request,
