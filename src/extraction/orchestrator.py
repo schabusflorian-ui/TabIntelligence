@@ -6,7 +6,7 @@ a new ExtractionStage subclass and registering it - no orchestrator changes need
 """
 import time
 import uuid
-from typing import Optional
+from typing import Optional, Callable
 from dataclasses import dataclass, asdict
 
 from src.core.logging import extraction_logger as logger, log_performance, log_exception
@@ -48,6 +48,7 @@ async def extract(
     file_id: str,
     entity_id: Optional[str] = None,
     job_id: Optional[str] = None,
+    progress_callback: Optional[Callable[[str, int], None]] = None,
 ) -> dict:
     """
     Run the guided extraction pipeline using registered stages.
@@ -60,6 +61,9 @@ async def extract(
         file_id: File UUID
         entity_id: Optional entity UUID
         job_id: Optional job UUID for lineage tracking
+        progress_callback: Optional callback(stage_name, progress_percent) called
+            after each stage completes. Failures in the callback are logged but
+            do not abort the pipeline.
     """
     if job_id is None:
         job_id = str(uuid.uuid4())
@@ -82,6 +86,15 @@ async def extract(
     pipeline = registry.get_pipeline()
     lineage_ids: dict[int, str] = {}
     last_lineage_id = None
+
+    # Progress weights per stage (cumulative percentage after stage completes)
+    STAGE_WEIGHTS = {
+        "parsing": 20,
+        "triage": 30,
+        "mapping": 55,
+        "validation": 75,
+        "enhanced_mapping": 95,
+    }
 
     try:
         for stage in pipeline:
@@ -112,6 +125,14 @@ async def extract(
             lineage_ids[stage.stage_number] = lineage_id
             last_lineage_id = lineage_id
 
+            # Notify caller of progress after each stage
+            if progress_callback:
+                progress = STAGE_WEIGHTS.get(stage.name, 50)
+                try:
+                    progress_callback(stage.name, progress)
+                except Exception as cb_err:
+                    logger.warning(f"Progress callback failed: {cb_err}")
+
         # Validate lineage completeness for all executed stages
         expected_stages = [s.stage_number for s in pipeline]
         context.tracker.validate_completeness(stages=expected_stages)
@@ -119,20 +140,33 @@ async def extract(
         # Persist lineage to database (synchronous, transactional)
         context.tracker.save_to_db()
 
-    except LineageIncompleteError as e:
-        logger.error(f"LINEAGE INCOMPLETE for job {job_id}: {str(e)}")
-        log_exception(logger, e, {"job_id": job_id, "file_id": file_id})
-        raise
-
-    except (ClaudeAPIError, ExtractionError) as e:
-        logger.error(f"Extraction failed for file_id {file_id}: {str(e)}")
-        raise
-
     except Exception as e:
-        logger.error(f"Unexpected extraction error for file_id {file_id}: {str(e)}")
-        error = ExtractionError(f"Extraction failed: {str(e)}", file_id=file_id)
-        log_exception(logger, error)
-        raise error
+        # Save whatever lineage events we have so far for debugging
+        if context.tracker.events:
+            try:
+                context.tracker.save_to_db()
+                logger.info(
+                    f"Saved {len(context.tracker.events)} partial lineage events "
+                    f"for failed job {job_id}"
+                )
+            except Exception as save_err:
+                logger.warning(
+                    f"Could not save partial lineage for job {job_id}: {save_err}"
+                )
+
+        # Re-raise with appropriate wrapping
+        if isinstance(e, LineageIncompleteError):
+            logger.error(f"LINEAGE INCOMPLETE for job {job_id}: {str(e)}")
+            log_exception(logger, e, {"job_id": job_id, "file_id": file_id})
+            raise
+        elif isinstance(e, (ClaudeAPIError, ExtractionError)):
+            logger.error(f"Extraction failed for file_id {file_id}: {str(e)}")
+            raise
+        else:
+            logger.error(f"Unexpected extraction error for file_id {file_id}: {str(e)}")
+            error = ExtractionError(f"Extraction failed: {str(e)}", file_id=file_id)
+            log_exception(logger, error)
+            raise error
 
     # Build final result from stage outputs
     extraction_result = _build_result(context, last_lineage_id, pipeline_start)

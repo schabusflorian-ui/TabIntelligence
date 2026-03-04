@@ -241,7 +241,7 @@ async def upload_file(
         # Compute content hash for deduplication
         content_hash = hashlib.sha256(file_bytes).hexdigest()
 
-        # Check for duplicate file
+        # Check for duplicate file (optimistic fast path)
         existing_file = crud.get_file_by_hash(db, content_hash)
         if existing_file:
             existing_job = (
@@ -265,22 +265,16 @@ async def upload_file(
                 "original_upload": existing_file.uploaded_at.isoformat() if existing_file.uploaded_at else None,
             }
 
-        # Create file record in database (without s3_key initially)
+        # --- Fix 1: Upload to S3 FIRST, before creating any DB records ---
+        # This ensures no orphaned DB records if S3 fails.
         filename = file.filename or "unknown.xlsx"
-        db_file = crud.create_file(
-            db,
-            filename=filename,
-            file_size=file_size,
-            entity_id=UUID(entity_id) if entity_id else None,
-            content_hash=content_hash,
-        )
+        file_id_for_key = uuid.uuid4()  # Pre-generate for S3 key
 
-        # Upload to S3/MinIO
         settings = get_settings()
         s3_client = get_s3_client(settings)
 
         s3_key = s3_client.generate_s3_key(
-            file_id=db_file.file_id,
+            file_id=file_id_for_key,
             filename=filename
         )
 
@@ -288,16 +282,55 @@ async def upload_file(
             file_bytes=file_bytes,
             s3_key=s3_key,
             metadata={
-                "file_id": str(db_file.file_id),
                 "filename": filename,
                 "entity_id": str(entity_id) if entity_id else ""
             }
         )
 
-        # Update file record with s3_key
-        crud.update_file_s3_key(db, db_file.file_id, s3_key)
+        # --- S3 upload succeeded. Now create DB records in a single transaction ---
+        # If DB commit fails, we log a warning about the orphaned S3 object.
+        try:
+            # Fix 2: Wrap in try/except IntegrityError for dedup race condition.
+            # Two concurrent uploads of the same file may both pass the optimistic
+            # get_file_by_hash() check. The unique constraint on content_hash
+            # will catch the race — we re-query and return the existing file.
+            db_file = crud.create_file(
+                db,
+                filename=filename,
+                file_size=file_size,
+                s3_key=s3_key,
+                entity_id=UUID(entity_id) if entity_id else None,
+                content_hash=content_hash,
+            )
+        except (IntegrityError, DatabaseError):
+            db.rollback()
+            # Race condition: another request inserted the same content_hash
+            existing_file = crud.get_file_by_hash(db, content_hash)
+            if existing_file:
+                existing_job = (
+                    db.query(ExtractionJob)
+                    .filter(ExtractionJob.file_id == existing_file.file_id)
+                    .order_by(ExtractionJob.created_at.desc())
+                    .first()
+                )
 
-        # Create extraction job record
+                logger.info(
+                    f"Duplicate file detected (race condition): hash={content_hash[:16]}..., "
+                    f"existing_file_id={existing_file.file_id}"
+                )
+                duplicate_uploads_total.inc()
+
+                return {
+                    "file_id": str(existing_file.file_id),
+                    "job_id": str(existing_job.job_id) if existing_job else None,
+                    "status": "duplicate",
+                    "message": "File with identical content already uploaded",
+                    "original_upload": existing_file.uploaded_at.isoformat() if existing_file.uploaded_at else None,
+                }
+            # Not a dedup race — re-raise
+            raise
+
+        # Create extraction job record (same transaction scope via crud)
         db_job = crud.create_extraction_job(db, file_id=db_file.file_id)
 
         logger.info(
@@ -305,12 +338,27 @@ async def upload_file(
             f"job_id: {db_job.job_id}, size: {file_size} bytes, s3_key: {s3_key}"
         )
 
-        # Enqueue Celery task (replaces background_tasks.add_task)
-        task = run_extraction_task.delay(
-            job_id=str(db_job.job_id),
-            file_bytes=file_bytes,
-            entity_id=entity_id
-        )
+        # --- Fix 3: Celery enqueue with error handling ---
+        # Fix 4: Pass s3_key instead of file_bytes (no pickle, no large Redis payloads)
+        try:
+            task = run_extraction_task.delay(
+                job_id=str(db_job.job_id),
+                s3_key=s3_key,
+                entity_id=entity_id
+            )
+        except Exception as enqueue_err:
+            # Redis/Celery unavailable — mark job FAILED and return 503
+            logger.error(f"Failed to enqueue Celery task: {enqueue_err}")
+            try:
+                crud.fail_job(
+                    db, db_job.job_id, "Task queue unavailable, please retry"
+                )
+            except Exception:
+                logger.error("Failed to mark job as FAILED after enqueue failure")
+            raise HTTPException(
+                status_code=503,
+                detail="Task queue unavailable, please retry"
+            )
 
         logger.info(f"Celery task enqueued: task_id={task.id}, job_id={db_job.job_id}")
 
@@ -340,10 +388,11 @@ async def upload_file(
             "message": "Extraction started"
         }
 
+    except HTTPException:
+        raise
+
     except FileStorageError as e:
         logger.error(f"Storage error during file upload: {str(e)}")
-        # Rollback database if storage fails
-        db.rollback()
         raise HTTPException(500, f"Storage error: {str(e)}")
 
     except IntegrityError as e:
@@ -601,27 +650,19 @@ async def retry_job(
             f"Only failed jobs can be retried (current status: {job.status.value})"
         )
 
-    # Download file from S3 for re-extraction
-    try:
-        file_record = crud.get_file(db, job.file_id)
-        if not file_record or not file_record.s3_key:
-            raise HTTPException(404, "Original file not found in storage")
-
-        settings = get_settings()
-        s3_client = get_s3_client(settings)
-        file_bytes = s3_client.download_file(file_record.s3_key)
-    except FileStorageError as e:
-        logger.error(f"Failed to download file for retry: {str(e)}")
-        raise HTTPException(500, f"Storage error: {str(e)}")
+    # Look up file record to get s3_key for re-extraction
+    file_record = crud.get_file(db, job.file_id)
+    if not file_record or not file_record.s3_key:
+        raise HTTPException(404, "Original file not found in storage")
 
     # Create new job for the same file
     new_job = crud.create_extraction_job(db, file_id=job.file_id)
 
-    # Enqueue Celery task
+    # Enqueue Celery task (task downloads from S3 itself using s3_key)
     entity_id = str(file_record.entity_id) if file_record.entity_id else None
     task = run_extraction_task.delay(
         job_id=str(new_job.job_id),
-        file_bytes=file_bytes,
+        s3_key=file_record.s3_key,
         entity_id=entity_id,
     )
 

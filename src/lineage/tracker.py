@@ -29,7 +29,7 @@ class LineageTracker:
         """
         self.job_id = job_id
         self.events: List[Dict] = []
-        self.lineage_chain: Dict[str, str] = {}  # Maps lineage_id -> parent_lineage_id
+        self.lineage_chain: Dict[str, Optional[str]] = {}  # Maps lineage_id -> parent_lineage_id
 
     def emit(
         self,

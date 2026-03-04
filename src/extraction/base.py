@@ -1,6 +1,6 @@
 """Base classes for extraction pipeline stages."""
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from src.lineage.tracker import LineageTracker
 
@@ -49,11 +49,13 @@ class PipelineContext:
         file_id: str,
         job_id: str,
         entity_id: Optional[str] = None,
+        progress_callback: Optional[Callable[[str, int], None]] = None,
     ):
         self.file_bytes = file_bytes
         self.file_id = file_id
         self.job_id = job_id
         self.entity_id = entity_id
+        self.progress_callback = progress_callback
         self.tracker = LineageTracker(job_id=job_id)
         self.results: Dict[str, Dict[str, Any]] = {}
         self.total_tokens = 0

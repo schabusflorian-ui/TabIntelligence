@@ -74,10 +74,10 @@ def mock_celery_task():
     # Store original function
     original_func = run_extraction_task
 
-    def sync_execution(job_id, file_bytes, entity_id=None):
+    def sync_execution(job_id, s3_key, entity_id=None):
         """Execute the task synchronously for testing."""
         # Call the actual task function directly (not via Celery)
-        return original_func(job_id, file_bytes, entity_id)
+        return original_func(job_id, s3_key, entity_id)
 
     # Patch where it's imported (in main.py), not where it's defined
     with patch("src.api.main.run_extraction_task") as mock_task:
@@ -86,8 +86,8 @@ def mock_celery_task():
         mock_result.id = "mock-task-id-12345"
 
         # When delay() is called, execute synchronously
-        def delay_side_effect(job_id, file_bytes, entity_id=None):
-            sync_execution(job_id, file_bytes, entity_id)
+        def delay_side_effect(job_id, s3_key, entity_id=None):
+            sync_execution(job_id, s3_key, entity_id)
             return mock_result
 
         mock_task.delay = delay_side_effect
@@ -329,13 +329,46 @@ def mock_anthropic(monkeypatch, mock_claude_client):
         """Mock save_to_db to do nothing (sync - matches actual implementation)."""
         pass
 
-    # Mock Excel-to-text conversion so tests can pass fake bytes
-    def mock_excel_to_text(file_bytes):
-        return "=== Sheet: Income Statement ===\nRevenue\t100\t200\t300\n"
+    # Mock structured Excel extraction so tests can pass fake bytes
+    def mock_excel_to_structured_repr(file_bytes):
+        return {
+            "sheets": [
+                {
+                    "sheet_name": "Income Statement",
+                    "is_hidden": False,
+                    "merged_regions": [],
+                    "rows": [
+                        {
+                            "row_index": 1,
+                            "cells": [
+                                {"ref": "A1", "value": "Revenue", "formula": None,
+                                 "is_bold": True, "indent_level": 0, "number_format": "General"},
+                                {"ref": "B1", "value": 100, "formula": None,
+                                 "is_bold": False, "indent_level": 0, "number_format": "#,##0"},
+                                {"ref": "C1", "value": 200, "formula": None,
+                                 "is_bold": False, "indent_level": 0, "number_format": "#,##0"},
+                                {"ref": "D1", "value": 300, "formula": None,
+                                 "is_bold": False, "indent_level": 0, "number_format": "#,##0"},
+                            ],
+                        }
+                    ],
+                }
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 1,
+        }
+
+    def mock_structured_to_markdown(structured):
+        return "## Sheet: Income Statement\n| Row | C1 | C2 | C3 | C4 | Formula | Bold | Indent |\n|---|---|---|---|---|---|---|---|\n| 1 | Revenue | 100 | 200 | 300 | \u2014 | Y | 0 |\n"
 
     monkeypatch.setattr(
-        "src.extraction.stages.parsing.ParsingStage._excel_to_text",
-        staticmethod(mock_excel_to_text)
+        "src.extraction.stages.parsing.ParsingStage._excel_to_structured_repr",
+        staticmethod(mock_excel_to_structured_repr)
+    )
+    monkeypatch.setattr(
+        "src.extraction.stages.parsing.ParsingStage._structured_to_markdown",
+        staticmethod(mock_structured_to_markdown)
     )
     monkeypatch.setattr(
         "src.extraction.claude_client.get_claude_client",
