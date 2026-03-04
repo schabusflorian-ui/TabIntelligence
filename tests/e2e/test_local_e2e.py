@@ -54,14 +54,31 @@ def e2e_client(test_db, mock_anthropic, mock_api_key):
         finally:
             db.close()
 
+    # --- Mock S3 client for upload endpoint (S3 upload) and task (S3 download) ---
+    # Store uploaded bytes keyed by s3_key so the task can download them.
+    _s3_store: dict[str, bytes] = {}
+
+    mock_s3 = MagicMock()
+    mock_s3.generate_s3_key.side_effect = lambda file_id, filename, prefix="uploads": f"uploads/{file_id}_{filename}"
+    mock_s3.ensure_bucket_exists.return_value = None
+
+    def _mock_upload(file_bytes, s3_key, **kwargs):
+        _s3_store[s3_key] = file_bytes
+        return s3_key
+    mock_s3.upload_file.side_effect = _mock_upload
+
+    def _mock_download(s3_key):
+        return _s3_store.get(s3_key, b"fallback-bytes")
+    mock_s3.download_file.side_effect = _mock_download
+
     # --- Synchronous Celery task execution ---
     # Run in a separate thread to avoid "asyncio.run() inside running loop" error.
     # This mirrors what the real Celery worker does (separate process/thread).
-    def mock_delay(job_id, file_bytes, entity_id=None):
+    def mock_delay(job_id, s3_key, entity_id=None):
         from src.jobs.tasks import async_extraction_wrapper
 
         def _run():
-            asyncio.run(async_extraction_wrapper(job_id, file_bytes, entity_id))
+            asyncio.run(async_extraction_wrapper(job_id, s3_key, entity_id))
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
             future = pool.submit(_run)
@@ -72,6 +89,8 @@ def e2e_client(test_db, mock_anthropic, mock_api_key):
         return result
 
     with patch("src.api.main.run_extraction_task") as mock_task, \
+         patch("src.api.main.get_s3_client", return_value=mock_s3), \
+         patch("src.storage.s3.get_s3_client", return_value=mock_s3), \
          patch("src.jobs.tasks.get_db_context", test_db_context):
         mock_task.delay = mock_delay
 

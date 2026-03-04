@@ -4,6 +4,7 @@ Tests the 3-stage pipeline: Parse, Triage, Map.
 """
 import pytest
 import json
+from unittest.mock import MagicMock, patch, AsyncMock
 
 from src.extraction.orchestrator import extract, ExtractionResult
 from src.extraction.registry import registry
@@ -153,3 +154,95 @@ def test_extraction_result_to_dict():
     assert d["file_id"] == "test-123"
     assert d["tokens_used"] == 100
     assert isinstance(d, dict)
+
+
+# ============================================================================
+# Progress callback and partial lineage tests
+# ============================================================================
+
+
+@pytest.mark.asyncio
+async def test_progress_callback_called_after_each_stage(mock_anthropic, sample_xlsx):
+    """Test that progress_callback is called after each stage completes."""
+    callback = MagicMock()
+
+    result = await extract(
+        sample_xlsx, file_id="test-progress",
+        progress_callback=callback,
+    )
+
+    # Pipeline has 5 stages; callback should be called once per stage
+    assert callback.call_count == 5
+
+    # Verify each call received (stage_name, progress_percent)
+    stage_names = [call.args[0] for call in callback.call_args_list]
+    assert "parsing" in stage_names
+    assert "triage" in stage_names
+    assert "mapping" in stage_names
+
+    # All progress values should be integers between 0 and 100
+    for call in callback.call_args_list:
+        stage_name, progress_percent = call.args
+        assert isinstance(stage_name, str)
+        assert isinstance(progress_percent, int)
+        assert 0 < progress_percent <= 100
+
+
+@pytest.mark.asyncio
+async def test_progress_callback_failure_does_not_abort_pipeline(mock_anthropic, sample_xlsx):
+    """Test that a failing progress callback does not abort the pipeline."""
+    callback = MagicMock(side_effect=RuntimeError("callback failed"))
+
+    # Pipeline should still complete even though callback raises
+    result = await extract(
+        sample_xlsx, file_id="test-callback-fail",
+        progress_callback=callback,
+    )
+
+    assert "file_id" in result
+    assert result["file_id"] == "test-callback-fail"
+
+
+@pytest.mark.asyncio
+async def test_no_progress_callback_by_default(mock_anthropic, sample_xlsx):
+    """Test that extract works without a progress callback (backward compat)."""
+    # Should work exactly as before, no callback
+    result = await extract(sample_xlsx, file_id="test-no-callback")
+
+    assert "file_id" in result
+    assert result["file_id"] == "test-no-callback"
+
+
+@pytest.mark.asyncio
+async def test_partial_lineage_saved_on_stage_failure(mock_anthropic, sample_xlsx):
+    """Test that lineage events from completed stages are saved when a later stage fails."""
+    from src.lineage.tracker import LineageTracker
+    from src.core.exceptions import ExtractionError
+
+    # Track whether save_to_db was called and with how many events
+    save_calls = []
+
+    original_init = LineageTracker.__init__
+
+    def mock_tracker_init(self, job_id):
+        original_init(self, job_id)
+
+        def tracking_save():
+            save_calls.append(len(self.events))
+
+        self.save_to_db = tracking_save
+
+    with patch.object(LineageTracker, "__init__", mock_tracker_init):
+        # Make the triage stage (stage 2) fail after parsing (stage 1) succeeds
+        from src.extraction.stages.triage import TriageStage
+
+        async def failing_triage_execute(self, context):
+            raise ExtractionError("Triage boom", stage="triage")
+
+        with patch.object(TriageStage, "execute", failing_triage_execute):
+            with pytest.raises(ExtractionError, match="Triage boom"):
+                await extract(sample_xlsx, file_id="test-partial-lineage")
+
+    # save_to_db should have been called once (partial save) with >= 1 event (parsing)
+    assert len(save_calls) == 1
+    assert save_calls[0] >= 1  # At least the parsing stage lineage event

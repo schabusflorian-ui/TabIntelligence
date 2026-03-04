@@ -22,15 +22,11 @@ class TestRetryEndpoint:
         finally:
             session.close()
 
-        # Mock S3 download and Celery task
-        mock_s3 = MagicMock()
-        mock_s3.download_file.return_value = b"fake excel bytes"
-
+        # Mock Celery task (no longer need S3 mock -- retry just passes s3_key)
         mock_task_result = MagicMock()
         mock_task_result.id = "retry-task-123"
 
-        with patch("src.api.main.get_s3_client", return_value=mock_s3), \
-             patch("src.api.main.run_extraction_task") as mock_task:
+        with patch("src.api.main.run_extraction_task") as mock_task:
             mock_task.delay.return_value = mock_task_result
 
             response = test_client_with_db.post(f"/api/v1/jobs/{job_id}/retry")
@@ -41,6 +37,12 @@ class TestRetryEndpoint:
         assert data["new_job_id"] != job_id  # New job created
         assert data["status"] == "processing"
         assert data["message"] == "Re-extraction started"
+
+        # Verify task was called with s3_key, not file_bytes
+        mock_task.delay.assert_called_once()
+        call_kwargs = mock_task.delay.call_args
+        assert call_kwargs.kwargs.get("s3_key") == "uploads/test.xlsx" or \
+               (call_kwargs.args and len(call_kwargs.args) > 1 and "uploads" in str(call_kwargs))
 
     def test_retry_pending_job_rejected(self, test_client_with_db, test_db):
         """Cannot retry a job that isn't failed."""
