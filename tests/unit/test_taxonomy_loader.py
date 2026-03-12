@@ -213,6 +213,135 @@ class TestFormatTaxonomyForPrompt:
         assert "Balance Sheet:" in result
 
 
+class TestFormatTaxonomyWithLearnedAliases:
+    """Test format_taxonomy_for_prompt with include_learned=True."""
+
+    def setup_method(self):
+        import src.extraction.taxonomy_loader as mod
+        mod._taxonomy_cache = {}
+        mod._promoted_cache = {}
+        mod._promoted_cache_time = 0.0
+
+    def teardown_method(self):
+        import src.extraction.taxonomy_loader as mod
+        mod._taxonomy_cache = {}
+        mod._promoted_cache = {}
+        mod._promoted_cache_time = 0.0
+
+    def test_learned_aliases_appear_in_prompt(self):
+        """Promoted learned aliases should appear tagged [learned]."""
+        import src.extraction.taxonomy_loader as mod
+        from src.extraction.taxonomy_loader import format_taxonomy_for_prompt
+        import time
+
+        mod._taxonomy_cache = {
+            "categories": {
+                "income_statement": [
+                    {"canonical_name": "revenue", "aliases": ["sales"]},
+                ]
+            }
+        }
+        # Inject promoted cache directly
+        mod._promoted_cache = {"total income": [("revenue", "income_statement")]}
+        mod._promoted_cache_time = time.time()
+
+        result = format_taxonomy_for_prompt(include_aliases=True, include_learned=True)
+        assert "revenue (sales, total income [learned])" in result
+
+    def test_learned_aliases_excluded_when_false(self):
+        """include_learned=False should not show learned aliases."""
+        import src.extraction.taxonomy_loader as mod
+        from src.extraction.taxonomy_loader import format_taxonomy_for_prompt
+        import time
+
+        mod._taxonomy_cache = {
+            "categories": {
+                "income_statement": [
+                    {"canonical_name": "revenue", "aliases": ["sales"]},
+                ]
+            }
+        }
+        mod._promoted_cache = {"total income": [("revenue", "income_statement")]}
+        mod._promoted_cache_time = time.time()
+
+        result = format_taxonomy_for_prompt(include_aliases=True, include_learned=False)
+        assert "[learned]" not in result
+        assert "revenue (sales)" in result
+
+    def test_learned_alias_not_duplicated_if_already_in_taxonomy(self):
+        """If a promoted alias matches an existing taxonomy alias, don't duplicate."""
+        import src.extraction.taxonomy_loader as mod
+        from src.extraction.taxonomy_loader import format_taxonomy_for_prompt
+        import time
+
+        mod._taxonomy_cache = {
+            "categories": {
+                "income_statement": [
+                    {"canonical_name": "revenue", "aliases": ["sales"]},
+                ]
+            }
+        }
+        # "sales" is already a taxonomy alias — should not appear as [learned]
+        mod._promoted_cache = {"sales": [("revenue", "income_statement")]}
+        mod._promoted_cache_time = time.time()
+
+        result = format_taxonomy_for_prompt(include_aliases=True, include_learned=True)
+        assert result.count("sales") == 1  # only the taxonomy alias, not duplicated
+        assert "[learned]" not in result
+
+    def test_no_promoted_aliases_still_works(self):
+        """When no promoted aliases exist, output is same as before."""
+        import src.extraction.taxonomy_loader as mod
+        from src.extraction.taxonomy_loader import format_taxonomy_for_prompt
+
+        mod._taxonomy_cache = {
+            "categories": {
+                "income_statement": [
+                    {"canonical_name": "revenue", "aliases": ["sales"]},
+                ]
+            }
+        }
+        mod._promoted_cache = {}
+        mod._promoted_cache_time = 0.0
+
+        result = format_taxonomy_for_prompt(include_aliases=True, include_learned=True)
+        assert "revenue (sales)" in result
+        assert "[learned]" not in result
+
+
+class TestStartupItemsInLoader:
+    """Test that new startup items are accessible via the loader."""
+
+    def setup_method(self):
+        import src.extraction.taxonomy_loader as mod
+        mod._taxonomy_cache = {}
+        mod._canonical_names_cache = frozenset()
+
+    def teardown_method(self):
+        import src.extraction.taxonomy_loader as mod
+        mod._taxonomy_cache = {}
+        mod._canonical_names_cache = frozenset()
+
+    def test_new_startup_items_in_canonical_names(self):
+        """New startup items should appear in get_all_canonical_names()."""
+        from src.extraction.taxonomy_loader import get_all_canonical_names
+        names = get_all_canonical_names()
+        assert "adjusted_ebitda" in names
+        assert "burn_rate" in names
+        assert "cash_runway_months" in names
+        assert "convertible_notes" in names
+        assert "safe_notes" in names
+        assert "headcount" in names
+
+    def test_arr_alias_resolves_to_metrics(self):
+        """'arr' alias should resolve to arr in metrics."""
+        from src.extraction.taxonomy_loader import get_alias_to_canonicals
+        lookup = get_alias_to_canonicals()
+        arr_entries = lookup.get("arr", [])
+        categories = [cat for _, cat in arr_entries]
+        assert "metrics" in categories
+
+
 class TestFormatTaxonomyDetailed:
     """Test format_taxonomy_detailed output."""
 

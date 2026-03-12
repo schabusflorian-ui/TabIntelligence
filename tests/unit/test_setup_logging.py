@@ -10,7 +10,6 @@ from unittest.mock import patch, MagicMock
 from io import StringIO
 
 from src.core.logging import setup_logging, CustomJsonFormatter, request_id_ctx
-from src.core.retry import retry
 
 
 # ============================================================================
@@ -176,73 +175,3 @@ class TestCustomJsonFormatter:
         formatter.add_fields(log_record, record, {})
         # environment should be present
         assert "environment" in log_record
-
-
-# ============================================================================
-# CORE RETRY DECORATOR
-# ============================================================================
-
-
-class TestCoreRetryDecorator:
-
-    @pytest.mark.asyncio
-    async def test_success_on_first_attempt(self):
-        """Should return result on first successful call."""
-        @retry(max_attempts=3, backoff_seconds=0)
-        async def my_func():
-            return "ok"
-
-        result = await my_func()
-        assert result == "ok"
-
-    @pytest.mark.asyncio
-    async def test_retries_on_failure(self):
-        """Should retry and succeed on subsequent attempt."""
-        call_count = 0
-
-        @retry(max_attempts=3, backoff_seconds=0)
-        async def flaky_func():
-            nonlocal call_count
-            call_count += 1
-            if call_count < 2:
-                raise ValueError("transient error")
-            return "recovered"
-
-        result = await flaky_func()
-        assert result == "recovered"
-        assert call_count == 2
-
-    @pytest.mark.asyncio
-    async def test_raises_after_max_attempts(self):
-        """Should raise last exception after exhausting attempts."""
-        @retry(max_attempts=2, backoff_seconds=0)
-        async def always_fails():
-            raise RuntimeError("persistent failure")
-
-        with pytest.raises(RuntimeError, match="persistent failure"):
-            await always_fails()
-
-    @pytest.mark.asyncio
-    async def test_passes_attempt_parameter(self):
-        """Should inject attempt number if function accepts it."""
-        attempts_seen = []
-
-        @retry(max_attempts=3, backoff_seconds=0)
-        async def func_with_attempt(attempt=1):
-            attempts_seen.append(attempt)
-            if attempt < 3:
-                raise ValueError("not yet")
-            return "done"
-
-        result = await func_with_attempt()
-        assert result == "done"
-        assert attempts_seen == [1, 2, 3]
-
-    @pytest.mark.asyncio
-    async def test_preserves_function_name(self):
-        """Decorated function should preserve original name."""
-        @retry(max_attempts=2, backoff_seconds=0)
-        async def my_named_function():
-            return True
-
-        assert my_named_function.__name__ == "my_named_function"

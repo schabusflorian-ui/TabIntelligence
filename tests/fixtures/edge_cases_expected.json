@@ -1,0 +1,229 @@
+{
+  "description": "Ground truth for edge_cases.xlsx accuracy measurement",
+  "model_info": {
+    "file": "edge_cases.xlsx",
+    "sheets": 4,
+    "company_type": "Edge case model — structural challenges",
+    "periods": ["FY2022", "FY2023", "FY2024E"],
+    "notes": "Combined IS+BS on one sheet, labels in col B, mixed Q+annual, draft sheet"
+  },
+  "expected_triage": [
+    {
+      "sheet_name": "Financials",
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "rationale": "Combined income statement and balance sheet — core financial data"
+    },
+    {
+      "sheet_name": "Quarterly Detail",
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "rationale": "Quarterly revenue detail supporting annual figures"
+    },
+    {
+      "sheet_name": "Sensitivities",
+      "tier": 3,
+      "decision": "PROCESS_LOW",
+      "rationale": "Sensitivity matrix — supporting analysis, not core data"
+    },
+    {
+      "sheet_name": "Old Draft v1",
+      "tier": 4,
+      "decision": "SKIP",
+      "rationale": "Draft sheet — stale data, should not be processed"
+    }
+  ],
+  "expected_mappings": [
+    {
+      "original_label": "Revenue",
+      "canonical_name": "revenue",
+      "sheet": "Financials"
+    },
+    {
+      "original_label": "Product Revenue",
+      "canonical_name": "product_revenue",
+      "sheet": "Financials"
+    },
+    {
+      "original_label": "Service Revenue",
+      "canonical_name": "service_revenue",
+      "sheet": "Financials"
+    },
+    {
+      "original_label": "Cost of Goods Sold",
+      "canonical_name": "cogs",
+      "sheet": "Financials",
+      "notes": "May also map to 'cost_of_sales'"
+    },
+    {
+      "original_label": "Gross Profit",
+      "canonical_name": "gross_profit",
+      "sheet": "Financials"
+    },
+    {
+      "original_label": "Selling Expenses",
+      "canonical_name": "sales_marketing",
+      "sheet": "Financials",
+      "notes": "May also map to 'marketing_expense' or 'sga'"
+    },
+    {
+      "original_label": "Administrative",
+      "canonical_name": "general_admin",
+      "sheet": "Financials",
+      "notes": "May also map to 'sga'"
+    },
+    {
+      "original_label": "Total Operating Expenses",
+      "canonical_name": "operating_expenses",
+      "sheet": "Financials",
+      "notes": "May also map to 'opex'"
+    },
+    {
+      "original_label": "Operating Income",
+      "canonical_name": "operating_income",
+      "sheet": "Financials",
+      "notes": "May also map to 'ebit'"
+    },
+    {
+      "original_label": "Interest Expense",
+      "canonical_name": "interest_expense",
+      "sheet": "Financials"
+    },
+    {
+      "original_label": "Earnings Before Tax",
+      "canonical_name": "earnings_before_tax",
+      "sheet": "Financials",
+      "notes": "May also map to 'ebt'"
+    },
+    {
+      "original_label": "Income Tax",
+      "canonical_name": "income_tax",
+      "sheet": "Financials",
+      "notes": "May also map to 'tax_expense'"
+    },
+    {
+      "original_label": "Net Income",
+      "canonical_name": "net_income",
+      "sheet": "Financials"
+    },
+    {
+      "original_label": "Cash",
+      "canonical_name": "cash_and_equivalents",
+      "sheet": "Financials",
+      "notes": "May also map to 'cash'"
+    },
+    {
+      "original_label": "Accounts Receivable",
+      "canonical_name": "accounts_receivable",
+      "sheet": "Financials"
+    },
+    {
+      "original_label": "Inventory",
+      "canonical_name": "inventory",
+      "sheet": "Financials"
+    },
+    {
+      "original_label": "Total Current Assets",
+      "canonical_name": "total_current_assets",
+      "sheet": "Financials"
+    },
+    {
+      "original_label": "Fixed Assets, Net",
+      "canonical_name": "net_ppe",
+      "sheet": "Financials",
+      "notes": "May also map to 'fixed_assets' or 'ppe'"
+    },
+    {
+      "original_label": "Intangibles",
+      "canonical_name": "intangible_assets",
+      "sheet": "Financials",
+      "notes": "May also map to 'intangibles'"
+    },
+    {
+      "original_label": "Total Assets",
+      "canonical_name": "total_assets",
+      "sheet": "Financials"
+    },
+    {
+      "original_label": "Accounts Payable",
+      "canonical_name": "accounts_payable",
+      "sheet": "Financials"
+    },
+    {
+      "original_label": "Accrued Expenses",
+      "canonical_name": "accrued_expenses",
+      "sheet": "Financials",
+      "notes": "May also map to 'accrued_liabilities'"
+    },
+    {
+      "original_label": "Total Current Liabilities",
+      "canonical_name": "total_current_liabilities",
+      "sheet": "Financials"
+    },
+    {
+      "original_label": "Long-Term Debt",
+      "canonical_name": "long_term_debt",
+      "sheet": "Financials"
+    },
+    {
+      "original_label": "Total Liabilities",
+      "canonical_name": "total_liabilities",
+      "sheet": "Financials"
+    },
+    {
+      "original_label": "Total Equity",
+      "canonical_name": "total_equity",
+      "sheet": "Financials",
+      "notes": "May also map to 'shareholders_equity'"
+    },
+    {
+      "original_label": "Total Liabilities & Equity",
+      "canonical_name": "total_liabilities_and_equity",
+      "sheet": "Financials"
+    },
+    {
+      "original_label": "Revenue",
+      "canonical_name": "revenue",
+      "sheet": "Quarterly Detail"
+    },
+    {
+      "original_label": "COGS",
+      "canonical_name": "cogs",
+      "sheet": "Quarterly Detail",
+      "notes": "May also map to 'cost_of_sales'"
+    },
+    {
+      "original_label": "Gross Profit",
+      "canonical_name": "gross_profit",
+      "sheet": "Quarterly Detail"
+    },
+    {
+      "original_label": "EBIT",
+      "canonical_name": "ebit",
+      "sheet": "Quarterly Detail",
+      "notes": "May also map to 'operating_income'"
+    }
+  ],
+  "acceptable_alternatives": {
+    "revenue": ["revenue"],
+    "cogs": ["cogs", "cost_of_sales"],
+    "sales_marketing": ["sales_marketing", "marketing_expense", "sga"],
+    "general_admin": ["general_admin", "sga"],
+    "operating_expenses": ["operating_expenses", "opex"],
+    "operating_income": ["operating_income", "ebit"],
+    "earnings_before_tax": ["earnings_before_tax", "ebt"],
+    "income_tax": ["income_tax", "tax_expense"],
+    "net_income": ["net_income", "net_profit"],
+    "cash_and_equivalents": ["cash_and_equivalents", "cash"],
+    "inventory": ["inventory", "inventories"],
+    "total_current_assets": ["total_current_assets", "current_assets"],
+    "net_ppe": ["net_ppe", "ppe", "fixed_assets", "property_plant_equipment"],
+    "intangible_assets": ["intangible_assets", "intangibles"],
+    "accrued_expenses": ["accrued_expenses", "accrued_liabilities"],
+    "total_current_liabilities": ["total_current_liabilities", "current_liabilities"],
+    "long_term_debt": ["long_term_debt", "total_debt"],
+    "total_equity": ["total_equity", "shareholders_equity", "stockholders_equity"],
+    "total_liabilities_and_equity": ["total_liabilities_and_equity"],
+    "ebit": ["ebit", "operating_income"]
+  }
+}

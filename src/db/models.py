@@ -19,16 +19,19 @@ from typing import List, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     DateTime,
     Enum,
     Float,
     ForeignKey,
+    Index,
     Integer,
     JSON,
     Numeric,
     String,
     Text,
+    UniqueConstraint,
     func,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
@@ -51,6 +54,7 @@ class JobStatusEnum(str, PyEnum):
     PROCESSING = "processing"
     COMPLETED = "completed"
     FAILED = "failed"
+    NEEDS_REVIEW = "needs_review"
 
 
 # ============================================================================
@@ -181,6 +185,7 @@ class EntityPattern(Base):
     confidence: Mapped[Decimal] = mapped_column(Numeric(precision=5, scale=4))
     occurrence_count: Mapped[int] = mapped_column(Integer, server_default="1")
     last_seen: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     created_by: Mapped[str] = mapped_column(String(50))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -192,6 +197,46 @@ class EntityPattern(Base):
 
     def __repr__(self):
         return f"<EntityPattern(original='{self.original_label}', canonical='{self.canonical_name}', confidence={self.confidence})>"
+
+
+class LearnedAlias(Base):
+    """
+    Learned aliases discovered from high-confidence Claude mappings.
+
+    When Claude maps a label to a canonical name with high confidence and
+    the label is not already in the taxonomy, it's recorded here. After
+    sufficient occurrences across different entities, aliases can be
+    promoted to the canonical taxonomy.
+    """
+    __tablename__ = "learned_aliases"
+
+    __table_args__ = (
+        UniqueConstraint(
+            'canonical_name', 'alias_text',
+            name='uq_learned_aliases_canonical_alias'
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid4
+    )
+    canonical_name: Mapped[str] = mapped_column(String(100), index=True)
+    alias_text: Mapped[str] = mapped_column(String(500), index=True)
+    occurrence_count: Mapped[int] = mapped_column(Integer, server_default="1")
+    source_entities: Mapped[list] = mapped_column(JSON, default=list, server_default="[]")
+    promoted: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now()
+    )
+
+    def __repr__(self):
+        return (
+            f"<LearnedAlias(canonical='{self.canonical_name}', "
+            f"alias='{self.alias_text}', count={self.occurrence_count})>"
+        )
 
 
 # ============================================================================
@@ -278,6 +323,9 @@ class ExtractionJob(Base):
     tokens_used: Mapped[Optional[int]] = mapped_column(Integer)
     cost_usd: Mapped[Optional[float]] = mapped_column(Float)
 
+    # Quality
+    quality_grade: Mapped[Optional[str]] = mapped_column(String(2), nullable=True)
+
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -293,6 +341,10 @@ class ExtractionJob(Base):
     # Relationships
     file: Mapped["File"] = relationship(back_populates="extraction_jobs")
     lineage_events: Mapped[List["LineageEvent"]] = relationship(
+        back_populates="job",
+        cascade="all, delete-orphan"
+    )
+    correction_history: Mapped[List["CorrectionHistory"]] = relationship(
         back_populates="job",
         cascade="all, delete-orphan"
     )
@@ -426,6 +478,121 @@ class DLQEntry(Base):
 
     def __repr__(self):
         return f"<DLQEntry(dlq_id={self.dlq_id}, task_id='{self.task_id}', replayed={self.replayed})>"
+
+
+# ============================================================================
+# EXTRACTION FACT TABLE
+# ============================================================================
+
+
+class ExtractionFact(Base):
+    """
+    Decomposed extraction result: one row per (job, canonical_name, period).
+
+    Enables efficient querying of individual extracted values across jobs,
+    entities, periods, and canonical names. Populated from line_items after
+    extraction completes.
+    """
+    __tablename__ = "extraction_facts"
+
+    __table_args__ = (
+        Index("ix_fact_entity_canonical_period", "entity_id", "canonical_name", "period"),
+        Index("ix_fact_job_canonical", "job_id", "canonical_name"),
+    )
+
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid4
+    )
+    job_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("extraction_jobs.job_id", ondelete="CASCADE"),
+        index=True
+    )
+    entity_id: Mapped[Optional[UUID]] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("entities.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True
+    )
+    canonical_name: Mapped[str] = mapped_column(String(100), index=True)
+    original_label: Mapped[Optional[str]] = mapped_column(String(500))
+    period: Mapped[str] = mapped_column(String(50), index=True)
+    period_normalized: Mapped[Optional[str]] = mapped_column(String(50))
+    value: Mapped[Decimal] = mapped_column(Numeric(precision=20, scale=4))
+    confidence: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    sheet_name: Mapped[Optional[str]] = mapped_column(String(255))
+    row_index: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    hierarchy_level: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    mapping_method: Mapped[Optional[str]] = mapped_column(String(50))
+    taxonomy_category: Mapped[Optional[str]] = mapped_column(String(50))
+    validation_passed: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now()
+    )
+
+    def __repr__(self):
+        return (
+            f"<ExtractionFact(job_id={self.job_id}, canonical='{self.canonical_name}', "
+            f"period='{self.period}', value={self.value})>"
+        )
+
+
+# ============================================================================
+# CORRECTION HISTORY
+# ============================================================================
+
+
+class CorrectionHistory(Base):
+    """
+    Tracks corrections applied to extraction job results.
+
+    Each row records one line_item correction (old canonical -> new canonical)
+    applied to a specific job. Stores a snapshot of the old line_item for undo.
+    """
+    __tablename__ = "correction_history"
+
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid4
+    )
+    job_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("extraction_jobs.job_id", ondelete="CASCADE"),
+        index=True
+    )
+    entity_id: Mapped[Optional[UUID]] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("entities.id", ondelete="SET NULL"),
+        nullable=True
+    )
+    original_label: Mapped[str] = mapped_column(String(500))
+    sheet: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    old_canonical_name: Mapped[str] = mapped_column(String(100))
+    new_canonical_name: Mapped[str] = mapped_column(String(100))
+    old_confidence: Mapped[float] = mapped_column(Float)
+    new_confidence: Mapped[float] = mapped_column(Float, default=1.0)
+    old_line_item_snapshot: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    reverted: Mapped[bool] = mapped_column(Boolean, default=False)
+    reverted_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now()
+    )
+
+    # Relationships
+    job: Mapped["ExtractionJob"] = relationship(back_populates="correction_history")
+
+    def __repr__(self):
+        return (
+            f"<CorrectionHistory(id={self.id}, job_id={self.job_id}, "
+            f"'{self.old_canonical_name}' -> '{self.new_canonical_name}')>"
+        )
 
 
 # Late import to register APIKey with Base metadata (avoids circular imports)

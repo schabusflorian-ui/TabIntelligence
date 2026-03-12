@@ -1,3 +1,5 @@
+# NOTE: This file overlaps with test_dlq_endpoint.py — both test DLQ API endpoints.
+# Kept intentionally; consolidation deferred.
 """Tests for DLQ admin API endpoints."""
 import pytest
 from uuid import uuid4

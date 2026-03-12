@@ -1,3 +1,5 @@
+# NOTE: This file overlaps with test_dlq_api.py — both test DLQ API endpoints.
+# Kept intentionally; consolidation deferred.
 """Tests for DLQ admin endpoints (GET/DELETE /api/v1/admin/dlq)."""
 import pytest
 from uuid import uuid4

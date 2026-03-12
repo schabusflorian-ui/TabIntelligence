@@ -4,13 +4,19 @@ CRUD (Create, Read, Update, Delete) operations for DebtFund database.
 All operations use explicit transaction management and proper error handling.
 This is the canonical location per Week 2 strategy.
 """
+import copy
+
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.exc import SQLAlchemyError
 from typing import Optional, List
 from uuid import UUID
 from datetime import datetime, timezone
 
-from src.db.models import Entity, File, ExtractionJob, JobStatusEnum, LineageEvent, DLQEntry, EntityPattern
+from src.db.models import (
+    Entity, File, ExtractionJob, ExtractionFact, JobStatusEnum, LineageEvent,
+    DLQEntry, EntityPattern, LearnedAlias, CorrectionHistory,
+)
 from src.core.logging import database_logger as logger
 from src.core.exceptions import DatabaseError
 
@@ -458,9 +464,10 @@ def complete_job(
     result: dict,
     tokens_used: int,
     cost_usd: float,
+    quality_grade: Optional[str] = None,
 ) -> ExtractionJob:
     """
-    Mark job as completed with results.
+    Mark job as completed (or NEEDS_REVIEW if quality gate fails).
 
     Args:
         db: Database session
@@ -468,6 +475,7 @@ def complete_job(
         result: Extraction result dictionary
         tokens_used: Number of tokens consumed
         cost_usd: Cost in USD
+        quality_grade: Letter grade from quality scorer (A/B/C/D/F)
 
     Returns:
         ExtractionJob: Updated job record
@@ -484,17 +492,27 @@ def complete_job(
                 table="extraction_jobs"
             )
 
-        job.status = JobStatusEnum.COMPLETED
+        # Quality gate: F grade -> NEEDS_REVIEW instead of COMPLETED
+        quality_gate = (result.get("quality") or {}).get("quality_gate", {})
+        if not quality_gate.get("passed", True):
+            job.status = JobStatusEnum.NEEDS_REVIEW
+        else:
+            job.status = JobStatusEnum.COMPLETED
+
         job.progress_percent = 100
         job.result = result
         job.tokens_used = tokens_used
         job.cost_usd = cost_usd
+        job.quality_grade = quality_grade
         job.updated_at = datetime.now(timezone.utc)
 
         db.commit()
         db.refresh(job)
 
-        logger.info(f"Job {job_id} completed: tokens={tokens_used}, cost=${cost_usd:.4f}")
+        logger.info(
+            f"Job {job_id} {job.status.value}: "
+            f"tokens={tokens_used}, cost=${cost_usd:.4f}, grade={quality_grade}"
+        )
         return job
     except SQLAlchemyError as e:
         db.rollback()
@@ -503,6 +521,57 @@ def complete_job(
             f"Failed to complete job: {str(e)}",
             operation="update",
             table="extraction_jobs"
+        )
+
+
+def review_job(
+    db: Session,
+    job_id: UUID,
+    decision: str,
+    reason: Optional[str] = None,
+) -> ExtractionJob:
+    """
+    Review a NEEDS_REVIEW job: approve transitions to COMPLETED, reject to FAILED.
+
+    Raises:
+        DatabaseError: If job not found or not in NEEDS_REVIEW status.
+    """
+    try:
+        job = db.query(ExtractionJob).filter(ExtractionJob.job_id == job_id).first()
+        if not job:
+            raise DatabaseError(
+                f"Job {job_id} not found",
+                operation="update",
+                table="extraction_jobs",
+            )
+
+        if job.status != JobStatusEnum.NEEDS_REVIEW:
+            raise DatabaseError(
+                f"Job {job_id} is not in NEEDS_REVIEW status (current: {job.status.value})",
+                operation="update",
+                table="extraction_jobs",
+            )
+
+        if decision == "approve":
+            job.status = JobStatusEnum.COMPLETED
+        else:
+            job.status = JobStatusEnum.FAILED
+            job.error = f"Rejected: {reason}" if reason else "Rejected by reviewer"
+
+        job.updated_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(job)
+
+        logger.info(f"Job {job_id} reviewed: decision={decision}, new_status={job.status.value}")
+        return job
+    except DatabaseError:
+        raise
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise DatabaseError(
+            f"Failed to review job: {str(e)}",
+            operation="update",
+            table="extraction_jobs",
         )
 
 
@@ -550,6 +619,48 @@ def fail_job(
             f"Failed to update job: {str(e)}",
             operation="update",
             table="extraction_jobs"
+        )
+
+
+def update_job_partial_result(
+    db: Session,
+    job_id: UUID,
+    stage_name: str,
+    stage_result: dict,
+) -> ExtractionJob:
+    """Save partial stage results to job.result for checkpoint/resume.
+
+    Stores results under ``_stage_results`` keyed by stage name.
+    """
+    try:
+        job = db.query(ExtractionJob).filter(ExtractionJob.job_id == job_id).first()
+        if not job:
+            raise DatabaseError(
+                f"Job {job_id} not found",
+                operation="update",
+                table="extraction_jobs",
+            )
+
+        current = copy.deepcopy(job.result) if job.result else {}
+        stage_results = current.get("_stage_results", {})
+        stage_results[stage_name] = stage_result
+        current["_stage_results"] = stage_results
+        current["_last_completed_stage"] = stage_name
+
+        job.result = current
+        job.updated_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(job)
+
+        logger.debug(f"Job {job_id} partial result saved: stage={stage_name}")
+        return job
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Failed to save partial result for job {job_id}: {str(e)}")
+        raise DatabaseError(
+            f"Failed to save partial result: {str(e)}",
+            operation="update",
+            table="extraction_jobs",
         )
 
 
@@ -677,6 +788,7 @@ def get_entity_patterns(
     entity_id: UUID,
     min_confidence: float = 0.0,
     limit: int = 100,
+    active_only: bool = True,
 ) -> List[EntityPattern]:
     """
     Get learned patterns for an entity, ordered by confidence descending.
@@ -686,6 +798,7 @@ def get_entity_patterns(
         entity_id: Entity UUID
         min_confidence: Minimum confidence threshold (default 0.0)
         limit: Maximum patterns to return
+        active_only: If True, only return active patterns (default True)
 
     Returns:
         List of EntityPattern records
@@ -695,9 +808,10 @@ def get_entity_patterns(
             db.query(EntityPattern)
             .filter(EntityPattern.entity_id == entity_id)
             .filter(EntityPattern.confidence >= min_confidence)
-            .order_by(EntityPattern.confidence.desc())
-            .limit(limit)
         )
+        if active_only:
+            query = query.filter(EntityPattern.is_active == True)
+        query = query.order_by(EntityPattern.confidence.desc()).limit(limit)
         return query.all()
     except SQLAlchemyError as e:
         logger.error(f"Failed to get entity patterns for {entity_id}: {str(e)}")
@@ -715,6 +829,7 @@ def upsert_entity_pattern(
     canonical_name: str,
     confidence: float,
     created_by: str = "claude",
+    flush_only: bool = False,
 ) -> EntityPattern:
     """
     Create or update an entity pattern (upsert by entity_id + original_label).
@@ -734,7 +849,15 @@ def upsert_entity_pattern(
 
     Returns:
         EntityPattern: Created or updated record
+
+    Raises:
+        ValueError: If canonical_name is not a valid taxonomy item
     """
+    from src.extraction.taxonomy_loader import get_all_canonical_names
+
+    if canonical_name not in get_all_canonical_names():
+        raise ValueError(f"Invalid canonical_name: '{canonical_name}'")
+
     try:
         existing = (
             db.query(EntityPattern)
@@ -751,8 +874,11 @@ def upsert_entity_pattern(
                 existing.canonical_name = canonical_name
             existing.occurrence_count += 1
             existing.last_seen = datetime.now(timezone.utc)
-            db.commit()
-            db.refresh(existing)
+            if flush_only:
+                db.flush()
+            else:
+                db.commit()
+                db.refresh(existing)
             return existing
 
         pattern = EntityPattern(
@@ -764,8 +890,11 @@ def upsert_entity_pattern(
             last_seen=datetime.now(timezone.utc),
         )
         db.add(pattern)
-        db.commit()
-        db.refresh(pattern)
+        if flush_only:
+            db.flush()
+        else:
+            db.commit()
+            db.refresh(pattern)
         logger.debug(
             f"Entity pattern created: entity={entity_id}, "
             f"'{original_label}' -> '{canonical_name}' ({confidence:.2f})"
@@ -804,6 +933,9 @@ def bulk_upsert_entity_patterns(
     Returns:
         Number of patterns upserted
     """
+    from src.extraction.taxonomy_loader import get_all_canonical_names
+
+    valid_names = get_all_canonical_names()
     count = 0
     for m in mappings:
         confidence = m.get("confidence", 0)
@@ -811,6 +943,11 @@ def bulk_upsert_entity_patterns(
         label = m.get("original_label", "")
 
         if confidence < min_confidence or canonical == "unmapped" or not label:
+            continue
+        if canonical not in valid_names:
+            logger.warning(
+                f"Skipping invalid canonical '{canonical}' for entity {entity_id}"
+            )
             continue
 
         upsert_entity_pattern(
@@ -825,6 +962,26 @@ def bulk_upsert_entity_patterns(
 
     logger.info(f"Bulk upserted {count} entity patterns for entity {entity_id}")
     return count
+
+
+def delete_entity_pattern(db: Session, pattern_id: UUID) -> bool:
+    """Delete an entity pattern. Returns True if deleted, False if not found."""
+    try:
+        pattern = db.query(EntityPattern).filter(EntityPattern.id == pattern_id).first()
+        if not pattern:
+            return False
+        db.delete(pattern)
+        db.commit()
+        logger.info(f"Entity pattern {pattern_id} deleted")
+        return True
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Failed to delete entity pattern {pattern_id}: {str(e)}")
+        raise DatabaseError(
+            f"Failed to delete entity pattern: {str(e)}",
+            operation="delete",
+            table="entity_patterns"
+        )
 
 
 # ============================================================================
@@ -963,4 +1120,1397 @@ def delete_dlq_entry(db: Session, dlq_id: UUID) -> bool:
             f"Failed to delete DLQ entry: {str(e)}",
             operation="delete",
             table="dlq_entries"
+        )
+
+
+# ============================================================================
+# PATTERN INTELLIGENCE OPERATIONS
+# ============================================================================
+
+
+def compute_effective_confidence(
+    base_confidence: float,
+    last_seen: Optional[datetime],
+    created_by: str = "claude",
+) -> float:
+    """
+    Compute effective confidence with time-based decay.
+
+    User corrections are exempt from decay. Claude-generated patterns
+    lose up to 30% confidence per year since last seen, with a floor at 0.5.
+
+    Args:
+        base_confidence: Stored confidence value (0.0-1.0)
+        last_seen: Timestamp of last pattern match
+        created_by: Pattern source ('claude' or 'user_correction')
+
+    Returns:
+        Effective confidence after decay
+    """
+    if created_by == "user_correction":
+        return float(base_confidence)
+
+    if last_seen is None:
+        return float(base_confidence)
+
+    now = datetime.now(timezone.utc)
+    if last_seen.tzinfo is None:
+        last_seen = last_seen.replace(tzinfo=timezone.utc)
+    days_since = (now - last_seen).days
+    decay_factor = max(0.5, 1.0 - (days_since / 365) * 0.3)
+    return float(base_confidence) * decay_factor
+
+
+def resolve_pattern_conflicts(db: Session, entity_id: UUID) -> int:
+    """
+    Resolve conflicts where multiple patterns map the same label to different canonicals.
+
+    Resolution priority:
+    1. user_correction wins over claude
+    2. Higher occurrence_count wins
+    3. More recent last_seen wins as tiebreaker
+
+    Args:
+        db: Database session
+        entity_id: Entity UUID
+
+    Returns:
+        Number of patterns deactivated
+    """
+    try:
+        # Get all active patterns for this entity
+        patterns = (
+            db.query(EntityPattern)
+            .filter(
+                EntityPattern.entity_id == entity_id,
+                EntityPattern.is_active == True,
+            )
+            .all()
+        )
+
+        # Group by original_label
+        from collections import defaultdict
+        label_groups: dict[str, list[EntityPattern]] = defaultdict(list)
+        for p in patterns:
+            label_groups[p.original_label].append(p)
+
+        deactivated = 0
+        for label, group in label_groups.items():
+            if len(group) <= 1:
+                continue
+
+            # Sort: user_correction first, then by occurrence_count desc, then by last_seen desc
+            def sort_key(p: EntityPattern):
+                is_user = 1 if p.created_by == "user_correction" else 0
+                occ = p.occurrence_count or 0
+                seen = p.last_seen or datetime.min.replace(tzinfo=timezone.utc)
+                if seen.tzinfo is None:
+                    seen = seen.replace(tzinfo=timezone.utc)
+                return (is_user, occ, seen)
+
+            group.sort(key=sort_key, reverse=True)
+
+            # Winner is first; deactivate the rest
+            for p in group[1:]:
+                p.is_active = False
+                deactivated += 1
+
+        if deactivated:
+            db.commit()
+            logger.info(
+                f"Resolved pattern conflicts for entity {entity_id}: "
+                f"{deactivated} patterns deactivated"
+            )
+
+        return deactivated
+
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Failed to resolve pattern conflicts: {str(e)}")
+        raise DatabaseError(
+            f"Failed to resolve pattern conflicts: {str(e)}",
+            operation="update",
+            table="entity_patterns"
+        )
+
+
+def update_pattern_confidence_from_validation(
+    db: Session,
+    entity_id: UUID,
+    failed_canonicals: set,
+    passed_canonicals: set,
+) -> dict:
+    """
+    Adjust pattern confidence based on validation results.
+
+    Pattern-mapped items that fail validation get confidence reduced.
+    Items that pass get a small confidence boost (reinforcement).
+    User corrections are exempt from adjustments.
+
+    Args:
+        db: Database session
+        entity_id: Entity UUID
+        failed_canonicals: Set of canonical names that failed validation
+        passed_canonicals: Set of canonical names that passed validation
+
+    Returns:
+        Dict with 'reduced' and 'boosted' counts
+    """
+    try:
+        patterns = (
+            db.query(EntityPattern)
+            .filter(
+                EntityPattern.entity_id == entity_id,
+                EntityPattern.is_active == True,
+                EntityPattern.created_by == "claude",
+            )
+            .all()
+        )
+
+        reduced = 0
+        boosted = 0
+
+        for p in patterns:
+            if p.canonical_name in failed_canonicals:
+                new_conf = max(0.1, float(p.confidence) - 0.1)
+                p.confidence = new_conf  # type: ignore[assignment]
+                reduced += 1
+            elif p.canonical_name in passed_canonicals:
+                new_conf = min(1.0, float(p.confidence) + 0.02)
+                p.confidence = new_conf  # type: ignore[assignment]
+                boosted += 1
+
+        if reduced or boosted:
+            db.commit()
+            logger.info(
+                f"Validation feedback for entity {entity_id}: "
+                f"{reduced} reduced, {boosted} boosted"
+            )
+
+        return {"reduced": reduced, "boosted": boosted}
+
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Failed to update pattern confidence from validation: {str(e)}")
+        raise DatabaseError(
+            f"Failed to update pattern confidence: {str(e)}",
+            operation="update",
+            table="entity_patterns"
+        )
+
+
+def get_industry_patterns(
+    db: Session,
+    industry: str,
+    exclude_entity_id: UUID,
+    min_confidence: float = 0.8,
+    limit: int = 50,
+) -> List[EntityPattern]:
+    """
+    Get patterns from other entities in the same industry.
+
+    Used to bootstrap pattern hints for new entities by loading
+    patterns from entities with the same industry classification.
+
+    Args:
+        db: Database session
+        industry: Industry classification string
+        exclude_entity_id: Entity to exclude (avoid self-matching)
+        min_confidence: Minimum confidence threshold
+        limit: Maximum patterns to return
+
+    Returns:
+        List of EntityPattern records from other entities in the industry
+    """
+    try:
+        return (
+            db.query(EntityPattern)
+            .join(Entity, EntityPattern.entity_id == Entity.id)
+            .filter(
+                Entity.industry == industry,
+                EntityPattern.entity_id != exclude_entity_id,
+                EntityPattern.confidence >= min_confidence,
+                EntityPattern.is_active == True,
+            )
+            .order_by(EntityPattern.confidence.desc())
+            .limit(limit)
+            .all()
+        )
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to get industry patterns for {industry}: {str(e)}")
+        raise DatabaseError(
+            f"Failed to get industry patterns: {str(e)}",
+            operation="read",
+            table="entity_patterns"
+        )
+
+
+# ============================================================================
+# LEARNED ALIAS OPERATIONS
+# ============================================================================
+
+
+def record_learned_alias(
+    db: Session,
+    canonical_name: str,
+    alias_text: str,
+    entity_id: str,
+) -> Optional[LearnedAlias]:
+    """
+    Record a learned alias from a high-confidence mapping.
+
+    Upserts by (canonical_name, alias_text). Increments occurrence_count
+    and appends entity_id to source_entities if not already present.
+
+    Args:
+        db: Database session
+        canonical_name: Canonical taxonomy name
+        alias_text: The discovered alias text
+        entity_id: Entity where alias was discovered
+
+    Returns:
+        Created or updated LearnedAlias record, or None if canonical_name is invalid
+    """
+    from src.extraction.taxonomy_loader import get_all_canonical_names
+
+    if canonical_name not in get_all_canonical_names():
+        logger.warning(
+            f"Skipping learned alias for invalid canonical '{canonical_name}'"
+        )
+        return None
+
+    try:
+        existing = (
+            db.query(LearnedAlias)
+            .filter(
+                LearnedAlias.canonical_name == canonical_name,
+                LearnedAlias.alias_text == alias_text,
+            )
+            .first()
+        )
+
+        if existing:
+            existing.occurrence_count += 1
+            sources = list(existing.source_entities or [])
+            if entity_id not in sources:
+                sources.append(entity_id)
+                existing.source_entities = sources
+            db.commit()
+            db.refresh(existing)
+            return existing
+
+        alias = LearnedAlias(
+            canonical_name=canonical_name,
+            alias_text=alias_text,
+            occurrence_count=1,
+            source_entities=[entity_id],
+        )
+        db.add(alias)
+        db.commit()
+        db.refresh(alias)
+        logger.debug(f"Learned alias recorded: '{alias_text}' -> {canonical_name}")
+        return alias
+
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Failed to record learned alias: {str(e)}")
+        raise DatabaseError(
+            f"Failed to record learned alias: {str(e)}",
+            operation="upsert",
+            table="learned_aliases"
+        )
+
+
+def get_learned_aliases(
+    db: Session,
+    promoted: Optional[bool] = None,
+    min_occurrences: int = 1,
+    limit: int = 100,
+) -> List[LearnedAlias]:
+    """
+    List learned aliases with optional filters.
+
+    Args:
+        db: Database session
+        promoted: Filter by promoted status (None = all)
+        min_occurrences: Minimum occurrence count
+        limit: Maximum records to return
+
+    Returns:
+        List of LearnedAlias records
+    """
+    try:
+        query = (
+            db.query(LearnedAlias)
+            .filter(LearnedAlias.occurrence_count >= min_occurrences)
+        )
+        if promoted is not None:
+            query = query.filter(LearnedAlias.promoted == promoted)
+        return (
+            query
+            .order_by(LearnedAlias.occurrence_count.desc())
+            .limit(limit)
+            .all()
+        )
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to get learned aliases: {str(e)}")
+        raise DatabaseError(
+            f"Failed to get learned aliases: {str(e)}",
+            operation="read",
+            table="learned_aliases"
+        )
+
+
+def promote_learned_alias(db: Session, alias_id: UUID) -> Optional[LearnedAlias]:
+    """
+    Mark a learned alias as promoted.
+
+    Args:
+        db: Database session
+        alias_id: LearnedAlias UUID
+
+    Returns:
+        Updated LearnedAlias or None if not found
+    """
+    try:
+        alias = db.query(LearnedAlias).filter(LearnedAlias.id == alias_id).first()
+        if not alias:
+            return None
+        alias.promoted = True
+        db.commit()
+        db.refresh(alias)
+        logger.info(f"Learned alias promoted: '{alias.alias_text}' -> {alias.canonical_name}")
+        try:
+            from src.extraction.taxonomy_loader import invalidate_promoted_cache
+            invalidate_promoted_cache()
+        except ImportError:
+            pass
+        return alias
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Failed to promote learned alias {alias_id}: {str(e)}")
+        raise DatabaseError(
+            f"Failed to promote learned alias: {str(e)}",
+            operation="update",
+            table="learned_aliases"
+        )
+
+
+def get_promoted_aliases_for_lookup(db: Session) -> List[dict]:
+    """Return promoted aliases as {alias_text, canonical_name} dicts for taxonomy merge.
+
+    Used by taxonomy_loader to merge promoted learned aliases into the alias lookup.
+    Returns empty list on failure (graceful degradation).
+    """
+    try:
+        aliases = (
+            db.query(LearnedAlias)
+            .filter(LearnedAlias.promoted == True)
+            .all()
+        )
+        return [
+            {"alias_text": a.alias_text, "canonical_name": a.canonical_name}
+            for a in aliases
+        ]
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to get promoted aliases for lookup: {str(e)}")
+        return []
+
+
+def get_promotable_aliases(
+    db: Session,
+    min_occurrences: int = 3,
+) -> List[LearnedAlias]:
+    """
+    Get aliases eligible for promotion to taxonomy.
+
+    Aliases must have been seen across enough different entities
+    and not yet promoted.
+
+    Args:
+        db: Database session
+        min_occurrences: Minimum occurrence count for eligibility
+
+    Returns:
+        List of LearnedAlias records eligible for promotion
+    """
+    try:
+        return (
+            db.query(LearnedAlias)
+            .filter(
+                LearnedAlias.promoted == False,
+                LearnedAlias.occurrence_count >= min_occurrences,
+            )
+            .order_by(LearnedAlias.occurrence_count.desc())
+            .all()
+        )
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to get promotable aliases: {str(e)}")
+        raise DatabaseError(
+            f"Failed to get promotable aliases: {str(e)}",
+            operation="read",
+            table="learned_aliases"
+        )
+
+
+# ============================================================================
+# EXTRACTION FACT OPERATIONS
+# ============================================================================
+
+
+def persist_extraction_facts(
+    db: Session,
+    job_id: UUID,
+    entity_id: Optional[UUID],
+    line_items: List[dict],
+    validation_lookup: Optional[dict] = None,
+) -> int:
+    """Decompose line_items into (canonical_name, period, value) facts and bulk insert.
+
+    Args:
+        db: Database session
+        job_id: ExtractionJob UUID
+        entity_id: Optional Entity UUID
+        line_items: List of dicts with canonical_name, original_label, values, confidence, etc.
+        validation_lookup: Optional dict {canonical_name: {passed: bool, ...}} from item_validation
+
+    Returns:
+        Number of facts persisted
+    """
+    from decimal import Decimal, InvalidOperation
+
+    facts = []
+    for item in line_items:
+        canonical = item.get("canonical_name")
+        if not canonical or canonical == "unmapped":
+            continue
+
+        values = item.get("values", {})
+        if not isinstance(values, dict):
+            continue
+
+        for period, value in values.items():
+            if value is None:
+                continue
+            try:
+                dec_value = Decimal(str(value))
+            except (InvalidOperation, ValueError, TypeError):
+                logger.warning(f"Skipping malformed value for {canonical}/{period}: {value}")
+                continue
+
+            validation_passed = None
+            if validation_lookup and canonical in validation_lookup:
+                validation_passed = validation_lookup[canonical].get("passed")
+
+            facts.append(ExtractionFact(
+                job_id=job_id,
+                entity_id=entity_id,
+                canonical_name=canonical,
+                original_label=item.get("original_label"),
+                period=str(period),
+                period_normalized=item.get("period_normalized", {}).get(str(period)) if isinstance(item.get("period_normalized"), dict) else None,
+                value=dec_value,
+                confidence=item.get("confidence"),
+                sheet_name=item.get("sheet_name"),
+                row_index=item.get("row_index"),
+                hierarchy_level=item.get("hierarchy_level"),
+                mapping_method=item.get("method"),
+                taxonomy_category=item.get("taxonomy_category"),
+                validation_passed=validation_passed,
+            ))
+
+    if not facts:
+        return 0
+
+    try:
+        db.bulk_save_objects(facts)
+        db.commit()
+        logger.info(f"Persisted {len(facts)} extraction facts for job {job_id}")
+        return len(facts)
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Failed to persist extraction facts: {str(e)}")
+        raise DatabaseError(
+            f"Failed to persist extraction facts: {str(e)}",
+            operation="create",
+            table="extraction_facts"
+        )
+
+
+def query_extraction_facts(
+    db: Session,
+    entity_id: Optional[UUID] = None,
+    canonical_name: Optional[str] = None,
+    period: Optional[str] = None,
+    job_id: Optional[UUID] = None,
+    min_confidence: Optional[float] = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> List[ExtractionFact]:
+    """Query extraction facts with optional filters.
+
+    Args:
+        db: Database session
+        entity_id: Filter by entity
+        canonical_name: Filter by canonical name
+        period: Filter by period
+        job_id: Filter by job
+        min_confidence: Minimum confidence threshold
+        limit: Max results (default 100, capped at 1000)
+        offset: Pagination offset
+
+    Returns:
+        List of ExtractionFact records
+    """
+    limit = min(limit, 1000)
+    try:
+        query = db.query(ExtractionFact)
+        if entity_id:
+            query = query.filter(ExtractionFact.entity_id == entity_id)
+        if canonical_name:
+            query = query.filter(ExtractionFact.canonical_name == canonical_name)
+        if period:
+            query = query.filter(ExtractionFact.period == period)
+        if job_id:
+            query = query.filter(ExtractionFact.job_id == job_id)
+        if min_confidence is not None:
+            query = query.filter(ExtractionFact.confidence >= min_confidence)
+
+        return (
+            query
+            .order_by(ExtractionFact.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to query extraction facts: {str(e)}")
+        raise DatabaseError(
+            f"Failed to query extraction facts: {str(e)}",
+            operation="read",
+            table="extraction_facts"
+        )
+
+
+# ============================================================================
+# CORRECTION HISTORY OPERATIONS
+# ============================================================================
+
+
+def _build_line_item_index(line_items: list) -> dict:
+    """Build a lookup index from line_items for O(1) matching by original_label.
+
+    Returns dict mapping original_label -> list of (index, item) tuples.
+    """
+    from collections import defaultdict
+    index = defaultdict(list)
+    for idx, item in enumerate(line_items):
+        label = item.get("original_label")
+        if label:
+            index[label].append((idx, item))
+    return dict(index)
+
+
+def _find_matching_line_items(
+    line_items: list,
+    original_label: str,
+    sheet: Optional[str] = None,
+    _index: Optional[dict] = None,
+) -> list:
+    """Find line_items matching original_label (and optionally sheet).
+
+    Args:
+        _index: Pre-built index from _build_line_item_index() for O(1) lookup.
+                 If None, falls back to linear scan.
+
+    Returns list of (index, item) tuples.
+    """
+    if _index is not None:
+        candidates = _index.get(original_label, [])
+    else:
+        candidates = [
+            (idx, item) for idx, item in enumerate(line_items)
+            if item.get("original_label") == original_label
+        ]
+
+    if sheet is None:
+        return candidates
+    return [(idx, item) for idx, item in candidates if item.get("sheet") == sheet]
+
+
+def update_extraction_facts_for_correction(
+    db: Session,
+    job_id: UUID,
+    original_label: str,
+    old_canonical_name: str,
+    new_canonical_name: str,
+    confidence: float = 1.0,
+    mapping_method: str = "user_correction",
+) -> int:
+    """Update ExtractionFact rows when a correction is applied or undone.
+
+    Args:
+        confidence: Value to set (1.0 for apply, original value for undo).
+        mapping_method: Value to set ("user_correction" for apply, original for undo).
+
+    Returns count of facts updated.
+    """
+    try:
+        facts = (
+            db.query(ExtractionFact)
+            .filter(
+                ExtractionFact.job_id == job_id,
+                ExtractionFact.canonical_name == old_canonical_name,
+                ExtractionFact.original_label == original_label,
+            )
+            .all()
+        )
+        for fact in facts:
+            fact.canonical_name = new_canonical_name
+            fact.confidence = confidence
+            fact.mapping_method = mapping_method
+        return len(facts)
+    except SQLAlchemyError as e:
+        logger.warning(f"Could not update extraction facts for correction: {e}")
+        return 0
+
+
+def apply_correction_to_result(
+    db: Session,
+    job_id: UUID,
+    corrections: list,
+    created_by: str = "user_correction",
+) -> dict:
+    """Apply corrections to job.result line_items, create history records,
+    update EntityPatterns, and update ExtractionFact rows.
+
+    Args:
+        db: Database session
+        job_id: Job UUID
+        corrections: List of dicts with keys: original_label, new_canonical_name, sheet (optional)
+        created_by: Source identifier
+
+    Returns:
+        dict with keys: diffs, patterns_created, patterns_updated, facts_updated, warnings
+    """
+    try:
+        # Lock the job row to prevent concurrent lost updates
+        job = (
+            db.query(ExtractionJob)
+            .options(joinedload(ExtractionJob.file))
+            .filter(ExtractionJob.job_id == job_id)
+            .with_for_update()
+            .first()
+        )
+    except SQLAlchemyError as e:
+        raise DatabaseError(f"Failed to load job: {e}", operation="read", table="extraction_jobs")
+
+    if not job:
+        raise DatabaseError("Job not found", operation="read", table="extraction_jobs")
+
+    if not job.result or "line_items" not in job.result:
+        raise DatabaseError("Job has no result to correct", operation="update", table="extraction_jobs")
+
+    entity_id = job.file.entity_id if job.file else None
+    if not entity_id:
+        raise DatabaseError("Corrections require an entity association", operation="update", table="extraction_jobs")
+
+    # Deep copy the result so mutations are isolated from the ORM instance
+    modified_result = copy.deepcopy(job.result)
+    line_items = modified_result["line_items"]
+    line_item_index = _build_line_item_index(line_items)
+    diffs = []
+    patterns_created = 0
+    patterns_updated = 0
+    facts_updated = 0
+    warnings = []
+
+    try:
+        for correction in corrections:
+            original_label = correction["original_label"]
+            new_canonical = correction["new_canonical_name"]
+            sheet = correction.get("sheet")
+
+            matches = _find_matching_line_items(line_items, original_label, sheet, _index=line_item_index)
+
+            if not matches:
+                warnings.append(f"Label '{original_label}' not found in job result")
+                continue
+
+            for idx, item in matches:
+                old_canonical = item.get("canonical_name", "unmapped")
+                old_confidence = item.get("confidence", 0.0)
+
+                if old_canonical == new_canonical:
+                    warnings.append(f"No change needed for '{original_label}' (already '{new_canonical}')")
+                    continue
+
+                # Snapshot before mutation
+                snapshot = copy.deepcopy(item)
+
+                # Mutate line_item in our copy
+                item["canonical_name"] = new_canonical
+                item["confidence"] = 1.0
+                if "provenance" not in item:
+                    item["provenance"] = {}
+                item["provenance"]["mapping"] = {
+                    "method": created_by,
+                    "stage": "correction",
+                    "taxonomy_category": item.get("provenance", {}).get("mapping", {}).get("taxonomy_category", "unknown"),
+                    "reasoning": f"User correction: {old_canonical} -> {new_canonical}",
+                }
+
+                # Create history record
+                history = CorrectionHistory(
+                    job_id=job_id,
+                    entity_id=entity_id,
+                    original_label=original_label,
+                    sheet=item.get("sheet"),
+                    old_canonical_name=old_canonical,
+                    new_canonical_name=new_canonical,
+                    old_confidence=old_confidence,
+                    new_confidence=1.0,
+                    old_line_item_snapshot=snapshot,
+                )
+                db.add(history)
+
+                # Upsert entity pattern for future extractions
+                existing_pattern = (
+                    db.query(EntityPattern)
+                    .filter(
+                        EntityPattern.entity_id == entity_id,
+                        EntityPattern.original_label == original_label,
+                    )
+                    .first()
+                )
+
+                upsert_entity_pattern(
+                    db=db,
+                    entity_id=entity_id,
+                    original_label=original_label,
+                    canonical_name=new_canonical,
+                    confidence=1.0,
+                    created_by=created_by,
+                    flush_only=True,
+                )
+
+                if existing_pattern:
+                    patterns_updated += 1
+                else:
+                    patterns_created += 1
+
+                # Update extraction facts
+                facts_updated += update_extraction_facts_for_correction(
+                    db, job_id, original_label, old_canonical, new_canonical
+                )
+
+                diffs.append({
+                    "original_label": original_label,
+                    "sheet": item.get("sheet"),
+                    "row": item.get("row"),
+                    "old_canonical_name": old_canonical,
+                    "new_canonical_name": new_canonical,
+                    "old_confidence": old_confidence,
+                    "new_confidence": 1.0,
+                })
+
+        # Assign the modified result back to the job
+        job.result = modified_result
+        flag_modified(job, "result")
+        job.updated_at = datetime.now(timezone.utc)
+        db.commit()
+
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise DatabaseError(
+            f"Failed to apply corrections: {e}",
+            operation="update",
+            table="extraction_jobs",
+        )
+
+    return {
+        "diffs": diffs,
+        "patterns_created": patterns_created,
+        "patterns_updated": patterns_updated,
+        "facts_updated": facts_updated,
+        "warnings": warnings,
+    }
+
+
+def preview_corrections(
+    db: Session,
+    job_id: UUID,
+    corrections: list,
+) -> dict:
+    """Preview what corrections would change without persisting.
+
+    Returns:
+        dict with keys: diffs, warnings
+    """
+    try:
+        job = db.query(ExtractionJob).filter(ExtractionJob.job_id == job_id).first()
+    except SQLAlchemyError as e:
+        raise DatabaseError(f"Failed to load job: {e}", operation="read", table="extraction_jobs")
+
+    if not job:
+        raise DatabaseError("Job not found", operation="read", table="extraction_jobs")
+
+    if not job.result or "line_items" not in job.result:
+        raise DatabaseError("Job has no result to preview", operation="read", table="extraction_jobs")
+
+    line_items = job.result["line_items"]
+    line_item_index = _build_line_item_index(line_items)
+    diffs = []
+    warnings = []
+
+    for correction in corrections:
+        original_label = correction["original_label"]
+        new_canonical = correction["new_canonical_name"]
+        sheet = correction.get("sheet")
+
+        matches = _find_matching_line_items(line_items, original_label, sheet, _index=line_item_index)
+
+        if not matches:
+            warnings.append(f"Label '{original_label}' not found in job result")
+            continue
+
+        for _idx, item in matches:
+            old_canonical = item.get("canonical_name", "unmapped")
+            old_confidence = item.get("confidence", 0.0)
+
+            if old_canonical == new_canonical:
+                warnings.append(f"No change needed for '{original_label}' (already '{new_canonical}')")
+                continue
+
+            diffs.append({
+                "original_label": original_label,
+                "sheet": item.get("sheet"),
+                "row": item.get("row"),
+                "old_canonical_name": old_canonical,
+                "new_canonical_name": new_canonical,
+                "old_confidence": old_confidence,
+                "new_confidence": 1.0,
+            })
+
+    return {"diffs": diffs, "warnings": warnings}
+
+
+def undo_correction(
+    db: Session,
+    correction_id: UUID,
+) -> CorrectionHistory:
+    """Revert a single correction by restoring old_line_item_snapshot into job.result.
+
+    Returns the updated CorrectionHistory record.
+
+    Raises:
+        DatabaseError: If correction not found, already reverted, or DB error.
+    """
+    try:
+        correction = (
+            db.query(CorrectionHistory)
+            .filter(CorrectionHistory.id == correction_id)
+            .first()
+        )
+    except SQLAlchemyError as e:
+        raise DatabaseError(f"Failed to load correction: {e}", operation="read", table="correction_history")
+
+    if not correction:
+        raise DatabaseError("Correction not found", operation="read", table="correction_history")
+
+    if correction.reverted:
+        raise DatabaseError("Correction already reverted", operation="update", table="correction_history")
+
+    # Reject undo if another non-reverted correction exists for the same
+    # label+sheet on this job. Restoring this snapshot would silently
+    # overwrite the other correction's changes (data corruption).
+    try:
+        sheet_filter = (
+            CorrectionHistory.sheet == correction.sheet
+            if correction.sheet
+            else CorrectionHistory.sheet.is_(None)
+        )
+        other_active = (
+            db.query(CorrectionHistory)
+            .filter(
+                CorrectionHistory.job_id == correction.job_id,
+                CorrectionHistory.original_label == correction.original_label,
+                sheet_filter,
+                CorrectionHistory.reverted == False,  # noqa: E712
+                CorrectionHistory.id != correction.id,
+            )
+            .first()
+        )
+    except SQLAlchemyError as e:
+        raise DatabaseError(
+            f"Failed to check correction ordering: {e}",
+            operation="read",
+            table="correction_history",
+        )
+
+    if other_active:
+        raise DatabaseError(
+            f"Cannot undo: another active correction for '{correction.original_label}' "
+            f"exists (id={other_active.id}). Undo the most recent correction first.",
+            operation="update",
+            table="correction_history",
+        )
+
+    try:
+        job = db.query(ExtractionJob).filter(ExtractionJob.job_id == correction.job_id).first()
+        if not job or not job.result or "line_items" not in job.result:
+            raise DatabaseError("Job result not available for undo", operation="update", table="extraction_jobs")
+
+        line_items = job.result["line_items"]
+        snapshot = correction.old_line_item_snapshot
+
+        if snapshot:
+            # Find the line_item and replace with snapshot
+            matches = _find_matching_line_items(
+                line_items,
+                correction.original_label,
+                correction.sheet,
+            )
+            if matches:
+                idx, _ = matches[0]
+                line_items[idx] = copy.deepcopy(snapshot)
+            else:
+                raise DatabaseError(
+                    f"Label '{correction.original_label}' not found in job result for undo",
+                    operation="update",
+                    table="extraction_jobs",
+                )
+        else:
+            # No snapshot - restore just canonical_name and confidence
+            matches = _find_matching_line_items(
+                line_items,
+                correction.original_label,
+                correction.sheet,
+            )
+            if matches:
+                idx, item = matches[0]
+                item["canonical_name"] = correction.old_canonical_name
+                item["confidence"] = correction.old_confidence
+            else:
+                raise DatabaseError(
+                    f"Label '{correction.original_label}' not found in job result for undo",
+                    operation="update",
+                    table="extraction_jobs",
+                )
+
+        flag_modified(job, "result")
+
+        # Restore extraction facts with original confidence/method
+        old_method = None
+        if correction.old_line_item_snapshot:
+            prov = correction.old_line_item_snapshot.get("provenance", {})
+            old_method = prov.get("mapping", {}).get("method")
+        update_extraction_facts_for_correction(
+            db,
+            correction.job_id,
+            correction.original_label,
+            correction.new_canonical_name,
+            correction.old_canonical_name,
+            confidence=correction.old_confidence,
+            mapping_method=old_method,
+        )
+
+        correction.reverted = True
+        correction.reverted_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(correction)
+
+    except DatabaseError:
+        db.rollback()
+        raise
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise DatabaseError(
+            f"Failed to undo correction: {e}",
+            operation="update",
+            table="correction_history",
+        )
+
+    return correction
+
+
+def get_correction_history(
+    db: Session,
+    job_id: UUID,
+    include_reverted: bool = True,
+    offset: int = 0,
+    limit: int = 100,
+) -> tuple:
+    """Return correction history for a job, ordered by created_at desc.
+
+    Returns:
+        (items, total_count) tuple for pagination.
+    """
+    try:
+        query = db.query(CorrectionHistory).filter(CorrectionHistory.job_id == job_id)
+        if not include_reverted:
+            query = query.filter(CorrectionHistory.reverted == False)  # noqa: E712
+        total = query.count()
+        items = query.order_by(CorrectionHistory.created_at.desc()).offset(offset).limit(limit).all()
+        return items, total
+    except SQLAlchemyError as e:
+        raise DatabaseError(
+            f"Failed to get correction history: {e}",
+            operation="read",
+            table="correction_history",
+        )
+
+
+# ============================================================================
+# ANALYTICS QUERY OPERATIONS
+# ============================================================================
+
+from sqlalchemy import func as sa_func, cast, Date
+
+
+def get_entity_financials(
+    db: Session,
+    entity_id: UUID,
+    canonical_names: Optional[List[str]] = None,
+    period_start: Optional[str] = None,
+    period_end: Optional[str] = None,
+    statement_type: Optional[str] = None,
+) -> List[ExtractionFact]:
+    """Query financial facts for an entity, grouped by canonical_name.
+
+    Returns raw ExtractionFact rows; caller groups by canonical_name/period.
+    Only returns the latest fact per (canonical_name, period) — i.e. the
+    most recent job's value.
+    """
+    try:
+        query = db.query(ExtractionFact).filter(
+            ExtractionFact.entity_id == entity_id
+        )
+        if canonical_names:
+            query = query.filter(ExtractionFact.canonical_name.in_(canonical_names))
+        if period_start:
+            query = query.filter(ExtractionFact.period >= period_start)
+        if period_end:
+            query = query.filter(ExtractionFact.period <= period_end)
+        if statement_type:
+            query = query.filter(ExtractionFact.taxonomy_category == statement_type)
+
+        return query.order_by(
+            ExtractionFact.canonical_name,
+            ExtractionFact.period,
+            ExtractionFact.created_at.desc(),
+        ).all()
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to get entity financials: {e}")
+        raise DatabaseError(
+            f"Failed to get entity financials: {e}",
+            operation="read",
+            table="extraction_facts",
+        )
+
+
+def get_cross_entity_comparison(
+    db: Session,
+    entity_ids: List[UUID],
+    canonical_names: List[str],
+    period: str,
+) -> List[ExtractionFact]:
+    """Get facts for comparing multiple entities on specific items and period."""
+    try:
+        return (
+            db.query(ExtractionFact)
+            .filter(
+                ExtractionFact.entity_id.in_(entity_ids),
+                ExtractionFact.canonical_name.in_(canonical_names),
+                ExtractionFact.period == period,
+            )
+            .order_by(ExtractionFact.canonical_name, ExtractionFact.entity_id)
+            .all()
+        )
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to get cross-entity comparison: {e}")
+        raise DatabaseError(
+            f"Failed to get cross-entity comparison: {e}",
+            operation="read",
+            table="extraction_facts",
+        )
+
+
+def get_portfolio_summary(
+    db: Session,
+    entity_ids: Optional[List[UUID]] = None,
+    period: Optional[str] = None,
+) -> dict:
+    """Aggregate portfolio stats using SQL-level aggregation.
+
+    Returns dict with total_entities, total_jobs, total_facts,
+    avg_confidence, quality_distribution.
+    """
+    try:
+        # Total entities
+        entity_query = db.query(sa_func.count(Entity.id))
+        if entity_ids:
+            entity_query = entity_query.filter(Entity.id.in_(entity_ids))
+        total_entities = entity_query.scalar() or 0
+
+        # Total jobs and quality distribution
+        job_query = db.query(ExtractionJob)
+        if entity_ids:
+            job_query = (
+                job_query.join(File, ExtractionJob.file_id == File.file_id)
+                .filter(File.entity_id.in_(entity_ids))
+            )
+        total_jobs = job_query.count()
+
+        # Quality distribution
+        quality_rows = (
+            db.query(
+                ExtractionJob.quality_grade,
+                sa_func.count(ExtractionJob.job_id),
+            )
+            .filter(ExtractionJob.quality_grade.isnot(None))
+            .group_by(ExtractionJob.quality_grade)
+            .all()
+        )
+        quality_distribution = [
+            {"grade": grade, "count": count}
+            for grade, count in quality_rows
+        ]
+
+        # Facts stats
+        facts_query = db.query(ExtractionFact)
+        if entity_ids:
+            facts_query = facts_query.filter(ExtractionFact.entity_id.in_(entity_ids))
+        if period:
+            facts_query = facts_query.filter(ExtractionFact.period == period)
+
+        total_facts = facts_query.count()
+        avg_confidence = (
+            db.query(sa_func.avg(ExtractionFact.confidence))
+            .filter(ExtractionFact.confidence.isnot(None))
+        )
+        if entity_ids:
+            avg_confidence = avg_confidence.filter(ExtractionFact.entity_id.in_(entity_ids))
+        if period:
+            avg_confidence = avg_confidence.filter(ExtractionFact.period == period)
+        avg_conf_val = avg_confidence.scalar()
+
+        return {
+            "total_entities": total_entities,
+            "total_jobs": total_jobs,
+            "total_facts": total_facts,
+            "avg_confidence": round(float(avg_conf_val), 4) if avg_conf_val else None,
+            "quality_distribution": quality_distribution,
+        }
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to get portfolio summary: {e}")
+        raise DatabaseError(
+            f"Failed to get portfolio summary: {e}",
+            operation="read",
+            table="extraction_facts",
+        )
+
+
+def get_entity_trends(
+    db: Session,
+    entity_id: UUID,
+    canonical_name: str,
+) -> List[ExtractionFact]:
+    """Get all facts for a specific entity + canonical_name, ordered by period.
+
+    Caller computes YoY changes.
+    """
+    try:
+        return (
+            db.query(ExtractionFact)
+            .filter(
+                ExtractionFact.entity_id == entity_id,
+                ExtractionFact.canonical_name == canonical_name,
+            )
+            .order_by(ExtractionFact.period)
+            .all()
+        )
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to get entity trends: {e}")
+        raise DatabaseError(
+            f"Failed to get entity trends: {e}",
+            operation="read",
+            table="extraction_facts",
+        )
+
+
+def get_taxonomy_coverage(db: Session) -> dict:
+    """Compute taxonomy coverage stats using SQL aggregation.
+
+    Returns total_taxonomy_items, items_ever_mapped, most_common,
+    never_mapped, coverage_pct.
+    """
+    from src.db.models import Taxonomy
+
+    try:
+        # Total taxonomy items
+        total_taxonomy = db.query(sa_func.count(Taxonomy.id)).scalar() or 0
+
+        # Distinct canonical names ever mapped in facts
+        mapped_names_query = (
+            db.query(ExtractionFact.canonical_name)
+            .distinct()
+            .all()
+        )
+        mapped_names = {row[0] for row in mapped_names_query}
+
+        # Most common mapped items (top 20)
+        most_common_rows = (
+            db.query(
+                ExtractionFact.canonical_name,
+                ExtractionFact.taxonomy_category,
+                sa_func.count(ExtractionFact.id).label("times_mapped"),
+                sa_func.avg(ExtractionFact.confidence).label("avg_conf"),
+            )
+            .group_by(ExtractionFact.canonical_name, ExtractionFact.taxonomy_category)
+            .order_by(sa_func.count(ExtractionFact.id).desc())
+            .limit(20)
+            .all()
+        )
+
+        most_common = [
+            {
+                "canonical_name": row[0],
+                "category": row[1] or "unknown",
+                "times_mapped": row[2],
+                "avg_confidence": round(float(row[3]), 4) if row[3] else None,
+            }
+            for row in most_common_rows
+        ]
+
+        # Never-mapped taxonomy items
+        all_taxonomy_names = {
+            row[0] for row in db.query(Taxonomy.canonical_name).all()
+        }
+        never_mapped = sorted(all_taxonomy_names - mapped_names)
+
+        coverage_pct = (
+            round(len(mapped_names) / total_taxonomy * 100, 2)
+            if total_taxonomy > 0
+            else 0.0
+        )
+
+        return {
+            "total_taxonomy_items": total_taxonomy,
+            "items_ever_mapped": len(mapped_names),
+            "coverage_pct": coverage_pct,
+            "most_common": most_common,
+            "never_mapped": never_mapped,
+        }
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to get taxonomy coverage: {e}")
+        raise DatabaseError(
+            f"Failed to get taxonomy coverage: {e}",
+            operation="read",
+            table="extraction_facts",
+        )
+
+
+def get_cost_analytics(
+    db: Session,
+    entity_id: Optional[UUID] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+) -> dict:
+    """Compute cost analytics across jobs using SQL-level aggregation.
+
+    Returns total_cost, total_jobs, avg_cost_per_job,
+    cost_by_entity, cost_trend_daily.
+    """
+    try:
+        # Build shared filter conditions
+        base_filters = [ExtractionJob.cost_usd.isnot(None)]
+        if date_from:
+            base_filters.append(
+                ExtractionJob.created_at >= datetime.fromisoformat(date_from)
+            )
+        if date_to:
+            base_filters.append(
+                ExtractionJob.created_at <= datetime.fromisoformat(date_to)
+            )
+
+        # --- Totals query ---
+        totals_query = db.query(
+            sa_func.coalesce(sa_func.sum(ExtractionJob.cost_usd), 0.0),
+            sa_func.count(ExtractionJob.job_id),
+            sa_func.coalesce(sa_func.avg(ExtractionJob.cost_usd), 0.0),
+        ).filter(*base_filters)
+        if entity_id:
+            totals_query = totals_query.join(
+                File, ExtractionJob.file_id == File.file_id
+            ).filter(File.entity_id == entity_id)
+        totals_row = totals_query.one()
+        total_cost = float(totals_row[0])
+        total_jobs = int(totals_row[1])
+        avg_cost = float(totals_row[2])
+
+        # --- Cost by entity query ---
+        entity_query = (
+            db.query(
+                File.entity_id,
+                Entity.name,
+                sa_func.sum(ExtractionJob.cost_usd),
+                sa_func.count(ExtractionJob.job_id),
+            )
+            .join(File, ExtractionJob.file_id == File.file_id)
+            .outerjoin(Entity, File.entity_id == Entity.id)
+            .filter(*base_filters)
+            .filter(File.entity_id.isnot(None))
+        )
+        if entity_id:
+            entity_query = entity_query.filter(File.entity_id == entity_id)
+        entity_query = entity_query.group_by(File.entity_id, Entity.name)
+
+        cost_by_entity = [
+            {
+                "entity_id": str(eid),
+                "entity_name": ename,
+                "total_cost": round(float(tcost), 4),
+                "job_count": int(jcount),
+            }
+            for eid, ename, tcost, jcount in entity_query.all()
+        ]
+
+        # --- Daily trend query ---
+        daily_query = (
+            db.query(
+                cast(ExtractionJob.created_at, Date).label("day"),
+                sa_func.sum(ExtractionJob.cost_usd),
+                sa_func.count(ExtractionJob.job_id),
+            )
+            .filter(*base_filters)
+        )
+        if entity_id:
+            daily_query = daily_query.join(
+                File, ExtractionJob.file_id == File.file_id
+            ).filter(File.entity_id == entity_id)
+        daily_query = daily_query.group_by("day").order_by("day")
+
+        cost_trend_daily = [
+            {
+                "date": str(day),
+                "cost": round(float(dcost), 4),
+                "job_count": int(dcount),
+            }
+            for day, dcost, dcount in daily_query.all()
+        ]
+
+        return {
+            "total_cost": round(total_cost, 4),
+            "total_jobs": total_jobs,
+            "avg_cost_per_job": round(avg_cost, 4),
+            "cost_by_entity": cost_by_entity,
+            "cost_trend_daily": cost_trend_daily,
+        }
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to get cost analytics: {e}")
+        raise DatabaseError(
+            f"Failed to get cost analytics: {e}",
+            operation="read",
+            table="extraction_jobs",
         )

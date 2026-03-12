@@ -1,20 +1,26 @@
 """Entity CRUD API endpoints."""
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
-from typing import Optional
 from uuid import UUID
 
+from src.api.schemas import (
+    EntityCreateRequest, EntityDetailResponse, EntityListResponse,
+    EntityResponse, UpdateEntityRequest,
+)
 from src.db.session import get_db
 from src.db import crud
-from src.auth.dependencies import get_current_api_key
+from src.auth.dependencies import get_current_api_key, require_entity_scope
+from src.api.rate_limit import limiter
 from src.core.exceptions import DatabaseError
 from src.core.logging import api_logger as logger
 
 router = APIRouter(prefix="/api/v1/entities", tags=["entities"])
 
 
-@router.get("/")
+@router.get("/", response_model=EntityListResponse)
+@limiter.limit("500/hour")
 def list_entities(
+    request: Request,
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
@@ -40,16 +46,17 @@ def list_entities(
         raise HTTPException(500, "Database error listing entities")
 
 
-@router.post("/", status_code=201)
+@router.post("/", status_code=201, response_model=EntityResponse)
+@limiter.limit("100/hour")
 def create_entity(
-    name: str = Query(..., min_length=1, max_length=255),
-    industry: Optional[str] = Query(None, max_length=100),
+    request: Request,
+    body: EntityCreateRequest,
     db: Session = Depends(get_db),
     _api_key=Depends(get_current_api_key),
 ):
     """Create a new entity."""
     try:
-        entity = crud.create_entity(db, name=name, industry=industry)
+        entity = crud.create_entity(db, name=body.name, industry=body.industry)
         return {
             "id": str(entity.id),
             "name": entity.name,
@@ -61,11 +68,11 @@ def create_entity(
         raise HTTPException(500, "Database error creating entity")
 
 
-@router.get("/{entity_id}")
+@router.get("/{entity_id}", response_model=EntityDetailResponse)
 def get_entity(
     entity_id: str,
     db: Session = Depends(get_db),
-    _api_key=Depends(get_current_api_key),
+    _api_key=Depends(require_entity_scope),
 ):
     """Get entity by ID with pattern and file counts."""
     try:
@@ -97,13 +104,12 @@ def get_entity(
         raise HTTPException(500, "Database error getting entity")
 
 
-@router.patch("/{entity_id}")
+@router.patch("/{entity_id}", response_model=EntityResponse)
 def update_entity(
     entity_id: str,
-    name: Optional[str] = Query(None, min_length=1, max_length=255),
-    industry: Optional[str] = Query(None, max_length=100),
+    body: UpdateEntityRequest,
     db: Session = Depends(get_db),
-    _api_key=Depends(get_current_api_key),
+    _api_key=Depends(require_entity_scope),
 ):
     """Update an entity's name and/or industry."""
     try:
@@ -111,11 +117,11 @@ def update_entity(
     except ValueError:
         raise HTTPException(400, "Invalid entity_id format")
 
-    if name is None and industry is None:
+    if body.name is None and body.industry is None:
         raise HTTPException(400, "At least one of 'name' or 'industry' must be provided")
 
     try:
-        entity = crud.update_entity(db, entity_uuid, name=name, industry=industry)
+        entity = crud.update_entity(db, entity_uuid, name=body.name, industry=body.industry)
         return {
             "id": str(entity.id),
             "name": entity.name,
@@ -133,7 +139,7 @@ def update_entity(
 def delete_entity(
     entity_id: str,
     db: Session = Depends(get_db),
-    _api_key=Depends(get_current_api_key),
+    _api_key=Depends(require_entity_scope),
 ):
     """Delete an entity and its associated patterns."""
     try:

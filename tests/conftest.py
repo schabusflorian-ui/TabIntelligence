@@ -79,19 +79,22 @@ def mock_celery_task():
         # Call the actual task function directly (not via Celery)
         return original_func(job_id, s3_key, entity_id)
 
-    # Patch where it's imported (in main.py), not where it's defined
-    with patch("src.api.main.run_extraction_task") as mock_task:
+    # Patch where it's imported (in router files), not where it's defined
+    with patch("src.api.files.run_extraction_task") as mock_files_task, \
+         patch("src.api.jobs.run_extraction_task") as mock_jobs_task:
         # Mock the delay method to execute synchronously
         mock_result = MagicMock()
         mock_result.id = "mock-task-id-12345"
 
         # When delay() is called, execute synchronously
-        def delay_side_effect(job_id, s3_key, entity_id=None):
-            sync_execution(job_id, s3_key, entity_id)
+        def delay_side_effect(job_id, s3_key=None, entity_id=None, **kwargs):
+            if s3_key:
+                sync_execution(job_id, s3_key, entity_id)
             return mock_result
 
-        mock_task.delay = delay_side_effect
-        yield mock_task
+        mock_files_task.delay = delay_side_effect
+        mock_jobs_task.delay = delay_side_effect
+        yield mock_files_task
 
 
 @pytest.fixture
@@ -311,6 +314,21 @@ def mock_claude_client(mock_claude_parsing_response, mock_claude_triage_response
 
     mock_client.messages.create = MagicMock(side_effect=create_mock_response)
 
+    # Also mock the streaming API used by the parsing stage.
+    # messages.stream() returns a context manager whose __enter__ has
+    # get_final_message() returning the same shaped response object.
+    def create_stream_context(model, max_tokens, messages):
+        """Return a context-manager mock that behaves like the streaming API."""
+        response = create_mock_response(model=model, max_tokens=max_tokens, messages=messages)
+        response.stop_reason = "end_turn"
+        ctx = MagicMock()
+        ctx.__enter__ = MagicMock(return_value=ctx)
+        ctx.__exit__ = MagicMock(return_value=False)
+        ctx.get_final_message = MagicMock(return_value=response)
+        return ctx
+
+    mock_client.messages.stream = MagicMock(side_effect=create_stream_context)
+
     return mock_client
 
 
@@ -360,7 +378,7 @@ def mock_anthropic(monkeypatch, mock_claude_client):
         }
 
     def mock_structured_to_markdown(structured):
-        return "## Sheet: Income Statement\n| Row | C1 | C2 | C3 | C4 | Formula | Bold | Indent |\n|---|---|---|---|---|---|---|---|\n| 1 | Revenue | 100 | 200 | 300 | \u2014 | Y | 0 |\n"
+        return "## Sheet: Income Statement\n| Row | C1 | C2 | C3 | C4 | Bold | Indent | Formula |\n|---|---|---|---|---|---|---|---|\n| 1 | Revenue | 100 | 200 | 300 | Y | 0 |  |\n"
 
     monkeypatch.setattr(
         "src.extraction.stages.parsing.ParsingStage._excel_to_structured_repr",

@@ -1,5 +1,5 @@
 {
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "Consolidated canonical financial taxonomy for DebtFund extraction pipeline",
   "categories": {
     "balance_sheet": [
@@ -23,7 +23,18 @@
         "parent_canonical": "current_liabilities",
         "validation_rules": {
           "type": "currency",
-          "min_value": 0
+          "min_value": 0,
+          "cross_item_validation": {
+            "must_be_positive": true,
+            "relationships": [
+              {
+                "rule": "accounts_payable <= current_liabilities",
+                "error_message": "Accounts payable cannot exceed current liabilities",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
         },
         "ocr_variants": [
           "Accounts Pay able",
@@ -374,7 +385,7 @@
           "C ash",
           "CASH",
           "Cash.",
-          "C\u0251sh"
+          "Cɑsh"
         ],
         "format_examples": [
           {
@@ -436,6 +447,71 @@
         ]
       },
       {
+        "canonical_name": "contract_assets",
+        "category": "balance_sheet",
+        "display_name": "Contract Assets",
+        "aliases": [
+          "Unbilled Revenue",
+          "Unbilled Receivables",
+          "Accrued Revenue"
+        ],
+        "definition": "Right to consideration for goods or services transferred to customer before payment is due (IFRS 15)",
+        "typical_sign": "positive",
+        "parent_canonical": "current_assets",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "all",
+          "saas"
+        ]
+      },
+      {
+        "canonical_name": "contract_liabilities",
+        "category": "balance_sheet",
+        "display_name": "Contract Liabilities",
+        "aliases": [
+          "Deferred Revenue (IFRS 15)",
+          "Billings in Advance",
+          "Unearned Contract Revenue"
+        ],
+        "definition": "Obligation to transfer goods or services for consideration already received (IFRS 15)",
+        "typical_sign": "positive",
+        "parent_canonical": "current_liabilities",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "all",
+          "saas"
+        ]
+      },
+      {
+        "canonical_name": "convertible_notes",
+        "category": "balance_sheet",
+        "display_name": "Convertible Notes",
+        "aliases": [
+          "Convertible Debt",
+          "CLN",
+          "Convertible Loan Notes",
+          "Convertible Bonds"
+        ],
+        "definition": "Debt instruments that may be converted into equity at the holder's option or upon triggering events",
+        "typical_sign": "positive",
+        "parent_canonical": "long_term_debt",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "saas",
+          "startup",
+          "venture"
+        ]
+      },
+      {
         "canonical_name": "current_assets",
         "category": "balance_sheet",
         "display_name": "Current Assets",
@@ -459,7 +535,18 @@
           "validation_checks": [
             "current_assets = sum of all current asset line items",
             "current_assets > cash"
-          ]
+          ],
+          "cross_item_validation": {
+            "must_be_positive": true,
+            "relationships": [
+              {
+                "rule": "current_assets <= total_assets",
+                "error_message": "Current assets cannot exceed total assets",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
         },
         "industry_tags": [
           "all",
@@ -487,7 +574,18 @@
           "derivation": "accounts_payable + short_term_debt + other_current_liabilities",
           "validation_checks": [
             "current_liabilities = sum of all current liability line items"
-          ]
+          ],
+          "cross_item_validation": {
+            "must_be_positive": true,
+            "relationships": [
+              {
+                "rule": "current_liabilities <= total_liabilities",
+                "error_message": "Current liabilities cannot exceed total liabilities",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
         },
         "industry_tags": [
           "all",
@@ -777,13 +875,14 @@
           "Merchandise Inventory",
           "Raw Materials",
           "Stock",
+          "Stocks",
           "Total Inventory",
           "WIP",
           "Work in Process",
           "Work in Progress",
+          "inventoyr",
           "inventroy",
-          "inventry",
-          "inventoyr"
+          "inventry"
         ],
         "definition": "Goods held for sale or raw materials for production",
         "typical_sign": "positive",
@@ -882,6 +981,48 @@
         ]
       },
       {
+        "canonical_name": "lease_liability_current",
+        "category": "balance_sheet",
+        "display_name": "Lease Liability (Current)",
+        "aliases": [
+          "Current Lease Obligation",
+          "Short-Term Lease Liability",
+          "Operating Lease Liability Current"
+        ],
+        "definition": "Current portion of lease obligations recognized under IFRS 16 / ASC 842",
+        "typical_sign": "positive",
+        "parent_canonical": "current_liabilities",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
+      },
+      {
+        "canonical_name": "lease_liability_non_current",
+        "category": "balance_sheet",
+        "display_name": "Lease Liability (Non-Current)",
+        "aliases": [
+          "Long-Term Lease Obligation",
+          "Non-Current Lease Liability",
+          "Operating Lease Liability Non-Current"
+        ],
+        "definition": "Non-current portion of lease obligations recognized under IFRS 16 / ASC 842",
+        "typical_sign": "positive",
+        "parent_canonical": "non_current_liabilities",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
+      },
+      {
         "canonical_name": "long_term_debt",
         "category": "balance_sheet",
         "display_name": "Long-Term Debt",
@@ -902,7 +1043,18 @@
         "parent_canonical": "non_current_liabilities",
         "validation_rules": {
           "type": "currency",
-          "min_value": 0
+          "min_value": 0,
+          "cross_item_validation": {
+            "must_be_positive": true,
+            "relationships": [
+              {
+                "rule": "long_term_debt <= total_liabilities",
+                "error_message": "Long-term debt cannot exceed total liabilities",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
         },
         "industry_tags": [
           "all",
@@ -966,7 +1118,11 @@
         "parent_canonical": "ppe",
         "validation_rules": {
           "type": "currency",
-          "derivation": "gross_ppe - accumulated_depreciation"
+          "derivation": "gross_ppe - accumulated_depreciation",
+          "cross_item_validation": {
+            "must_be_positive": true,
+            "relationships": []
+          }
         },
         "industry_tags": [
           "all",
@@ -987,7 +1143,18 @@
         "parent_canonical": "total_assets",
         "validation_rules": {
           "type": "currency",
-          "min_value": 0
+          "min_value": 0,
+          "cross_item_validation": {
+            "must_be_positive": true,
+            "relationships": [
+              {
+                "rule": "non_current_assets <= total_assets",
+                "error_message": "Non-current assets cannot exceed total assets",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
         },
         "industry_tags": [
           "all",
@@ -1194,7 +1361,18 @@
         "parent_canonical": "non_current_assets",
         "validation_rules": {
           "type": "currency",
-          "min_value": 0
+          "min_value": 0,
+          "cross_item_validation": {
+            "must_be_positive": true,
+            "relationships": [
+              {
+                "rule": "ppe <= non_current_assets",
+                "error_message": "PP&E cannot exceed non-current assets",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
         },
         "industry_tags": [
           "manufacturing",
@@ -1310,11 +1488,13 @@
         "display_name": "Retained Earnings",
         "aliases": [
           "Accumulated Earnings",
+          "Accumulated Profit/(Loss)",
           "Accumulated Profits",
           "Accumulated Retained Earnings",
           "Earnings Retained",
           "RE",
           "Retained Income",
+          "Retained Profit",
           "Retained Profits",
           "Retained Surplus",
           "Undistributed Profits"
@@ -1328,6 +1508,49 @@
         "industry_tags": [
           "all",
           "corporate"
+        ]
+      },
+      {
+        "canonical_name": "right_of_use_asset",
+        "category": "balance_sheet",
+        "display_name": "Right-of-Use Asset",
+        "aliases": [
+          "ROU Asset",
+          "Lease Asset",
+          "IFRS 16 Asset",
+          "Operating Lease Asset"
+        ],
+        "definition": "Asset representing lessee's right to use an underlying asset for the lease term (IFRS 16 / ASC 842)",
+        "typical_sign": "positive",
+        "parent_canonical": "non_current_assets",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
+      },
+      {
+        "canonical_name": "safe_notes",
+        "category": "balance_sheet",
+        "display_name": "SAFE Notes",
+        "aliases": [
+          "SAFE",
+          "Simple Agreement for Future Equity",
+          "SAFE Agreements"
+        ],
+        "definition": "Simple Agreement for Future Equity; convertible instrument common in seed-stage startup funding",
+        "typical_sign": "positive",
+        "parent_canonical": "non_current_liabilities",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "startup",
+          "venture"
         ]
       },
       {
@@ -1365,7 +1588,18 @@
         "parent_canonical": "current_liabilities",
         "validation_rules": {
           "type": "currency",
-          "min_value": 0
+          "min_value": 0,
+          "cross_item_validation": {
+            "must_be_positive": true,
+            "relationships": [
+              {
+                "rule": "short_term_debt <= current_liabilities",
+                "error_message": "Short-term debt cannot exceed current liabilities",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
         },
         "industry_tags": [
           "all",
@@ -1414,6 +1648,28 @@
         ]
       },
       {
+        "canonical_name": "tax_loss_carryforward",
+        "category": "balance_sheet",
+        "display_name": "Tax Loss Carryforward",
+        "aliases": [
+          "NOL Carryforward",
+          "Net Operating Loss Carryforward",
+          "Tax Loss Carried Forward"
+        ],
+        "definition": "Tax benefit from prior-period losses that can offset future taxable income",
+        "typical_sign": "positive",
+        "parent_canonical": "deferred_tax_assets",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "all",
+          "corporate",
+          "saas"
+        ]
+      },
+      {
         "canonical_name": "total_assets",
         "category": "balance_sheet",
         "display_name": "Total Assets",
@@ -1446,12 +1702,12 @@
             "relationships": [
               {
                 "rule": "total_assets == current_assets + non_current_assets",
-                "tolerance": 0.01,
+                "tolerance": 0.0001,
                 "error_message": "Total assets must equal current + non-current assets"
               },
               {
                 "rule": "total_assets == total_liabilities + total_equity",
-                "tolerance": 0.01,
+                "tolerance": 0.0001,
                 "error_message": "Fundamental accounting equation: Assets = Liabilities + Equity",
                 "critical": true
               }
@@ -1462,7 +1718,7 @@
           "Total Ass ets",
           "Total-Assets",
           "TOTAL ASSETS",
-          "Tot\u0251l Assets"
+          "Totɑl Assets"
         ],
         "format_examples": [
           {
@@ -1567,7 +1823,7 @@
             "relationships": [
               {
                 "rule": "total_equity == total_assets - total_liabilities",
-                "tolerance": 0.01,
+                "tolerance": 0.0001,
                 "error_message": "Equity must equal assets minus liabilities",
                 "critical": true
               }
@@ -1578,7 +1834,7 @@
           "Total Equ ity",
           "Total-Equity",
           "TOTAL EQUITY",
-          "Tot\u0251l Equity"
+          "Totɑl Equity"
         ],
         "format_examples": [
           {
@@ -1614,7 +1870,7 @@
             "relationships": [
               {
                 "rule": "total_liabilities == current_liabilities + non_current_liabilities",
-                "tolerance": 0.01
+                "tolerance": 0.0001
               }
             ]
           }
@@ -1629,6 +1885,54 @@
             "value": "30,000,000",
             "context": "All obligations"
           }
+        ],
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
+      },
+      {
+        "canonical_name": "total_liabilities_and_equity",
+        "category": "balance_sheet",
+        "display_name": "Total Liabilities & Equity",
+        "aliases": [
+          "Total Liabilities & Shareholders' Equity",
+          "Total Liabilities and Equity",
+          "Total Liabilities and Shareholders' Equity",
+          "Total Liabilities & Stockholders' Equity",
+          "Total Liabilities and Stockholders' Equity",
+          "Liabilities and Equity",
+          "Total L&E",
+          "Total Liabilities + Equity"
+        ],
+        "definition": "Sum of total liabilities and total equity; must equal total assets (accounting identity)",
+        "typical_sign": "positive",
+        "parent_canonical": null,
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0,
+          "derivation": "total_liabilities + total_equity",
+          "cross_item_validation": {
+            "must_be_positive": true,
+            "relationships": [
+              {
+                "rule": "total_liabilities_and_equity == total_liabilities + total_equity",
+                "tolerance": 0.0001,
+                "error_message": "Total L&E should equal total liabilities + total equity"
+              },
+              {
+                "rule": "total_liabilities_and_equity == total_assets",
+                "tolerance": 0.0001,
+                "error_message": "Total L&E must equal total assets (accounting identity)",
+                "critical": true
+              }
+            ]
+          }
+        },
+        "ocr_variants": [
+          "Total Liabilities & Share holders' Equity",
+          "TOTAL LIABILITIES & SHAREHOLDERS' EQUITY",
+          "Total Liab & Equity"
         ],
         "industry_tags": [
           "all",
@@ -1771,7 +2075,11 @@
         "parent_canonical": null,
         "validation_rules": {
           "type": "currency",
-          "min_value": 0
+          "min_value": 0,
+          "cross_item_validation": {
+            "must_be_positive": true,
+            "relationships": []
+          }
         },
         "industry_tags": [
           "all",
@@ -1851,6 +2159,9 @@
               ],
               "description": "Real estate CapEx typically 15-30% of revenue"
             }
+          },
+          "cross_item_validation": {
+            "relationships": []
           }
         },
         "ocr_variants": [
@@ -1858,7 +2169,7 @@
           "CAPEX",
           "CapEx",
           "Cap-Ex",
-          "C\u0251pex"
+          "Cɑpex"
         ],
         "format_examples": [
           {
@@ -1959,7 +2270,16 @@
         "typical_sign": "negative",
         "parent_canonical": null,
         "validation_rules": {
-          "type": "currency"
+          "type": "currency",
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "cfi <= 0",
+                "error_message": "Cash from investing is typically negative (outflow)",
+                "warning_only": true
+              }
+            ]
+          }
         },
         "industry_tags": [
           "all",
@@ -2163,6 +2483,47 @@
         ]
       },
       {
+        "canonical_name": "change_in_contract_liabilities",
+        "category": "cash_flow",
+        "display_name": "Change in Contract Liabilities",
+        "aliases": [
+          "Change in Deferred Revenue (IFRS 15)",
+          "Contract Liability Movement",
+          "Movement in Contract Liabilities"
+        ],
+        "definition": "Period-over-period change in contract liabilities, reflecting timing of revenue recognition vs billing",
+        "typical_sign": "variable",
+        "parent_canonical": "cfo",
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "all",
+          "saas"
+        ]
+      },
+      {
+        "canonical_name": "change_in_deferred_revenue_cf",
+        "category": "cash_flow",
+        "display_name": "Change in Deferred Revenue",
+        "aliases": [
+          "Movement in Deferred Revenue",
+          "Deferred Revenue Change",
+          "Change in Unearned Revenue"
+        ],
+        "definition": "Period-over-period change in deferred revenue balance, a working capital adjustment in operating cash flow",
+        "typical_sign": "variable",
+        "parent_canonical": "cfo",
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "all",
+          "saas",
+          "subscription"
+        ]
+      },
+      {
         "canonical_name": "change_in_inventory",
         "category": "cash_flow",
         "display_name": "Change in Inventory",
@@ -2308,7 +2669,11 @@
         "typical_sign": "positive",
         "parent_canonical": "cfo",
         "validation_rules": {
-          "type": "currency"
+          "type": "currency",
+          "cross_item_validation": {
+            "must_be_positive": true,
+            "relationships": []
+          }
         },
         "industry_tags": [
           "all",
@@ -2472,7 +2837,7 @@
           "FC F",
           "F CF",
           "FCF.",
-          "FC\u0191"
+          "FCƑ"
         ],
         "format_examples": [
           {
@@ -2607,7 +2972,18 @@
         "parent_canonical": null,
         "validation_rules": {
           "type": "currency",
-          "derivation": "cfo + cfi + cff"
+          "derivation": "cfo + cfi + cff",
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "net_change_cash == cfo + cfi + cff",
+                "tolerance": 0.05,
+                "error_message": "Net change in cash should equal sum of operating, investing, and financing cash flows",
+                "optional": true,
+                "warning_only": true
+              }
+            ]
+          }
         },
         "industry_tags": [
           "all",
@@ -2692,6 +3068,27 @@
         "industry_tags": [
           "all",
           "corporate"
+        ]
+      },
+      {
+        "canonical_name": "proceeds_from_convertible_notes",
+        "category": "cash_flow",
+        "display_name": "Proceeds from Convertible Notes",
+        "aliases": [
+          "Convertible Note Proceeds",
+          "Convertible Debt Issuance",
+          "CLN Proceeds"
+        ],
+        "definition": "Cash inflow from issuance of convertible debt instruments",
+        "typical_sign": "positive",
+        "parent_canonical": "cff",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "startup",
+          "venture"
         ]
       },
       {
@@ -2870,7 +3267,21 @@
         "industry_tags": [
           "all",
           "leveraged"
-        ]
+        ],
+        "validation_rules": {
+          "cross_item_validation": {
+            "must_be_positive": true,
+            "relationships": [
+              {
+                "rule": "debt_closing_balance == debt_opening_balance + debt_drawdown - debt_mandatory_repayment",
+                "tolerance": 0.01,
+                "error_message": "Closing debt balance should equal opening + drawdowns - repayments",
+                "optional": true,
+                "warning_only": true
+              }
+            ]
+          }
+        }
       },
       {
         "canonical_name": "debt_covenants",
@@ -2952,7 +3363,13 @@
         "industry_tags": [
           "all",
           "leveraged"
-        ]
+        ],
+        "validation_rules": {
+          "cross_item_validation": {
+            "must_be_positive": true,
+            "relationships": []
+          }
+        }
       },
       {
         "canonical_name": "debt_optional_repayment",
@@ -2989,7 +3406,17 @@
         "parent_canonical": null,
         "validation_rules": {
           "type": "currency",
-          "derivation": "principal_payment + interest_payment"
+          "derivation": "principal_payment + interest_payment",
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "debt_service <= 0",
+                "error_message": "Debt service should be negative (outflow)",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
         },
         "industry_tags": [
           "all",
@@ -3053,6 +3480,16 @@
               ],
               "description": "Minimum DSCR 1.1-1.25x"
             }
+          },
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "1.0 <= dscr <= 10.0",
+                "error_message": "DSCR outside expected range (1.0-10.0x); may indicate extraction error",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
           }
         },
         "industry_tags": [
@@ -3110,7 +3547,10 @@
         "typical_sign": "negative",
         "parent_canonical": null,
         "validation_rules": {
-          "type": "currency"
+          "type": "currency",
+          "cross_item_validation": {
+            "relationships": []
+          }
         },
         "industry_tags": [
           "all",
@@ -3357,6 +3797,8 @@
         "display_name": "Senior Debt",
         "aliases": [
           "Senior Secured Debt",
+          "Senior Notes",
+          "Senior Unsecured Notes",
           "First Lien Debt"
         ],
         "definition": "Debt with priority claim on assets in bankruptcy",
@@ -3455,7 +3897,11 @@
           "validation_checks": [
             "total_debt >= 0",
             "total_debt = short_term_debt + long_term_debt"
-          ]
+          ],
+          "cross_item_validation": {
+            "must_be_positive": true,
+            "relationships": []
+          }
         },
         "industry_tags": [
           "all",
@@ -3487,6 +3933,38 @@
     ],
     "income_statement": [
       {
+        "canonical_name": "adjusted_ebitda",
+        "category": "income_statement",
+        "display_name": "Adjusted EBITDA",
+        "aliases": [
+          "Adj. EBITDA",
+          "Adjusted Operating Cash Flow",
+          "Pro Forma EBITDA"
+        ],
+        "definition": "EBITDA adjusted for non-recurring or non-cash items such as stock-based compensation and restructuring charges",
+        "typical_sign": "positive",
+        "parent_canonical": null,
+        "validation_rules": {
+          "type": "currency",
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "adjusted_ebitda == ebitda + stock_based_compensation_expense + restructuring_charges",
+                "tolerance": 0.05,
+                "optional": true,
+                "warning_only": true,
+                "error_message": "Adjusted EBITDA should approximate EBITDA + SBC + restructuring charges"
+              }
+            ]
+          }
+        },
+        "industry_tags": [
+          "all",
+          "saas",
+          "corporate"
+        ]
+      },
+      {
         "canonical_name": "amortization",
         "category": "income_statement",
         "display_name": "Amortization",
@@ -3499,7 +3977,10 @@
         "typical_sign": "negative",
         "parent_canonical": null,
         "validation_rules": {
-          "type": "currency"
+          "type": "currency",
+          "cross_item_validation": {
+            "relationships": []
+          }
         },
         "ocr_variants": [
           "Amort ization",
@@ -3523,8 +4004,10 @@
         "display_name": "Cost of Goods Sold",
         "aliases": [
           "COGS",
+          "COR",
           "COS",
           "Cost of Goods Sold",
+          "Cost of Rev",
           "Cost of Revenue",
           "Cost of Sales",
           "Cost of Services",
@@ -3539,8 +4022,8 @@
           "Unit Costs",
           "Variable Costs",
           "cog",
-          "cosg",
           "cogss",
+          "cosg",
           "cost of good sold"
         ],
         "definition": "Direct costs attributable to production of goods sold",
@@ -3589,6 +4072,27 @@
         ]
       },
       {
+        "canonical_name": "contribution_margin",
+        "category": "income_statement",
+        "display_name": "Contribution Margin",
+        "aliases": [
+          "CM",
+          "Contribution Profit",
+          "Variable Profit",
+          "Unit Contribution"
+        ],
+        "definition": "Revenue minus all variable costs; measures per-unit profitability before fixed costs",
+        "typical_sign": "positive",
+        "parent_canonical": null,
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "all",
+          "saas"
+        ]
+      },
+      {
         "canonical_name": "cost_of_sales",
         "category": "income_statement",
         "display_name": "Cost of Sales",
@@ -3599,6 +4103,46 @@
         "definition": "Cost of sales (synonym for COGS)",
         "typical_sign": "negative",
         "parent_canonical": "cogs",
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
+      },
+      {
+        "canonical_name": "current_tax_expense",
+        "category": "income_statement",
+        "display_name": "Current Tax Expense",
+        "aliases": [
+          "Current Income Tax",
+          "Current Tax Provision",
+          "Tax Payable"
+        ],
+        "definition": "Income tax expense for the current period based on taxable income",
+        "typical_sign": "negative",
+        "parent_canonical": "tax_expense",
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
+      },
+      {
+        "canonical_name": "deferred_tax_expense",
+        "category": "income_statement",
+        "display_name": "Deferred Tax Expense",
+        "aliases": [
+          "Deferred Income Tax",
+          "Deferred Tax Provision",
+          "Deferred Tax Benefit"
+        ],
+        "definition": "Change in deferred tax liabilities or assets recognized in the income statement",
+        "typical_sign": "variable",
+        "parent_canonical": "tax_expense",
         "validation_rules": {
           "type": "currency"
         },
@@ -3620,13 +4164,16 @@
         "typical_sign": "negative",
         "parent_canonical": null,
         "validation_rules": {
-          "type": "currency"
+          "type": "currency",
+          "cross_item_validation": {
+            "relationships": []
+          }
         },
         "ocr_variants": [
           "Depreciat ion",
           "Depre ciation",
           "DEPRECIATION",
-          "Deprecia\u01abon"
+          "Depreciaƫon"
         ],
         "format_examples": [
           {
@@ -3658,6 +4205,8 @@
         "display_name": "Depreciation and Amortization",
         "aliases": [
           "D&A",
+          "D+A",
+          "Dep & Amort",
           "Depreciation & Amortization",
           "Total D&A"
         ],
@@ -3671,7 +4220,18 @@
           "validation_checks": [
             "depreciation_and_amortization = depreciation + amortization",
             "depreciation_and_amortization < 0 (expense)"
-          ]
+          ],
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "depreciation_and_amortization == depreciation + amortization",
+                "tolerance": 0.01,
+                "error_message": "D&A should equal sum of depreciation and amortization",
+                "optional": true,
+                "warning_only": true
+              }
+            ]
+          }
         },
         "industry_tags": [
           "all",
@@ -3924,7 +4484,24 @@
           "validation_checks": [
             "ebt = ebit - interest_expense + interest_income",
             "ebt is pre-tax income"
-          ]
+          ],
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "ebt == ebit - interest_expense",
+                "tolerance": 0.05,
+                "error_message": "EBT should approximately equal EBIT minus interest expense",
+                "optional": true,
+                "warning_only": true
+              },
+              {
+                "rule": "ebt <= ebit",
+                "error_message": "EBT should not exceed EBIT (interest expense is non-negative)",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
         },
         "industry_tags": [
           "all",
@@ -3936,9 +4513,9 @@
         "category": "income_statement",
         "display_name": "Effective Tax Rate",
         "aliases": [
-          "Tax Rate",
+          "ETR",
           "Effective Tax Rate %",
-          "ETR"
+          "Tax Rate"
         ],
         "definition": "Actual tax rate paid as percentage of pre-tax income",
         "typical_sign": "positive",
@@ -3977,6 +4554,14 @@
               ],
               "description": "UK corporate rate 19-25%"
             }
+          },
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "0 <= effective_tax_rate <= 0.5",
+                "error_message": "Effective tax rate should be between 0% and 50%"
+              }
+            ]
           }
         },
         "industry_tags": [
@@ -4139,12 +4724,12 @@
         "category": "income_statement",
         "display_name": "Gross Profit",
         "aliases": [
-          "Contribution Margin",
           "GP",
           "Gross Contribution",
           "Gross Earnings",
           "Gross Income",
           "Gross Margin",
+          "Gross Margin $",
           "Gross Operating Profit",
           "Gross Profit Before OpEx",
           "Gross Trading Profit",
@@ -4272,6 +4857,9 @@
           ],
           "cross_validation": {
             "total_debt": "interest_expense / total_debt should be 0.02-0.15 (2-15% interest rate)"
+          },
+          "cross_item_validation": {
+            "relationships": []
           }
         },
         "ocr_variants": [
@@ -4454,7 +5042,7 @@
           "Net Inc ome",
           "Net-Income",
           "NET INCOME",
-          "N\u0247t Income",
+          "Nɇt Income",
           "Net lncome"
         ],
         "format_examples": [
@@ -4534,6 +5122,29 @@
         ]
       },
       {
+        "canonical_name": "non_recurring_revenue",
+        "category": "income_statement",
+        "display_name": "Non-Recurring Revenue",
+        "aliases": [
+          "One-Time Revenue",
+          "Non-Recurring Sales",
+          "NRR Revenue",
+          "Non-Recurring Income"
+        ],
+        "definition": "Revenue from one-time transactions not expected to repeat regularly",
+        "typical_sign": "positive",
+        "parent_canonical": "revenue",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "all",
+          "saas",
+          "subscription"
+        ]
+      },
+      {
         "canonical_name": "operating_expenses",
         "category": "income_statement",
         "display_name": "Operating Expenses",
@@ -4570,7 +5181,18 @@
         "typical_sign": "positive",
         "parent_canonical": "ebit",
         "validation_rules": {
-          "type": "currency"
+          "type": "currency",
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "operating_income == ebit",
+                "tolerance": 0.01,
+                "error_message": "Operating income should equal EBIT",
+                "optional": true,
+                "warning_only": true
+              }
+            ]
+          }
         },
         "industry_tags": [
           "all",
@@ -4608,20 +5230,33 @@
           "OPEX",
           "Op Ex",
           "OpEx",
+          "OpEx Total",
           "Operating Costs",
           "Operating Expenditure",
           "Operating Expense",
           "Operating Expenses",
           "Operational Expenditure",
           "Operational Expenses",
+          "Opex",
           "Total OpEx",
-          "Total Operating Expenses"
+          "Total Operating Expenses",
+          "Total Opex"
         ],
         "definition": "Expenses incurred in normal business operations excluding COGS",
         "typical_sign": "negative",
         "parent_canonical": null,
         "validation_rules": {
-          "type": "currency"
+          "type": "currency",
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "opex <= revenue",
+                "error_message": "Operating expenses should not exceed revenue in normal operations",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
         },
         "industry_tags": [
           "all",
@@ -4733,7 +5368,10 @@
         "typical_sign": "negative",
         "parent_canonical": "opex",
         "validation_rules": {
-          "type": "currency"
+          "type": "currency",
+          "cross_item_validation": {
+            "relationships": []
+          }
         },
         "industry_tags": [
           "technology",
@@ -4741,6 +5379,27 @@
           "pharma",
           "manufacturing",
           "saas"
+        ]
+      },
+      {
+        "canonical_name": "recurring_revenue",
+        "category": "income_statement",
+        "display_name": "Recurring Revenue",
+        "aliases": [
+          "Base Revenue",
+          "Recurring Income",
+          "Repeating Revenue"
+        ],
+        "definition": "Revenue from ongoing contracts or subscriptions expected to repeat each period",
+        "typical_sign": "positive",
+        "parent_canonical": "revenue",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "saas",
+          "subscription"
         ]
       },
       {
@@ -4764,27 +5423,24 @@
         "category": "income_statement",
         "display_name": "Revenue",
         "aliases": [
-          "ARR",
-          "Annual Recurring Revenue",
           "Chiffre d'affaires",
           "Consolidated Revenue",
           "Gross Revenue",
           "Gross Sales",
           "Income from Sales",
-          "MRR",
-          "Monthly Recurring Revenue",
           "Net Revenue",
           "Net Sales",
           "Operating Revenue",
           "Premium Income",
           "Rental Income",
+          "Rev",
           "Revenue (Gross)",
           "Revenue (Net)",
           "Revenues",
+          "Revs",
           "Sales",
           "Sales Income",
           "Sales Revenue",
-          "Subscription Income",
           "Top Line",
           "Total Operating Revenue",
           "Total Revenue",
@@ -4856,7 +5512,7 @@
           "RevenUe",
           "REVENUE",
           "revenue.",
-          "Reve\u03c0ue",
+          "Reveπue",
           "Rev-enue"
         ],
         "format_examples": [
@@ -4963,10 +5619,11 @@
         "category": "income_statement",
         "display_name": "Service Revenue",
         "aliases": [
-          "Service Sales",
+          "Advisory Revenue",
+          "Consulting Revenue",
           "Professional Services Revenue",
           "Service Income",
-          "Consulting Revenue"
+          "Service Sales"
         ],
         "definition": "Revenue from provision of services",
         "typical_sign": "positive",
@@ -4986,22 +5643,30 @@
         "display_name": "SG&A",
         "aliases": [
           "Administrative and Selling Expenses",
+          "Employee Costs",
           "G&A",
           "General & Administrative Expenses",
           "General and Administrative",
+          "Headcount Costs",
+          "People Costs",
+          "Personnel Expenses",
           "S&A",
           "SG&A Expenses",
           "SGA",
           "Sales General Administrative",
           "Selling G&A",
           "Selling General and Administrative",
-          "Selling and Administrative"
+          "Selling and Administrative",
+          "Staff Costs"
         ],
         "definition": "Selling, general, and administrative expenses",
         "typical_sign": "negative",
         "parent_canonical": "opex",
         "validation_rules": {
-          "type": "currency"
+          "type": "currency",
+          "cross_item_validation": {
+            "relationships": []
+          }
         },
         "industry_tags": [
           "all",
@@ -5010,21 +5675,43 @@
         ]
       },
       {
+        "canonical_name": "stock_based_compensation_expense",
+        "category": "income_statement",
+        "display_name": "Stock-Based Compensation Expense",
+        "aliases": [
+          "SBC Expense",
+          "SBC",
+          "Share-Based Compensation",
+          "Equity-Based Compensation",
+          "Stock Compensation Expense"
+        ],
+        "definition": "Non-cash expense for equity awards (options, RSUs) granted to employees, recognized on the income statement",
+        "typical_sign": "negative",
+        "parent_canonical": "opex",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "all",
+          "saas",
+          "tech"
+        ]
+      },
+      {
         "canonical_name": "subscription_revenue",
         "category": "income_statement",
         "display_name": "Subscription Revenue",
         "aliases": [
-          "ARR",
-          "Annual Recurring Revenue",
           "CRR",
           "Contracted Recurring Revenue",
-          "MRR",
           "Membership Fees",
-          "Monthly Recurring Revenue",
+          "Recurring License Revenue",
           "Recurring Revenue",
           "Recurring Sales",
           "Recurring Subscription Revenue",
           "SaaS Revenue",
+          "SaaS Subscription Revenue",
           "Subscription Income",
           "Subscription Sales"
         ],
@@ -5037,7 +5724,9 @@
         },
         "industry_tags": [
           "all",
-          "corporate"
+          "corporate",
+          "saas",
+          "subscription"
         ]
       },
       {
@@ -5076,9 +5765,383 @@
           "all",
           "corporate"
         ]
+      },
+      {
+        "canonical_name": "usage_based_revenue",
+        "category": "income_statement",
+        "display_name": "Usage-Based Revenue",
+        "aliases": [
+          "Consumption Revenue",
+          "Pay-As-You-Go Revenue",
+          "Metered Revenue",
+          "Variable Revenue"
+        ],
+        "definition": "Revenue based on customer usage or consumption of products or services",
+        "typical_sign": "positive",
+        "parent_canonical": "revenue",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "saas",
+          "cloud"
+        ]
+      }
+    ],
+    "project_finance": [
+      {
+        "canonical_name": "cfads",
+        "category": "project_finance",
+        "display_name": "Cash Flow Available for Debt Service",
+        "aliases": [
+          "CFADS",
+          "Cash Flow Available for Debt Service",
+          "Cash Available for Debt Service",
+          "Cashflow Available for Debt Service"
+        ],
+        "definition": "Net operating cash flow available to service project debt (typically Net Income + D&A + Interest - Tax adjustments)",
+        "typical_sign": "positive",
+        "validation_rules": {
+          "type": "currency",
+          "cross_item_validation": {
+            "must_be_positive": false,
+            "relationships": [
+              {
+                "rule": "cfads >= cfae",
+                "error_message": "CFADS should be >= CFAE (CFAE = CFADS after debt service)",
+                "warning_only": true,
+                "optional": true
+              },
+              {
+                "rule": "cfads <= revenue",
+                "error_message": "CFADS exceeds revenue; possible extraction error",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "cfae",
+        "category": "project_finance",
+        "display_name": "Cash Flow Available for Equity",
+        "aliases": [
+          "CFAE",
+          "Cashflow Available for Equity",
+          "Cash Flow Available for Equity",
+          "Cash Available for Equity",
+          "Equity Cash Flow"
+        ],
+        "definition": "Cash flow remaining after debt service, available for distribution to equity holders (CFADS - Debt Service)",
+        "typical_sign": "positive",
+        "validation_rules": {
+          "type": "currency",
+          "cross_item_validation": {
+            "must_be_positive": false,
+            "relationships": [
+              {
+                "rule": "cfae == cfads + debt_service",
+                "tolerance": 0.05,
+                "error_message": "CFAE should equal CFADS + debt service (debt service is negative)",
+                "warning_only": true,
+                "optional": true
+              },
+              {
+                "rule": "cfae <= cfads",
+                "error_message": "CFAE should not exceed CFADS",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "equity_contribution",
+        "category": "project_finance",
+        "display_name": "Equity Contribution",
+        "aliases": [
+          "Equity",
+          "Equity Injection",
+          "Equity Investment",
+          "Equity Funding",
+          "Sponsor Equity"
+        ],
+        "definition": "Equity capital injected by sponsors during construction/development phase",
+        "typical_sign": "negative",
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "equity_returns",
+        "category": "project_finance",
+        "display_name": "Total Equity Returns",
+        "aliases": [
+          "Total Equity Returns",
+          "Equity Returns",
+          "Equity Cash Flows",
+          "Equity Distributions"
+        ],
+        "definition": "Total cash flow stream to equity holders including contributions and distributions",
+        "typical_sign": "varies",
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "development_costs",
+        "category": "project_finance",
+        "display_name": "Development Costs",
+        "aliases": [
+          "Development Cost",
+          "Development Costs",
+          "Dev Cost",
+          "Pre-construction Costs",
+          "Soft Costs"
+        ],
+        "definition": "Project development costs including legal, permitting, engineering, and site development (NOT R&D)",
+        "typical_sign": "negative",
+        "validation_rules": {
+          "type": "currency",
+          "cross_item_validation": {
+            "relationships": []
+          }
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "sculpted_debt_service",
+        "category": "project_finance",
+        "display_name": "Sculpted Debt Service",
+        "aliases": [
+          "Sculpted Debt Service",
+          "Sculpted Debt Service Total",
+          "Sculpted DS"
+        ],
+        "definition": "Debt service payments shaped to match the project's cash flow profile (vs level repayments)",
+        "typical_sign": "negative",
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "dsra_balance",
+        "category": "project_finance",
+        "display_name": "DSRA Balance",
+        "aliases": [
+          "DSRA",
+          "DSRA Balance",
+          "Debt Service Reserve Account",
+          "Debt Service Reserve",
+          "DSRA - Initial Funding"
+        ],
+        "definition": "Debt service reserve account balance, maintained to cover upcoming debt service payments",
+        "typical_sign": "positive",
+        "validation_rules": {
+          "type": "currency",
+          "cross_item_validation": {
+            "must_be_positive": false
+          }
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "llcr",
+        "category": "project_finance",
+        "display_name": "Loan Life Coverage Ratio",
+        "aliases": [
+          "LLCR",
+          "Loan Life Coverage Ratio"
+        ],
+        "definition": "NPV of CFADS over remaining loan life divided by outstanding debt balance",
+        "typical_sign": "positive",
+        "validation_rules": {
+          "type": "ratio",
+          "min_value": 0,
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "1.0 <= llcr <= 10.0",
+                "error_message": "LLCR outside expected range (1.0x - 10.0x)",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "plcr",
+        "category": "project_finance",
+        "display_name": "Project Life Coverage Ratio",
+        "aliases": [
+          "PLCR",
+          "Project Life Coverage Ratio"
+        ],
+        "definition": "NPV of CFADS over remaining project life divided by outstanding debt balance",
+        "typical_sign": "positive",
+        "validation_rules": {
+          "type": "ratio",
+          "min_value": 0,
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "1.0 <= plcr <= 10.0",
+                "error_message": "PLCR outside expected range (1.0x - 10.0x)",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "pre_tax_irr",
+        "category": "project_finance",
+        "display_name": "Pre-Tax IRR",
+        "aliases": [
+          "Pre-Tax IRR",
+          "Pre-Tax Free Cashflow IRR",
+          "Project IRR (Pre-Tax)"
+        ],
+        "definition": "Internal rate of return on project cash flows before tax",
+        "typical_sign": "positive",
+        "validation_rules": {
+          "type": "percentage"
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "post_tax_irr",
+        "category": "project_finance",
+        "display_name": "Post-Tax IRR",
+        "aliases": [
+          "Post-Tax IRR",
+          "Post-Tax Free Cashflow IRR",
+          "Project IRR (Post-Tax)"
+        ],
+        "definition": "Internal rate of return on project cash flows after tax",
+        "typical_sign": "positive",
+        "validation_rules": {
+          "type": "percentage"
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "equity_irr",
+        "category": "project_finance",
+        "display_name": "Equity IRR",
+        "aliases": [
+          "Equity IRR",
+          "Levered IRR",
+          "Sponsor IRR"
+        ],
+        "definition": "Internal rate of return on equity investment (contributions vs distributions)",
+        "typical_sign": "positive",
+        "validation_rules": {
+          "type": "percentage",
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "0 <= equity_irr <= 1",
+                "error_message": "Equity IRR outside expected range (0% - 100%)",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "total_investment",
+        "category": "project_finance",
+        "display_name": "Total Investment",
+        "aliases": [
+          "Investment Total",
+          "Total Investment",
+          "Total Project Cost",
+          "Total Uses"
+        ],
+        "definition": "Total capital investment in the project including capex, development costs, and reserves",
+        "typical_sign": "negative",
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
       }
     ],
     "metrics": [
+      {
+        "canonical_name": "acv",
+        "category": "metrics",
+        "display_name": "Annual Contract Value",
+        "aliases": [
+          "ACV",
+          "Average Contract Value",
+          "Annualized Contract Value"
+        ],
+        "definition": "Average annualized revenue per customer contract",
+        "typical_sign": "positive",
+        "parent_canonical": null,
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "saas",
+          "subscription"
+        ]
+      },
       {
         "canonical_name": "affo",
         "category": "metrics",
@@ -5129,8 +6192,8 @@
         "display_name": "Annual Recurring Revenue",
         "aliases": [
           "ARR",
+          "Annual Recurring Revenue",
           "Annualized Recurring Revenue",
-          "Annual Contract Value",
           "Recurring Revenue ARR"
         ],
         "definition": "Annualized value of active recurring revenue contracts",
@@ -5144,7 +6207,7 @@
             "relationships": [
               {
                 "rule": "arr == mrr * 12",
-                "tolerance": 0.02,
+                "tolerance": 0.05,
                 "optional": true
               }
             ]
@@ -5178,6 +6241,27 @@
         ]
       },
       {
+        "canonical_name": "bookings",
+        "category": "metrics",
+        "display_name": "Bookings",
+        "aliases": [
+          "Total Bookings",
+          "New Bookings",
+          "Gross Bookings"
+        ],
+        "definition": "Total value of new contracts signed in a period, regardless of revenue recognition timing",
+        "typical_sign": "positive",
+        "parent_canonical": null,
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "saas",
+          "subscription"
+        ]
+      },
+      {
         "canonical_name": "burn_multiple",
         "category": "metrics",
         "display_name": "Burn Multiple",
@@ -5195,6 +6279,27 @@
         "industry_tags": [
           "all",
           "corporate"
+        ]
+      },
+      {
+        "canonical_name": "burn_rate",
+        "category": "metrics",
+        "display_name": "Burn Rate",
+        "aliases": [
+          "Cash Burn",
+          "Cash Burn Rate",
+          "Net Burn"
+        ],
+        "definition": "Rate at which a company spends cash reserves, typically measured monthly",
+        "typical_sign": "negative",
+        "parent_canonical": null,
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "startup",
+          "saas",
+          "venture"
         ]
       },
       {
@@ -5226,8 +6331,10 @@
         "category": "metrics",
         "display_name": "CAC Payback Period",
         "aliases": [
-          "Payback Period",
-          "Months to Recover CAC"
+          "CAC Payback Months",
+          "CAC Recovery Period",
+          "Months to Recover CAC",
+          "Payback Period"
         ],
         "definition": "Months required to recover customer acquisition cost from gross margin",
         "typical_sign": "positive",
@@ -5238,7 +6345,8 @@
         },
         "industry_tags": [
           "all",
-          "corporate"
+          "corporate",
+          "saas"
         ]
       },
       {
@@ -5321,6 +6429,30 @@
         ]
       },
       {
+        "canonical_name": "cash_runway_months",
+        "category": "metrics",
+        "display_name": "Cash Runway",
+        "aliases": [
+          "Runway",
+          "Months of Runway",
+          "Cash Runway Months",
+          "Operating Runway"
+        ],
+        "definition": "Number of months until cash reserves are depleted at the current burn rate",
+        "typical_sign": "positive",
+        "parent_canonical": null,
+        "validation_rules": {
+          "type": "months",
+          "min_value": 0,
+          "derivation": "cash / monthly_burn"
+        },
+        "industry_tags": [
+          "startup",
+          "saas",
+          "venture"
+        ]
+      },
+      {
         "canonical_name": "churn_rate",
         "category": "metrics",
         "display_name": "Churn Rate",
@@ -5340,6 +6472,27 @@
         },
         "industry_tags": [
           "all",
+          "saas",
+          "subscription"
+        ]
+      },
+      {
+        "canonical_name": "churned_customers",
+        "category": "metrics",
+        "display_name": "Churned Customers",
+        "aliases": [
+          "Lost Customers",
+          "Customer Losses",
+          "Churned Logos"
+        ],
+        "definition": "Number of customers lost during a period",
+        "typical_sign": "positive",
+        "parent_canonical": null,
+        "validation_rules": {
+          "type": "units",
+          "min_value": 0
+        },
+        "industry_tags": [
           "saas",
           "subscription"
         ]
@@ -5424,11 +6577,45 @@
               ],
               "description": "Minimum current ratio 1.0-1.5"
             }
+          },
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "current_ratio == current_assets / current_liabilities",
+                "tolerance": 0.01,
+                "error_message": "Current ratio should equal current assets / current liabilities",
+                "optional": true,
+                "warning_only": true
+              }
+            ]
           }
         },
         "industry_tags": [
           "all",
           "corporate"
+        ]
+      },
+      {
+        "canonical_name": "customer_count",
+        "category": "metrics",
+        "display_name": "Customer Count",
+        "aliases": [
+          "Total Customers",
+          "Active Customers",
+          "Number of Customers",
+          "Paying Customers"
+        ],
+        "definition": "Total number of active paying customers",
+        "typical_sign": "positive",
+        "parent_canonical": null,
+        "validation_rules": {
+          "type": "units",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "all",
+          "saas",
+          "subscription"
         ]
       },
       {
@@ -5614,7 +6801,18 @@
         "validation_rules": {
           "type": "ratio",
           "min_value": 0,
-          "derivation": "total_debt / total_equity"
+          "derivation": "total_debt / total_equity",
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "debt_to_equity == total_debt / total_equity",
+                "tolerance": 0.01,
+                "error_message": "Debt-to-equity should equal total debt / total equity",
+                "optional": true,
+                "warning_only": true
+              }
+            ]
+          }
         },
         "industry_tags": [
           "all",
@@ -5873,7 +7071,10 @@
         "category": "metrics",
         "display_name": "Gross Revenue Retention",
         "aliases": [
+          "GDR",
           "GRR",
+          "Gross Dollar Retention",
+          "Gross MRR Retention",
           "Gross Retention"
         ],
         "definition": "Revenue retention from existing customers excluding expansions; measures pure retention",
@@ -5882,11 +7083,43 @@
         "validation_rules": {
           "type": "percentage",
           "min_value": 0,
-          "max_value": 1
+          "max_value": 1,
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "0 <= gross_retention <= 1",
+                "error_message": "Gross revenue retention must be between 0% and 100%"
+              }
+            ]
+          }
         },
         "industry_tags": [
           "all",
-          "corporate"
+          "corporate",
+          "saas",
+          "subscription"
+        ]
+      },
+      {
+        "canonical_name": "headcount",
+        "category": "metrics",
+        "display_name": "Headcount",
+        "aliases": [
+          "FTE",
+          "Full-Time Equivalents",
+          "Employee Count",
+          "Total Employees",
+          "Number of Employees"
+        ],
+        "definition": "Total number of full-time equivalent employees",
+        "typical_sign": "positive",
+        "parent_canonical": null,
+        "validation_rules": {
+          "type": "units",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "all"
         ]
       },
       {
@@ -5978,6 +7211,36 @@
         ]
       },
       {
+        "canonical_name": "logo_churn_rate",
+        "category": "metrics",
+        "display_name": "Logo Churn Rate",
+        "aliases": [
+          "Account Churn",
+          "Customer Churn Rate",
+          "Logo Churn %"
+        ],
+        "definition": "Percentage of customers lost during a period relative to total customers at the start",
+        "typical_sign": "positive",
+        "parent_canonical": null,
+        "validation_rules": {
+          "type": "percentage",
+          "min_value": 0,
+          "max_value": 1,
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "0 <= logo_churn_rate <= 1",
+                "error_message": "Logo churn rate must be between 0% and 100%"
+              }
+            ]
+          }
+        },
+        "industry_tags": [
+          "saas",
+          "subscription"
+        ]
+      },
+      {
         "canonical_name": "ltv",
         "category": "metrics",
         "display_name": "Customer Lifetime Value",
@@ -6052,7 +7315,8 @@
         "display_name": "Magic Number",
         "aliases": [
           "SaaS Magic Number",
-          "Sales Efficiency"
+          "Sales Efficiency",
+          "Sales Efficiency Ratio"
         ],
         "definition": "Net new ARR / sales & marketing spend; measures sales efficiency",
         "typical_sign": "positive",
@@ -6063,7 +7327,8 @@
         },
         "industry_tags": [
           "all",
-          "corporate"
+          "corporate",
+          "saas"
         ]
       },
       {
@@ -6108,12 +7373,33 @@
         ]
       },
       {
+        "canonical_name": "monthly_burn",
+        "category": "metrics",
+        "display_name": "Monthly Burn",
+        "aliases": [
+          "Monthly Cash Burn",
+          "Net Monthly Burn",
+          "Monthly Spend"
+        ],
+        "definition": "Average monthly cash expenditure net of revenue",
+        "typical_sign": "negative",
+        "parent_canonical": null,
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "startup",
+          "saas"
+        ]
+      },
+      {
         "canonical_name": "mrr",
         "category": "metrics",
         "display_name": "Monthly Recurring Revenue",
         "aliases": [
           "MRR",
           "Monthly Recurring Rev",
+          "Monthly Recurring Revenue",
           "Recurring Revenue MRR"
         ],
         "definition": "Monthly value of recurring revenue from active subscriptions",
@@ -6200,6 +7486,17 @@
               ],
               "description": "Retail typically 2-8%"
             }
+          },
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "net_margin == net_income / revenue",
+                "tolerance": 0.01,
+                "error_message": "Net margin should equal net income / revenue",
+                "optional": true,
+                "warning_only": true
+              }
+            ]
           }
         },
         "industry_tags": [
@@ -6212,10 +7509,13 @@
         "category": "metrics",
         "display_name": "Net Revenue Retention",
         "aliases": [
-          "NRR",
-          "Net Retention",
+          "DBNR",
+          "Dollar-Based Net Retention",
           "NDR",
-          "Net Dollar Retention"
+          "NRR",
+          "Net Dollar Retention",
+          "Net MRR Retention",
+          "Net Retention"
         ],
         "definition": "Revenue retention from existing customers including expansions and downgrades; >100% indicates growth from existing base",
         "typical_sign": "positive",
@@ -6226,7 +7526,63 @@
         },
         "industry_tags": [
           "all",
+          "corporate",
+          "saas",
+          "subscription"
+        ]
+      },
+      {
+        "canonical_name": "net_working_capital",
+        "category": "metrics",
+        "display_name": "Net Working Capital",
+        "aliases": [
+          "NWC",
+          "Working Capital",
+          "Net Working Capital",
+          "Current Working Capital"
+        ],
+        "definition": "Current assets minus current liabilities; measures short-term liquidity",
+        "typical_sign": "positive",
+        "parent_canonical": null,
+        "validation_rules": {
+          "type": "currency",
+          "derivation": "current_assets - current_liabilities",
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "net_working_capital == current_assets - current_liabilities",
+                "tolerance": 0.02,
+                "error_message": "NWC should equal current assets minus current liabilities",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
+        },
+        "industry_tags": [
+          "all",
           "corporate"
+        ]
+      },
+      {
+        "canonical_name": "new_customers",
+        "category": "metrics",
+        "display_name": "New Customers",
+        "aliases": [
+          "New Logos",
+          "Customer Additions",
+          "New Customer Acquisitions"
+        ],
+        "definition": "Number of new customers acquired during a period",
+        "typical_sign": "positive",
+        "parent_canonical": null,
+        "validation_rules": {
+          "type": "units",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "saas",
+          "subscription"
         ]
       },
       {
@@ -6279,7 +7635,7 @@
           "OEE",
           "Equipment Effectiveness"
         ],
-        "definition": "Availability \u00d7 Performance \u00d7 Quality; measures manufacturing productivity",
+        "definition": "Availability × Performance × Quality; measures manufacturing productivity",
         "typical_sign": "positive",
         "parent_canonical": null,
         "validation_rules": {
@@ -6327,11 +7683,43 @@
         "parent_canonical": null,
         "validation_rules": {
           "type": "percentage",
-          "derivation": "ebit / revenue"
+          "derivation": "ebit / revenue",
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "operating_margin == ebit / revenue",
+                "tolerance": 0.01,
+                "error_message": "Operating margin should equal EBIT / revenue",
+                "optional": true,
+                "warning_only": true
+              }
+            ]
+          }
         },
         "industry_tags": [
           "all",
           "corporate"
+        ]
+      },
+      {
+        "canonical_name": "pipeline_value",
+        "category": "metrics",
+        "display_name": "Pipeline Value",
+        "aliases": [
+          "Sales Pipeline",
+          "Pipeline",
+          "Weighted Pipeline"
+        ],
+        "definition": "Total value of prospective deals in the sales pipeline",
+        "typical_sign": "positive",
+        "parent_canonical": null,
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "saas",
+          "all"
         ]
       },
       {
@@ -6445,7 +7833,18 @@
         "typical_sign": "positive",
         "parent_canonical": "roe",
         "validation_rules": {
-          "type": "percentage"
+          "type": "percentage",
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "return_on_equity == net_income / total_equity",
+                "tolerance": 0.01,
+                "error_message": "Return on equity should equal net income / total equity",
+                "optional": true,
+                "warning_only": true
+              }
+            ]
+          }
         },
         "industry_tags": [
           "all",
@@ -6474,6 +7873,36 @@
         ]
       },
       {
+        "canonical_name": "revenue_churn_rate",
+        "category": "metrics",
+        "display_name": "Revenue Churn Rate",
+        "aliases": [
+          "MRR Churn",
+          "Revenue Churn",
+          "Gross Revenue Churn"
+        ],
+        "definition": "Percentage of recurring revenue lost from existing customers during a period",
+        "typical_sign": "positive",
+        "parent_canonical": null,
+        "validation_rules": {
+          "type": "percentage",
+          "min_value": 0,
+          "max_value": 1,
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "0 <= revenue_churn_rate <= 1",
+                "error_message": "Revenue churn rate must be between 0% and 100%"
+              }
+            ]
+          }
+        },
+        "industry_tags": [
+          "saas",
+          "subscription"
+        ]
+      },
+      {
         "canonical_name": "revenue_growth",
         "category": "metrics",
         "display_name": "Revenue Growth %",
@@ -6488,6 +7917,28 @@
         "industry_tags": [
           "all",
           "corporate"
+        ]
+      },
+      {
+        "canonical_name": "revenue_per_employee",
+        "category": "metrics",
+        "display_name": "Revenue per Employee",
+        "aliases": [
+          "Rev/Employee",
+          "Revenue per Head",
+          "Revenue per FTE"
+        ],
+        "definition": "Total revenue divided by number of full-time equivalent employees",
+        "typical_sign": "positive",
+        "parent_canonical": null,
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0,
+          "derivation": "revenue / headcount"
+        },
+        "industry_tags": [
+          "all",
+          "saas"
         ]
       },
       {
@@ -6636,8 +8087,11 @@
         "category": "metrics",
         "display_name": "Rule of 40",
         "aliases": [
+          "Growth + Margin",
+          "R40",
+          "R40 Score",
           "Rule of 40 Score",
-          "R40"
+          "Rule of Forty"
         ],
         "definition": "Growth rate + profit margin; healthy SaaS companies should exceed 40%",
         "typical_sign": "positive",
@@ -6648,7 +8102,8 @@
         },
         "industry_tags": [
           "all",
-          "corporate"
+          "corporate",
+          "saas"
         ]
       },
       {

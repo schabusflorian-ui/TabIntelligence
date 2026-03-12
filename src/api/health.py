@@ -5,20 +5,22 @@ Provides:
 - Liveness probe: Is the service running?
 - Readiness probe: Can the service handle requests?
 - Detailed database health: Connection pool and query performance
+- Stale job detection: Find jobs stuck in PENDING/PROCESSING
 
 These endpoints are used by Kubernetes and monitoring systems to
 determine service health and route traffic accordingly.
 """
 import time
-from datetime import datetime
-from typing import Dict, Any
+from datetime import datetime, timedelta
+from typing import Dict, Any, List
 
-from fastapi import APIRouter, Response, status as http_status
+from fastapi import APIRouter, Depends, Response, status as http_status
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from src.db.session import get_db_async, async_engine
 from src.db.resilience import db_circuit_breaker
+from src.auth.dependencies import get_current_api_key
 from src.core.logging import api_logger as logger
 
 router = APIRouter(prefix="/health", tags=["health"])
@@ -125,8 +127,8 @@ async def readiness():
 # Detailed Database Health
 # ============================================================================
 
-@router.get("/health/database")
-async def database_health() -> Dict[str, Any]:
+@router.get("/database")
+async def database_health(_api_key=Depends(get_current_api_key)) -> Dict[str, Any]:
     """
     Detailed database health check with connection pool status.
 
@@ -275,8 +277,8 @@ async def database_health() -> Dict[str, Any]:
 # Circuit Breaker Status
 # ============================================================================
 
-@router.get("/health/circuit-breaker")
-async def circuit_breaker_status():
+@router.get("/circuit-breaker")
+async def circuit_breaker_status(_api_key=Depends(get_current_api_key)):
     """
     Get circuit breaker status and statistics.
 
@@ -310,7 +312,7 @@ async def circuit_breaker_status():
 # ============================================================================
 
 @router.get("/db-metrics", include_in_schema=False)
-async def db_metrics():
+async def db_metrics(_api_key=Depends(get_current_api_key)):
     """
     Prometheus-compatible metrics endpoint.
 
@@ -387,4 +389,104 @@ database_requests_rejected {breaker_stats['rejected_requests']}
             content=f"# Error collecting metrics: {e}\n",
             media_type="text/plain",
             status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE
+        )
+
+
+# ============================================================================
+# Stale Job Detection
+# ============================================================================
+
+@router.get("/stale-jobs")
+async def stale_jobs(_api_key=Depends(get_current_api_key)):
+    """
+    Check for stale PENDING/PROCESSING jobs.
+
+    Detects jobs that may be stuck:
+    - PENDING jobs older than 10 minutes (should have been picked up by Celery)
+    - PROCESSING jobs older than 30 minutes (typical extraction takes < 10 min)
+
+    Use this for:
+    - Monitoring dashboards
+    - Alerting on stuck jobs
+    - Operational debugging
+
+    Returns:
+        dict: Stale job counts and IDs
+
+    Example response (healthy):
+        {
+            "status": "ok",
+            "stale_pending": [],
+            "stale_processing": [],
+            "stale_pending_count": 0,
+            "stale_processing_count": 0,
+            "timestamp": "2026-03-04T12:00:00"
+        }
+
+    Example response (stale jobs found):
+        {
+            "status": "warning",
+            "stale_pending": ["abc-123"],
+            "stale_processing": ["def-456"],
+            "stale_pending_count": 1,
+            "stale_processing_count": 1,
+            "timestamp": "2026-03-04T12:00:00"
+        }
+    """
+    try:
+        from src.db.session import get_db_context
+        from src.db.models import ExtractionJob, JobStatusEnum
+
+        now = datetime.utcnow()
+        pending_cutoff = now - timedelta(minutes=10)
+        processing_cutoff = now - timedelta(minutes=30)
+
+        with get_db_context() as db:
+            stale_pending = (
+                db.query(ExtractionJob)
+                .filter(
+                    ExtractionJob.status == JobStatusEnum.PENDING,
+                    ExtractionJob.created_at < pending_cutoff,
+                )
+                .all()
+            )
+
+            stale_processing = (
+                db.query(ExtractionJob)
+                .filter(
+                    ExtractionJob.status == JobStatusEnum.PROCESSING,
+                    ExtractionJob.updated_at < processing_cutoff,
+                )
+                .all()
+            )
+
+        pending_ids = [str(j.job_id) for j in stale_pending]
+        processing_ids = [str(j.job_id) for j in stale_processing]
+
+        status = "ok"
+        if pending_ids or processing_ids:
+            status = "warning"
+            logger.warning(
+                f"Stale jobs detected: {len(pending_ids)} pending, "
+                f"{len(processing_ids)} processing"
+            )
+
+        return {
+            "status": status,
+            "stale_pending": pending_ids,
+            "stale_processing": processing_ids,
+            "stale_pending_count": len(pending_ids),
+            "stale_processing_count": len(processing_ids),
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+
+    except Exception as e:
+        logger.error(f"Stale job check failed: {e}")
+        return JSONResponse(
+            content={
+                "status": "error",
+                "error": str(e),
+                "timestamp": datetime.utcnow().isoformat(),
+            },
+            status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
         )

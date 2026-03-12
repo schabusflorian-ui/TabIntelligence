@@ -49,7 +49,8 @@ class TestEntityCreate:
 
     def test_create_entity(self, test_client_with_db):
         response = test_client_with_db.post(
-            "/api/v1/entities/?name=Acme%20Corp&industry=Technology"
+            "/api/v1/entities/",
+            json={"name": "Acme Corp", "industry": "Technology"},
         )
         assert response.status_code == 201
         data = response.json()
@@ -58,14 +59,17 @@ class TestEntityCreate:
         assert "id" in data
 
     def test_create_entity_name_only(self, test_client_with_db):
-        response = test_client_with_db.post("/api/v1/entities/?name=Simple%20Entity")
+        response = test_client_with_db.post(
+            "/api/v1/entities/",
+            json={"name": "Simple Entity"},
+        )
         assert response.status_code == 201
         data = response.json()
         assert data["name"] == "Simple Entity"
         assert data["industry"] is None
 
     def test_create_entity_missing_name(self, test_client_with_db):
-        response = test_client_with_db.post("/api/v1/entities/")
+        response = test_client_with_db.post("/api/v1/entities/", json={})
         assert response.status_code == 422  # Validation error
 
 
@@ -114,7 +118,8 @@ class TestEntityUpdate:
             session.close()
 
         response = test_client_with_db.patch(
-            f"/api/v1/entities/{entity_id}?name=New%20Name"
+            f"/api/v1/entities/{entity_id}",
+            json={"name": "New Name"},
         )
         assert response.status_code == 200
         assert response.json()["name"] == "New Name"
@@ -130,7 +135,8 @@ class TestEntityUpdate:
             session.close()
 
         response = test_client_with_db.patch(
-            f"/api/v1/entities/{entity_id}?industry=Finance"
+            f"/api/v1/entities/{entity_id}",
+            json={"industry": "Finance"},
         )
         assert response.status_code == 200
         assert response.json()["industry"] == "Finance"
@@ -145,13 +151,17 @@ class TestEntityUpdate:
         finally:
             session.close()
 
-        response = test_client_with_db.patch(f"/api/v1/entities/{entity_id}")
+        response = test_client_with_db.patch(
+            f"/api/v1/entities/{entity_id}",
+            json={},
+        )
         assert response.status_code == 400
 
     def test_update_entity_not_found(self, test_client_with_db):
         fake_id = str(uuid4())
         response = test_client_with_db.patch(
-            f"/api/v1/entities/{fake_id}?name=X"
+            f"/api/v1/entities/{fake_id}",
+            json={"name": "X"},
         )
         assert response.status_code == 404
 
@@ -194,7 +204,10 @@ class TestEntityAuth:
         assert response.status_code in (401, 403)
 
     def test_create_requires_auth(self, unauthenticated_client):
-        response = unauthenticated_client.post("/api/v1/entities/?name=Test")
+        response = unauthenticated_client.post(
+            "/api/v1/entities/",
+            json={"name": "Test"},
+        )
         assert response.status_code in (401, 403)
 
 

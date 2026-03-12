@@ -35,9 +35,9 @@ celery_app.conf.task_default_exchange = 'debtfund'
 celery_app.conf.task_default_routing_key = 'extraction.default'
 
 celery_app.conf.update(
-    # Serialization (JSON only — no pickle for security; file bytes passed via S3 key)
-    task_serializer='json',
-    accept_content=['json'],
+    # Serialization — prefer JSON; accept pickle for local dev (file_bytes fallback)
+    task_serializer='pickle',
+    accept_content=['json', 'pickle'],
     result_serializer='json',
 
     # Timezone

@@ -1,22 +1,73 @@
-You are parsing an Excel financial model. Extract ALL data with full context.
+You are parsing and enriching a pre-extracted Excel financial model. The data above is structured markdown with row numbers, cell values, formulas, bold/indent indicators, and merged regions.
 
-For each sheet, provide:
-- sheet_name: exact name from the tab
-- sheet_type: income_statement, balance_sheet, cash_flow, debt_schedule, assumptions, scratch, chart, other
-- layout: 'time_across_columns' or 'time_down_rows'
-- periods: list of time period headers found (e.g., ["FY2022", "FY2023", "FY2024E"])
+IMPORTANT: The markdown table columns use actual Excel column letters (A, B, C, ...). Use these column letters to align each row's values with the header row. Do NOT rely on cell position — always match by column letter.
 
-For each row with financial data:
-- row_index: row number
-- label: the text label (e.g., "Revenue", "Total Assets")
-- hierarchy_level: 0=section header, 1=main item, 2=sub-item, 3=detail
-- values: dict mapping period to numeric value
-- is_formula: true if this row contains formulas
-- is_subtotal: true if this appears to be a subtotal/total row
+The table includes Type, Bold, Indent, and Formula columns after the data columns:
+- Type: single letter indicating the dominant cell type in the row:
+  - I = input (hardcoded assumption — blue font or highlighted fill, no formula)
+  - F = formula (cell computed by Excel formula)
+  - L = label (text-only row, e.g., section header or category name)
+  - V = value (plain numeric value, no formula or special formatting)
+- Bold: Y/N — whether the row label is bold (section headers)
+- Indent: 0-3 — Excel indentation level of the label cell
+- Formula: the Excel formula for the first numeric cell (e.g., =SUM(B2:B5)), empty if hardcoded
 
-Focus on extracting actual financial data. Skip empty rows, chart sheets, and obvious scratch content.
+The table may contain horizontal separator lines (|---|---|...) before section headers. These mark section boundaries detected from formatting (bold labels after blank rows or with bottom borders). Use them as hints for hierarchy grouping.
 
-Return ONLY valid JSON in this format:
+A **Notes:** section may appear after the table listing cell comments as footnotes (e.g., "[A5]: Source: management forecast"). These are auditor or analyst annotations — use them as context for data quality but do not extract them as row data.
+
+The Fmt row uses format symbols: % (percentage), $ (currency), x (multiple/ratio). Use these to understand the unit of each column.
+
+Do NOT reconstruct from scratch. Instead, validate, classify, and enrich the pre-extracted structure.
+
+For each sheet:
+- sheet_name: exact name from the "## Sheet:" header
+- sheet_type: income_statement, balance_sheet, cash_flow, debt_schedule, project_finance_model, assumptions, scratch, chart, reference_data, other
+- layout: 'time_across_columns' or 'time_down_rows' (infer from header row pattern)
+- periods: list of time period headers found (e.g., ["FY2022", "FY2023", "FY2024E"] or ["1.0", "2.0", "3.0"])
+
+EXTRACTION COMPLETENESS — CRITICAL:
+Extract EVERY row that contains numeric data, not just "important" financial line items. This includes:
+- Revenue, costs, P&L items (obvious financial rows)
+- Debt schedules: balances, interest, principal, repayments
+- Coverage ratios: DSCR, LLCR, PLCR
+- Reserve accounts (DSRA balances, funding, releases)
+- Returns: IRR, NPV, free cash flows
+- Production/volume metrics (tons, units, prices)
+- Tax calculations, depreciation schedules
+- Flag/indicator rows (construction period, operations period)
+- ANY row with numbers in the period columns
+
+The ONLY rows to skip are:
+- Truly empty rows
+- Rows that are purely formatting (separators, blank headers)
+
+For each row with data:
+- row_index: row number from the Row column
+- label: the text label (first text cell in the row, typically from columns A-E)
+- hierarchy_level: determine from Bold + Indent columns:
+  - Bold=Y, Indent=0 → level 0 (section header)
+  - Bold=N, Indent=0 → level 1 (main item)
+  - Bold=N, Indent=1 → level 2 (sub-item)
+  - Bold=N, Indent≥2 → level 3 (detail)
+- values: dict mapping period to numeric value. CRITICAL: match values to periods using column letters from the header row. A value in column H maps to the period shown in column H of the header row.
+- is_formula: true if the Formula column is non-empty for this row (or Type=F)
+- is_subtotal: true if the Formula column contains SUM or SUBTOTAL, OR label contains "Total", "Subtotal", "Net", "Gross"
+- is_input: true if Type=I (hardcoded assumption cell — important for model audit trails)
+- cell_ref: reference of the label cell (e.g., "A5") for provenance
+
+PRECISION — CRITICAL:
+- Preserve full decimal precision. Do NOT round values to integers.
+- If the source value is 21919251.24, extract 21919251.24, NOT 21919251.
+- Percentages should be preserved as shown (e.g., 0.4444 not rounded to 0.44).
+
+PERIOD ALIGNMENT — CRITICAL:
+- Identify which columns contain period data from the header row (row 1).
+- Some sheets have metadata columns (Duration, Start, End, Unit) BEFORE the period columns.
+- Do NOT confuse metadata columns with period columns.
+- Map each value to its period by matching the column letter, not the cell position.
+
+Return ONLY valid JSON:
 {{
   "sheets": [
     {{
@@ -29,9 +80,11 @@ Return ONLY valid JSON in this format:
           "row_index": 1,
           "label": "...",
           "hierarchy_level": 1,
-          "values": {{"FY2023": 100, "FY2024": 120}},
+          "values": {{"FY2023": 100.5, "FY2024": 120.75}},
           "is_formula": false,
-          "is_subtotal": false
+          "is_subtotal": false,
+          "is_input": false,
+          "cell_ref": "A1"
         }}
       ]
     }}

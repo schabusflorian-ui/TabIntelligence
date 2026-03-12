@@ -1,10 +1,38 @@
 """Shared utilities for extraction pipeline."""
 import json
 import re
-from typing import Union
+from typing import List, Union
 
 from src.core.logging import extraction_logger as logger
 from src.core.exceptions import ExtractionError
+
+
+def validate_canonical_names(mappings: List[dict], stage: str) -> List[dict]:
+    """Validate canonical_names in mapping results against taxonomy.
+
+    Invalid (hallucinated) names are replaced with 'unmapped' at confidence 0.0
+    so Stage 5 can re-attempt the mapping.
+
+    Args:
+        mappings: List of mapping dicts with canonical_name keys
+        stage: Stage identifier for logging (e.g. "3", "5")
+
+    Returns:
+        The (mutated) mappings list
+    """
+    from src.extraction.taxonomy_loader import get_all_canonical_names
+
+    valid = get_all_canonical_names()
+    for m in mappings:
+        canonical = m.get("canonical_name", "")
+        if canonical and canonical not in valid:
+            logger.warning(
+                f"Stage {stage}: Hallucinated canonical_name '{canonical}' "
+                f"for label '{m.get('original_label', '?')}', resetting to unmapped"
+            )
+            m["canonical_name"] = "unmapped"
+            m["confidence"] = 0.0
+    return mappings
 
 
 def extract_json(content: str) -> Union[dict, list]:

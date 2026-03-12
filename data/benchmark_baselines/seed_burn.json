@@ -1,0 +1,2941 @@
+{
+  "timestamp": "2026-03-12T09:25:20.180327+00:00",
+  "file": "seed_burn.xlsx",
+  "duration_seconds": 82.59,
+  "sheets": [
+    "Monthly P&L",
+    "Cash",
+    "Notes"
+  ],
+  "triage": [
+    {
+      "sheet_name": "Monthly P&L",
+      "section": "Seed Co - Monthly P&L",
+      "section_start_row": 1,
+      "section_end_row": 5,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.9,
+      "reasoning": "Income statement section with core P&L components (Revenue, Cost of Revenue). Part of core financial statements despite low formula count."
+    },
+    {
+      "sheet_name": "Monthly P&L",
+      "section": "Gross Profit",
+      "section_start_row": 6,
+      "section_end_row": 11,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.9,
+      "reasoning": "Continuation of P&L structure showing gross profit calculation and operating expenses, essential part of income statement."
+    },
+    {
+      "sheet_name": "Monthly P&L",
+      "section": "Total Expenses",
+      "section_start_row": 12,
+      "section_end_row": 12,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.9,
+      "reasoning": "Expense subtotal section of the P&L, critical for income statement integrity."
+    },
+    {
+      "sheet_name": "Monthly P&L",
+      "section": "Net Income",
+      "section_start_row": 14,
+      "section_end_row": 14,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.9,
+      "reasoning": "Bottom line of P&L showing net income, essential component of core financial statements."
+    },
+    {
+      "sheet_name": "Cash",
+      "section": "Cash Tracker",
+      "section_start_row": 1,
+      "section_end_row": 6,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.85,
+      "reasoning": "Cash flow tracking with beginning cash, revenue, expenses, and net burn - core cash flow statement components."
+    },
+    {
+      "sheet_name": "Cash",
+      "section": "Ending Cash",
+      "section_start_row": 7,
+      "section_end_row": 8,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.85,
+      "reasoning": "Final cash position and runway calculation, critical cash flow statement metrics."
+    },
+    {
+      "sheet_name": "Notes",
+      "tier": 4,
+      "decision": "SKIP",
+      "confidence": 0.95,
+      "reasoning": "Empty sheet with no data (0 rows, no labels). Likely used for documentation or unused.",
+      "section": null,
+      "section_start_row": null,
+      "section_end_row": null
+    }
+  ],
+  "line_items_count": 15,
+  "tokens_used": 35876,
+  "cost_usd": 0.19716,
+  "validation": {
+    "period_results": {
+      "Jan-25": {
+        "total_checks": 19,
+        "passed": 16,
+        "failed": 3,
+        "success_rate": 0.842
+      },
+      "Feb-25": {
+        "total_checks": 19,
+        "passed": 16,
+        "failed": 3,
+        "success_rate": 0.842
+      },
+      "Mar-25": {
+        "total_checks": 19,
+        "passed": 16,
+        "failed": 3,
+        "success_rate": 0.842
+      },
+      "Apr-25": {
+        "total_checks": 19,
+        "passed": 16,
+        "failed": 3,
+        "success_rate": 0.842
+      },
+      "May-25": {
+        "total_checks": 22,
+        "passed": 19,
+        "failed": 3,
+        "success_rate": 0.864
+      },
+      "Jun-25": {
+        "total_checks": 22,
+        "passed": 19,
+        "failed": 3,
+        "success_rate": 0.864
+      },
+      "Jul-25": {
+        "total_checks": 22,
+        "passed": 19,
+        "failed": 3,
+        "success_rate": 0.864
+      },
+      "Aug-25": {
+        "total_checks": 22,
+        "passed": 19,
+        "failed": 3,
+        "success_rate": 0.864
+      },
+      "Sep-25": {
+        "total_checks": 22,
+        "passed": 19,
+        "failed": 3,
+        "success_rate": 0.864
+      },
+      "Oct-25": {
+        "total_checks": 22,
+        "passed": 19,
+        "failed": 3,
+        "success_rate": 0.864
+      },
+      "Nov-25": {
+        "total_checks": 22,
+        "passed": 19,
+        "failed": 3,
+        "success_rate": 0.864
+      },
+      "Dec-25": {
+        "total_checks": 22,
+        "passed": 19,
+        "failed": 3,
+        "success_rate": 0.864
+      }
+    },
+    "flags": [
+      {
+        "period": "Jan-25",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "must_be_positive",
+        "message": "cogs must be positive, got 0.0",
+        "actual": null,
+        "expected": "positive"
+      },
+      {
+        "period": "Jan-25",
+        "severity": "warning",
+        "item": "operating_cash_flow",
+        "rule": "sign_convention",
+        "message": "operating_cash_flow is negative (-110000.0) but typically positive",
+        "actual": "-110000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Jan-25",
+        "severity": "warning",
+        "item": "net_income",
+        "rule": "sign_convention",
+        "message": "net_income is negative (-110000.0) but typically positive",
+        "actual": "-110000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Feb-25",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "must_be_positive",
+        "message": "cogs must be positive, got 0.0",
+        "actual": null,
+        "expected": "positive"
+      },
+      {
+        "period": "Feb-25",
+        "severity": "warning",
+        "item": "operating_cash_flow",
+        "rule": "sign_convention",
+        "message": "operating_cash_flow is negative (-101000.0) but typically positive",
+        "actual": "-101000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Feb-25",
+        "severity": "warning",
+        "item": "net_income",
+        "rule": "sign_convention",
+        "message": "net_income is negative (-101000.0) but typically positive",
+        "actual": "-101000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Mar-25",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "must_be_positive",
+        "message": "cogs must be positive, got 0.0",
+        "actual": null,
+        "expected": "positive"
+      },
+      {
+        "period": "Mar-25",
+        "severity": "warning",
+        "item": "operating_cash_flow",
+        "rule": "sign_convention",
+        "message": "operating_cash_flow is negative (-111000.0) but typically positive",
+        "actual": "-111000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Mar-25",
+        "severity": "warning",
+        "item": "net_income",
+        "rule": "sign_convention",
+        "message": "net_income is negative (-111000.0) but typically positive",
+        "actual": "-111000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Apr-25",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "must_be_positive",
+        "message": "cogs must be positive, got 0.0",
+        "actual": null,
+        "expected": "positive"
+      },
+      {
+        "period": "Apr-25",
+        "severity": "warning",
+        "item": "operating_cash_flow",
+        "rule": "sign_convention",
+        "message": "operating_cash_flow is negative (-123000.0) but typically positive",
+        "actual": "-123000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Apr-25",
+        "severity": "warning",
+        "item": "net_income",
+        "rule": "sign_convention",
+        "message": "net_income is negative (-123000.0) but typically positive",
+        "actual": "-123000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "May-25",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "must_be_positive",
+        "message": "cogs must be positive, got -1000.0",
+        "actual": "-1000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "May-25",
+        "severity": "warning",
+        "item": "operating_cash_flow",
+        "rule": "sign_convention",
+        "message": "operating_cash_flow is negative (-111000.0) but typically positive",
+        "actual": "-111000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "May-25",
+        "severity": "warning",
+        "item": "net_income",
+        "rule": "sign_convention",
+        "message": "net_income is negative (-110000.0) but typically positive",
+        "actual": "-110000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Jun-25",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "must_be_positive",
+        "message": "cogs must be positive, got -2000.0",
+        "actual": "-2000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Jun-25",
+        "severity": "warning",
+        "item": "operating_cash_flow",
+        "rule": "sign_convention",
+        "message": "operating_cash_flow is negative (-117000.0) but typically positive",
+        "actual": "-117000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Jun-25",
+        "severity": "warning",
+        "item": "net_income",
+        "rule": "sign_convention",
+        "message": "net_income is negative (-114000.0) but typically positive",
+        "actual": "-114000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Jul-25",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "must_be_positive",
+        "message": "cogs must be positive, got -3000.0",
+        "actual": "-3000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Jul-25",
+        "severity": "warning",
+        "item": "operating_cash_flow",
+        "rule": "sign_convention",
+        "message": "operating_cash_flow is negative (-117000.0) but typically positive",
+        "actual": "-117000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Jul-25",
+        "severity": "warning",
+        "item": "net_income",
+        "rule": "sign_convention",
+        "message": "net_income is negative (-112000.0) but typically positive",
+        "actual": "-112000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Aug-25",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "must_be_positive",
+        "message": "cogs must be positive, got -4000.0",
+        "actual": "-4000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Aug-25",
+        "severity": "warning",
+        "item": "operating_cash_flow",
+        "rule": "sign_convention",
+        "message": "operating_cash_flow is negative (-117000.0) but typically positive",
+        "actual": "-117000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Aug-25",
+        "severity": "warning",
+        "item": "net_income",
+        "rule": "sign_convention",
+        "message": "net_income is negative (-109000.0) but typically positive",
+        "actual": "-109000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Sep-25",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "must_be_positive",
+        "message": "cogs must be positive, got -6000.0",
+        "actual": "-6000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Sep-25",
+        "severity": "warning",
+        "item": "operating_cash_flow",
+        "rule": "sign_convention",
+        "message": "operating_cash_flow is negative (-127000.0) but typically positive",
+        "actual": "-127000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Sep-25",
+        "severity": "warning",
+        "item": "net_income",
+        "rule": "sign_convention",
+        "message": "net_income is negative (-115000.0) but typically positive",
+        "actual": "-115000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Oct-25",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "must_be_positive",
+        "message": "cogs must be positive, got -8000.0",
+        "actual": "-8000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Oct-25",
+        "severity": "warning",
+        "item": "operating_cash_flow",
+        "rule": "sign_convention",
+        "message": "operating_cash_flow is negative (-127000.0) but typically positive",
+        "actual": "-127000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Oct-25",
+        "severity": "warning",
+        "item": "net_income",
+        "rule": "sign_convention",
+        "message": "net_income is negative (-110000.0) but typically positive",
+        "actual": "-110000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Nov-25",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "must_be_positive",
+        "message": "cogs must be positive, got -11000.0",
+        "actual": "-11000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Nov-25",
+        "severity": "warning",
+        "item": "operating_cash_flow",
+        "rule": "sign_convention",
+        "message": "operating_cash_flow is negative (-128000.0) but typically positive",
+        "actual": "-128000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Nov-25",
+        "severity": "warning",
+        "item": "net_income",
+        "rule": "sign_convention",
+        "message": "net_income is negative (-104000.0) but typically positive",
+        "actual": "-104000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Dec-25",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "must_be_positive",
+        "message": "cogs must be positive, got -14000.0",
+        "actual": "-14000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Dec-25",
+        "severity": "warning",
+        "item": "operating_cash_flow",
+        "rule": "sign_convention",
+        "message": "operating_cash_flow is negative (-138000.0) but typically positive",
+        "actual": "-138000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "Dec-25",
+        "severity": "warning",
+        "item": "net_income",
+        "rule": "sign_convention",
+        "message": "net_income is negative (-104000.0) but typically positive",
+        "actual": "-104000.0",
+        "expected": "positive"
+      }
+    ],
+    "claude_reasoning": [
+      {
+        "flag_index": 0,
+        "assessment": "acceptable",
+        "confidence": 0.9,
+        "reasoning": "Zero COGS in Jan-25 is acceptable as the company has zero revenue and is in pre-revenue phase",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 1,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative operating cash flow is normal for early-stage companies burning cash before profitability",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 2,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative net income is normal for early-stage companies in loss-making phase",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 3,
+        "assessment": "acceptable",
+        "confidence": 0.9,
+        "reasoning": "Zero COGS in Feb-25 is acceptable as the company has zero revenue and is in pre-revenue phase",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 4,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative operating cash flow continues to be normal for early-stage companies",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 5,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative net income continues to be normal for loss-making early-stage companies",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 6,
+        "assessment": "acceptable",
+        "confidence": 0.9,
+        "reasoning": "Zero COGS in Mar-25 is acceptable as the company has zero revenue and is in pre-revenue phase",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 7,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative operating cash flow continues to be normal for early-stage companies",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 8,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative net income continues to be normal for loss-making early-stage companies",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 9,
+        "assessment": "acceptable",
+        "confidence": 0.9,
+        "reasoning": "Zero COGS in Apr-25 is acceptable as the company has zero revenue and is in pre-revenue phase",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 10,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative operating cash flow continues to be normal for early-stage companies",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 11,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative net income continues to be normal for loss-making early-stage companies",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 12,
+        "assessment": "error",
+        "confidence": 0.85,
+        "reasoning": "Negative COGS (-1000) with positive revenue (2000) suggests extraction error. COGS should be positive expense",
+        "suggested_fix": "1000.0"
+      },
+      {
+        "flag_index": 13,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative operating cash flow is still normal as company is early in revenue generation and not yet profitable",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 14,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative net income is still normal as company is early in revenue generation and not yet profitable",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 15,
+        "assessment": "error",
+        "confidence": 0.85,
+        "reasoning": "Negative COGS (-2000) with positive revenue (5000) suggests extraction error. COGS should be positive expense",
+        "suggested_fix": "2000.0"
+      },
+      {
+        "flag_index": 16,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative operating cash flow continues as company scales up operations",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 17,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative net income continues as company scales up operations",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 18,
+        "assessment": "error",
+        "confidence": 0.85,
+        "reasoning": "Negative COGS (-3000) with positive revenue (8000) suggests extraction error. COGS should be positive expense",
+        "suggested_fix": "3000.0"
+      },
+      {
+        "flag_index": 19,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative operating cash flow continues as company scales up operations",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 20,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative net income continues as company scales up operations",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 21,
+        "assessment": "error",
+        "confidence": 0.85,
+        "reasoning": "Negative COGS (-4000) with positive revenue (12000) suggests extraction error. COGS should be positive expense",
+        "suggested_fix": "4000.0"
+      },
+      {
+        "flag_index": 22,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative operating cash flow continues as company scales up operations",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 23,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative net income continues as company scales up operations",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 24,
+        "assessment": "error",
+        "confidence": 0.85,
+        "reasoning": "Negative COGS (-6000) with positive revenue (18000) suggests extraction error. COGS should be positive expense",
+        "suggested_fix": "6000.0"
+      },
+      {
+        "flag_index": 25,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative operating cash flow continues as company scales up operations",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 26,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative net income continues as company scales up operations",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 27,
+        "assessment": "error",
+        "confidence": 0.85,
+        "reasoning": "Negative COGS (-8000) with positive revenue (25000) suggests extraction error. COGS should be positive expense",
+        "suggested_fix": "8000.0"
+      },
+      {
+        "flag_index": 28,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative operating cash flow continues as company scales up operations",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 29,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative net income continues as company scales up operations",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 30,
+        "assessment": "error",
+        "confidence": 0.85,
+        "reasoning": "Negative COGS (-11000) with positive revenue (35000) suggests extraction error. COGS should be positive expense",
+        "suggested_fix": "11000.0"
+      },
+      {
+        "flag_index": 31,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative operating cash flow continues as company scales up operations",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 32,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative net income continues as company scales up operations",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 33,
+        "assessment": "error",
+        "confidence": 0.85,
+        "reasoning": "Negative COGS (-14000) with positive revenue (48000) suggests extraction error. COGS should be positive expense",
+        "suggested_fix": "14000.0"
+      },
+      {
+        "flag_index": 34,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative operating cash flow continues as company scales up operations",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 35,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Negative net income continues as company scales up operations",
+        "suggested_fix": null
+      }
+    ],
+    "overall_confidence": 0.857,
+    "time_series": {
+      "total_checks": 552,
+      "flags": [
+        {
+          "check_type": "yoy_change",
+          "canonical_name": "cogs",
+          "period": "Jun-25",
+          "severity": "warning",
+          "message": "cogs declined -100% from May-25 to Jun-25 (threshold: -80%)",
+          "details": {
+            "pct_change": -1.0,
+            "threshold": -0.8
+          }
+        },
+        {
+          "check_type": "yoy_change",
+          "canonical_name": "general_admin",
+          "period": "Apr-25",
+          "severity": "warning",
+          "message": "general_admin declined -400% from Mar-25 to Apr-25 (threshold: -80%)",
+          "details": {
+            "pct_change": -4.0,
+            "threshold": -0.8
+          }
+        }
+      ],
+      "consistency_score": 0.996,
+      "items_checked": 12,
+      "periods_analyzed": 12
+    },
+    "completeness": {
+      "model_type": "corporate",
+      "overall_score": 0.402,
+      "detected_statements": [
+        "income_statement"
+      ],
+      "total_expected": 11,
+      "total_found": 4,
+      "total_missing": 7,
+      "missing_items": [
+        {
+          "canonical_name": "revenue",
+          "category": "income_statement",
+          "weight": 1.0,
+          "is_core": true
+        },
+        {
+          "canonical_name": "ebitda",
+          "category": "income_statement",
+          "weight": 0.85,
+          "is_core": true
+        },
+        {
+          "canonical_name": "ebit",
+          "category": "income_statement",
+          "weight": 0.8,
+          "is_core": true
+        },
+        {
+          "canonical_name": "depreciation",
+          "category": "income_statement",
+          "weight": 0.6,
+          "is_core": false
+        },
+        {
+          "canonical_name": "interest_expense",
+          "category": "income_statement",
+          "weight": 0.7,
+          "is_core": false
+        },
+        {
+          "canonical_name": "tax_expense",
+          "category": "income_statement",
+          "weight": 0.65,
+          "is_core": false
+        },
+        {
+          "canonical_name": "ebt",
+          "category": "income_statement",
+          "weight": 0.6,
+          "is_core": false
+        }
+      ],
+      "per_statement": {
+        "income_statement": {
+          "raw_score": 0.364,
+          "weighted_score": 0.402,
+          "core_score": 0.514,
+          "found": [
+            "cogs",
+            "gross_profit",
+            "net_income",
+            "opex"
+          ],
+          "missing": [
+            "revenue",
+            "ebitda",
+            "ebit",
+            "depreciation",
+            "interest_expense",
+            "tax_expense",
+            "ebt"
+          ]
+        }
+      }
+    },
+    "quality": {
+      "numeric_score": 0.772,
+      "letter_grade": "B",
+      "label": "needs_review",
+      "dimensions": [
+        {
+          "name": "mapping_confidence",
+          "score": 0.86,
+          "weight": 0.3,
+          "details": null
+        },
+        {
+          "name": "validation_success",
+          "score": 0.857,
+          "weight": 0.25,
+          "details": null
+        },
+        {
+          "name": "completeness",
+          "score": 0.402,
+          "weight": 0.25,
+          "details": null
+        },
+        {
+          "name": "time_series_consistency",
+          "score": 0.996,
+          "weight": 0.2,
+          "details": null
+        }
+      ],
+      "model_type": "corporate"
+    },
+    "lifecycle": {
+      "is_project_finance": false,
+      "confidence": 0.0,
+      "signals_used": [],
+      "phases": {}
+    },
+    "unit_normalization": {
+      "Monthly P&L": "1000.0"
+    }
+  },
+  "lineage_summary": {
+    "total_events": 5,
+    "stages": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "event_types": [
+      "enhanced_mapping",
+      "mapping",
+      "triage",
+      "validation",
+      "parsing"
+    ]
+  },
+  "triage_accuracy": {
+    "correct": 3,
+    "total": 3,
+    "accuracy": 1.0,
+    "details": [
+      {
+        "sheet_name": "Monthly P&L",
+        "expected_tier": 1,
+        "actual_tier": 1,
+        "correct": true
+      },
+      {
+        "sheet_name": "Cash",
+        "expected_tier": 1,
+        "actual_tier": 1,
+        "correct": true
+      },
+      {
+        "sheet_name": "Notes",
+        "expected_tier": 4,
+        "actual_tier": 4,
+        "correct": true
+      }
+    ]
+  },
+  "mapping_accuracy": {
+    "correct": 11,
+    "total": 12,
+    "accuracy": 0.9167,
+    "unmapped_count": 0,
+    "unmapped_labels": [],
+    "mismatches": [
+      {
+        "label": "Revenue",
+        "expected": "revenue",
+        "actual": "cash_from_operations",
+        "acceptable": [
+          "revenue"
+        ]
+      }
+    ],
+    "per_statement": {
+      "Monthly P&L": {
+        "correct": 7,
+        "total": 8,
+        "mismatches": [
+          {
+            "label": "Revenue",
+            "expected": "revenue",
+            "actual": "cash_from_operations"
+          }
+        ],
+        "accuracy": 0.875
+      },
+      "Cash": {
+        "correct": 4,
+        "total": 4,
+        "mismatches": [],
+        "accuracy": 1.0
+      }
+    }
+  },
+  "completeness": {
+    "model_type": "corporate",
+    "overall_score": 0.402,
+    "detected_statements": [
+      "income_statement"
+    ],
+    "total_expected": 11,
+    "total_found": 4,
+    "total_missing": 7,
+    "missing_items": [
+      {
+        "canonical_name": "revenue",
+        "category": "income_statement",
+        "weight": 1.0,
+        "is_core": true
+      },
+      {
+        "canonical_name": "ebitda",
+        "category": "income_statement",
+        "weight": 0.85,
+        "is_core": true
+      },
+      {
+        "canonical_name": "ebit",
+        "category": "income_statement",
+        "weight": 0.8,
+        "is_core": true
+      },
+      {
+        "canonical_name": "depreciation",
+        "category": "income_statement",
+        "weight": 0.6,
+        "is_core": false
+      },
+      {
+        "canonical_name": "interest_expense",
+        "category": "income_statement",
+        "weight": 0.7,
+        "is_core": false
+      },
+      {
+        "canonical_name": "tax_expense",
+        "category": "income_statement",
+        "weight": 0.65,
+        "is_core": false
+      },
+      {
+        "canonical_name": "ebt",
+        "category": "income_statement",
+        "weight": 0.6,
+        "is_core": false
+      }
+    ],
+    "per_statement": {
+      "income_statement": {
+        "raw_score": 0.364,
+        "weighted_score": 0.402,
+        "core_score": 0.514,
+        "found": [
+          "cogs",
+          "gross_profit",
+          "net_income",
+          "opex"
+        ],
+        "missing": [
+          "revenue",
+          "ebitda",
+          "ebit",
+          "depreciation",
+          "interest_expense",
+          "tax_expense",
+          "ebt"
+        ]
+      }
+    }
+  },
+  "quality": {
+    "numeric_score": 0.772,
+    "letter_grade": "B",
+    "label": "needs_review",
+    "dimensions": [
+      {
+        "name": "mapping_confidence",
+        "score": 0.86,
+        "weight": 0.3,
+        "details": null
+      },
+      {
+        "name": "validation_success",
+        "score": 0.857,
+        "weight": 0.25,
+        "details": null
+      },
+      {
+        "name": "completeness",
+        "score": 0.402,
+        "weight": 0.25,
+        "details": null
+      },
+      {
+        "name": "time_series_consistency",
+        "score": 0.996,
+        "weight": 0.2,
+        "details": null
+      }
+    ],
+    "model_type": "corporate"
+  },
+  "sample_line_items": [
+    {
+      "sheet": "Monthly P&L",
+      "row": 4,
+      "original_label": "Revenue",
+      "canonical_name": "cash_from_operations",
+      "values": {
+        "Jan-25": 0,
+        "Feb-25": 0,
+        "Mar-25": 0,
+        "Apr-25": 0,
+        "May-25": 2,
+        "Jun-25": 5,
+        "Jul-25": 8,
+        "Aug-25": 12,
+        "Sep-25": 18,
+        "Oct-25": 25,
+        "Nov-25": 35,
+        "Dec-25": 48
+      },
+      "confidence": 0.7,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "A4",
+            "raw_value": "Revenue"
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "B4",
+            "raw_value": 0
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "C4",
+            "raw_value": 0
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "D4",
+            "raw_value": 0
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "E4",
+            "raw_value": 0
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "F4",
+            "raw_value": 2
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "G4",
+            "raw_value": 5
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "H4",
+            "raw_value": 8
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "I4",
+            "raw_value": 12
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "J4",
+            "raw_value": 18
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "K4",
+            "raw_value": 25
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "L4",
+            "raw_value": 35
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "M4",
+            "raw_value": 48
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "cash_flow",
+          "reasoning": "Revenue on Cash sheet likely represents cash inflow from operations, though context suggests this might be operating cash flow component"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Monthly P&L",
+      "row": 5,
+      "original_label": "Cost of Revenue",
+      "canonical_name": "cogs",
+      "values": {
+        "Jan-25": 0,
+        "Feb-25": 0,
+        "Mar-25": 0,
+        "Apr-25": 0,
+        "May-25": -1,
+        "Jun-25": -2,
+        "Jul-25": -3,
+        "Aug-25": -4,
+        "Sep-25": -6,
+        "Oct-25": -8,
+        "Nov-25": -11,
+        "Dec-25": -14
+      },
+      "confidence": 0.9,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "A5",
+            "raw_value": "Cost of Revenue"
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "B5",
+            "raw_value": 0
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "C5",
+            "raw_value": 0
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "D5",
+            "raw_value": 0
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "E5",
+            "raw_value": 0
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "F5",
+            "raw_value": -1
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "G5",
+            "raw_value": -2
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "H5",
+            "raw_value": -3
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "I5",
+            "raw_value": -4
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "J5",
+            "raw_value": -6
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "K5",
+            "raw_value": -8
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "L5",
+            "raw_value": -11
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "M5",
+            "raw_value": -14
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Cost of Revenue is equivalent to Cost of Goods Sold (COGS) on income statement"
+        },
+        "validation": {
+          "rules_applied": [
+            "must_be_positive"
+          ],
+          "all_passed": false,
+          "flags": [
+            {
+              "period": "Jan-25",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "must_be_positive",
+              "message": "cogs must be positive, got 0.0",
+              "actual": null,
+              "expected": "positive"
+            },
+            {
+              "period": "Feb-25",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "must_be_positive",
+              "message": "cogs must be positive, got 0.0",
+              "actual": null,
+              "expected": "positive"
+            },
+            {
+              "period": "Mar-25",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "must_be_positive",
+              "message": "cogs must be positive, got 0.0",
+              "actual": null,
+              "expected": "positive"
+            },
+            {
+              "period": "Apr-25",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "must_be_positive",
+              "message": "cogs must be positive, got 0.0",
+              "actual": null,
+              "expected": "positive"
+            },
+            {
+              "period": "May-25",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "must_be_positive",
+              "message": "cogs must be positive, got -1000.0",
+              "actual": "-1000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "Jun-25",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "must_be_positive",
+              "message": "cogs must be positive, got -2000.0",
+              "actual": "-2000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "Jul-25",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "must_be_positive",
+              "message": "cogs must be positive, got -3000.0",
+              "actual": "-3000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "Aug-25",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "must_be_positive",
+              "message": "cogs must be positive, got -4000.0",
+              "actual": "-4000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "Sep-25",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "must_be_positive",
+              "message": "cogs must be positive, got -6000.0",
+              "actual": "-6000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "Oct-25",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "must_be_positive",
+              "message": "cogs must be positive, got -8000.0",
+              "actual": "-8000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "Nov-25",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "must_be_positive",
+              "message": "cogs must be positive, got -11000.0",
+              "actual": "-11000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "Dec-25",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "must_be_positive",
+              "message": "cogs must be positive, got -14000.0",
+              "actual": "-14000.0",
+              "expected": "positive"
+            }
+          ]
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Monthly P&L",
+      "row": 6,
+      "original_label": "Gross Profit",
+      "canonical_name": "gross_profit",
+      "values": {
+        "Jan-25": 0,
+        "Feb-25": 0,
+        "Mar-25": 0,
+        "Apr-25": 0,
+        "May-25": 1,
+        "Jun-25": 3,
+        "Jul-25": 5,
+        "Aug-25": 8,
+        "Sep-25": 12,
+        "Oct-25": 17,
+        "Nov-25": 24,
+        "Dec-25": 34
+      },
+      "confidence": 0.95,
+      "hierarchy_level": 0,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "A6",
+            "raw_value": "Gross Profit"
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "B6",
+            "raw_value": 0
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "C6",
+            "raw_value": 0
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "D6",
+            "raw_value": 0
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "E6",
+            "raw_value": 0
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "F6",
+            "raw_value": 1
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "G6",
+            "raw_value": 3
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "H6",
+            "raw_value": 5
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "I6",
+            "raw_value": 8
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "J6",
+            "raw_value": 12
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "K6",
+            "raw_value": 17
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "L6",
+            "raw_value": 24
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "M6",
+            "raw_value": 34
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 0,
+          "is_bold": true,
+          "is_formula": false,
+          "is_subtotal": true
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Gross Profit is a standard income statement line item, maps directly to gross_profit canonical"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Monthly P&L",
+      "row": 8,
+      "original_label": "Payroll",
+      "canonical_name": "labor_costs",
+      "values": {
+        "Jan-25": -85,
+        "Feb-25": -85,
+        "Mar-25": -95,
+        "Apr-25": -95,
+        "May-25": -95,
+        "Jun-25": -100,
+        "Jul-25": -100,
+        "Aug-25": -100,
+        "Sep-25": -110,
+        "Oct-25": -110,
+        "Nov-25": -110,
+        "Dec-25": -120
+      },
+      "confidence": 0.85,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "A8",
+            "raw_value": "Payroll"
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "B8",
+            "raw_value": -85
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "C8",
+            "raw_value": -85
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "D8",
+            "raw_value": -95
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "E8",
+            "raw_value": -95
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "F8",
+            "raw_value": -95
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "G8",
+            "raw_value": -100
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "H8",
+            "raw_value": -100
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "I8",
+            "raw_value": -100
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "J8",
+            "raw_value": -110
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "K8",
+            "raw_value": -110
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "L8",
+            "raw_value": -110
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "M8",
+            "raw_value": -120
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Payroll represents employee compensation costs, maps to labor_costs canonical name"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Monthly P&L",
+      "row": 9,
+      "original_label": "Rent",
+      "canonical_name": "opex",
+      "values": {
+        "Jan-25": -8,
+        "Feb-25": -8,
+        "Mar-25": -8,
+        "Apr-25": -8,
+        "May-25": -8,
+        "Jun-25": -8,
+        "Jul-25": -8,
+        "Aug-25": -8,
+        "Sep-25": -8,
+        "Oct-25": -8,
+        "Nov-25": -8,
+        "Dec-25": -8
+      },
+      "confidence": 0.75,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "A9",
+            "raw_value": "Rent"
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "B9",
+            "raw_value": -8
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "C9",
+            "raw_value": -8
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "D9",
+            "raw_value": -8
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "E9",
+            "raw_value": -8
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "F9",
+            "raw_value": -8
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "G9",
+            "raw_value": -8
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "H9",
+            "raw_value": -8
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "I9",
+            "raw_value": -8
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "J9",
+            "raw_value": -8
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "K9",
+            "raw_value": -8
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "L9",
+            "raw_value": -8
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "M9",
+            "raw_value": -8
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Rent is an operating expense component, maps to general operating expenses (opex)"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Monthly P&L",
+      "row": 10,
+      "original_label": "Software",
+      "canonical_name": "opex",
+      "values": {
+        "Jan-25": -5,
+        "Feb-25": -5,
+        "Mar-25": -5,
+        "Apr-25": -5,
+        "May-25": -5,
+        "Jun-25": -6,
+        "Jul-25": -6,
+        "Aug-25": -6,
+        "Sep-25": -6,
+        "Oct-25": -6,
+        "Nov-25": -7,
+        "Dec-25": -7
+      },
+      "confidence": 0.75,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "A10",
+            "raw_value": "Software"
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "B10",
+            "raw_value": -5
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "C10",
+            "raw_value": -5
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "D10",
+            "raw_value": -5
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "E10",
+            "raw_value": -5
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "F10",
+            "raw_value": -5
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "G10",
+            "raw_value": -6
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "H10",
+            "raw_value": -6
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "I10",
+            "raw_value": -6
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "J10",
+            "raw_value": -6
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "K10",
+            "raw_value": -6
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "L10",
+            "raw_value": -7
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "M10",
+            "raw_value": -7
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Software expenses are operating expenses, maps to general operating expenses (opex)"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Monthly P&L",
+      "row": 11,
+      "original_label": "Legal & Professional",
+      "canonical_name": "general_admin",
+      "values": {
+        "Jan-25": -12,
+        "Feb-25": -3,
+        "Mar-25": -3,
+        "Apr-25": -15,
+        "May-25": -3,
+        "Jun-25": -3,
+        "Jul-25": -3,
+        "Aug-25": -3,
+        "Sep-25": -3,
+        "Oct-25": -3,
+        "Nov-25": -3,
+        "Dec-25": -3
+      },
+      "confidence": 0.8,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "A11",
+            "raw_value": "Legal & Professional"
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "B11",
+            "raw_value": -12
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "C11",
+            "raw_value": -3
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "D11",
+            "raw_value": -3
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "E11",
+            "raw_value": -15
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "F11",
+            "raw_value": -3
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "G11",
+            "raw_value": -3
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "H11",
+            "raw_value": -3
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "I11",
+            "raw_value": -3
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "J11",
+            "raw_value": -3
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "K11",
+            "raw_value": -3
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "L11",
+            "raw_value": -3
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "M11",
+            "raw_value": -3
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Legal & Professional services are typically classified as General & Administrative expenses"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Monthly P&L",
+      "row": 12,
+      "original_label": "Total Expenses",
+      "canonical_name": "operating_expenses",
+      "values": {
+        "Jan-25": -110,
+        "Feb-25": -101,
+        "Mar-25": -111,
+        "Apr-25": -123,
+        "May-25": -111,
+        "Jun-25": -117,
+        "Jul-25": -117,
+        "Aug-25": -117,
+        "Sep-25": -127,
+        "Oct-25": -127,
+        "Nov-25": -128,
+        "Dec-25": -138
+      },
+      "confidence": 0.85,
+      "hierarchy_level": 0,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "A12",
+            "raw_value": "Total Expenses"
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "B12",
+            "raw_value": -110
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "C12",
+            "raw_value": -101
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "D12",
+            "raw_value": -111
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "E12",
+            "raw_value": -123
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "F12",
+            "raw_value": -111
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "G12",
+            "raw_value": -117
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "H12",
+            "raw_value": -117
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "I12",
+            "raw_value": -117
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "J12",
+            "raw_value": -127
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "K12",
+            "raw_value": -127
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "L12",
+            "raw_value": -128
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "M12",
+            "raw_value": -138
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 0,
+          "is_bold": true,
+          "is_formula": false,
+          "is_subtotal": true
+        },
+        "mapping": {
+          "method": "hierarchical",
+          "stage": 3,
+          "taxonomy_category": "unknown",
+          "reasoning": "Given the hierarchy context showing this appears on both P&L and Cash sheets, and nearby labels include 'Rent', 'Software', 'Legal & Professional', this represents total operating expenses. The entity pattern shows 'Total Expenses' -> operating_expenses (90%). While it appears on cash sheet, it's still fundamentally an expense total, not a cash flow line item."
+        },
+        "validation": null,
+        "enhanced_mapping": {
+          "was_remapped": true,
+          "old_canonical": "operating_cash_flow",
+          "old_confidence": 0.6,
+          "new_canonical": "operating_expenses",
+          "new_confidence": 0.85,
+          "stage": 5
+        }
+      }
+    },
+    {
+      "sheet": "Monthly P&L",
+      "row": 14,
+      "original_label": "Net Income",
+      "canonical_name": "net_income",
+      "values": {
+        "Jan-25": -110,
+        "Feb-25": -101,
+        "Mar-25": -111,
+        "Apr-25": -123,
+        "May-25": -110,
+        "Jun-25": -114,
+        "Jul-25": -112,
+        "Aug-25": -109,
+        "Sep-25": -115,
+        "Oct-25": -110,
+        "Nov-25": -104,
+        "Dec-25": -104
+      },
+      "confidence": 0.95,
+      "hierarchy_level": 0,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "A14",
+            "raw_value": "Net Income"
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "B14",
+            "raw_value": -110
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "C14",
+            "raw_value": -101
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "D14",
+            "raw_value": -111
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "E14",
+            "raw_value": -123
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "F14",
+            "raw_value": -110
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "G14",
+            "raw_value": -114
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "H14",
+            "raw_value": -112
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "I14",
+            "raw_value": -109
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "J14",
+            "raw_value": -115
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "K14",
+            "raw_value": -110
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "L14",
+            "raw_value": -104
+          },
+          {
+            "sheet": "Monthly P&L",
+            "cell_ref": "M14",
+            "raw_value": -104
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 0,
+          "is_bold": true,
+          "is_formula": false,
+          "is_subtotal": true
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Net Income on P&L sheet maps to income statement net_income canonical (not cash flow net_income_cf)"
+        },
+        "validation": {
+          "rules_applied": [
+            "sign_convention"
+          ],
+          "all_passed": true,
+          "flags": [
+            {
+              "period": "Jan-25",
+              "severity": "warning",
+              "item": "net_income",
+              "rule": "sign_convention",
+              "message": "net_income is negative (-110000.0) but typically positive",
+              "actual": "-110000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "Feb-25",
+              "severity": "warning",
+              "item": "net_income",
+              "rule": "sign_convention",
+              "message": "net_income is negative (-101000.0) but typically positive",
+              "actual": "-101000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "Mar-25",
+              "severity": "warning",
+              "item": "net_income",
+              "rule": "sign_convention",
+              "message": "net_income is negative (-111000.0) but typically positive",
+              "actual": "-111000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "Apr-25",
+              "severity": "warning",
+              "item": "net_income",
+              "rule": "sign_convention",
+              "message": "net_income is negative (-123000.0) but typically positive",
+              "actual": "-123000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "May-25",
+              "severity": "warning",
+              "item": "net_income",
+              "rule": "sign_convention",
+              "message": "net_income is negative (-110000.0) but typically positive",
+              "actual": "-110000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "Jun-25",
+              "severity": "warning",
+              "item": "net_income",
+              "rule": "sign_convention",
+              "message": "net_income is negative (-114000.0) but typically positive",
+              "actual": "-114000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "Jul-25",
+              "severity": "warning",
+              "item": "net_income",
+              "rule": "sign_convention",
+              "message": "net_income is negative (-112000.0) but typically positive",
+              "actual": "-112000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "Aug-25",
+              "severity": "warning",
+              "item": "net_income",
+              "rule": "sign_convention",
+              "message": "net_income is negative (-109000.0) but typically positive",
+              "actual": "-109000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "Sep-25",
+              "severity": "warning",
+              "item": "net_income",
+              "rule": "sign_convention",
+              "message": "net_income is negative (-115000.0) but typically positive",
+              "actual": "-115000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "Oct-25",
+              "severity": "warning",
+              "item": "net_income",
+              "rule": "sign_convention",
+              "message": "net_income is negative (-110000.0) but typically positive",
+              "actual": "-110000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "Nov-25",
+              "severity": "warning",
+              "item": "net_income",
+              "rule": "sign_convention",
+              "message": "net_income is negative (-104000.0) but typically positive",
+              "actual": "-104000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "Dec-25",
+              "severity": "warning",
+              "item": "net_income",
+              "rule": "sign_convention",
+              "message": "net_income is negative (-104000.0) but typically positive",
+              "actual": "-104000.0",
+              "expected": "positive"
+            }
+          ]
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Cash",
+      "row": 3,
+      "original_label": "Beginning Cash",
+      "canonical_name": "beginning_cash",
+      "values": {
+        "Jan-25": 2000,
+        "Feb-25": 1890,
+        "Mar-25": 1789,
+        "Apr-25": 1678,
+        "May-25": 1555,
+        "Jun-25": 1445,
+        "Jul-25": 1331,
+        "Aug-25": 1219,
+        "Sep-25": 1110,
+        "Oct-25": 995,
+        "Nov-25": 885,
+        "Dec-25": 781
+      },
+      "confidence": 0.95,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Cash",
+            "cell_ref": "A3",
+            "raw_value": "Beginning Cash"
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "B3",
+            "raw_value": 2000
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "C3",
+            "raw_value": 1890
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "D3",
+            "raw_value": 1789
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "E3",
+            "raw_value": 1678
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "F3",
+            "raw_value": 1555
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "G3",
+            "raw_value": 1445
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "H3",
+            "raw_value": 1331
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "I3",
+            "raw_value": 1219
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "J3",
+            "raw_value": 1110
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "K3",
+            "raw_value": 995
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "L3",
+            "raw_value": 885
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "M3",
+            "raw_value": 781
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "cash_flow",
+          "reasoning": "Beginning Cash on cash flow analysis maps directly to beginning_cash canonical"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Cash",
+      "row": 4,
+      "original_label": "Revenue",
+      "canonical_name": "cash_from_operations",
+      "values": {
+        "Jan-25": 0,
+        "Feb-25": 0,
+        "Mar-25": 0,
+        "Apr-25": 0,
+        "May-25": 2,
+        "Jun-25": 5,
+        "Jul-25": 8,
+        "Aug-25": 12,
+        "Sep-25": 18,
+        "Oct-25": 25,
+        "Nov-25": 35,
+        "Dec-25": 48
+      },
+      "confidence": 0.7,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Cash",
+            "cell_ref": "A4",
+            "raw_value": "Revenue"
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "B4",
+            "raw_value": 0
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "C4",
+            "raw_value": 0
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "D4",
+            "raw_value": 0
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "E4",
+            "raw_value": 0
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "F4",
+            "raw_value": 2
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "G4",
+            "raw_value": 5
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "H4",
+            "raw_value": 8
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "I4",
+            "raw_value": 12
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "J4",
+            "raw_value": 18
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "K4",
+            "raw_value": 25
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "L4",
+            "raw_value": 35
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "M4",
+            "raw_value": 48
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "cash_flow",
+          "reasoning": "Revenue on Cash sheet likely represents cash inflow from operations, though context suggests this might be operating cash flow component"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Cash",
+      "row": 5,
+      "original_label": "Total Expenses",
+      "canonical_name": "operating_expenses",
+      "values": {
+        "Jan-25": -110,
+        "Feb-25": -101,
+        "Mar-25": -111,
+        "Apr-25": -123,
+        "May-25": -111,
+        "Jun-25": -117,
+        "Jul-25": -117,
+        "Aug-25": -117,
+        "Sep-25": -127,
+        "Oct-25": -127,
+        "Nov-25": -128,
+        "Dec-25": -138
+      },
+      "confidence": 0.85,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Cash",
+            "cell_ref": "A5",
+            "raw_value": "Total Expenses"
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "B5",
+            "raw_value": -110
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "C5",
+            "raw_value": -101
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "D5",
+            "raw_value": -111
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "E5",
+            "raw_value": -123
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "F5",
+            "raw_value": -111
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "G5",
+            "raw_value": -117
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "H5",
+            "raw_value": -117
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "I5",
+            "raw_value": -117
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "J5",
+            "raw_value": -127
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "K5",
+            "raw_value": -127
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "L5",
+            "raw_value": -128
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "M5",
+            "raw_value": -138
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": true
+        },
+        "mapping": {
+          "method": "hierarchical",
+          "stage": 3,
+          "taxonomy_category": "unknown",
+          "reasoning": "Given the hierarchy context showing this appears on both P&L and Cash sheets, and nearby labels include 'Rent', 'Software', 'Legal & Professional', this represents total operating expenses. The entity pattern shows 'Total Expenses' -> operating_expenses (90%). While it appears on cash sheet, it's still fundamentally an expense total, not a cash flow line item."
+        },
+        "validation": null,
+        "enhanced_mapping": {
+          "was_remapped": true,
+          "old_canonical": "operating_cash_flow",
+          "old_confidence": 0.6,
+          "new_canonical": "operating_expenses",
+          "new_confidence": 0.85,
+          "stage": 5
+        }
+      }
+    },
+    {
+      "sheet": "Cash",
+      "row": 6,
+      "original_label": "Net Burn",
+      "canonical_name": "burn_rate",
+      "values": {
+        "Jan-25": -110,
+        "Feb-25": -101,
+        "Mar-25": -111,
+        "Apr-25": -123,
+        "May-25": -110,
+        "Jun-25": -114,
+        "Jul-25": -112,
+        "Aug-25": -109,
+        "Sep-25": -115,
+        "Oct-25": -110,
+        "Nov-25": -104,
+        "Dec-25": -104
+      },
+      "confidence": 0.95,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Cash",
+            "cell_ref": "A6",
+            "raw_value": "Net Burn"
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "B6",
+            "raw_value": -110
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "C6",
+            "raw_value": -101
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "D6",
+            "raw_value": -111
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "E6",
+            "raw_value": -123
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "F6",
+            "raw_value": -110
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "G6",
+            "raw_value": -114
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "H6",
+            "raw_value": -112
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "I6",
+            "raw_value": -109
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "J6",
+            "raw_value": -115
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "K6",
+            "raw_value": -110
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "L6",
+            "raw_value": -104
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "M6",
+            "raw_value": -104
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": true
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "metrics",
+          "reasoning": "Net Burn is a startup/growth company metric that maps directly to burn_rate canonical"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Cash",
+      "row": 7,
+      "original_label": "Ending Cash",
+      "canonical_name": "ending_cash",
+      "values": {
+        "Jan-25": 1890,
+        "Feb-25": 1789,
+        "Mar-25": 1678,
+        "Apr-25": 1555,
+        "May-25": 1445,
+        "Jun-25": 1331,
+        "Jul-25": 1219,
+        "Aug-25": 1110,
+        "Sep-25": 995,
+        "Oct-25": 885,
+        "Nov-25": 781,
+        "Dec-25": 677
+      },
+      "confidence": 0.95,
+      "hierarchy_level": 0,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Cash",
+            "cell_ref": "A7",
+            "raw_value": "Ending Cash"
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "B7",
+            "raw_value": 1890
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "C7",
+            "raw_value": 1789
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "D7",
+            "raw_value": 1678
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "E7",
+            "raw_value": 1555
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "F7",
+            "raw_value": 1445
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "G7",
+            "raw_value": 1331
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "H7",
+            "raw_value": 1219
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "I7",
+            "raw_value": 1110
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "J7",
+            "raw_value": 995
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "K7",
+            "raw_value": 885
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "L7",
+            "raw_value": 781
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "M7",
+            "raw_value": 677
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 0,
+          "is_bold": true,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "cash_flow",
+          "reasoning": "Ending Cash maps directly to ending_cash canonical name"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Cash",
+      "row": 8,
+      "original_label": "Runway (months)",
+      "canonical_name": "cash_runway_months",
+      "values": {
+        "Jan-25": 17.2,
+        "Feb-25": 17.7,
+        "Mar-25": 15.1,
+        "Apr-25": 12.6,
+        "May-25": 13.1,
+        "Jun-25": 11.7,
+        "Jul-25": 10.9,
+        "Aug-25": 10.2,
+        "Sep-25": 8.7,
+        "Oct-25": 8,
+        "Nov-25": 7.5,
+        "Dec-25": 6.5
+      },
+      "confidence": 0.95,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Cash",
+            "cell_ref": "A8",
+            "raw_value": "Runway (months)"
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "B8",
+            "raw_value": 17.2
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "C8",
+            "raw_value": 17.7
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "D8",
+            "raw_value": 15.1
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "E8",
+            "raw_value": 12.6
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "F8",
+            "raw_value": 13.1
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "G8",
+            "raw_value": 11.7
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "H8",
+            "raw_value": 10.9
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "I8",
+            "raw_value": 10.2
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "J8",
+            "raw_value": 8.7
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "K8",
+            "raw_value": 8
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "L8",
+            "raw_value": 7.5
+          },
+          {
+            "sheet": "Cash",
+            "cell_ref": "M8",
+            "raw_value": 6.5
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "metrics",
+          "reasoning": "Runway (months) is a standard startup metric that maps directly to cash_runway_months"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    }
+  ]
+}

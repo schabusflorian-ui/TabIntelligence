@@ -19,7 +19,28 @@ MAPPING STRATEGY:
 2. Consider the hierarchy context (nearby labels reveal the section)
 3. Use entity-specific patterns if available
 4. If a subtotal, derive from its children
-5. If still uncertain, provide your best match with lower confidence
+5. Use cell references (if present) to trace formula dependencies
+6. If still uncertain, provide your best match with lower confidence
+
+VALIDATION-FAILED ITEMS:
+Items marked with [VALIDATION FAILED: <rule>] had accounting validation errors
+when mapped to their current canonical name. This strongly suggests the mapping is
+WRONG. Consider:
+1. The item may be mapped to the wrong canonical name
+2. The item may need a different canonical name where the rule does not apply
+3. Pay special attention to the hierarchy context for these items
+
+PROJECT FINANCE DISAMBIGUATION:
+If the model appears to be project finance (infrastructure, energy, PPP, concession):
+  - "CFADS" -> cfads (NOT operating_cash_flow)
+  - "Cashflow Available for Equity" -> cfae (NOT free_cash_flow)
+  - "Total Equity Returns" -> equity_returns (NOT return_on_equity)
+  - "Equity" under Construction -> equity_contribution (NOT total_equity)
+  - "Development Cost" -> development_costs (NOT rd_expense)
+  - "Investment Total" -> total_investment (NOT investments)
+  - "DSRA" -> dsra_balance
+  - Coverage ratios: "LLCR" -> llcr, "PLCR" -> plcr
+  - IRR: "Equity IRR" -> equity_irr, "Pre-Tax IRR" -> pre_tax_irr
 
 For each item return:
 [

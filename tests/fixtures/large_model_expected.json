@@ -1,0 +1,378 @@
+{
+  "description": "Ground truth for large_model.xlsx accuracy measurement",
+  "model_info": {
+    "file": "large_model.xlsx",
+    "sheets": 12,
+    "company_type": "Large corporate model (~$500M revenue)",
+    "periods": ["FY2022A", "FY2023A", "FY2024E", "FY2025E", "FY2026E"],
+    "notes": "12 sheets, ~200 items, revenue/opex build tabs, returns analysis"
+  },
+  "expected_triage": [
+    {
+      "sheet_name": "Income Statement",
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "rationale": "Core income statement with detailed revenue and expense breakdown"
+    },
+    {
+      "sheet_name": "Balance Sheet",
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "rationale": "Core balance sheet with detailed asset/liability/equity"
+    },
+    {
+      "sheet_name": "Cash Flow Statement",
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "rationale": "Core cash flow — operating, investing, financing"
+    },
+    {
+      "sheet_name": "Debt Schedule",
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "rationale": "Detailed debt tranches with interest rates"
+    },
+    {
+      "sheet_name": "Revenue Build",
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "rationale": "Revenue disaggregation by product and geography"
+    },
+    {
+      "sheet_name": "OpEx Build",
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "rationale": "Operating expense detail by department"
+    },
+    {
+      "sheet_name": "Working Capital",
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "rationale": "Working capital metrics and drivers"
+    },
+    {
+      "sheet_name": "D&A Schedule",
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "rationale": "Depreciation and amortization detail"
+    },
+    {
+      "sheet_name": "Tax Schedule",
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "rationale": "Tax provision detail — current and deferred"
+    },
+    {
+      "sheet_name": "Assumptions",
+      "tier": 3,
+      "decision": "PROCESS_LOW",
+      "rationale": "Input assumptions — rates and percentages"
+    },
+    {
+      "sheet_name": "Returns Analysis",
+      "tier": 3,
+      "decision": "PROCESS_LOW",
+      "rationale": "Investment return metrics — IRR, MOIC"
+    },
+    {
+      "sheet_name": "Cover Page",
+      "tier": 4,
+      "decision": "SKIP",
+      "rationale": "Title page with disclaimers, no financial data"
+    }
+  ],
+  "expected_mappings": [
+    {
+      "original_label": "Net Revenue",
+      "canonical_name": "revenue",
+      "sheet": "Income Statement"
+    },
+    {
+      "original_label": "Product A",
+      "canonical_name": "product_revenue",
+      "sheet": "Income Statement",
+      "notes": "Product line — may map to 'revenue' or 'other_revenue'"
+    },
+    {
+      "original_label": "Licensing Revenue",
+      "canonical_name": "other_revenue",
+      "sheet": "Income Statement",
+      "notes": "May also map to 'revenue' or 'usage_based_revenue'"
+    },
+    {
+      "original_label": "Cost of Goods Sold",
+      "canonical_name": "cogs",
+      "sheet": "Income Statement",
+      "notes": "May also map to 'cost_of_sales'"
+    },
+    {
+      "original_label": "Gross Profit",
+      "canonical_name": "gross_profit",
+      "sheet": "Income Statement"
+    },
+    {
+      "original_label": "Sales & Marketing",
+      "canonical_name": "sales_marketing",
+      "sheet": "Income Statement"
+    },
+    {
+      "original_label": "Research & Development",
+      "canonical_name": "rd_expense",
+      "sheet": "Income Statement"
+    },
+    {
+      "original_label": "General & Administrative",
+      "canonical_name": "general_admin",
+      "sheet": "Income Statement",
+      "notes": "May also map to 'sga'"
+    },
+    {
+      "original_label": "Depreciation",
+      "canonical_name": "depreciation",
+      "sheet": "Income Statement"
+    },
+    {
+      "original_label": "Amortization",
+      "canonical_name": "amortization",
+      "sheet": "Income Statement"
+    },
+    {
+      "original_label": "Total Operating Expenses",
+      "canonical_name": "operating_expenses",
+      "sheet": "Income Statement",
+      "notes": "May also map to 'opex'"
+    },
+    {
+      "original_label": "Operating Income",
+      "canonical_name": "operating_income",
+      "sheet": "Income Statement",
+      "notes": "May also map to 'ebit'"
+    },
+    {
+      "original_label": "Interest Expense",
+      "canonical_name": "interest_expense",
+      "sheet": "Income Statement"
+    },
+    {
+      "original_label": "Other Income",
+      "canonical_name": "other_income",
+      "sheet": "Income Statement"
+    },
+    {
+      "original_label": "Income Before Tax",
+      "canonical_name": "earnings_before_tax",
+      "sheet": "Income Statement",
+      "notes": "May also map to 'ebt'"
+    },
+    {
+      "original_label": "Income Tax Expense",
+      "canonical_name": "income_tax",
+      "sheet": "Income Statement",
+      "notes": "May also map to 'tax_expense'"
+    },
+    {
+      "original_label": "Net Income",
+      "canonical_name": "net_income",
+      "sheet": "Income Statement"
+    },
+    {
+      "original_label": "Cash & Equivalents",
+      "canonical_name": "cash_and_equivalents",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Accounts Receivable",
+      "canonical_name": "accounts_receivable",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Inventory",
+      "canonical_name": "inventory",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Total Current Assets",
+      "canonical_name": "total_current_assets",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Net PP&E",
+      "canonical_name": "net_ppe",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Goodwill",
+      "canonical_name": "goodwill",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Total Assets",
+      "canonical_name": "total_assets",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Accounts Payable",
+      "canonical_name": "accounts_payable",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Deferred Revenue",
+      "canonical_name": "deferred_revenue",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Total Current Liabilities",
+      "canonical_name": "total_current_liabilities",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Long-Term Debt",
+      "canonical_name": "long_term_debt",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Total Liabilities",
+      "canonical_name": "total_liabilities",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Retained Earnings",
+      "canonical_name": "retained_earnings",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Total Equity",
+      "canonical_name": "total_equity",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Total Liabilities & Equity",
+      "canonical_name": "total_liabilities_and_equity",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Operating Cash Flow",
+      "canonical_name": "operating_cash_flow",
+      "sheet": "Cash Flow Statement",
+      "notes": "May also map to 'cfo'"
+    },
+    {
+      "original_label": "Capital Expenditures",
+      "canonical_name": "capex",
+      "sheet": "Cash Flow Statement"
+    },
+    {
+      "original_label": "Free Cash Flow",
+      "canonical_name": "free_cash_flow",
+      "sheet": "Cash Flow Statement",
+      "notes": "May also map to 'fcf'"
+    },
+    {
+      "original_label": "Net Change in Cash",
+      "canonical_name": "net_change_cash",
+      "sheet": "Cash Flow Statement"
+    },
+    {
+      "original_label": "Ending Cash",
+      "canonical_name": "ending_cash",
+      "sheet": "Cash Flow Statement"
+    },
+    {
+      "original_label": "Total Debt",
+      "canonical_name": "total_debt",
+      "sheet": "Debt Schedule"
+    },
+    {
+      "original_label": "Total Interest Expense",
+      "canonical_name": "interest_expense_debt",
+      "sheet": "Debt Schedule",
+      "notes": "May also map to 'interest_expense'"
+    },
+    {
+      "original_label": "Days Sales Outstanding",
+      "canonical_name": "days_sales_outstanding",
+      "sheet": "Working Capital"
+    },
+    {
+      "original_label": "Days Inventory Outstanding",
+      "canonical_name": "days_inventory_outstanding",
+      "sheet": "Working Capital"
+    },
+    {
+      "original_label": "Days Payable Outstanding",
+      "canonical_name": "days_payable_outstanding",
+      "sheet": "Working Capital"
+    },
+    {
+      "original_label": "Net Working Capital",
+      "canonical_name": "net_working_capital",
+      "sheet": "Working Capital"
+    },
+    {
+      "original_label": "Total Depreciation",
+      "canonical_name": "depreciation",
+      "sheet": "D&A Schedule"
+    },
+    {
+      "original_label": "Total Amortization",
+      "canonical_name": "amortization",
+      "sheet": "D&A Schedule"
+    },
+    {
+      "original_label": "Total D&A",
+      "canonical_name": "depreciation_and_amortization",
+      "sheet": "D&A Schedule"
+    },
+    {
+      "original_label": "Effective Tax Rate",
+      "canonical_name": "effective_tax_rate",
+      "sheet": "Tax Schedule"
+    },
+    {
+      "original_label": "Total Tax Expense",
+      "canonical_name": "income_tax",
+      "sheet": "Tax Schedule",
+      "notes": "May also map to 'tax_expense'"
+    },
+    {
+      "original_label": "Revenue Growth",
+      "canonical_name": "revenue_growth",
+      "sheet": "Assumptions"
+    },
+    {
+      "original_label": "Gross Margin",
+      "canonical_name": "gross_margin",
+      "sheet": "Assumptions"
+    }
+  ],
+  "acceptable_alternatives": {
+    "revenue": ["revenue"],
+    "product_revenue": ["product_revenue", "revenue", "other_revenue"],
+    "other_revenue": ["other_revenue", "revenue", "usage_based_revenue"],
+    "cogs": ["cogs", "cost_of_sales"],
+    "sales_marketing": ["sales_marketing", "marketing_expense", "sga"],
+    "general_admin": ["general_admin", "sga"],
+    "operating_expenses": ["operating_expenses", "opex"],
+    "operating_income": ["operating_income", "ebit"],
+    "earnings_before_tax": ["earnings_before_tax", "ebt"],
+    "income_tax": ["income_tax", "tax_expense"],
+    "net_income": ["net_income", "net_profit"],
+    "cash_and_equivalents": ["cash_and_equivalents", "cash"],
+    "inventory": ["inventory", "inventories"],
+    "total_current_assets": ["total_current_assets", "current_assets"],
+    "net_ppe": ["net_ppe", "ppe", "property_plant_equipment", "fixed_assets"],
+    "total_current_liabilities": ["total_current_liabilities", "current_liabilities"],
+    "long_term_debt": ["long_term_debt", "total_debt"],
+    "total_equity": ["total_equity", "shareholders_equity", "stockholders_equity"],
+    "total_liabilities_and_equity": ["total_liabilities_and_equity"],
+    "operating_cash_flow": ["operating_cash_flow", "cfo", "cash_from_operations"],
+    "capex": ["capex", "capital_expenditures"],
+    "free_cash_flow": ["free_cash_flow", "fcf"],
+    "net_change_cash": ["net_change_cash", "change_in_cash"],
+    "total_debt": ["total_debt", "gross_debt"],
+    "interest_expense_debt": ["interest_expense_debt", "interest_expense", "interest_payment"],
+    "depreciation_and_amortization": ["depreciation_and_amortization", "depreciation"],
+    "depreciation": ["depreciation", "depreciation_and_amortization"],
+    "amortization": ["amortization", "depreciation_and_amortization"]
+  }
+}

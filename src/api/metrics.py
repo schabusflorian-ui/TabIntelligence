@@ -89,6 +89,24 @@ validation_flags_total = Counter(
     ["severity"],
 )
 
+extraction_stage_timeouts_total = Counter(
+    "debtfund_extraction_stage_timeouts_total",
+    "Total stage timeouts",
+    ["stage"],
+)
+
+extraction_quality_score = Histogram(
+    "debtfund_extraction_quality_score",
+    "Composite extraction quality score (0-1)",
+    buckets=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+)
+
+extraction_quality_by_model_type = Counter(
+    "debtfund_extraction_quality_by_model_type",
+    "Extraction quality grade count by model type",
+    ["model_type", "grade"],
+)
+
 # Deduplication metrics
 duplicate_uploads_total = Counter(
     "debtfund_duplicate_uploads_total",

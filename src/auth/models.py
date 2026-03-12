@@ -78,6 +78,12 @@ class APIKey(Base):
         comment="Last time this key was used successfully",
     )
 
+    expires_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="When this key expires (null = never)",
+    )
+
     # Relationships
     entity = relationship("Entity", back_populates="api_keys")
 

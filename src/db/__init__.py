@@ -5,10 +5,13 @@ from src.db.models import (
     Entity,
     Taxonomy,
     EntityPattern,
+    LearnedAlias,
     File,
     ExtractionJob,
     LineageEvent,
     AuditLog,
+    DLQEntry,
+    ExtractionFact,
     JobStatusEnum,
 )
 from src.db.session import (
@@ -32,10 +35,13 @@ __all__ = [
     "Entity",
     "Taxonomy",
     "EntityPattern",
+    "LearnedAlias",
     "File",
     "ExtractionJob",
     "LineageEvent",
     "AuditLog",
+    "DLQEntry",
+    "ExtractionFact",
     "JobStatusEnum",
     # Session management
     "get_db_async",

@@ -1,5 +1,6 @@
 """Tests for Stage 3 entity pattern hints integration."""
 import pytest
+from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -34,6 +35,8 @@ class TestBuildEntityHints:
         mock_pattern.canonical_name = "revenue"
         mock_pattern.confidence = Decimal("0.9500")
         mock_pattern.occurrence_count = 3
+        mock_pattern.last_seen = datetime.now(timezone.utc)
+        mock_pattern.created_by = "claude"
 
         with patch("src.db.session.get_db_sync") as mock_db, \
              patch("src.db.crud.get_entity_patterns") as mock_get:
@@ -90,6 +93,8 @@ class TestBuildEntityHints:
             p.canonical_name = name
             p.confidence = Decimal(conf)
             p.occurrence_count = 2
+            p.last_seen = datetime.now(timezone.utc)
+            p.created_by = "claude"
             patterns.append(p)
 
         with patch("src.db.session.get_db_sync") as mock_db, \

@@ -190,6 +190,96 @@ tr:hover td { background: #f9fafb; }
 /* Export */
 .export-buttons { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
 
+/* Pending corrections banner */
+#pending-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #92400e;
+}
+#pending-banner .btn { padding: 0.25rem 0.75rem; font-size: 0.78rem; }
+
+/* Editable canonical cell */
+.canonical-cell { cursor: pointer; position: relative; }
+.canonical-cell:hover { background: #eff6ff; }
+.canonical-cell.corrected { background: #ecfdf5; }
+.canonical-cell.corrected code::after { content: " \270E"; font-size: 0.7rem; color: #059669; }
+tr.row-corrected td:first-child { border-left: 3px solid #059669; }
+
+/* Taxonomy autocomplete dropdown */
+.tax-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 100;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  max-height: 240px;
+  overflow-y: auto;
+  width: 300px;
+}
+.tax-dropdown input {
+  width: 100%;
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.8rem;
+  outline: none;
+  box-sizing: border-box;
+}
+.tax-option { padding: 0.4rem 0.75rem; cursor: pointer; font-size: 0.8rem; }
+.tax-option:hover { background: #eff6ff; }
+.tax-cat { font-size: 0.7rem; color: #6b7280; margin-left: 0.5rem; }
+
+/* Preview modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-box {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.modal-box h3 { margin-bottom: 1rem; }
+.modal-actions { display: flex; gap: 0.75rem; margin-top: 1rem; justify-content: flex-end; }
+
+/* Diff table */
+.diff-table { width: 100%; font-size: 0.8rem; }
+.diff-old { color: #dc2626; text-decoration: line-through; }
+.diff-new { color: #059669; font-weight: 600; }
+
+/* Correction history */
+.btn-undo {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn-undo:hover { background: #dc2626; }
+.reverted { opacity: 0.5; text-decoration: line-through; }
+
 .hidden { display: none !important; }
 
 /* Responsive */

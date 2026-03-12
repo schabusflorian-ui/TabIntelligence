@@ -1,0 +1,266 @@
+{
+  "description": "Ground truth for saas_startup.xlsx accuracy measurement",
+  "model_info": {
+    "file": "saas_startup.xlsx",
+    "sheets": 5,
+    "company_type": "Series B SaaS company (~$5M ARR)",
+    "periods": ["FY2023", "FY2024", "FY2025E"],
+    "notes": "Messy labels (Rev, GP, Opex), SaaS metrics, col B spacer layout"
+  },
+  "expected_triage": [
+    {
+      "sheet_name": "P&L",
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "rationale": "Income statement with revenue, EBITDA, EBIT"
+    },
+    {
+      "sheet_name": "Balance Sheet",
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "rationale": "Core financial statement with assets, liabilities, equity"
+    },
+    {
+      "sheet_name": "SaaS Metrics",
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "rationale": "Key SaaS KPIs — ARR, MRR, NRR, CAC, LTV"
+    },
+    {
+      "sheet_name": "Headcount",
+      "tier": 3,
+      "decision": "PROCESS_LOW",
+      "rationale": "Supporting headcount data, not core financial statement"
+    },
+    {
+      "sheet_name": "Scratch",
+      "tier": 4,
+      "decision": "SKIP",
+      "rationale": "TODO notes, no financial data"
+    }
+  ],
+  "expected_mappings": [
+    {
+      "original_label": "Rev",
+      "canonical_name": "revenue",
+      "sheet": "P&L",
+      "notes": "Short form — may also map to 'recurring_revenue'"
+    },
+    {
+      "original_label": "Subscription Revenue",
+      "canonical_name": "subscription_revenue",
+      "sheet": "P&L",
+      "notes": "May also map to 'recurring_revenue'"
+    },
+    {
+      "original_label": "Services Revenue",
+      "canonical_name": "service_revenue",
+      "sheet": "P&L"
+    },
+    {
+      "original_label": "COGS",
+      "canonical_name": "cogs",
+      "sheet": "P&L"
+    },
+    {
+      "original_label": "GP",
+      "canonical_name": "gross_profit",
+      "sheet": "P&L",
+      "notes": "Short form for Gross Profit"
+    },
+    {
+      "original_label": "S&M",
+      "canonical_name": "sales_marketing",
+      "sheet": "P&L",
+      "notes": "May also map to 'marketing_expense'"
+    },
+    {
+      "original_label": "R&D",
+      "canonical_name": "rd_expense",
+      "sheet": "P&L"
+    },
+    {
+      "original_label": "G&A",
+      "canonical_name": "general_admin",
+      "sheet": "P&L",
+      "notes": "May also map to 'sga'"
+    },
+    {
+      "original_label": "Total Opex",
+      "canonical_name": "operating_expenses",
+      "sheet": "P&L",
+      "notes": "May also map to 'opex'"
+    },
+    {
+      "original_label": "EBITDA",
+      "canonical_name": "ebitda",
+      "sheet": "P&L"
+    },
+    {
+      "original_label": "D&A",
+      "canonical_name": "depreciation_and_amortization",
+      "sheet": "P&L",
+      "notes": "Short form — may also map to 'depreciation'"
+    },
+    {
+      "original_label": "EBIT",
+      "canonical_name": "ebit",
+      "sheet": "P&L",
+      "notes": "May also map to 'operating_income'"
+    },
+    {
+      "original_label": "Cash & Equivalents",
+      "canonical_name": "cash_and_equivalents",
+      "sheet": "Balance Sheet",
+      "notes": "May also map to 'cash'"
+    },
+    {
+      "original_label": "Accounts Receivable",
+      "canonical_name": "accounts_receivable",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Prepaid Expenses",
+      "canonical_name": "prepaid_expenses",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Total Current Assets",
+      "canonical_name": "total_current_assets",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "PP&E, Net",
+      "canonical_name": "net_ppe",
+      "sheet": "Balance Sheet",
+      "notes": "May also map to 'ppe' or 'fixed_assets'"
+    },
+    {
+      "original_label": "Total Assets",
+      "canonical_name": "total_assets",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Accounts Payable",
+      "canonical_name": "accounts_payable",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Deferred Revenue",
+      "canonical_name": "deferred_revenue",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Total Current Liabilities",
+      "canonical_name": "total_current_liabilities",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Convertible Notes",
+      "canonical_name": "convertible_notes",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Total Liabilities",
+      "canonical_name": "total_liabilities",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Total Equity",
+      "canonical_name": "total_equity",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Total Liabilities & Equity",
+      "canonical_name": "total_liabilities_and_equity",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "ARR ($000)",
+      "canonical_name": "arr",
+      "sheet": "SaaS Metrics"
+    },
+    {
+      "original_label": "MRR",
+      "canonical_name": "mrr",
+      "sheet": "SaaS Metrics"
+    },
+    {
+      "original_label": "NRR",
+      "canonical_name": "net_revenue_retention",
+      "sheet": "SaaS Metrics",
+      "notes": "May also map to 'gross_retention'"
+    },
+    {
+      "original_label": "Logo Churn",
+      "canonical_name": "logo_churn_rate",
+      "sheet": "SaaS Metrics",
+      "notes": "May also map to 'churn_rate'"
+    },
+    {
+      "original_label": "CAC",
+      "canonical_name": "cac",
+      "sheet": "SaaS Metrics"
+    },
+    {
+      "original_label": "LTV",
+      "canonical_name": "ltv",
+      "sheet": "SaaS Metrics"
+    },
+    {
+      "original_label": "LTV/CAC",
+      "canonical_name": "ltv_cac_ratio",
+      "sheet": "SaaS Metrics"
+    },
+    {
+      "original_label": "Burn Rate",
+      "canonical_name": "burn_rate",
+      "sheet": "SaaS Metrics",
+      "notes": "May also map to 'monthly_burn'"
+    },
+    {
+      "original_label": "Runway (months)",
+      "canonical_name": "cash_runway_months",
+      "sheet": "SaaS Metrics"
+    },
+    {
+      "original_label": "Customers",
+      "canonical_name": "customer_count",
+      "sheet": "SaaS Metrics"
+    },
+    {
+      "original_label": "New Customers",
+      "canonical_name": "new_customers",
+      "sheet": "SaaS Metrics"
+    },
+    {
+      "original_label": "Rev per Employee",
+      "canonical_name": "revenue_per_employee",
+      "sheet": "Headcount"
+    }
+  ],
+  "acceptable_alternatives": {
+    "revenue": ["revenue", "recurring_revenue", "subscription_revenue"],
+    "subscription_revenue": ["subscription_revenue", "recurring_revenue", "revenue"],
+    "service_revenue": ["service_revenue", "non_recurring_revenue"],
+    "cogs": ["cogs", "cost_of_sales"],
+    "gross_profit": ["gross_profit"],
+    "sales_marketing": ["sales_marketing", "marketing_expense", "sga"],
+    "rd_expense": ["rd_expense"],
+    "general_admin": ["general_admin", "sga"],
+    "operating_expenses": ["operating_expenses", "opex"],
+    "depreciation_and_amortization": ["depreciation_and_amortization", "depreciation", "amortization"],
+    "ebit": ["ebit", "operating_income"],
+    "cash_and_equivalents": ["cash_and_equivalents", "cash"],
+    "total_current_assets": ["total_current_assets", "current_assets"],
+    "net_ppe": ["net_ppe", "ppe", "property_plant_equipment", "fixed_assets"],
+    "total_current_liabilities": ["total_current_liabilities", "current_liabilities"],
+    "total_equity": ["total_equity", "shareholders_equity", "stockholders_equity"],
+    "total_liabilities_and_equity": ["total_liabilities_and_equity"],
+    "net_revenue_retention": ["net_revenue_retention", "gross_retention"],
+    "logo_churn_rate": ["logo_churn_rate", "churn_rate", "revenue_churn_rate"],
+    "burn_rate": ["burn_rate", "monthly_burn"],
+    "arr": ["arr", "recurring_revenue"],
+    "ltv_cac_ratio": ["ltv_cac_ratio"]
+  }
+}

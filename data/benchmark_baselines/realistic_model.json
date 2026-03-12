@@ -1,0 +1,3451 @@
+{
+  "timestamp": "2026-03-12T09:46:37.803723+00:00",
+  "file": "realistic_model.xlsx",
+  "duration_seconds": 285.93,
+  "sheets": [
+    "Income Statement",
+    "Balance Sheet",
+    "Cash Flow Statement",
+    "Debt Schedule",
+    "Working Capital",
+    "Assumptions",
+    "D&A Schedule",
+    "Scratch - Notes"
+  ],
+  "triage": [
+    {
+      "sheet_name": "Income Statement",
+      "section": "Income Statement",
+      "section_start_row": 1,
+      "section_end_row": 1,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Title section of a core Income Statement - fundamental financial statement requiring highest accuracy"
+    },
+    {
+      "sheet_name": "Income Statement",
+      "section": "Net Revenues",
+      "section_start_row": 4,
+      "section_end_row": 7,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Revenue and cost of sales section of Income Statement with subtotals - core P&L components"
+    },
+    {
+      "sheet_name": "Income Statement",
+      "section": "Gross Profit",
+      "section_start_row": 8,
+      "section_end_row": 8,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Gross profit calculation - key P&L metric requiring high accuracy"
+    },
+    {
+      "sheet_name": "Income Statement",
+      "section": "Operating Expenses:",
+      "section_start_row": 10,
+      "section_end_row": 13,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Operating expenses section of Income Statement - core P&L component"
+    },
+    {
+      "sheet_name": "Income Statement",
+      "section": "Total Operating Expenses",
+      "section_start_row": 14,
+      "section_end_row": 14,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Operating expense subtotal - critical P&L calculation"
+    },
+    {
+      "sheet_name": "Income Statement",
+      "section": "EBITDA",
+      "section_start_row": 16,
+      "section_end_row": 17,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "EBITDA and depreciation section - key profitability metrics in P&L"
+    },
+    {
+      "sheet_name": "Income Statement",
+      "section": "EBIT",
+      "section_start_row": 18,
+      "section_end_row": 21,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "EBIT and interest expense section - core P&L profitability calculations"
+    },
+    {
+      "sheet_name": "Income Statement",
+      "section": "Pre-Tax Income",
+      "section_start_row": 22,
+      "section_end_row": 23,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Pre-tax income and tax provision - essential P&L components"
+    },
+    {
+      "sheet_name": "Income Statement",
+      "section": "Net Income",
+      "section_start_row": 24,
+      "section_end_row": 24,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Net income - the bottom line of P&L requiring highest accuracy"
+    },
+    {
+      "sheet_name": "Balance Sheet",
+      "section": "Balance Sheet",
+      "section_start_row": 1,
+      "section_end_row": 1,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Title section of core Balance Sheet - fundamental financial statement"
+    },
+    {
+      "sheet_name": "Balance Sheet",
+      "section": "Section 2",
+      "section_start_row": 3,
+      "section_end_row": 10,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Assets section of Balance Sheet including current assets - core financial statement component"
+    },
+    {
+      "sheet_name": "Balance Sheet",
+      "section": "Total Current Assets",
+      "section_start_row": 11,
+      "section_end_row": 11,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Current assets subtotal - critical Balance Sheet calculation"
+    },
+    {
+      "sheet_name": "Balance Sheet",
+      "section": "Non-Current Assets",
+      "section_start_row": 13,
+      "section_end_row": 17,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Non-current assets section with subtotals - core Balance Sheet component"
+    },
+    {
+      "sheet_name": "Balance Sheet",
+      "section": "Total Assets",
+      "section_start_row": 18,
+      "section_end_row": 18,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Total assets - critical Balance Sheet balancing figure"
+    },
+    {
+      "sheet_name": "Balance Sheet",
+      "section": "LIABILITIES",
+      "section_start_row": 20,
+      "section_end_row": 25,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Liabilities section including current liabilities - core Balance Sheet component"
+    },
+    {
+      "sheet_name": "Balance Sheet",
+      "section": "Total Current Liabilities",
+      "section_start_row": 26,
+      "section_end_row": 26,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Current liabilities subtotal - critical Balance Sheet calculation"
+    },
+    {
+      "sheet_name": "Balance Sheet",
+      "section": "Long-Term Debt",
+      "section_start_row": 28,
+      "section_end_row": 30,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Long-term debt section - core Balance Sheet liability component"
+    },
+    {
+      "sheet_name": "Balance Sheet",
+      "section": "Total Long-Term Debt",
+      "section_start_row": 31,
+      "section_end_row": 31,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Long-term debt subtotal - critical Balance Sheet calculation"
+    },
+    {
+      "sheet_name": "Balance Sheet",
+      "section": "Total Liabilities",
+      "section_start_row": 33,
+      "section_end_row": 33,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Total liabilities - critical Balance Sheet balancing component"
+    },
+    {
+      "sheet_name": "Balance Sheet",
+      "section": "SHAREHOLDERS' EQUITY",
+      "section_start_row": 35,
+      "section_end_row": 37,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Shareholders' equity section - core Balance Sheet component"
+    },
+    {
+      "sheet_name": "Balance Sheet",
+      "section": "Total Shareholders' Equity",
+      "section_start_row": 38,
+      "section_end_row": 38,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Total shareholders' equity - critical Balance Sheet calculation"
+    },
+    {
+      "sheet_name": "Balance Sheet",
+      "section": "Total Liabilities & Shareholders' Equity",
+      "section_start_row": 40,
+      "section_end_row": 40,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Total liabilities & equity - critical Balance Sheet balancing figure that must equal total assets"
+    },
+    {
+      "sheet_name": "Cash Flow Statement",
+      "section": "Cash Flow Statement",
+      "section_start_row": 1,
+      "section_end_row": 1,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Title section of core Cash Flow Statement - fundamental financial statement"
+    },
+    {
+      "sheet_name": "Cash Flow Statement",
+      "section": "Section 2",
+      "section_start_row": 3,
+      "section_end_row": 10,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Operating activities section with subtotals - core Cash Flow Statement component"
+    },
+    {
+      "sheet_name": "Cash Flow Statement",
+      "section": "Cash from Operations",
+      "section_start_row": 11,
+      "section_end_row": 11,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Operating cash flow subtotal - critical Cash Flow Statement metric"
+    },
+    {
+      "sheet_name": "Cash Flow Statement",
+      "section": "Cash from Investing Activities",
+      "section_start_row": 13,
+      "section_end_row": 14,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Investing activities section - core Cash Flow Statement component"
+    },
+    {
+      "sheet_name": "Cash Flow Statement",
+      "section": "Cash from Investing",
+      "section_start_row": 15,
+      "section_end_row": 15,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Investing cash flow subtotal - critical Cash Flow Statement calculation"
+    },
+    {
+      "sheet_name": "Cash Flow Statement",
+      "section": "Cash from Financing Activities",
+      "section_start_row": 17,
+      "section_end_row": 18,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Financing activities section - core Cash Flow Statement component"
+    },
+    {
+      "sheet_name": "Cash Flow Statement",
+      "section": "Cash from Financing",
+      "section_start_row": 19,
+      "section_end_row": 19,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Financing cash flow subtotal - critical Cash Flow Statement calculation"
+    },
+    {
+      "sheet_name": "Cash Flow Statement",
+      "section": "Net Change in Cash",
+      "section_start_row": 21,
+      "section_end_row": 22,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Net change in cash with subtotals - critical Cash Flow Statement reconciliation"
+    },
+    {
+      "sheet_name": "Cash Flow Statement",
+      "section": "Ending Cash",
+      "section_start_row": 23,
+      "section_end_row": 23,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Ending cash balance - critical Cash Flow Statement total that ties to Balance Sheet"
+    },
+    {
+      "sheet_name": "Cash Flow Statement",
+      "section": "Free Cash Flow",
+      "section_start_row": 25,
+      "section_end_row": 25,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.9,
+      "reasoning": "Free cash flow calculation - key metric typically part of core Cash Flow Statement analysis"
+    },
+    {
+      "sheet_name": "Debt Schedule",
+      "section": "Debt Schedule",
+      "section_start_row": 1,
+      "section_end_row": 1,
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.9,
+      "reasoning": "Title section of debt schedule - supporting schedule for core financial statements"
+    },
+    {
+      "sheet_name": "Debt Schedule",
+      "section": "Term Loan A",
+      "section_start_row": 4,
+      "section_end_row": 6,
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.9,
+      "reasoning": "Term loan debt service calculations - supporting debt schedule component"
+    },
+    {
+      "sheet_name": "Debt Schedule",
+      "section": "Ending Balance",
+      "section_start_row": 7,
+      "section_end_row": 7,
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.9,
+      "reasoning": "Debt ending balance calculation - supporting debt schedule metric"
+    },
+    {
+      "sheet_name": "Debt Schedule",
+      "section": "Revolver",
+      "section_start_row": 9,
+      "section_end_row": 11,
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.9,
+      "reasoning": "Revolver debt calculations - supporting debt schedule component"
+    },
+    {
+      "sheet_name": "Debt Schedule",
+      "section": "Ending Balance",
+      "section_start_row": 12,
+      "section_end_row": 12,
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.9,
+      "reasoning": "Revolver ending balance - supporting debt schedule metric"
+    },
+    {
+      "sheet_name": "Debt Schedule",
+      "section": "Senior Notes",
+      "section_start_row": 14,
+      "section_end_row": 15,
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.9,
+      "reasoning": "Senior notes debt calculations - supporting debt schedule component"
+    },
+    {
+      "sheet_name": "Debt Schedule",
+      "section": "Ending Balance",
+      "section_start_row": 16,
+      "section_end_row": 16,
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.9,
+      "reasoning": "Senior notes ending balance - supporting debt schedule metric"
+    },
+    {
+      "sheet_name": "Debt Schedule",
+      "section": "Interest Expense",
+      "section_start_row": 18,
+      "section_end_row": 20,
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.9,
+      "reasoning": "Interest expense calculations by debt type - supporting debt schedule component"
+    },
+    {
+      "sheet_name": "Debt Schedule",
+      "section": "Total Interest Expense",
+      "section_start_row": 21,
+      "section_end_row": 21,
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.9,
+      "reasoning": "Total interest expense with subtotal - key debt schedule output that feeds P&L"
+    },
+    {
+      "sheet_name": "Debt Schedule",
+      "section": "Total Debt Outstanding",
+      "section_start_row": 23,
+      "section_end_row": 23,
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.9,
+      "reasoning": "Total debt outstanding with subtotal - key debt schedule output that feeds Balance Sheet"
+    },
+    {
+      "sheet_name": "Working Capital",
+      "section": "Working Capital",
+      "section_start_row": 1,
+      "section_end_row": 1,
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Title section of working capital schedule - supporting financial schedule"
+    },
+    {
+      "sheet_name": "Working Capital",
+      "section": "Section 2",
+      "section_start_row": 3,
+      "section_end_row": 10,
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Working capital components and calculations - supporting schedule for Balance Sheet and Cash Flow"
+    },
+    {
+      "sheet_name": "Working Capital",
+      "section": "Net Working Capital",
+      "section_start_row": 12,
+      "section_end_row": 12,
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Net working capital subtotal - key working capital metric feeding other statements"
+    },
+    {
+      "sheet_name": "Working Capital",
+      "section": "Change in Net Working Capital",
+      "section_start_row": 13,
+      "section_end_row": 13,
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Change in working capital subtotal - feeds Cash Flow Statement operating activities"
+    },
+    {
+      "sheet_name": "Assumptions",
+      "section": "Assumptions",
+      "section_start_row": 1,
+      "section_end_row": 1,
+      "tier": 3,
+      "decision": "PROCESS_LOW",
+      "confidence": 0.9,
+      "reasoning": "Title section of assumptions sheet - analytical inputs and drivers"
+    },
+    {
+      "sheet_name": "Assumptions",
+      "section": "Section 2",
+      "section_start_row": 3,
+      "section_end_row": 15,
+      "tier": 3,
+      "decision": "PROCESS_LOW",
+      "confidence": 0.9,
+      "reasoning": "Model assumptions and drivers like growth rates and margins - analytical inputs for modeling"
+    },
+    {
+      "sheet_name": "D&A Schedule",
+      "section": "D&A Schedule",
+      "section_start_row": 1,
+      "section_end_row": 1,
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Title section of depreciation & amortization schedule - supporting financial schedule"
+    },
+    {
+      "sheet_name": "D&A Schedule",
+      "section": "Section 2",
+      "section_start_row": 3,
+      "section_end_row": 7,
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Depreciation calculations with subtotals - supporting schedule for P&L and Balance Sheet"
+    },
+    {
+      "sheet_name": "D&A Schedule",
+      "section": "Total Depreciation",
+      "section_start_row": 8,
+      "section_end_row": 10,
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Total depreciation with subtotals - key D&A schedule output"
+    },
+    {
+      "sheet_name": "D&A Schedule",
+      "section": "Total D&A",
+      "section_start_row": 11,
+      "section_end_row": 11,
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Total D&A subtotal - critical output feeding P&L and Cash Flow Statement"
+    },
+    {
+      "sheet_name": "Scratch - Notes",
+      "tier": 4,
+      "decision": "SKIP",
+      "confidence": 0.95,
+      "reasoning": "Contains 'Scratch' in name indicating temporary/working notes sheet - should be skipped",
+      "section": null,
+      "section_start_row": null,
+      "section_end_row": null
+    }
+  ],
+  "line_items_count": 95,
+  "tokens_used": 65298,
+  "cost_usd": 0.501246,
+  "validation": {
+    "period_results": {
+      "FY2022A": {
+        "total_checks": 107,
+        "passed": 94,
+        "failed": 13,
+        "success_rate": 0.879
+      },
+      "FY2023A": {
+        "total_checks": 111,
+        "passed": 97,
+        "failed": 14,
+        "success_rate": 0.874
+      },
+      "FY2024E": {
+        "total_checks": 111,
+        "passed": 97,
+        "failed": 14,
+        "success_rate": 0.874
+      },
+      "FY2025E": {
+        "total_checks": 111,
+        "passed": 98,
+        "failed": 13,
+        "success_rate": 0.883
+      },
+      "FY2026E": {
+        "total_checks": 111,
+        "passed": 98,
+        "failed": 13,
+        "success_rate": 0.883
+      }
+    },
+    "flags": [
+      {
+        "period": "FY2022A",
+        "severity": "warning",
+        "item": "debt_closing_balance",
+        "rule": "debt_closing_balance == debt_opening_balance + debt_drawdown - debt_mandatory_repayment",
+        "message": "Closing debt balance should equal opening + drawdowns - repayments",
+        "actual": "95000",
+        "expected": "105000"
+      },
+      {
+        "period": "FY2022A",
+        "severity": "warning",
+        "item": "depreciation_and_amortization",
+        "rule": "depreciation_and_amortization == depreciation + amortization",
+        "message": "D&A should equal sum of depreciation and amortization",
+        "actual": "8946",
+        "expected": "10000"
+      },
+      {
+        "period": "FY2022A",
+        "severity": "warning",
+        "item": "net_working_capital",
+        "rule": "net_working_capital == current_assets - current_liabilities",
+        "message": "NWC should equal current assets minus current liabilities",
+        "actual": "31895",
+        "expected": "66500"
+      },
+      {
+        "period": "FY2022A",
+        "severity": "warning",
+        "item": "cost_of_sales",
+        "rule": "sign_convention",
+        "message": "cost_of_sales is positive (105560) but typically negative",
+        "actual": "105560",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2022A",
+        "severity": "warning",
+        "item": "sga",
+        "rule": "sign_convention",
+        "message": "sga is positive (27840) but typically negative",
+        "actual": "27840",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2022A",
+        "severity": "warning",
+        "item": "rd_expense",
+        "rule": "sign_convention",
+        "message": "rd_expense is positive (13920) but typically negative",
+        "actual": "13920",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2022A",
+        "severity": "warning",
+        "item": "other_expense",
+        "rule": "sign_convention",
+        "message": "other_expense is positive (5800) but typically negative",
+        "actual": "5800",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2022A",
+        "severity": "warning",
+        "item": "operating_expenses",
+        "rule": "sign_convention",
+        "message": "operating_expenses is positive (47560) but typically negative",
+        "actual": "47560",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2022A",
+        "severity": "warning",
+        "item": "interest_expense",
+        "rule": "sign_convention",
+        "message": "interest_expense is positive (7525) but typically negative",
+        "actual": "7525",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2022A",
+        "severity": "warning",
+        "item": "tax_expense",
+        "rule": "sign_convention",
+        "message": "tax_expense is positive (15428) but typically negative",
+        "actual": "15428",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2022A",
+        "severity": "warning",
+        "item": "depreciation",
+        "rule": "sign_convention",
+        "message": "depreciation is positive (8200) but typically negative",
+        "actual": "8200",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2022A",
+        "severity": "warning",
+        "item": "amortization",
+        "rule": "sign_convention",
+        "message": "amortization is positive (1800) but typically negative",
+        "actual": "1800",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2022A",
+        "severity": "warning",
+        "item": "depreciation_and_amortization",
+        "rule": "sign_convention",
+        "message": "depreciation_and_amortization is positive (8946) but typically negative",
+        "actual": "8946",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2023A",
+        "severity": "error",
+        "item": "ending_cash",
+        "rule": "ending_cash == cash",
+        "message": "Ending cash on cash flow should equal cash on balance sheet",
+        "actual": "91394",
+        "expected": "93194"
+      },
+      {
+        "period": "FY2023A",
+        "severity": "warning",
+        "item": "debt_closing_balance",
+        "rule": "debt_closing_balance == debt_opening_balance + debt_drawdown - debt_mandatory_repayment",
+        "message": "Closing debt balance should equal opening + drawdowns - repayments",
+        "actual": "88000",
+        "expected": "102000"
+      },
+      {
+        "period": "FY2023A",
+        "severity": "warning",
+        "item": "depreciation_and_amortization",
+        "rule": "depreciation_and_amortization == depreciation + amortization",
+        "message": "D&A should equal sum of depreciation and amortization",
+        "actual": "10150",
+        "expected": "9300"
+      },
+      {
+        "period": "FY2023A",
+        "severity": "warning",
+        "item": "net_working_capital",
+        "rule": "net_working_capital == current_assets - current_liabilities",
+        "message": "NWC should equal current assets minus current liabilities",
+        "actual": "31852",
+        "expected": "110529"
+      },
+      {
+        "period": "FY2023A",
+        "severity": "warning",
+        "item": "cost_of_sales",
+        "rule": "sign_convention",
+        "message": "cost_of_sales is positive (112752) but typically negative",
+        "actual": "112752",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2023A",
+        "severity": "warning",
+        "item": "sga",
+        "rule": "sign_convention",
+        "message": "sga is positive (29566) but typically negative",
+        "actual": "29566",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2023A",
+        "severity": "warning",
+        "item": "rd_expense",
+        "rule": "sign_convention",
+        "message": "rd_expense is positive (15535) but typically negative",
+        "actual": "15535",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2023A",
+        "severity": "warning",
+        "item": "other_expense",
+        "rule": "sign_convention",
+        "message": "other_expense is positive (6013) but typically negative",
+        "actual": "6013",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2023A",
+        "severity": "warning",
+        "item": "operating_expenses",
+        "rule": "sign_convention",
+        "message": "operating_expenses is positive (51114) but typically negative",
+        "actual": "51114",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2023A",
+        "severity": "warning",
+        "item": "interest_expense",
+        "rule": "sign_convention",
+        "message": "interest_expense is positive (7650) but typically negative",
+        "actual": "7650",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2023A",
+        "severity": "warning",
+        "item": "tax_expense",
+        "rule": "sign_convention",
+        "message": "tax_expense is positive (17036) but typically negative",
+        "actual": "17036",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2023A",
+        "severity": "warning",
+        "item": "depreciation",
+        "rule": "sign_convention",
+        "message": "depreciation is positive (7800) but typically negative",
+        "actual": "7800",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2023A",
+        "severity": "warning",
+        "item": "amortization",
+        "rule": "sign_convention",
+        "message": "amortization is positive (1500) but typically negative",
+        "actual": "1500",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2023A",
+        "severity": "warning",
+        "item": "depreciation_and_amortization",
+        "rule": "sign_convention",
+        "message": "depreciation_and_amortization is positive (10150) but typically negative",
+        "actual": "10150",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2024E",
+        "severity": "error",
+        "item": "ending_cash",
+        "rule": "ending_cash == cash",
+        "message": "Ending cash on cash flow should equal cash on balance sheet",
+        "actual": "141394",
+        "expected": "143194"
+      },
+      {
+        "period": "FY2024E",
+        "severity": "warning",
+        "item": "debt_closing_balance",
+        "rule": "debt_closing_balance == debt_opening_balance + debt_drawdown - debt_mandatory_repayment",
+        "message": "Closing debt balance should equal opening + drawdowns - repayments",
+        "actual": "81000",
+        "expected": "95000"
+      },
+      {
+        "period": "FY2024E",
+        "severity": "warning",
+        "item": "depreciation_and_amortization",
+        "rule": "depreciation_and_amortization == depreciation + amortization",
+        "message": "D&A should equal sum of depreciation and amortization",
+        "actual": "11593",
+        "expected": "8900"
+      },
+      {
+        "period": "FY2024E",
+        "severity": "warning",
+        "item": "net_working_capital",
+        "rule": "net_working_capital == current_assets - current_liabilities",
+        "message": "NWC should equal current assets minus current liabilities",
+        "actual": "32885",
+        "expected": "160810"
+      },
+      {
+        "period": "FY2024E",
+        "severity": "warning",
+        "item": "cost_of_sales",
+        "rule": "sign_convention",
+        "message": "cost_of_sales is positive (122649) but typically negative",
+        "actual": "122649",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2024E",
+        "severity": "warning",
+        "item": "sga",
+        "rule": "sign_convention",
+        "message": "sga is positive (31696) but typically negative",
+        "actual": "31696",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2024E",
+        "severity": "warning",
+        "item": "rd_expense",
+        "rule": "sign_convention",
+        "message": "rd_expense is positive (17915) but typically negative",
+        "actual": "17915",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2024E",
+        "severity": "warning",
+        "item": "other_expense",
+        "rule": "sign_convention",
+        "message": "other_expense is positive (6339) but typically negative",
+        "actual": "6339",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2024E",
+        "severity": "warning",
+        "item": "operating_expenses",
+        "rule": "sign_convention",
+        "message": "operating_expenses is positive (55950) but typically negative",
+        "actual": "55950",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2024E",
+        "severity": "warning",
+        "item": "interest_expense",
+        "rule": "sign_convention",
+        "message": "interest_expense is positive (7705) but typically negative",
+        "actual": "7705",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2024E",
+        "severity": "warning",
+        "item": "tax_expense",
+        "rule": "sign_convention",
+        "message": "tax_expense is positive (19223) but typically negative",
+        "actual": "19223",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2024E",
+        "severity": "warning",
+        "item": "depreciation",
+        "rule": "sign_convention",
+        "message": "depreciation is positive (7400) but typically negative",
+        "actual": "7400",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2024E",
+        "severity": "warning",
+        "item": "amortization",
+        "rule": "sign_convention",
+        "message": "amortization is positive (1500) but typically negative",
+        "actual": "1500",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2024E",
+        "severity": "warning",
+        "item": "depreciation_and_amortization",
+        "rule": "sign_convention",
+        "message": "depreciation_and_amortization is positive (11593) but typically negative",
+        "actual": "11593",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2025E",
+        "severity": "warning",
+        "item": "debt_closing_balance",
+        "rule": "debt_closing_balance == debt_opening_balance + debt_drawdown - debt_mandatory_repayment",
+        "message": "Closing debt balance should equal opening + drawdowns - repayments",
+        "actual": "74000",
+        "expected": "88000"
+      },
+      {
+        "period": "FY2025E",
+        "severity": "warning",
+        "item": "depreciation_and_amortization",
+        "rule": "depreciation_and_amortization == depreciation + amortization",
+        "message": "D&A should equal sum of depreciation and amortization",
+        "actual": "13208",
+        "expected": "8500"
+      },
+      {
+        "period": "FY2025E",
+        "severity": "warning",
+        "item": "net_working_capital",
+        "rule": "net_working_capital == current_assets - current_liabilities",
+        "message": "NWC should equal current assets minus current liabilities",
+        "actual": "34338",
+        "expected": "220057"
+      },
+      {
+        "period": "FY2025E",
+        "severity": "warning",
+        "item": "cost_of_sales",
+        "rule": "sign_convention",
+        "message": "cost_of_sales is positive (132185) but typically negative",
+        "actual": "132185",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2025E",
+        "severity": "warning",
+        "item": "sga",
+        "rule": "sign_convention",
+        "message": "sga is positive (33948) but typically negative",
+        "actual": "33948",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2025E",
+        "severity": "warning",
+        "item": "rd_expense",
+        "rule": "sign_convention",
+        "message": "rd_expense is positive (18927) but typically negative",
+        "actual": "18927",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2025E",
+        "severity": "warning",
+        "item": "other_expense",
+        "rule": "sign_convention",
+        "message": "other_expense is positive (6609) but typically negative",
+        "actual": "6609",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2025E",
+        "severity": "warning",
+        "item": "operating_expenses",
+        "rule": "sign_convention",
+        "message": "operating_expenses is positive (59484) but typically negative",
+        "actual": "59484",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2025E",
+        "severity": "warning",
+        "item": "interest_expense",
+        "rule": "sign_convention",
+        "message": "interest_expense is positive (7098) but typically negative",
+        "actual": "7098",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2025E",
+        "severity": "warning",
+        "item": "tax_expense",
+        "rule": "sign_convention",
+        "message": "tax_expense is positive (21886) but typically negative",
+        "actual": "21886",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2025E",
+        "severity": "warning",
+        "item": "depreciation",
+        "rule": "sign_convention",
+        "message": "depreciation is positive (7000) but typically negative",
+        "actual": "7000",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2025E",
+        "severity": "warning",
+        "item": "amortization",
+        "rule": "sign_convention",
+        "message": "amortization is positive (1500) but typically negative",
+        "actual": "1500",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2025E",
+        "severity": "warning",
+        "item": "depreciation_and_amortization",
+        "rule": "sign_convention",
+        "message": "depreciation_and_amortization is positive (13208) but typically negative",
+        "actual": "13208",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2026E",
+        "severity": "warning",
+        "item": "debt_closing_balance",
+        "rule": "debt_closing_balance == debt_opening_balance + debt_drawdown - debt_mandatory_repayment",
+        "message": "Closing debt balance should equal opening + drawdowns - repayments",
+        "actual": "67000",
+        "expected": "81000"
+      },
+      {
+        "period": "FY2026E",
+        "severity": "warning",
+        "item": "depreciation_and_amortization",
+        "rule": "depreciation_and_amortization == depreciation + amortization",
+        "message": "D&A should equal sum of depreciation and amortization",
+        "actual": "14871",
+        "expected": "8100"
+      },
+      {
+        "period": "FY2026E",
+        "severity": "warning",
+        "item": "net_working_capital",
+        "rule": "net_working_capital == current_assets - current_liabilities",
+        "message": "NWC should equal current assets minus current liabilities",
+        "actual": "33884",
+        "expected": "288945"
+      },
+      {
+        "period": "FY2026E",
+        "severity": "warning",
+        "item": "cost_of_sales",
+        "rule": "sign_convention",
+        "message": "cost_of_sales is positive (139831) but typically negative",
+        "actual": "139831",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2026E",
+        "severity": "warning",
+        "item": "sga",
+        "rule": "sign_convention",
+        "message": "sga is positive (35360) but typically negative",
+        "actual": "35360",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2026E",
+        "severity": "warning",
+        "item": "rd_expense",
+        "rule": "sign_convention",
+        "message": "rd_expense is positive (19287) but typically negative",
+        "actual": "19287",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2026E",
+        "severity": "warning",
+        "item": "other_expense",
+        "rule": "sign_convention",
+        "message": "other_expense is positive (6429) but typically negative",
+        "actual": "6429",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2026E",
+        "severity": "warning",
+        "item": "operating_expenses",
+        "rule": "sign_convention",
+        "message": "operating_expenses is positive (61076) but typically negative",
+        "actual": "61076",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2026E",
+        "severity": "warning",
+        "item": "interest_expense",
+        "rule": "sign_convention",
+        "message": "interest_expense is positive (6466) but typically negative",
+        "actual": "6466",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2026E",
+        "severity": "warning",
+        "item": "tax_expense",
+        "rule": "sign_convention",
+        "message": "tax_expense is positive (24560) but typically negative",
+        "actual": "24560",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2026E",
+        "severity": "warning",
+        "item": "depreciation",
+        "rule": "sign_convention",
+        "message": "depreciation is positive (6600) but typically negative",
+        "actual": "6600",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2026E",
+        "severity": "warning",
+        "item": "amortization",
+        "rule": "sign_convention",
+        "message": "amortization is positive (1500) but typically negative",
+        "actual": "1500",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2026E",
+        "severity": "warning",
+        "item": "depreciation_and_amortization",
+        "rule": "sign_convention",
+        "message": "depreciation_and_amortization is positive (14871) but typically negative",
+        "actual": "14871",
+        "expected": "negative"
+      },
+      {
+        "period": "cross_statement",
+        "severity": "warning",
+        "item": "total_debt",
+        "rule": "cross_statement:total_debt_schedule",
+        "message": "total_debt (145000) differs from sum of components (290000) in period FY2022A",
+        "actual": "145000",
+        "expected": "290000"
+      },
+      {
+        "period": "cross_statement",
+        "severity": "warning",
+        "item": "total_debt",
+        "rule": "cross_statement:total_debt_schedule",
+        "message": "total_debt (138000) differs from sum of components (276000) in period FY2023A",
+        "actual": "138000",
+        "expected": "276000"
+      },
+      {
+        "period": "cross_statement",
+        "severity": "warning",
+        "item": "total_debt",
+        "rule": "cross_statement:total_debt_schedule",
+        "message": "total_debt (131000) differs from sum of components (262000) in period FY2024E",
+        "actual": "131000",
+        "expected": "262000"
+      },
+      {
+        "period": "cross_statement",
+        "severity": "warning",
+        "item": "total_debt",
+        "rule": "cross_statement:total_debt_schedule",
+        "message": "total_debt (124000) differs from sum of components (248000) in period FY2025E",
+        "actual": "124000",
+        "expected": "248000"
+      },
+      {
+        "period": "cross_statement",
+        "severity": "warning",
+        "item": "total_debt",
+        "rule": "cross_statement:total_debt_schedule",
+        "message": "total_debt (117000) differs from sum of components (234000) in period FY2026E",
+        "actual": "117000",
+        "expected": "234000"
+      }
+    ],
+    "claude_reasoning": {},
+    "overall_confidence": 0.873,
+    "time_series": {
+      "total_checks": 1318,
+      "flags": [
+        {
+          "check_type": "yoy_change",
+          "canonical_name": "beginning_cash",
+          "period": "FY2023A",
+          "severity": "warning",
+          "message": "beginning_cash grew 1187% from FY2022A to FY2023A (threshold: 200%)",
+          "details": {
+            "pct_change": 11.8683,
+            "threshold": 2.0
+          }
+        },
+        {
+          "check_type": "yoy_change",
+          "canonical_name": "change_in_inventory",
+          "period": "FY2024E",
+          "severity": "warning",
+          "message": "change_in_inventory declined -389% from FY2023A to FY2024E (threshold: -80%)",
+          "details": {
+            "pct_change": -3.8855,
+            "threshold": -0.8
+          }
+        },
+        {
+          "check_type": "monotonicity",
+          "canonical_name": "debt_closing_balance",
+          "period": "FY2023A",
+          "severity": "warning",
+          "message": "debt_closing_balance decreased from 95000 to 88000 between FY2022A and FY2023A (expected non-decreasing)",
+          "details": null
+        },
+        {
+          "check_type": "monotonicity",
+          "canonical_name": "debt_closing_balance",
+          "period": "FY2024E",
+          "severity": "warning",
+          "message": "debt_closing_balance decreased from 88000 to 81000 between FY2023A and FY2024E (expected non-decreasing)",
+          "details": null
+        },
+        {
+          "check_type": "monotonicity",
+          "canonical_name": "debt_closing_balance",
+          "period": "FY2025E",
+          "severity": "warning",
+          "message": "debt_closing_balance decreased from 81000 to 74000 between FY2024E and FY2025E (expected non-decreasing)",
+          "details": null
+        },
+        {
+          "check_type": "monotonicity",
+          "canonical_name": "debt_closing_balance",
+          "period": "FY2026E",
+          "severity": "warning",
+          "message": "debt_closing_balance decreased from 74000 to 67000 between FY2025E and FY2026E (expected non-decreasing)",
+          "details": null
+        }
+      ],
+      "consistency_score": 0.995,
+      "items_checked": 73,
+      "periods_analyzed": 5
+    },
+    "completeness": {
+      "model_type": "corporate",
+      "overall_score": 0.758,
+      "detected_statements": [
+        "balance_sheet",
+        "cash_flow",
+        "debt_schedule",
+        "income_statement"
+      ],
+      "total_expected": 32,
+      "total_found": 24,
+      "total_missing": 8,
+      "missing_items": [
+        {
+          "canonical_name": "cfo",
+          "category": "cash_flow",
+          "weight": 1.0,
+          "is_core": true
+        },
+        {
+          "canonical_name": "capex",
+          "category": "cash_flow",
+          "weight": 0.8,
+          "is_core": true
+        },
+        {
+          "canonical_name": "fcf",
+          "category": "cash_flow",
+          "weight": 0.75,
+          "is_core": false
+        },
+        {
+          "canonical_name": "debt_service",
+          "category": "debt_schedule",
+          "weight": 0.85,
+          "is_core": true
+        },
+        {
+          "canonical_name": "cogs",
+          "category": "income_statement",
+          "weight": 0.9,
+          "is_core": true
+        },
+        {
+          "canonical_name": "net_income",
+          "category": "income_statement",
+          "weight": 0.95,
+          "is_core": true
+        },
+        {
+          "canonical_name": "ebt",
+          "category": "income_statement",
+          "weight": 0.6,
+          "is_core": false
+        },
+        {
+          "canonical_name": "opex",
+          "category": "income_statement",
+          "weight": 0.7,
+          "is_core": false
+        }
+      ],
+      "per_statement": {
+        "balance_sheet": {
+          "raw_score": 1.0,
+          "weighted_score": 1.0,
+          "core_score": 1.0,
+          "found": [
+            "total_assets",
+            "total_liabilities",
+            "total_equity",
+            "current_assets",
+            "cash",
+            "current_liabilities",
+            "long_term_debt",
+            "accounts_receivable",
+            "accounts_payable",
+            "ppe"
+          ],
+          "missing": []
+        },
+        "cash_flow": {
+          "raw_score": 0.5,
+          "weighted_score": 0.51,
+          "core_score": 0.596,
+          "found": [
+            "cfi",
+            "cff",
+            "net_change_cash"
+          ],
+          "missing": [
+            "cfo",
+            "capex",
+            "fcf"
+          ]
+        },
+        "debt_schedule": {
+          "raw_score": 0.833,
+          "weighted_score": 0.825,
+          "core_score": 0.754,
+          "found": [
+            "debt_opening_balance",
+            "debt_closing_balance",
+            "interest_expense",
+            "debt_drawdown",
+            "debt_mandatory_repayment"
+          ],
+          "missing": [
+            "debt_service"
+          ]
+        },
+        "income_statement": {
+          "raw_score": 0.636,
+          "weighted_score": 0.638,
+          "core_score": 0.661,
+          "found": [
+            "revenue",
+            "gross_profit",
+            "ebitda",
+            "ebit",
+            "depreciation",
+            "interest_expense",
+            "tax_expense"
+          ],
+          "missing": [
+            "cogs",
+            "net_income",
+            "ebt",
+            "opex"
+          ]
+        }
+      }
+    },
+    "quality": {
+      "numeric_score": 0.894,
+      "letter_grade": "B",
+      "label": "trustworthy",
+      "dimensions": [
+        {
+          "name": "mapping_confidence",
+          "score": 0.956,
+          "weight": 0.3,
+          "details": null
+        },
+        {
+          "name": "validation_success",
+          "score": 0.873,
+          "weight": 0.25,
+          "details": null
+        },
+        {
+          "name": "completeness",
+          "score": 0.758,
+          "weight": 0.25,
+          "details": null
+        },
+        {
+          "name": "time_series_consistency",
+          "score": 0.995,
+          "weight": 0.2,
+          "details": null
+        }
+      ],
+      "model_type": "corporate"
+    },
+    "lifecycle": {
+      "is_project_finance": false,
+      "confidence": 0.4,
+      "signals_used": [
+        "revenue",
+        "debt_drawdown"
+      ],
+      "phases": {
+        "FY2022A": "operations",
+        "FY2023A": "operations",
+        "FY2024E": "operations",
+        "FY2025E": "operations",
+        "FY2026E": "operations"
+      }
+    },
+    "unit_normalization": {}
+  },
+  "lineage_summary": {
+    "total_events": 5,
+    "stages": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "event_types": [
+      "parsing",
+      "validation",
+      "triage",
+      "enhanced_mapping",
+      "mapping"
+    ]
+  },
+  "triage_accuracy": {
+    "correct": 8,
+    "total": 8,
+    "accuracy": 1.0,
+    "details": [
+      {
+        "sheet_name": "Income Statement",
+        "expected_tier": 1,
+        "actual_tier": 1,
+        "correct": true
+      },
+      {
+        "sheet_name": "Balance Sheet",
+        "expected_tier": 1,
+        "actual_tier": 1,
+        "correct": true
+      },
+      {
+        "sheet_name": "Cash Flow Statement",
+        "expected_tier": 1,
+        "actual_tier": 1,
+        "correct": true
+      },
+      {
+        "sheet_name": "Debt Schedule",
+        "expected_tier": 2,
+        "actual_tier": 2,
+        "correct": true
+      },
+      {
+        "sheet_name": "Working Capital",
+        "expected_tier": 2,
+        "actual_tier": 2,
+        "correct": true
+      },
+      {
+        "sheet_name": "Assumptions",
+        "expected_tier": 3,
+        "actual_tier": 3,
+        "correct": true
+      },
+      {
+        "sheet_name": "D&A Schedule",
+        "expected_tier": 2,
+        "actual_tier": 2,
+        "correct": true
+      },
+      {
+        "sheet_name": "Scratch - Notes",
+        "expected_tier": 4,
+        "actual_tier": 4,
+        "correct": true
+      }
+    ]
+  },
+  "mapping_accuracy": {
+    "correct": 55,
+    "total": 56,
+    "accuracy": 0.9821,
+    "unmapped_count": 0,
+    "unmapped_labels": [],
+    "mismatches": [
+      {
+        "label": "Depreciation & Amortization",
+        "expected": "depreciation_and_amortization",
+        "actual": "depreciation_cf",
+        "acceptable": [
+          "depreciation_and_amortization",
+          "depreciation",
+          "amortization"
+        ]
+      }
+    ],
+    "per_statement": {
+      "Income Statement": {
+        "correct": 16,
+        "total": 17,
+        "mismatches": [
+          {
+            "label": "Depreciation & Amortization",
+            "expected": "depreciation_and_amortization",
+            "actual": "depreciation_cf"
+          }
+        ],
+        "accuracy": 0.9411764705882353
+      },
+      "Balance Sheet": {
+        "correct": 24,
+        "total": 24,
+        "mismatches": [],
+        "accuracy": 1.0
+      },
+      "Cash Flow Statement": {
+        "correct": 9,
+        "total": 9,
+        "mismatches": [],
+        "accuracy": 1.0
+      },
+      "Debt Schedule": {
+        "correct": 2,
+        "total": 2,
+        "mismatches": [],
+        "accuracy": 1.0
+      },
+      "Working Capital": {
+        "correct": 4,
+        "total": 4,
+        "mismatches": [],
+        "accuracy": 1.0
+      }
+    }
+  },
+  "completeness": {
+    "model_type": "corporate",
+    "overall_score": 0.758,
+    "detected_statements": [
+      "balance_sheet",
+      "cash_flow",
+      "debt_schedule",
+      "income_statement"
+    ],
+    "total_expected": 32,
+    "total_found": 24,
+    "total_missing": 8,
+    "missing_items": [
+      {
+        "canonical_name": "cfo",
+        "category": "cash_flow",
+        "weight": 1.0,
+        "is_core": true
+      },
+      {
+        "canonical_name": "capex",
+        "category": "cash_flow",
+        "weight": 0.8,
+        "is_core": true
+      },
+      {
+        "canonical_name": "fcf",
+        "category": "cash_flow",
+        "weight": 0.75,
+        "is_core": false
+      },
+      {
+        "canonical_name": "debt_service",
+        "category": "debt_schedule",
+        "weight": 0.85,
+        "is_core": true
+      },
+      {
+        "canonical_name": "cogs",
+        "category": "income_statement",
+        "weight": 0.9,
+        "is_core": true
+      },
+      {
+        "canonical_name": "net_income",
+        "category": "income_statement",
+        "weight": 0.95,
+        "is_core": true
+      },
+      {
+        "canonical_name": "ebt",
+        "category": "income_statement",
+        "weight": 0.6,
+        "is_core": false
+      },
+      {
+        "canonical_name": "opex",
+        "category": "income_statement",
+        "weight": 0.7,
+        "is_core": false
+      }
+    ],
+    "per_statement": {
+      "balance_sheet": {
+        "raw_score": 1.0,
+        "weighted_score": 1.0,
+        "core_score": 1.0,
+        "found": [
+          "total_assets",
+          "total_liabilities",
+          "total_equity",
+          "current_assets",
+          "cash",
+          "current_liabilities",
+          "long_term_debt",
+          "accounts_receivable",
+          "accounts_payable",
+          "ppe"
+        ],
+        "missing": []
+      },
+      "cash_flow": {
+        "raw_score": 0.5,
+        "weighted_score": 0.51,
+        "core_score": 0.596,
+        "found": [
+          "cfi",
+          "cff",
+          "net_change_cash"
+        ],
+        "missing": [
+          "cfo",
+          "capex",
+          "fcf"
+        ]
+      },
+      "debt_schedule": {
+        "raw_score": 0.833,
+        "weighted_score": 0.825,
+        "core_score": 0.754,
+        "found": [
+          "debt_opening_balance",
+          "debt_closing_balance",
+          "interest_expense",
+          "debt_drawdown",
+          "debt_mandatory_repayment"
+        ],
+        "missing": [
+          "debt_service"
+        ]
+      },
+      "income_statement": {
+        "raw_score": 0.636,
+        "weighted_score": 0.638,
+        "core_score": 0.661,
+        "found": [
+          "revenue",
+          "gross_profit",
+          "ebitda",
+          "ebit",
+          "depreciation",
+          "interest_expense",
+          "tax_expense"
+        ],
+        "missing": [
+          "cogs",
+          "net_income",
+          "ebt",
+          "opex"
+        ]
+      }
+    }
+  },
+  "quality": {
+    "numeric_score": 0.894,
+    "letter_grade": "B",
+    "label": "trustworthy",
+    "dimensions": [
+      {
+        "name": "mapping_confidence",
+        "score": 0.956,
+        "weight": 0.3,
+        "details": null
+      },
+      {
+        "name": "validation_success",
+        "score": 0.873,
+        "weight": 0.25,
+        "details": null
+      },
+      {
+        "name": "completeness",
+        "score": 0.758,
+        "weight": 0.25,
+        "details": null
+      },
+      {
+        "name": "time_series_consistency",
+        "score": 0.995,
+        "weight": 0.2,
+        "details": null
+      }
+    ],
+    "model_type": "corporate"
+  },
+  "sample_line_items": [
+    {
+      "sheet": "Income Statement",
+      "row": 4,
+      "original_label": "Net Revenues",
+      "canonical_name": "revenue",
+      "values": {
+        "FY2022A": 232000,
+        "FY2023A": 250560,
+        "FY2024E": 275616,
+        "FY2025E": 300421,
+        "FY2026E": 321450
+      },
+      "confidence": 0.95,
+      "hierarchy_level": 0,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "A4",
+            "raw_value": "Net Revenues"
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "B4",
+            "raw_value": 232000
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "C4",
+            "raw_value": 250560
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "D4",
+            "raw_value": 275616
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "E4",
+            "raw_value": 300421
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "F4",
+            "raw_value": 321450
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 0,
+          "is_bold": true,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Net Revenues is a standard term for total revenue on Income Statement"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Income Statement",
+      "row": 5,
+      "original_label": "Product Revenue",
+      "canonical_name": "product_revenue",
+      "values": {
+        "FY2022A": 167040,
+        "FY2023A": 177898,
+        "FY2024E": 192931,
+        "FY2025E": 207290,
+        "FY2026E": 218586
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 3,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "A5",
+            "raw_value": "  Product Revenue"
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "B5",
+            "raw_value": 167040
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "C5",
+            "raw_value": 177898
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "D5",
+            "raw_value": 192931
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "E5",
+            "raw_value": 207290
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "F5",
+            "raw_value": 218586
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 3,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Direct match to product_revenue canonical name"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Income Statement",
+      "row": 6,
+      "original_label": "Service Revenue",
+      "canonical_name": "service_revenue",
+      "values": {
+        "FY2022A": 64960,
+        "FY2023A": 72662,
+        "FY2024E": 82685,
+        "FY2025E": 93131,
+        "FY2026E": 102864
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 3,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "A6",
+            "raw_value": "  Service Revenue"
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "B6",
+            "raw_value": 64960
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "C6",
+            "raw_value": 72662
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "D6",
+            "raw_value": 82685
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "E6",
+            "raw_value": 93131
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "F6",
+            "raw_value": 102864
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 3,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Direct match to service_revenue canonical name"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Income Statement",
+      "row": 7,
+      "original_label": "Cost of Sales",
+      "canonical_name": "cost_of_sales",
+      "values": {
+        "FY2022A": 105560,
+        "FY2023A": 112752,
+        "FY2024E": 122649,
+        "FY2025E": 132185,
+        "FY2026E": 139831
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "A7",
+            "raw_value": "Cost of Sales"
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "B7",
+            "raw_value": 105560
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "C7",
+            "raw_value": 112752
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "D7",
+            "raw_value": 122649
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "E7",
+            "raw_value": 132185
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "F7",
+            "raw_value": 139831
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Direct match to cost_of_sales canonical name"
+        },
+        "validation": {
+          "rules_applied": [
+            "sign_convention"
+          ],
+          "all_passed": true,
+          "flags": [
+            {
+              "period": "FY2022A",
+              "severity": "warning",
+              "item": "cost_of_sales",
+              "rule": "sign_convention",
+              "message": "cost_of_sales is positive (105560) but typically negative",
+              "actual": "105560",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2023A",
+              "severity": "warning",
+              "item": "cost_of_sales",
+              "rule": "sign_convention",
+              "message": "cost_of_sales is positive (112752) but typically negative",
+              "actual": "112752",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2024E",
+              "severity": "warning",
+              "item": "cost_of_sales",
+              "rule": "sign_convention",
+              "message": "cost_of_sales is positive (122649) but typically negative",
+              "actual": "122649",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2025E",
+              "severity": "warning",
+              "item": "cost_of_sales",
+              "rule": "sign_convention",
+              "message": "cost_of_sales is positive (132185) but typically negative",
+              "actual": "132185",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2026E",
+              "severity": "warning",
+              "item": "cost_of_sales",
+              "rule": "sign_convention",
+              "message": "cost_of_sales is positive (139831) but typically negative",
+              "actual": "139831",
+              "expected": "negative"
+            }
+          ]
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Income Statement",
+      "row": 8,
+      "original_label": "Gross Profit",
+      "canonical_name": "gross_profit",
+      "values": {
+        "FY2022A": 126440,
+        "FY2023A": 137808,
+        "FY2024E": 152967,
+        "FY2025E": 168236,
+        "FY2026E": 181619
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 0,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "A8",
+            "raw_value": "Gross Profit"
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "B8",
+            "raw_value": 126440
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "C8",
+            "raw_value": 137808
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "D8",
+            "raw_value": 152967
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "E8",
+            "raw_value": 168236
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "F8",
+            "raw_value": 181619
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 0,
+          "is_bold": true,
+          "is_formula": false,
+          "is_subtotal": true
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Direct match to gross_profit canonical name"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Income Statement",
+      "row": 11,
+      "original_label": "SG&A",
+      "canonical_name": "sga",
+      "values": {
+        "FY2022A": 27840,
+        "FY2023A": 29566,
+        "FY2024E": 31696,
+        "FY2025E": 33948,
+        "FY2026E": 35360
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 3,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "A11",
+            "raw_value": "  SG&A"
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "B11",
+            "raw_value": 27840
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "C11",
+            "raw_value": 29566
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "D11",
+            "raw_value": 31696
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "E11",
+            "raw_value": 33948
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "F11",
+            "raw_value": 35360
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 3,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Direct match to sga canonical name"
+        },
+        "validation": {
+          "rules_applied": [
+            "sign_convention"
+          ],
+          "all_passed": true,
+          "flags": [
+            {
+              "period": "FY2022A",
+              "severity": "warning",
+              "item": "sga",
+              "rule": "sign_convention",
+              "message": "sga is positive (27840) but typically negative",
+              "actual": "27840",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2023A",
+              "severity": "warning",
+              "item": "sga",
+              "rule": "sign_convention",
+              "message": "sga is positive (29566) but typically negative",
+              "actual": "29566",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2024E",
+              "severity": "warning",
+              "item": "sga",
+              "rule": "sign_convention",
+              "message": "sga is positive (31696) but typically negative",
+              "actual": "31696",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2025E",
+              "severity": "warning",
+              "item": "sga",
+              "rule": "sign_convention",
+              "message": "sga is positive (33948) but typically negative",
+              "actual": "33948",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2026E",
+              "severity": "warning",
+              "item": "sga",
+              "rule": "sign_convention",
+              "message": "sga is positive (35360) but typically negative",
+              "actual": "35360",
+              "expected": "negative"
+            }
+          ]
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Income Statement",
+      "row": 12,
+      "original_label": "R&D Expenses",
+      "canonical_name": "rd_expense",
+      "values": {
+        "FY2022A": 13920,
+        "FY2023A": 15535,
+        "FY2024E": 17915,
+        "FY2025E": 18927,
+        "FY2026E": 19287
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 3,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "A12",
+            "raw_value": "  R&D Expenses"
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "B12",
+            "raw_value": 13920
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "C12",
+            "raw_value": 15535
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "D12",
+            "raw_value": 17915
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "E12",
+            "raw_value": 18927
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "F12",
+            "raw_value": 19287
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 3,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Direct match to rd_expense canonical name"
+        },
+        "validation": {
+          "rules_applied": [
+            "sign_convention"
+          ],
+          "all_passed": true,
+          "flags": [
+            {
+              "period": "FY2022A",
+              "severity": "warning",
+              "item": "rd_expense",
+              "rule": "sign_convention",
+              "message": "rd_expense is positive (13920) but typically negative",
+              "actual": "13920",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2023A",
+              "severity": "warning",
+              "item": "rd_expense",
+              "rule": "sign_convention",
+              "message": "rd_expense is positive (15535) but typically negative",
+              "actual": "15535",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2024E",
+              "severity": "warning",
+              "item": "rd_expense",
+              "rule": "sign_convention",
+              "message": "rd_expense is positive (17915) but typically negative",
+              "actual": "17915",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2025E",
+              "severity": "warning",
+              "item": "rd_expense",
+              "rule": "sign_convention",
+              "message": "rd_expense is positive (18927) but typically negative",
+              "actual": "18927",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2026E",
+              "severity": "warning",
+              "item": "rd_expense",
+              "rule": "sign_convention",
+              "message": "rd_expense is positive (19287) but typically negative",
+              "actual": "19287",
+              "expected": "negative"
+            }
+          ]
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Income Statement",
+      "row": 13,
+      "original_label": "Other Operating Expenses",
+      "canonical_name": "other_expense",
+      "values": {
+        "FY2022A": 5800,
+        "FY2023A": 6013,
+        "FY2024E": 6339,
+        "FY2025E": 6609,
+        "FY2026E": 6429
+      },
+      "confidence": 0.9,
+      "hierarchy_level": 3,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "A13",
+            "raw_value": "  Other Operating Expenses"
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "B13",
+            "raw_value": 5800
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "C13",
+            "raw_value": 6013
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "D13",
+            "raw_value": 6339
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "E13",
+            "raw_value": 6609
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "F13",
+            "raw_value": 6429
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 3,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Maps to other_expense as miscellaneous operating expenses"
+        },
+        "validation": {
+          "rules_applied": [
+            "sign_convention"
+          ],
+          "all_passed": true,
+          "flags": [
+            {
+              "period": "FY2022A",
+              "severity": "warning",
+              "item": "other_expense",
+              "rule": "sign_convention",
+              "message": "other_expense is positive (5800) but typically negative",
+              "actual": "5800",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2023A",
+              "severity": "warning",
+              "item": "other_expense",
+              "rule": "sign_convention",
+              "message": "other_expense is positive (6013) but typically negative",
+              "actual": "6013",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2024E",
+              "severity": "warning",
+              "item": "other_expense",
+              "rule": "sign_convention",
+              "message": "other_expense is positive (6339) but typically negative",
+              "actual": "6339",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2025E",
+              "severity": "warning",
+              "item": "other_expense",
+              "rule": "sign_convention",
+              "message": "other_expense is positive (6609) but typically negative",
+              "actual": "6609",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2026E",
+              "severity": "warning",
+              "item": "other_expense",
+              "rule": "sign_convention",
+              "message": "other_expense is positive (6429) but typically negative",
+              "actual": "6429",
+              "expected": "negative"
+            }
+          ]
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Income Statement",
+      "row": 14,
+      "original_label": "Total Operating Expenses",
+      "canonical_name": "operating_expenses",
+      "values": {
+        "FY2022A": 47560,
+        "FY2023A": 51114,
+        "FY2024E": 55950,
+        "FY2025E": 59484,
+        "FY2026E": 61076
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 0,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "A14",
+            "raw_value": "Total Operating Expenses"
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "B14",
+            "raw_value": 47560
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "C14",
+            "raw_value": 51114
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "D14",
+            "raw_value": 55950
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "E14",
+            "raw_value": 59484
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "F14",
+            "raw_value": 61076
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 0,
+          "is_bold": true,
+          "is_formula": false,
+          "is_subtotal": true
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Direct match to operating_expenses canonical name"
+        },
+        "validation": {
+          "rules_applied": [
+            "sign_convention"
+          ],
+          "all_passed": true,
+          "flags": [
+            {
+              "period": "FY2022A",
+              "severity": "warning",
+              "item": "operating_expenses",
+              "rule": "sign_convention",
+              "message": "operating_expenses is positive (47560) but typically negative",
+              "actual": "47560",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2023A",
+              "severity": "warning",
+              "item": "operating_expenses",
+              "rule": "sign_convention",
+              "message": "operating_expenses is positive (51114) but typically negative",
+              "actual": "51114",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2024E",
+              "severity": "warning",
+              "item": "operating_expenses",
+              "rule": "sign_convention",
+              "message": "operating_expenses is positive (55950) but typically negative",
+              "actual": "55950",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2025E",
+              "severity": "warning",
+              "item": "operating_expenses",
+              "rule": "sign_convention",
+              "message": "operating_expenses is positive (59484) but typically negative",
+              "actual": "59484",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2026E",
+              "severity": "warning",
+              "item": "operating_expenses",
+              "rule": "sign_convention",
+              "message": "operating_expenses is positive (61076) but typically negative",
+              "actual": "61076",
+              "expected": "negative"
+            }
+          ]
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Income Statement",
+      "row": 16,
+      "original_label": "EBITDA",
+      "canonical_name": "ebitda",
+      "values": {
+        "FY2022A": 78880,
+        "FY2023A": 86694,
+        "FY2024E": 97017,
+        "FY2025E": 108752,
+        "FY2026E": 120543
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 0,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "A16",
+            "raw_value": "EBITDA"
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "B16",
+            "raw_value": 78880
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "C16",
+            "raw_value": 86694
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "D16",
+            "raw_value": 97017
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "E16",
+            "raw_value": 108752
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "F16",
+            "raw_value": 120543
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 0,
+          "is_bold": true,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Direct match to ebitda canonical name"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Income Statement",
+      "row": 17,
+      "original_label": "Depreciation & Amortization",
+      "canonical_name": "depreciation_cf",
+      "values": {
+        "FY2022A": 8946,
+        "FY2023A": 10150,
+        "FY2024E": 11593,
+        "FY2025E": 13208,
+        "FY2026E": 14871
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "A17",
+            "raw_value": "Depreciation & Amortization"
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "B17",
+            "raw_value": 8946
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "C17",
+            "raw_value": 10150
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "D17",
+            "raw_value": 11593
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "E17",
+            "raw_value": 13208
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "F17",
+            "raw_value": 14871
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "cash_flow",
+          "reasoning": "On Cash Flow Statement, Depreciation & Amortization maps to depreciation_cf"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Income Statement",
+      "row": 18,
+      "original_label": "EBIT",
+      "canonical_name": "ebit",
+      "values": {
+        "FY2022A": 69934,
+        "FY2023A": 76544,
+        "FY2024E": 85424,
+        "FY2025E": 95544,
+        "FY2026E": 105672
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 0,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "A18",
+            "raw_value": "EBIT"
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "B18",
+            "raw_value": 69934
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "C18",
+            "raw_value": 76544
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "D18",
+            "raw_value": 85424
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "E18",
+            "raw_value": 95544
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "F18",
+            "raw_value": 105672
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 0,
+          "is_bold": true,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Direct match to ebit canonical name"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Income Statement",
+      "row": 20,
+      "original_label": "Interest Expense",
+      "canonical_name": "interest_expense",
+      "values": {
+        "FY2022A": 7525,
+        "FY2023A": 7650,
+        "FY2024E": 7705,
+        "FY2025E": 7098,
+        "FY2026E": 6466
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "A20",
+            "raw_value": "Interest Expense"
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "B20",
+            "raw_value": 7525
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "C20",
+            "raw_value": 7650
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "D20",
+            "raw_value": 7705
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "E20",
+            "raw_value": 7098
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "F20",
+            "raw_value": 6466
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "On Income Statement, maps to interest_expense (not interest_expense_debt)"
+        },
+        "validation": {
+          "rules_applied": [
+            "sign_convention"
+          ],
+          "all_passed": true,
+          "flags": [
+            {
+              "period": "FY2022A",
+              "severity": "warning",
+              "item": "interest_expense",
+              "rule": "sign_convention",
+              "message": "interest_expense is positive (7525) but typically negative",
+              "actual": "7525",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2023A",
+              "severity": "warning",
+              "item": "interest_expense",
+              "rule": "sign_convention",
+              "message": "interest_expense is positive (7650) but typically negative",
+              "actual": "7650",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2024E",
+              "severity": "warning",
+              "item": "interest_expense",
+              "rule": "sign_convention",
+              "message": "interest_expense is positive (7705) but typically negative",
+              "actual": "7705",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2025E",
+              "severity": "warning",
+              "item": "interest_expense",
+              "rule": "sign_convention",
+              "message": "interest_expense is positive (7098) but typically negative",
+              "actual": "7098",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2026E",
+              "severity": "warning",
+              "item": "interest_expense",
+              "rule": "sign_convention",
+              "message": "interest_expense is positive (6466) but typically negative",
+              "actual": "6466",
+              "expected": "negative"
+            }
+          ]
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Income Statement",
+      "row": 21,
+      "original_label": "Other (Income) / Expense, Net",
+      "canonical_name": "other_income",
+      "values": {
+        "FY2022A": 696,
+        "FY2023A": 752,
+        "FY2024E": 827,
+        "FY2025E": 901,
+        "FY2026E": 964
+      },
+      "confidence": 0.9,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "A21",
+            "raw_value": "Other (Income) / Expense, Net"
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "B21",
+            "raw_value": 696
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "C21",
+            "raw_value": 752
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "D21",
+            "raw_value": 827
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "E21",
+            "raw_value": 901
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "F21",
+            "raw_value": 964
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Non-operating income/expense items map to other_income"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Income Statement",
+      "row": 22,
+      "original_label": "Pre-Tax Income",
+      "canonical_name": "earnings_before_tax",
+      "values": {
+        "FY2022A": 61713,
+        "FY2023A": 68142,
+        "FY2024E": 76892,
+        "FY2025E": 87545,
+        "FY2026E": 98242
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 0,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "A22",
+            "raw_value": "Pre-Tax Income"
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "B22",
+            "raw_value": 61713
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "C22",
+            "raw_value": 68142
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "D22",
+            "raw_value": 76892
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "E22",
+            "raw_value": 87545
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "F22",
+            "raw_value": 98242
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 0,
+          "is_bold": true,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Pre-Tax Income maps to earnings_before_tax canonical name"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Income Statement",
+      "row": 23,
+      "original_label": "Income Tax Provision",
+      "canonical_name": "tax_expense",
+      "values": {
+        "FY2022A": 15428,
+        "FY2023A": 17036,
+        "FY2024E": 19223,
+        "FY2025E": 21886,
+        "FY2026E": 24560
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "A23",
+            "raw_value": "Income Tax Provision"
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "B23",
+            "raw_value": 15428
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "C23",
+            "raw_value": 17036
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "D23",
+            "raw_value": 19223
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "E23",
+            "raw_value": 21886
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "F23",
+            "raw_value": 24560
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Income Tax Provision maps to income_tax canonical name"
+        },
+        "validation": {
+          "rules_applied": [
+            "sign_convention"
+          ],
+          "all_passed": true,
+          "flags": [
+            {
+              "period": "FY2022A",
+              "severity": "warning",
+              "item": "tax_expense",
+              "rule": "sign_convention",
+              "message": "tax_expense is positive (15428) but typically negative",
+              "actual": "15428",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2023A",
+              "severity": "warning",
+              "item": "tax_expense",
+              "rule": "sign_convention",
+              "message": "tax_expense is positive (17036) but typically negative",
+              "actual": "17036",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2024E",
+              "severity": "warning",
+              "item": "tax_expense",
+              "rule": "sign_convention",
+              "message": "tax_expense is positive (19223) but typically negative",
+              "actual": "19223",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2025E",
+              "severity": "warning",
+              "item": "tax_expense",
+              "rule": "sign_convention",
+              "message": "tax_expense is positive (21886) but typically negative",
+              "actual": "21886",
+              "expected": "negative"
+            },
+            {
+              "period": "FY2026E",
+              "severity": "warning",
+              "item": "tax_expense",
+              "rule": "sign_convention",
+              "message": "tax_expense is positive (24560) but typically negative",
+              "actual": "24560",
+              "expected": "negative"
+            }
+          ]
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Income Statement",
+      "row": 24,
+      "original_label": "Net Income",
+      "canonical_name": "net_income_cf",
+      "values": {
+        "FY2022A": 46285,
+        "FY2023A": 51106,
+        "FY2024E": 57669,
+        "FY2025E": 65659,
+        "FY2026E": 73682
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 0,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "A24",
+            "raw_value": "Net Income"
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "B24",
+            "raw_value": 46285
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "C24",
+            "raw_value": 51106
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "D24",
+            "raw_value": 57669
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "E24",
+            "raw_value": 65659
+          },
+          {
+            "sheet": "Income Statement",
+            "cell_ref": "F24",
+            "raw_value": 73682
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 0,
+          "is_bold": true,
+          "is_formula": false,
+          "is_subtotal": true
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "cash_flow",
+          "reasoning": "On Cash Flow Statement, Net Income maps to net_income_cf"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Balance Sheet",
+      "row": 6,
+      "original_label": "Cash & Equivalents",
+      "canonical_name": "cash",
+      "values": {
+        "FY2022A": 48565,
+        "FY2023A": 93194,
+        "FY2024E": 143194,
+        "FY2025E": 201732,
+        "FY2026E": 271705
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 3,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "A6",
+            "raw_value": "  Cash & Equivalents"
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "B6",
+            "raw_value": 48565
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "C6",
+            "raw_value": 93194
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "D6",
+            "raw_value": 143194
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "E6",
+            "raw_value": 201732
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "F6",
+            "raw_value": 271705
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 3,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "balance_sheet",
+          "reasoning": "Direct match to cash_and_equivalents canonical name"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Balance Sheet",
+      "row": 7,
+      "original_label": "Accounts Receivable",
+      "canonical_name": "accounts_receivable",
+      "values": {
+        "FY2022A": 33052,
+        "FY2023A": 34323,
+        "FY2024E": 36245,
+        "FY2025E": 38684,
+        "FY2026E": 39631
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 3,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "A7",
+            "raw_value": "  Accounts Receivable"
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "B7",
+            "raw_value": 33052
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "C7",
+            "raw_value": 34323
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "D7",
+            "raw_value": 36245
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "E7",
+            "raw_value": 38684
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "F7",
+            "raw_value": 39631
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 3,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "balance_sheet",
+          "reasoning": "Direct match to accounts_receivable canonical name"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Balance Sheet",
+      "row": 8,
+      "original_label": "Inventory",
+      "canonical_name": "inventory",
+      "values": {
+        "FY2022A": 10990,
+        "FY2023A": 11121,
+        "FY2024E": 11761,
+        "FY2025E": 12313,
+        "FY2026E": 12642
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 3,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "A8",
+            "raw_value": "  Inventory"
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "B8",
+            "raw_value": 10990
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "C8",
+            "raw_value": 11121
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "D8",
+            "raw_value": 11761
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "E8",
+            "raw_value": 12313
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "F8",
+            "raw_value": 12642
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 3,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "balance_sheet",
+          "reasoning": "Direct match to inventory canonical name"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    }
+  ]
+}

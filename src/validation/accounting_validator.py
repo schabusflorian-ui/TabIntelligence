@@ -18,9 +18,11 @@ Usage:
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Set
 from decimal import Decimal
 import re
+
+from src.validation.utils import sort_periods
 
 
 @dataclass
@@ -81,6 +83,22 @@ class AccountingValidator:
         """
         self.taxonomy = {item['canonical_name']: item for item in taxonomy_items}
 
+    def _normalize_percentages(self, data: Dict[str, Decimal]) -> Dict[str, Decimal]:
+        """Normalize percentage fields from 0-100 scale to 0-1 decimal scale.
+
+        If a taxonomy item has type 'percentage' and the extracted value > 1.0,
+        divide by 100 to convert from percentage format (e.g., 54.5% -> 0.545).
+        """
+        normalized = dict(data)
+        for canonical_name, value in data.items():
+            item = self.taxonomy.get(canonical_name)
+            if not item:
+                continue
+            vr = item.get("validation_rules", {})
+            if vr.get("type") == "percentage" and abs(value) > Decimal("1.0"):
+                normalized[canonical_name] = value / Decimal("100")
+        return normalized
+
     def validate(self, extracted_data: Dict[str, Decimal]) -> ValidationSummary:
         """
         Validate extracted data against all taxonomy rules.
@@ -91,14 +109,16 @@ class AccountingValidator:
         Returns:
             ValidationSummary with all results
         """
+        # Normalize percentage values (e.g., 54.5 -> 0.545) before validation
+        data = self._normalize_percentages(extracted_data)
         results = []
 
         # Run validations for each item
         for canonical_name, item in self.taxonomy.items():
-            if canonical_name not in extracted_data:
+            if canonical_name not in data:
                 continue  # Skip items not in extracted data
 
-            value = extracted_data[canonical_name]
+            value = data[canonical_name]
             validation_rules = item.get('validation_rules', {})
             cross_val = validation_rules.get('cross_item_validation', {})
 
@@ -112,7 +132,7 @@ class AccountingValidator:
                 rel_result = self._check_relationship(
                     canonical_name,
                     relationship,
-                    extracted_data
+                    data
                 )
                 if rel_result:
                     results.append(rel_result)
@@ -202,11 +222,11 @@ class AccountingValidator:
                 return None
 
             return ValidationResult(
-                passed=True,  # Don't fail on evaluation errors
+                passed=False,
                 item_name=item_name,
                 rule=rule_str,
                 message=f"Could not evaluate rule: {str(e)}",
-                severity='info',
+                severity='warning',
                 actual_value=None,
                 expected_value=None
             )
@@ -231,15 +251,26 @@ class AccountingValidator:
         # Handle equality checks with derivations
         if '==' in rule_str:
             left, right = rule_str.split('==')
-            left_val = self._eval_expression(left.strip(), data)
+            left_name = left.strip()
+            left_val = self._eval_expression(left_name, data)
             right_val = self._eval_expression(right.strip(), data)
 
             if left_val is None or right_val is None:
                 return (True, None, None)  # Can't evaluate
 
-            # Check with tolerance
-            diff_pct = abs(float(left_val - right_val) / float(max(abs(left_val), abs(right_val), 1)))  # type: ignore[arg-type]
-            passed = diff_pct <= tolerance
+            # Percentage items use absolute difference; others use relative
+            item_meta = self.taxonomy.get(left_name, {})
+            is_percentage = (
+                item_meta.get("validation_rules", {}).get("type") == "percentage"
+            )
+
+            if is_percentage:
+                diff = abs(float(left_val - right_val))
+                passed = diff <= tolerance
+            else:
+                divisor = float(max(abs(left_val), abs(right_val), 1))  # type: ignore[arg-type]
+                diff_pct = abs(float(left_val - right_val)) / divisor
+                passed = diff_pct <= tolerance
 
             return (passed, left_val, right_val)
 
@@ -255,21 +286,10 @@ class AccountingValidator:
             passed = left_val >= right_val
             return (passed, left_val, right_val)
 
-        # Handle <= comparisons
-        elif '<=' in rule_str:
-            left, right = rule_str.split('<=')
-            left_val = self._eval_expression(left.strip(), data)
-            right_val = self._eval_expression(right.strip(), data)
-
-            if left_val is None or right_val is None:
-                return (True, None, None)
-
-            passed = left_val <= right_val
-            return (passed, left_val, right_val)
-
-        # Handle range checks (e.g., "0 <= gross_margin <= 1")
-        elif '<=' in rule_str and rule_str.count('<=') == 2:
-            parts = re.split(r'<=', rule_str)
+        # Handle range checks FIRST (e.g., "0 <= gross_margin <= 1")
+        # Must come before simple <= to avoid misparse on 3-part split
+        elif rule_str.count('<=') == 2:
+            parts = rule_str.split('<=')
             if len(parts) == 3:
                 lower = self._eval_expression(parts[0].strip(), data)
                 value = self._eval_expression(parts[1].strip(), data)
@@ -280,6 +300,18 @@ class AccountingValidator:
 
                 passed = lower <= value <= upper if lower is not None and upper is not None else True
                 return (passed, value, f"{lower} to {upper}")  # type: ignore[return-value]
+
+        # Handle simple <= comparisons (single operator)
+        elif '<=' in rule_str:
+            left, right = rule_str.split('<=')
+            left_val = self._eval_expression(left.strip(), data)
+            right_val = self._eval_expression(right.strip(), data)
+
+            if left_val is None or right_val is None:
+                return (True, None, None)
+
+            passed = left_val <= right_val
+            return (passed, left_val, right_val)
 
         raise ValueError(f"Unsupported rule format: {rule_str}")
 
@@ -361,65 +393,277 @@ class AccountingValidator:
         # Couldn't evaluate
         return None
 
+    # ------------------------------------------------------------------
+    # Sign Convention Enforcement (Part D)
+    # ------------------------------------------------------------------
 
-# Example usage
-if __name__ == "__main__":
-    import asyncio
+    def validate_sign_conventions(
+        self, data: Dict[str, Decimal],
+    ) -> List[ValidationResult]:
+        """Check extracted values against typical_sign from taxonomy.
 
-    # Sample taxonomy
-    taxonomy = [
-        {
-            "canonical_name": "revenue",
-            "validation_rules": {
-                "cross_item_validation": {
-                    "must_be_positive": True,
-                    "relationships": [
-                        {
-                            "rule": "revenue >= gross_profit",
-                            "error_message": "Revenue cannot be less than gross profit"
-                        }
-                    ]
-                }
-            }
-        },
-        {
-            "canonical_name": "gross_profit",
-            "validation_rules": {
-                "cross_item_validation": {
-                    "relationships": [
-                        {
-                            "rule": "gross_profit == revenue - cogs",
-                            "tolerance": 0.01,
-                            "error_message": "Gross profit should equal revenue minus COGS"
-                        }
-                    ]
-                }
-            }
-        }
-    ]
+        Returns warning-severity results for sign violations.
+        Skips items with typical_sign == "varies" or None, and zero values.
+        """
+        results: List[ValidationResult] = []
+        for canonical_name, value in data.items():
+            item = self.taxonomy.get(canonical_name)
+            if not item:
+                continue
 
-    # Sample extracted data
-    extracted_data = {
-        "revenue": Decimal("1000000"),
-        "cogs": Decimal("600000"),
-        "gross_profit": Decimal("400000"),  # Correct
+            typical_sign = item.get("typical_sign")
+            if typical_sign is None or typical_sign == "varies":
+                continue
+
+            if value == 0:
+                continue
+
+            violation = False
+            msg = ""
+            if typical_sign == "positive" and value < 0:
+                violation = True
+                msg = f"{canonical_name} is negative ({value}) but typically positive"
+            elif typical_sign == "negative" and value > 0:
+                violation = True
+                msg = f"{canonical_name} is positive ({value}) but typically negative"
+
+            results.append(ValidationResult(
+                passed=not violation,
+                item_name=canonical_name,
+                rule="sign_convention",
+                message=msg if violation else f"✓ {canonical_name} sign OK",
+                severity="warning",
+                actual_value=value,
+                expected_value=typical_sign,
+            ))
+
+        return results
+
+    # ------------------------------------------------------------------
+    # Cross-Statement Validation (Part C)
+    # ------------------------------------------------------------------
+
+    CROSS_STATEMENT_TOLERANCE = 0.05  # 5% tolerance for cross-statement checks
+
+    # Debt components to sum for total_debt reconciliation
+    _DEBT_COMPONENTS: Set[str] = {
+        "senior_debt", "subordinated_debt", "term_loan_a", "term_loan_b",
+        "bonds_payable", "notes_payable", "revolver_balance",
+        "revolving_credit", "long_term_debt", "short_term_debt",
     }
 
-    # Validate
-    validator = AccountingValidator(taxonomy)
-    results = validator.validate(extracted_data)
+    def validate_cross_statement(
+        self,
+        multi_period_data: Dict[str, Dict[str, Decimal]],
+    ) -> List[ValidationResult]:
+        """Validate relationships across financial statements.
 
-    print(f"Total checks: {results.total_checks}")
-    print(f"Passed: {results.passed}")
-    print(f"Failed: {results.failed}")
-    print(f"Success rate: {results.success_rate:.1%}")
+        Best-effort: skips checks where required items are missing.
+        All checks use 5% tolerance and warning severity.
+        """
+        results: List[ValidationResult] = []
+        sorted_periods = sort_periods(list(multi_period_data.keys()))
 
-    if results.has_errors:
-        print(f"\nErrors ({len(results.errors)}):")
-        for error in results.errors:
-            print(f"  - {error.message}")
+        for idx, period in enumerate(sorted_periods):
+            data = multi_period_data.get(period, {})
+            prev_data = (
+                multi_period_data.get(sorted_periods[idx - 1], {})
+                if idx > 0 else {}
+            )
 
-    if results.has_warnings:
-        print(f"\nWarnings ({len(results.warnings_list)}):")
-        for warning in results.warnings_list:
-            print(f"  - {warning.message}")
+            # 1. cash (BS) ≈ ending_cash (CF)
+            r = self._check_cash_bs_cf(period, data)
+            if r is not None:
+                results.append(r)
+
+            # 2. retained_earnings change ≈ net_income
+            r = self._check_retained_earnings_net_income(period, data, prev_data)
+            if r is not None:
+                results.append(r)
+
+            # 3. total_debt (BS) ≈ sum of debt components
+            r = self._check_total_debt_schedule(period, data)
+            if r is not None:
+                results.append(r)
+
+            # 4. depreciation_and_amortization (IS) ≈ depreciation_cf (CF)
+            r = self._check_depreciation_is_cf(period, data)
+            if r is not None:
+                results.append(r)
+
+            # 5. capex (CF) correlates with PPE change on BS
+            r = self._check_capex_ppe_change(period, data, prev_data)
+            if r is not None:
+                results.append(r)
+
+        return results
+
+    def _check_cash_bs_cf(
+        self, period: str, data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """cash (BS) ≈ ending_cash (CF)."""
+        cash = data.get("cash")
+        ending_cash = data.get("ending_cash")
+        if cash is None or ending_cash is None:
+            return None
+
+        divisor = float(max(abs(cash), abs(ending_cash), 1))
+        diff_pct = abs(float(cash - ending_cash)) / divisor
+        passed = diff_pct <= self.CROSS_STATEMENT_TOLERANCE
+
+        return ValidationResult(
+            passed=passed,
+            item_name="cash",
+            rule="cross_statement:cash_bs_cf",
+            message=(
+                f"✓ cash (BS) matches ending_cash (CF)" if passed
+                else f"cash (BS) = {cash} differs from ending_cash (CF) = {ending_cash} in period {period}"
+            ),
+            severity="warning",
+            actual_value=cash,
+            expected_value=ending_cash,
+        )
+
+    def _check_retained_earnings_net_income(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+        prev_data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """Change in retained_earnings ≈ net_income."""
+        re_curr = data.get("retained_earnings")
+        re_prev = prev_data.get("retained_earnings")
+        net_income = data.get("net_income")
+
+        if re_curr is None or re_prev is None or net_income is None:
+            return None
+
+        re_change = re_curr - re_prev
+        divisor = float(max(abs(re_change), abs(net_income), 1))
+        diff_pct = abs(float(re_change - net_income)) / divisor
+        passed = diff_pct <= self.CROSS_STATEMENT_TOLERANCE
+
+        return ValidationResult(
+            passed=passed,
+            item_name="retained_earnings",
+            rule="cross_statement:retained_earnings_ni",
+            message=(
+                f"✓ retained_earnings change matches net_income" if passed
+                else f"retained_earnings change ({re_change}) differs from net_income ({net_income}) in period {period}"
+            ),
+            severity="warning",
+            actual_value=re_change,
+            expected_value=net_income,
+        )
+
+    def _check_total_debt_schedule(
+        self, period: str, data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """total_debt (BS) ≈ sum of debt schedule components."""
+        total_debt = data.get("total_debt")
+        if total_debt is None:
+            return None
+
+        # Sum whichever debt components are present
+        components_found = []
+        debt_sum = Decimal("0")
+        for comp in self._DEBT_COMPONENTS:
+            val = data.get(comp)
+            if val is not None:
+                debt_sum += val
+                components_found.append(comp)
+
+        # Need at least 2 components to make this check meaningful
+        if len(components_found) < 2:
+            return None
+
+        divisor = float(max(abs(total_debt), abs(debt_sum), 1))
+        diff_pct = abs(float(total_debt - debt_sum)) / divisor
+        passed = diff_pct <= self.CROSS_STATEMENT_TOLERANCE
+
+        return ValidationResult(
+            passed=passed,
+            item_name="total_debt",
+            rule="cross_statement:total_debt_schedule",
+            message=(
+                f"✓ total_debt matches sum of debt components" if passed
+                else f"total_debt ({total_debt}) differs from sum of components ({debt_sum}) in period {period}"
+            ),
+            severity="warning",
+            actual_value=total_debt,
+            expected_value=debt_sum,
+        )
+
+    def _check_depreciation_is_cf(
+        self, period: str, data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """depreciation_and_amortization (IS) ≈ depreciation_cf (CF)."""
+        da_is = data.get("depreciation_and_amortization")
+        da_cf = data.get("depreciation_cf")
+
+        if da_is is None or da_cf is None:
+            return None
+
+        # Compare absolute values (signs may differ between IS and CF)
+        abs_is = abs(da_is)
+        abs_cf = abs(da_cf)
+        divisor = float(max(abs_is, abs_cf, 1))
+        diff_pct = abs(float(abs_is - abs_cf)) / divisor
+        passed = diff_pct <= self.CROSS_STATEMENT_TOLERANCE
+
+        return ValidationResult(
+            passed=passed,
+            item_name="depreciation_and_amortization",
+            rule="cross_statement:depreciation_is_cf",
+            message=(
+                f"✓ D&A (IS) matches depreciation_cf (CF)" if passed
+                else f"D&A (IS) = {da_is} differs from depreciation_cf (CF) = {da_cf} in period {period}"
+            ),
+            severity="warning",
+            actual_value=da_is,
+            expected_value=da_cf,
+        )
+
+    def _check_capex_ppe_change(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+        prev_data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """capex (CF) correlates with PPE change on BS.
+
+        PPE[t] - PPE[t-1] + depreciation[t] ≈ abs(capex[t])
+        Uses 10% tolerance (wider than standard 5%) because disposals
+        and impairments can cause legitimate gaps.
+        """
+        capex = data.get("capex")
+        ppe_curr = data.get("ppe")
+        ppe_prev = prev_data.get("ppe")
+        depreciation = data.get("depreciation") or data.get("depreciation_and_amortization")
+
+        if capex is None or ppe_curr is None or ppe_prev is None or depreciation is None:
+            return None
+
+        ppe_change = ppe_curr - ppe_prev
+        # PPE change + depreciation ≈ capex (all in absolute terms)
+        implied_capex = ppe_change + abs(depreciation)
+        actual_capex = abs(capex)
+
+        divisor = float(max(actual_capex, abs(implied_capex), 1))
+        diff_pct = abs(float(actual_capex - implied_capex)) / divisor
+        wider_tolerance = 0.10  # 10% for capex/PPE reconciliation
+        passed = diff_pct <= wider_tolerance
+
+        return ValidationResult(
+            passed=passed,
+            item_name="capex",
+            rule="cross_statement:capex_ppe_change",
+            message=(
+                f"✓ capex correlates with PPE change" if passed
+                else f"capex ({capex}) inconsistent with PPE change + depreciation ({implied_capex}) in period {period}"
+            ),
+            severity="warning",
+            actual_value=capex,
+            expected_value=implied_capex,
+        )
+

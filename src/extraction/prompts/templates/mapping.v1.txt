@@ -1,7 +1,50 @@
-Map these financial line items to canonical names.
+Map these financial line items to canonical taxonomy names.
 
 CANONICAL TAXONOMY (use these exact names):
 {taxonomy}
+
+The line items below are grouped by sheet with hierarchy and formula context to aid mapping:
+- hierarchy_level: 0=section header, 1=main item, 2=sub-item, 3=detail
+- is_formula/is_subtotal: indicates calculated or total rows
+
+Use these structural hints:
+1. Items under a section header (level 0) inherit that section's context (e.g., items under "Operating Expenses" are likely opex-related)
+2. Subtotal rows often correspond to aggregate canonical names (e.g., "Total Revenue" -> "revenue")
+3. Sub-items (level 2-3) may map to more specific canonical names than their parent
+
+SHEET-TO-CATEGORY DISAMBIGUATION (CRITICAL):
+The taxonomy above is organized by category. When the same label appears on multiple sheets,
+ALWAYS choose the canonical name whose category matches the sheet type:
+  - "Income Statement" / "P&L" sheets -> Income Statement canonicals (net_income, depreciation_and_amortization, interest_expense)
+  - "Cash Flow Statement" sheets -> Cash Flow canonicals (net_income_cf, depreciation_cf)
+  - "Balance Sheet" sheets -> Balance Sheet canonicals
+  - "Debt Schedule" sheets -> Debt Schedule canonicals (interest_expense_debt)
+  - Project finance models -> use project_finance canonicals where applicable
+Examples (pay close attention to the sheet name):
+  - "Net Income" on Income Statement -> net_income; on Cash Flow -> net_income_cf
+  - "Depreciation & Amortization" on Income Statement -> depreciation_and_amortization (NEVER depreciation_cf)
+  - "Depreciation & Amortization" on Cash Flow Statement -> depreciation_cf
+  - "Senior Notes" on Balance Sheet or Debt Schedule -> senior_debt (NEVER bonds_payable)
+
+PROJECT FINANCE DISAMBIGUATION (CRITICAL):
+Project finance models use different terminology than corporate finance. Do NOT map PF-specific
+concepts to corporate finance equivalents:
+  - "CFADS" / "Cash Flow Available for Debt Service" -> cfads (NOT operating_cash_flow or cfo)
+  - "Cashflow Available for Equity" / "CFAE" -> cfae (NOT free_cash_flow or fcf)
+  - "Total Equity Returns" / "Equity Returns" -> equity_returns (NOT return_on_equity — ROE is a ratio, not a cash flow)
+  - "Equity" under a Construction section -> equity_contribution (NOT total_equity — it's a cash injection, not a balance)
+  - "Development Cost" -> development_costs (NOT rd_expense — PF dev costs are legal/permitting/site, not R&D)
+  - "DSRA" / "Debt Service Reserve" -> dsra_balance
+  - "Investment Total" / "Total Project Cost" -> total_investment (NOT investments)
+  - "Sculpted Debt Service" -> sculpted_debt_service
+  - "LLCR" -> llcr, "PLCR" -> plcr
+  - "Equity IRR" -> equity_irr, "Pre-Tax IRR" -> pre_tax_irr, "Post-Tax IRR" -> post_tax_irr
+
+Key distinction: flows vs. stocks
+  - Equity INJECTIONS (construction phase, negative values) -> equity_contribution
+  - Total equity on a balance sheet (positive stock) -> total_equity
+  - CFADS is NOT operating_cash_flow — CFADS = Net Income + D&A + Interest (specific to PF debt sizing)
+  - CFAE is NOT free_cash_flow — FCF = Operating CF - Capex, while CFAE = CFADS - Debt Service
 
 For each line item, return:
 [

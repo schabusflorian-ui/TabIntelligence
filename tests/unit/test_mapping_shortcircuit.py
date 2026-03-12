@@ -1,0 +1,407 @@
+"""Tests for Stage 3 mapping pattern-based shortcircuit."""
+import json
+import pytest
+from datetime import datetime, timezone
+from unittest.mock import MagicMock, patch, PropertyMock
+from decimal import Decimal
+
+
+class TestPatternShortcircuit:
+    """Test that high-confidence entity patterns shortcircuit Claude calls."""
+
+    def _make_context(self, entity_id=None):
+        """Create a mock PipelineContext with parsed results."""
+        context = MagicMock()
+        context.entity_id = entity_id
+        context.get_result.return_value = {
+            "parsed": {
+                "sheets": [
+                    {
+                        "sheet_name": "Income Statement",
+                        "rows": [
+                            {"label": "Revenue", "hierarchy_level": 1, "is_formula": False, "is_subtotal": False},
+                            {"label": "Cost of Goods Sold", "hierarchy_level": 1, "is_formula": False, "is_subtotal": False},
+                            {"label": "Gross Profit", "hierarchy_level": 1, "is_formula": True, "is_subtotal": True},
+                        ],
+                    }
+                ]
+            }
+        }
+        return context
+
+    def _make_pattern(self, original_label, canonical_name, confidence=0.98, occurrence_count=5):
+        """Create a mock EntityPattern."""
+        p = MagicMock()
+        p.original_label = original_label
+        p.canonical_name = canonical_name
+        p.confidence = Decimal(str(confidence))
+        p.occurrence_count = occurrence_count
+        p.last_seen = datetime.now(timezone.utc)
+        p.created_by = "claude"
+        return p
+
+    @pytest.mark.asyncio
+    async def test_all_labels_matched_skips_claude(self):
+        """When all labels match patterns >= 0.95, Claude is NOT called."""
+        from src.extraction.stages.mapping import MappingStage
+
+        stage = MappingStage()
+        context = self._make_context(entity_id="00000000-0000-0000-0000-000000000001")
+
+        patterns = [
+            self._make_pattern("Revenue", "revenue", 0.98, 5),
+            self._make_pattern("Cost of Goods Sold", "cogs", 0.97, 3),
+            self._make_pattern("Gross Profit", "gross_profit", 0.99, 4),
+        ]
+
+        mock_claude = MagicMock()
+
+        with patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude), \
+             patch.object(stage, "_lookup_patterns") as mock_lookup, \
+             patch.object(stage, "_build_entity_hints", return_value=""):
+
+            # All labels pre-mapped, no remaining
+            pre_mapped = {
+                "Revenue": {
+                    "original_label": "Revenue",
+                    "canonical_name": "revenue",
+                    "confidence": 0.98,
+                    "method": "entity_pattern",
+                    "reasoning": "Matched entity pattern (seen 5x)",
+                },
+                "Cost of Goods Sold": {
+                    "original_label": "Cost of Goods Sold",
+                    "canonical_name": "cogs",
+                    "confidence": 0.97,
+                    "method": "entity_pattern",
+                    "reasoning": "Matched entity pattern (seen 3x)",
+                },
+                "Gross Profit": {
+                    "original_label": "Gross Profit",
+                    "canonical_name": "gross_profit",
+                    "confidence": 0.99,
+                    "method": "entity_pattern",
+                    "reasoning": "Matched entity pattern (seen 4x)",
+                },
+            }
+            mock_lookup.return_value = (pre_mapped, set())
+
+            result = await stage.execute(context)
+
+        # Claude should NOT be called
+        mock_claude.messages.create.assert_not_called()
+
+        # All mappings should come from patterns
+        assert result["tokens"] == 0
+        assert result["input_tokens"] == 0
+        assert result["output_tokens"] == 0
+        assert len(result["mappings"]) == 3
+        assert result["lineage_metadata"]["pattern_matched"] == 3
+        assert result["lineage_metadata"]["claude_mapped"] == 0
+
+        # All should have method = entity_pattern
+        for m in result["mappings"]:
+            assert m["method"] == "entity_pattern"
+
+    @pytest.mark.asyncio
+    async def test_partial_match_sends_remaining_to_claude(self):
+        """When some labels match patterns, only unmatched are sent to Claude."""
+        from src.extraction.stages.mapping import MappingStage
+
+        stage = MappingStage()
+        context = self._make_context(entity_id="00000000-0000-0000-0000-000000000001")
+
+        # Mock Claude response for the remaining label
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text=json.dumps([
+            {
+                "original_label": "Gross Profit",
+                "canonical_name": "gross_profit",
+                "confidence": 0.90,
+                "reasoning": "Standard gross profit",
+            }
+        ]))]
+        mock_response.usage = MagicMock(input_tokens=200, output_tokens=100)
+
+        mock_claude = MagicMock()
+        mock_claude.messages.create.return_value = mock_response
+
+        with patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude), \
+             patch.object(stage, "_lookup_patterns") as mock_lookup, \
+             patch.object(stage, "_build_entity_hints", return_value=""):
+
+            # 2 of 3 labels pre-mapped
+            pre_mapped = {
+                "Revenue": {
+                    "original_label": "Revenue",
+                    "canonical_name": "revenue",
+                    "confidence": 0.98,
+                    "method": "entity_pattern",
+                    "reasoning": "Matched entity pattern (seen 5x)",
+                },
+                "Cost of Goods Sold": {
+                    "original_label": "Cost of Goods Sold",
+                    "canonical_name": "cogs",
+                    "confidence": 0.97,
+                    "method": "entity_pattern",
+                    "reasoning": "Matched entity pattern (seen 3x)",
+                },
+            }
+            mock_lookup.return_value = (pre_mapped, {"Gross Profit"})
+
+            result = await stage.execute(context)
+
+        # Claude SHOULD be called
+        mock_claude.messages.create.assert_called_once()
+
+        # Verify Claude only received the unmatched label
+        call_args = mock_claude.messages.create.call_args
+        prompt_content = call_args[1]["messages"][0]["content"] if "messages" in call_args[1] else call_args[0][0]["messages"][0]["content"]
+        assert "Gross Profit" in prompt_content
+        # Revenue and COGS should NOT be in the Claude prompt's line_items
+        # (they may appear in taxonomy hints though, so we check the rendered line items)
+
+        # Check merged results
+        assert len(result["mappings"]) == 3
+        assert result["tokens"] == 300  # 200 + 100
+        assert result["lineage_metadata"]["pattern_matched"] == 2
+        assert result["lineage_metadata"]["claude_mapped"] == 1
+
+        # Check method tags
+        methods = {m["original_label"]: m["method"] for m in result["mappings"]}
+        assert methods["Revenue"] == "entity_pattern"
+        assert methods["Cost of Goods Sold"] == "entity_pattern"
+        assert methods["Gross Profit"] == "claude"
+
+    @pytest.mark.asyncio
+    async def test_no_entity_id_sends_all_to_claude(self):
+        """Without entity_id, all labels are sent to Claude."""
+        from src.extraction.stages.mapping import MappingStage
+
+        stage = MappingStage()
+        context = self._make_context(entity_id=None)
+
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text=json.dumps([
+            {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95, "reasoning": "Direct match"},
+            {"original_label": "Cost of Goods Sold", "canonical_name": "cogs", "confidence": 0.95, "reasoning": "Standard"},
+            {"original_label": "Gross Profit", "canonical_name": "gross_profit", "confidence": 0.95, "reasoning": "Standard"},
+        ]))]
+        mock_response.usage = MagicMock(input_tokens=500, output_tokens=300)
+
+        mock_claude = MagicMock()
+        mock_claude.messages.create.return_value = mock_response
+
+        with patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude), \
+             patch.object(stage, "_build_entity_hints", return_value=""):
+
+            result = await stage.execute(context)
+
+        # Claude SHOULD be called with all 3 labels
+        mock_claude.messages.create.assert_called_once()
+        assert len(result["mappings"]) == 3
+        assert result["tokens"] == 800
+
+        # All should have method = claude
+        for m in result["mappings"]:
+            assert m["method"] == "claude"
+
+    @pytest.mark.asyncio
+    async def test_pattern_lookup_failure_falls_back_to_claude(self):
+        """If pattern lookup fails, all labels are sent to Claude."""
+        from src.extraction.stages.mapping import MappingStage
+
+        stage = MappingStage()
+        context = self._make_context(entity_id="00000000-0000-0000-0000-000000000001")
+
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text=json.dumps([
+            {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95, "reasoning": "Direct match"},
+            {"original_label": "Cost of Goods Sold", "canonical_name": "cogs", "confidence": 0.95, "reasoning": "Standard"},
+            {"original_label": "Gross Profit", "canonical_name": "gross_profit", "confidence": 0.95, "reasoning": "Standard"},
+        ]))]
+        mock_response.usage = MagicMock(input_tokens=500, output_tokens=300)
+
+        mock_claude = MagicMock()
+        mock_claude.messages.create.return_value = mock_response
+
+        with patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude), \
+             patch.object(stage, "_lookup_patterns") as mock_lookup, \
+             patch.object(stage, "_build_entity_hints", return_value=""):
+
+            # Simulate pattern lookup returning empty (as if exception was caught)
+            mock_lookup.return_value = ({}, {"Revenue", "Cost of Goods Sold", "Gross Profit"})
+
+            result = await stage.execute(context)
+
+        # Claude should be called with all labels
+        mock_claude.messages.create.assert_called_once()
+        assert len(result["mappings"]) == 3
+
+
+class TestLookupPatterns:
+    """Test the _lookup_patterns method directly."""
+
+    def _make_pattern(self, original_label, canonical_name, confidence=0.98, occurrence_count=5):
+        """Create a mock EntityPattern."""
+        p = MagicMock()
+        p.original_label = original_label
+        p.canonical_name = canonical_name
+        p.confidence = Decimal(str(confidence))
+        p.occurrence_count = occurrence_count
+        p.last_seen = datetime.now(timezone.utc)
+        p.created_by = "claude"
+        return p
+
+    def test_lookup_without_entity_id(self):
+        """Without entity_id, returns empty pre_mapped and all labels."""
+        from src.extraction.stages.mapping import MappingStage
+
+        stage = MappingStage()
+        context = MagicMock()
+        context.entity_id = None
+
+        labels = {"Revenue", "COGS"}
+        pre_mapped, remaining = stage._lookup_patterns(context, labels)
+
+        assert pre_mapped == {}
+        assert remaining == labels
+
+    def test_lookup_with_matching_patterns(self):
+        """With matching patterns, returns pre_mapped and remaining."""
+        from src.extraction.stages.mapping import MappingStage
+
+        stage = MappingStage()
+        context = MagicMock()
+        context.entity_id = "00000000-0000-0000-0000-000000000001"
+
+        patterns = [
+            self._make_pattern("Revenue", "revenue", 0.98, 5),
+        ]
+
+        with patch("src.extraction.stages.mapping.MappingStage._lookup_patterns") as original:
+            # Call the real method but mock the DB
+            pass
+
+        # Use direct DB mocking
+        with patch("src.db.session.get_db_sync") as mock_db_ctx:
+            mock_session = MagicMock()
+            mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_session)
+            mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
+
+            with patch("src.db.crud.get_entity_patterns", return_value=patterns):
+                labels = {"Revenue", "COGS"}
+                pre_mapped, remaining = stage._lookup_patterns(context, labels)
+
+        assert "Revenue" in pre_mapped
+        assert pre_mapped["Revenue"]["canonical_name"] == "revenue"
+        assert pre_mapped["Revenue"]["method"] == "entity_pattern"
+        assert remaining == {"COGS"}
+
+    def test_lookup_db_failure_returns_all_labels(self):
+        """DB failure returns empty pre_mapped and all labels."""
+        from src.extraction.stages.mapping import MappingStage
+
+        stage = MappingStage()
+        context = MagicMock()
+        context.entity_id = "00000000-0000-0000-0000-000000000001"
+
+        with patch("src.db.session.get_db_sync", side_effect=Exception("DB down")):
+            labels = {"Revenue", "COGS"}
+            pre_mapped, remaining = stage._lookup_patterns(context, labels)
+
+        assert pre_mapped == {}
+        assert remaining == labels
+
+
+class TestSheetCategoryDisambiguation:
+    """Tests for deterministic sheet-category disambiguation override."""
+
+    def test_overrides_wrong_category(self):
+        """D&A on Income Statement should override depreciation_cf -> depreciation_and_amortization."""
+        from src.extraction.stages.mapping import _disambiguate_by_sheet_category
+        from src.extraction.taxonomy_loader import get_alias_to_canonicals
+
+        mappings = [
+            {
+                "original_label": "Depreciation & Amortization",
+                "canonical_name": "depreciation_cf",
+                "confidence": 0.95,
+            },
+        ]
+        grouped_items = [
+            {"label": "Depreciation & Amortization", "sheet": "Income Statement"},
+        ]
+        alias_lookup = get_alias_to_canonicals()
+
+        count = _disambiguate_by_sheet_category(mappings, grouped_items, alias_lookup)
+
+        assert count == 1
+        assert mappings[0]["canonical_name"] == "depreciation_and_amortization"
+        assert mappings[0]["disambiguation_override"]["original"] == "depreciation_cf"
+
+    def test_no_override_correct_category(self):
+        """D&A on Cash Flow should keep depreciation_cf (already correct)."""
+        from src.extraction.stages.mapping import _disambiguate_by_sheet_category
+        from src.extraction.taxonomy_loader import get_alias_to_canonicals
+
+        mappings = [
+            {
+                "original_label": "Add: Depreciation",
+                "canonical_name": "depreciation_cf",
+                "confidence": 0.95,
+            },
+        ]
+        grouped_items = [
+            {"label": "Add: Depreciation", "sheet": "Cash Flow Statement"},
+        ]
+        alias_lookup = get_alias_to_canonicals()
+
+        count = _disambiguate_by_sheet_category(mappings, grouped_items, alias_lookup)
+
+        assert count == 0
+        assert mappings[0]["canonical_name"] == "depreciation_cf"
+
+    def test_no_override_no_alias_match(self):
+        """Unknown label with no alias match should not be changed."""
+        from src.extraction.stages.mapping import _disambiguate_by_sheet_category
+        from src.extraction.taxonomy_loader import get_alias_to_canonicals
+
+        mappings = [
+            {
+                "original_label": "Custom Widget Revenue",
+                "canonical_name": "revenue",
+                "confidence": 0.85,
+            },
+        ]
+        grouped_items = [
+            {"label": "Custom Widget Revenue", "sheet": "Income Statement"},
+        ]
+        alias_lookup = get_alias_to_canonicals()
+
+        count = _disambiguate_by_sheet_category(mappings, grouped_items, alias_lookup)
+
+        assert count == 0
+        assert mappings[0]["canonical_name"] == "revenue"
+
+    def test_no_override_unmapped(self):
+        """Unmapped items should not be touched."""
+        from src.extraction.stages.mapping import _disambiguate_by_sheet_category
+        from src.extraction.taxonomy_loader import get_alias_to_canonicals
+
+        mappings = [
+            {
+                "original_label": "Some Label",
+                "canonical_name": "unmapped",
+                "confidence": 0.3,
+            },
+        ]
+        grouped_items = [
+            {"label": "Some Label", "sheet": "Income Statement"},
+        ]
+        alias_lookup = get_alias_to_canonicals()
+
+        count = _disambiguate_by_sheet_category(mappings, grouped_items, alias_lookup)
+
+        assert count == 0
+        assert mappings[0]["canonical_name"] == "unmapped"

@@ -35,14 +35,14 @@ class TestTaxonomyJSON:
         for cat_items in self.data["categories"].values():
             self.all_items.extend(cat_items)
 
-    def test_version_is_2_1_0(self):
-        assert self.data["version"] == "2.1.0"
+    def test_version_is_3_0_0(self):
+        assert self.data["version"] == "3.0.0"
 
-    def test_minimum_250_items(self):
-        assert len(self.all_items) >= 250
+    def test_minimum_295_items(self):
+        assert len(self.all_items) >= 295
 
     def test_all_categories_present(self):
-        expected = {"income_statement", "balance_sheet", "cash_flow", "debt_schedule", "metrics"}
+        expected = {"income_statement", "balance_sheet", "cash_flow", "debt_schedule", "metrics", "project_finance"}
         assert expected.issubset(set(self.data["categories"].keys()))
 
     def test_all_items_have_required_fields(self):
@@ -158,6 +158,129 @@ class TestTaxonomyJSON:
         found = {item["canonical_name"] for item in self.all_items}
         missing = retail_items - found
         assert not missing, f"Missing retail metrics: {missing}"
+
+    # Phase 4: Startup / SaaS expansion
+    def test_startup_items_exist(self):
+        found = {item["canonical_name"] for item in self.all_items}
+        startup_items = {
+            "recurring_revenue", "non_recurring_revenue",
+            "usage_based_revenue", "adjusted_ebitda", "stock_based_compensation_expense",
+            "restructuring_charges", "current_tax_expense", "deferred_tax_expense",
+            "contribution_margin",
+            "contract_assets", "contract_liabilities",
+            "right_of_use_asset", "lease_liability_current", "lease_liability_non_current",
+            "tax_loss_carryforward", "convertible_notes", "safe_notes",
+            "change_in_contract_liabilities", "proceeds_from_convertible_notes",
+            "change_in_deferred_revenue_cf",
+            "burn_rate", "cash_runway_months", "bookings", "acv",
+            "customer_count", "new_customers", "churned_customers",
+            "headcount", "revenue_per_employee",
+            "logo_churn_rate", "revenue_churn_rate",
+            "monthly_burn", "pipeline_value",
+        }
+        missing = startup_items - found
+        assert not missing, f"Missing startup items: {missing}"
+
+    def test_new_saas_items_tagged(self):
+        saas_names = {
+            "recurring_revenue", "usage_based_revenue", "burn_rate",
+            "cash_runway_months", "bookings", "acv",
+        }
+        for name in saas_names:
+            item = next((i for i in self.all_items if i["canonical_name"] == name), None)
+            assert item is not None, f"{name} not found"
+            tags = item.get("industry_tags", [])
+            assert "saas" in tags or "subscription" in tags, \
+                f"{name} should be tagged 'saas' or 'subscription', got {tags}"
+
+    def test_no_conflicting_aliases_among_ws4_items(self):
+        """WS-4 new items should not have aliases that conflict with each other."""
+        ws4_items = {
+            "recurring_revenue", "non_recurring_revenue",
+            "usage_based_revenue", "adjusted_ebitda", "stock_based_compensation_expense",
+            "restructuring_charges", "current_tax_expense", "deferred_tax_expense",
+            "contribution_margin",
+            "contract_assets", "contract_liabilities",
+            "right_of_use_asset", "lease_liability_current", "lease_liability_non_current",
+            "tax_loss_carryforward", "convertible_notes", "safe_notes",
+            "change_in_contract_liabilities", "proceeds_from_convertible_notes",
+            "change_in_deferred_revenue_cf",
+            "burn_rate", "cash_runway_months", "bookings", "acv",
+            "customer_count", "new_customers", "churned_customers",
+            "headcount", "revenue_per_employee",
+            "logo_churn_rate", "revenue_churn_rate",
+            "monthly_burn", "pipeline_value",
+        }
+        for category, items in self.data["categories"].items():
+            ws4_in_cat = [i for i in items if i["canonical_name"] in ws4_items]
+            alias_to_item = {}
+            for item in ws4_in_cat:
+                for alias in item.get("aliases", []):
+                    key = alias.lower().strip()
+                    if key in alias_to_item:
+                        pytest.fail(
+                            f"WS-4 alias '{alias}' appears on both "
+                            f"'{alias_to_item[key]}' and '{item['canonical_name']}' "
+                            f"in category '{category}'"
+                        )
+                    alias_to_item[key] = item["canonical_name"]
+
+    def test_arr_mrr_aliases_not_on_revenue(self):
+        """ARR and MRR aliases should be on arr/mrr metrics, not on revenue."""
+        revenue = next(i for i in self.all_items if i["canonical_name"] == "revenue")
+        lowered = [a.lower() for a in revenue.get("aliases", [])]
+        assert "arr" not in lowered, "revenue should not have 'ARR' alias"
+        assert "mrr" not in lowered, "revenue should not have 'MRR' alias"
+
+    def test_adjusted_ebitda_has_validation_rule(self):
+        item = next((i for i in self.all_items if i["canonical_name"] == "adjusted_ebitda"), None)
+        assert item is not None
+        vr = item.get("validation_rules", {})
+        civ = vr.get("cross_item_validation", {})
+        assert len(civ.get("relationships", [])) >= 1
+
+    def test_ws4_items_in_correct_categories(self):
+        """Each WS-4 item must be in the expected category."""
+        expected = {
+            "recurring_revenue": "income_statement",
+            "non_recurring_revenue": "income_statement",
+            "usage_based_revenue": "income_statement",
+            "adjusted_ebitda": "income_statement",
+            "stock_based_compensation_expense": "income_statement",
+            "restructuring_charges": "income_statement",
+            "current_tax_expense": "income_statement",
+            "deferred_tax_expense": "income_statement",
+            "contribution_margin": "income_statement",
+            "contract_assets": "balance_sheet",
+            "contract_liabilities": "balance_sheet",
+            "right_of_use_asset": "balance_sheet",
+            "lease_liability_current": "balance_sheet",
+            "lease_liability_non_current": "balance_sheet",
+            "tax_loss_carryforward": "balance_sheet",
+            "convertible_notes": "balance_sheet",
+            "safe_notes": "balance_sheet",
+            "change_in_contract_liabilities": "cash_flow",
+            "proceeds_from_convertible_notes": "cash_flow",
+            "change_in_deferred_revenue_cf": "cash_flow",
+            "burn_rate": "metrics",
+            "cash_runway_months": "metrics",
+            "bookings": "metrics",
+            "acv": "metrics",
+            "customer_count": "metrics",
+            "new_customers": "metrics",
+            "churned_customers": "metrics",
+            "headcount": "metrics",
+            "revenue_per_employee": "metrics",
+            "logo_churn_rate": "metrics",
+            "revenue_churn_rate": "metrics",
+            "monthly_burn": "metrics",
+            "pipeline_value": "metrics",
+        }
+        for item in self.all_items:
+            name = item["canonical_name"]
+            if name in expected:
+                assert item["category"] == expected[name], \
+                    f"{name} should be in {expected[name]}, got {item['category']}"
 
 
 # ============================================================
@@ -334,6 +457,67 @@ class TestAccountingValidator:
         assert results.passed >= 0
         assert results.failed >= 0
         assert 0.0 <= results.success_rate <= 1.0
+
+    def test_arr_mrr_validation(self):
+        """ARR should be approximately MRR * 12."""
+        taxonomy = [
+            {
+                "canonical_name": "arr",
+                "validation_rules": {
+                    "cross_item_validation": {
+                        "relationships": [
+                            {
+                                "rule": "arr == mrr * 12",
+                                "tolerance": 0.05,
+                                "optional": True,
+                                "error_message": "ARR should be approximately MRR x 12"
+                            }
+                        ]
+                    }
+                }
+            }
+        ]
+        validator = AccountingValidator(taxonomy)
+        # Valid: 120000 == 10000 * 12
+        data = {"arr": Decimal("120000"), "mrr": Decimal("10000")}
+        results = validator.validate(data)
+        assert not results.has_errors
+
+        # Invalid: 150000 != 10000 * 12 (25% off, exceeds 5% tolerance)
+        data_bad = {"arr": Decimal("150000"), "mrr": Decimal("10000")}
+        results_bad = validator.validate(data_bad)
+        arr_results = [r for r in results_bad.all_results if "arr" in r.rule]
+        assert any(not r.passed for r in arr_results)
+
+    def test_gross_retention_range_validation(self):
+        """Gross retention must be between 0 and 1."""
+        taxonomy = [
+            {
+                "canonical_name": "gross_retention",
+                "validation_rules": {
+                    "type": "percentage",
+                    "cross_item_validation": {
+                        "relationships": [
+                            {
+                                "rule": "0 <= gross_retention <= 1",
+                                "error_message": "Gross retention must be between 0% and 100%"
+                            }
+                        ]
+                    }
+                }
+            }
+        ]
+        validator = AccountingValidator(taxonomy)
+        # Valid
+        data = {"gross_retention": Decimal("0.85")}
+        results = validator.validate(data)
+        assert not results.has_errors
+
+        # Invalid: 150 (percent-scale) normalizes to 1.5 which exceeds range 0-1
+        data_bad = {"gross_retention": Decimal("150")}
+        results_bad = validator.validate(data_bad)
+        retention_results = [r for r in results_bad.all_results if "gross_retention" in r.rule]
+        assert any(not r.passed for r in retention_results)
 
 
 # ============================================================

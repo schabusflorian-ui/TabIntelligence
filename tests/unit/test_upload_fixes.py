@@ -9,6 +9,9 @@ import pytest
 from unittest.mock import patch, MagicMock
 from uuid import uuid4
 
+# Valid XLSX magic bytes (ZIP header) so uploads pass magic-byte validation
+_FAKE_XLSX = b"PK\x03\x04" + b"\x00" * 100
+
 
 class TestUploadS3FailureNoOrphanedRecords:
     """Fix 1: If S3 upload fails, no DB records should be created."""
@@ -21,10 +24,10 @@ class TestUploadS3FailureNoOrphanedRecords:
         mock_s3.generate_s3_key.return_value = "uploads/test-key.xlsx"
         mock_s3.upload_file.side_effect = FileStorageError("S3 connection refused")
 
-        with patch("src.api.main.get_s3_client", return_value=mock_s3):
+        with patch("src.api.files.get_s3_client", return_value=mock_s3):
             response = test_client_with_db.post(
                 "/api/v1/files/upload",
-                files={"file": ("test.xlsx", b"fake excel content", "application/vnd.ms-excel")},
+                files={"file": ("test.xlsx", _FAKE_XLSX, "application/vnd.ms-excel")},
             )
 
         assert response.status_code == 500
@@ -54,11 +57,11 @@ class TestCeleryEnqueueFailureReturns503:
         mock_task = MagicMock()
         mock_task.delay.side_effect = ConnectionError("Redis connection refused")
 
-        with patch("src.api.main.get_s3_client", return_value=mock_s3), \
-             patch("src.api.main.run_extraction_task", mock_task):
+        with patch("src.api.files.get_s3_client", return_value=mock_s3), \
+             patch("src.api.files.run_extraction_task", mock_task):
             response = test_client_with_db.post(
                 "/api/v1/files/upload",
-                files={"file": ("test.xlsx", b"fake excel content", "application/vnd.ms-excel")},
+                files={"file": ("test.xlsx", _FAKE_XLSX, "application/vnd.ms-excel")},
             )
 
         assert response.status_code == 503
@@ -91,11 +94,11 @@ class TestTaskReceivesS3Key:
         mock_result.id = "test-task-id"
         mock_task.delay.return_value = mock_result
 
-        with patch("src.api.main.get_s3_client", return_value=mock_s3), \
-             patch("src.api.main.run_extraction_task", mock_task):
+        with patch("src.api.files.get_s3_client", return_value=mock_s3), \
+             patch("src.api.files.run_extraction_task", mock_task):
             response = test_client_with_db.post(
                 "/api/v1/files/upload",
-                files={"file": ("test.xlsx", b"fake excel content", "application/vnd.ms-excel")},
+                files={"file": ("test.xlsx", _FAKE_XLSX, "application/vnd.ms-excel")},
             )
 
         assert response.status_code == 200
@@ -134,7 +137,7 @@ class TestRetryPassesS3Key:
         mock_task_result = MagicMock()
         mock_task_result.id = "retry-task-456"
 
-        with patch("src.api.main.run_extraction_task") as mock_task:
+        with patch("src.api.jobs.run_extraction_task") as mock_task:
             mock_task.delay.return_value = mock_task_result
             response = test_client_with_db.post(f"/api/v1/jobs/{job_id}/retry")
 
@@ -146,3 +149,118 @@ class TestRetryPassesS3Key:
         assert call_kwargs.kwargs.get("s3_key") == "uploads/original.xlsx"
         # Verify file_bytes was NOT passed
         assert "file_bytes" not in call_kwargs.kwargs
+
+
+class TestQualityGradeAndNeedsReview:
+    """Test quality_grade persistence and NEEDS_REVIEW status."""
+
+    def test_complete_job_stores_quality_grade(self, test_client_with_db, test_db):
+        """complete_job should store quality_grade on the ExtractionJob."""
+        from src.db import crud
+
+        session = test_db()
+        try:
+            file = crud.create_file(
+                session, filename="test.xlsx", file_size=1024, s3_key="uploads/test.xlsx"
+            )
+            job = crud.create_extraction_job(session, file_id=file.file_id)
+
+            result = {
+                "quality": {
+                    "letter_grade": "B",
+                    "numeric_score": 0.82,
+                    "quality_gate": {"passed": True},
+                },
+            }
+            crud.complete_job(
+                session, job.job_id, result=result,
+                tokens_used=500, cost_usd=0.01, quality_grade="B"
+            )
+
+            updated = crud.get_job(session, job.job_id)
+            assert updated.quality_grade == "B"
+            assert updated.status.value == "completed"
+        finally:
+            session.close()
+
+    def test_complete_job_needs_review_on_gate_fail(self, test_client_with_db, test_db):
+        """complete_job should set NEEDS_REVIEW when quality gate fails."""
+        from src.db import crud
+        from src.db.models import JobStatusEnum
+
+        session = test_db()
+        try:
+            file = crud.create_file(
+                session, filename="test.xlsx", file_size=1024, s3_key="uploads/test.xlsx"
+            )
+            job = crud.create_extraction_job(session, file_id=file.file_id)
+
+            result = {
+                "quality": {
+                    "letter_grade": "F",
+                    "numeric_score": 0.25,
+                    "quality_gate": {"passed": False, "reason": "Grade F"},
+                },
+            }
+            crud.complete_job(
+                session, job.job_id, result=result,
+                tokens_used=500, cost_usd=0.01, quality_grade="F"
+            )
+
+            updated = crud.get_job(session, job.job_id)
+            assert updated.status == JobStatusEnum.NEEDS_REVIEW
+            assert updated.quality_grade == "F"
+        finally:
+            session.close()
+
+    def test_complete_job_completed_when_gate_passes(self, test_client_with_db, test_db):
+        """complete_job should set COMPLETED when quality gate passes."""
+        from src.db import crud
+        from src.db.models import JobStatusEnum
+
+        session = test_db()
+        try:
+            file = crud.create_file(
+                session, filename="test.xlsx", file_size=1024, s3_key="uploads/test.xlsx"
+            )
+            job = crud.create_extraction_job(session, file_id=file.file_id)
+
+            result = {
+                "quality": {
+                    "letter_grade": "A",
+                    "numeric_score": 0.95,
+                    "quality_gate": {"passed": True},
+                },
+            }
+            crud.complete_job(
+                session, job.job_id, result=result,
+                tokens_used=500, cost_usd=0.01, quality_grade="A"
+            )
+
+            updated = crud.get_job(session, job.job_id)
+            assert updated.status == JobStatusEnum.COMPLETED
+        finally:
+            session.close()
+
+    def test_complete_job_no_quality_gate_defaults_completed(self, test_client_with_db, test_db):
+        """Without quality_gate in result, job should still be COMPLETED."""
+        from src.db import crud
+        from src.db.models import JobStatusEnum
+
+        session = test_db()
+        try:
+            file = crud.create_file(
+                session, filename="test.xlsx", file_size=1024, s3_key="uploads/test.xlsx"
+            )
+            job = crud.create_extraction_job(session, file_id=file.file_id)
+
+            result = {"quality": {"letter_grade": "C"}}
+            crud.complete_job(
+                session, job.job_id, result=result,
+                tokens_used=100, cost_usd=0.001
+            )
+
+            updated = crud.get_job(session, job.job_id)
+            assert updated.status == JobStatusEnum.COMPLETED
+        finally:
+            session.close()

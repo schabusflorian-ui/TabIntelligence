@@ -48,13 +48,15 @@ except (ImportError, AttributeError):
 def run_extraction_task(
     self,
     job_id: str,
-    s3_key: str,
-    entity_id: Optional[str] = None
+    s3_key: Optional[str] = None,
+    file_bytes: Optional[bytes] = None,
+    entity_id: Optional[str] = None,
+    resume_from_stage: Optional[str] = None,
 ) -> dict:
     """
     Background task for extraction pipeline.
 
-    Downloads file from S3 using the provided key, then runs extraction.
+    Accepts either s3_key (production) or file_bytes (local dev without S3).
     Uses asyncio.run() to bridge the sync Celery task with async extraction code.
     Job failure is handled by DLQTask.on_failure() after all retries are exhausted.
     """
@@ -65,7 +67,11 @@ def run_extraction_task(
 
     try:
         result = asyncio.run(
-            async_extraction_wrapper(job_id, s3_key, entity_id)
+            async_extraction_wrapper(
+                job_id, s3_key, entity_id,
+                file_bytes=file_bytes,
+                resume_from_stage=resume_from_stage,
+            )
         )
         logger.info(f"Celery task completed: job_id={job_id}")
         return result
@@ -94,35 +100,41 @@ def run_extraction_task(
 
 async def async_extraction_wrapper(
     job_id: str,
-    s3_key: str,
-    entity_id: Optional[str]
+    s3_key: Optional[str],
+    entity_id: Optional[str],
+    file_bytes: Optional[bytes] = None,
+    resume_from_stage: Optional[str] = None,
 ) -> dict:
     """
     Async wrapper that orchestrates the extraction pipeline.
 
     This function handles:
-    1. Downloading the file from S3
+    1. Downloading the file from S3 (or using provided file_bytes)
     2. Updating job status to PROCESSING
     3. Running the async extraction orchestrator with progress callbacks
     4. Updating job status to COMPLETED or FAILED
 
     Args:
         job_id: UUID of the extraction job
-        s3_key: S3 object key to download the file from
+        s3_key: S3 object key to download the file from (production)
         entity_id: Optional entity ID
+        file_bytes: Pre-loaded file bytes (local dev without S3)
 
     Returns:
         Extraction result dictionary
     """
     from src.extraction.orchestrator import extract
     from src.core.exceptions import ExtractionError, ClaudeAPIError, LineageIncompleteError
-    from src.storage.s3 import get_s3_client
 
     job_uuid = UUID(job_id)
 
-    # Download file from S3
-    s3_client = get_s3_client()
-    file_bytes = s3_client.download_file(s3_key)
+    # Get file bytes: from S3 if key provided, otherwise use direct bytes
+    if file_bytes is None:
+        if s3_key is None:
+            raise ValueError(f"Job {job_id}: neither s3_key nor file_bytes provided")
+        from src.storage.s3 import get_s3_client
+        s3_client = get_s3_client()
+        file_bytes = s3_client.download_file(s3_key)
 
     def update_progress(stage_name: str, progress_percent: int):
         """Update job progress in DB after each stage completes."""
@@ -158,16 +170,32 @@ async def async_extraction_wrapper(
         result = await extract(
             file_bytes, file_id_str, entity_id,
             job_id=job_id, progress_callback=update_progress,
+            resume_from_stage=resume_from_stage,
         )
 
-        # Mark as completed
+        # Mark as completed (or NEEDS_REVIEW if quality gate fails)
+        quality = result.get("quality") or {}
+        quality_grade = quality.get("letter_grade")
         with get_db_context() as db:
             crud.complete_job(
                 db,
                 job_uuid,
                 result=result,
                 tokens_used=result.get("tokens_used", 0),
-                cost_usd=result.get("cost_usd", 0.0)
+                cost_usd=result.get("cost_usd", 0.0),
+                quality_grade=quality_grade,
+            )
+
+        # --- Critical condition alerting ---
+        cost_usd = result.get("cost_usd", 0.0)
+        duration_s = result.get("duration_seconds", 0)
+        if cost_usd > 5.0:
+            logger.critical(
+                f"COST ALERT: job {job_id} cost ${cost_usd:.2f} (threshold: $5.00)"
+            )
+        if duration_s > 600:
+            logger.critical(
+                f"DURATION ALERT: job {job_id} took {duration_s:.0f}s (threshold: 600s)"
             )
 
         logger.info(f"Extraction completed successfully for job: {job_id}")

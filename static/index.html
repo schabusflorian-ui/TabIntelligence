@@ -51,17 +51,26 @@
     <!-- Results -->
     <section id="results-section" class="hidden">
       <div id="summary-bar">
+        <div class="stat"><span id="stat-quality" class="quality-badge">-</span><label>Quality</label></div>
         <div class="stat"><span id="stat-sheets">0</span><label>Sheets</label></div>
         <div class="stat"><span id="stat-items">0</span><label>Line Items</label></div>
         <div class="stat"><span id="stat-confidence">0%</span><label>Confidence</label></div>
         <div class="stat"><span id="stat-tokens">0</span><label>Tokens</label></div>
         <div class="stat"><span id="stat-cost">$0.00</span><label>Cost</label></div>
+        <div class="stat"><span id="stat-validation-delta"></span><label>Validation Delta</label></div>
       </div>
 
       <div class="tabs">
         <button class="tab active" data-tab="line-items">Line Items</button>
         <button class="tab" data-tab="triage">Triage</button>
         <button class="tab" data-tab="validation">Validation</button>
+        <button class="tab" data-tab="corrections">Corrections</button>
+      </div>
+
+      <div id="pending-banner" class="hidden">
+        <span id="pending-count">0</span> pending correction(s)
+        <button id="preview-btn" class="btn">Preview &amp; Apply</button>
+        <button id="discard-btn" class="btn btn-secondary">Discard</button>
       </div>
 
       <!-- Line Items Tab -->
@@ -100,11 +109,28 @@
         <div id="validation-content"></div>
       </div>
 
+      <!-- Corrections Tab -->
+      <div id="tab-corrections" class="tab-content">
+        <div id="corrections-content"><p>No corrections yet.</p></div>
+      </div>
+
       <div class="export-buttons">
         <button id="export-json" class="btn">Download JSON</button>
         <button id="export-csv" class="btn">Download CSV</button>
       </div>
     </section>
+
+    <div id="preview-modal" class="modal-overlay hidden">
+      <div class="modal-box">
+        <h3>Preview Corrections</h3>
+        <div id="preview-body"></div>
+        <div id="preview-warnings"></div>
+        <div class="modal-actions">
+          <button id="confirm-apply-btn" class="btn">Apply Corrections</button>
+          <button id="cancel-preview-btn" class="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
   </main>
 
   <script src="/static/app.js"></script>

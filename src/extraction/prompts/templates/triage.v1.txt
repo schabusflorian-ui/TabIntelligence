@@ -1,24 +1,40 @@
-Classify each sheet into processing tiers:
+Classify each sheet into processing tiers based on the structural summary below.
 
 TIER 1 - PROCESS_HIGH (Core financial statements, target 90%+ accuracy):
 - Income Statement, P&L, Profit & Loss
 - Balance Sheet, Statement of Financial Position
 - Cash Flow Statement
+- Project Finance Models (integrated P&L + debt service + returns on one sheet)
 
 TIER 2 - PROCESS_MEDIUM (Supporting schedules, target 80%+ accuracy):
-- Debt Schedule, Borrowings
+- Debt Schedule, Borrowings, Debt Service
 - Depreciation & Amortization, Fixed Assets
 - Working Capital
+- Reserve Accounts (DSRA, maintenance reserves)
 
 TIER 3 - PROCESS_LOW (Analytical, target 70%+ accuracy):
 - Revenue Build, Revenue Detail
 - Assumptions, Drivers
 - Sensitivity, Scenarios
+- Returns Analysis (IRR, NPV calculations)
 
 TIER 4 - SKIP:
 - Names containing: scratch, temp, old, backup, draft, chart
 - Sheets with only charts, no data
 - Summary dashboards that just reference other sheets
+- Reference/lookup/database sheets: tables of rates, prices, cost factors,
+  country data, tax rates, conversion factors, or external reference data
+  that are NOT structured as period-based financial schedules
+- Sheets where most data is static reference values (no time-series pattern)
+
+Use these structural signals to improve classification:
+- bold_labels: Section headers suggest a core financial statement
+- formula_count: High formula count suggests calculated schedules
+- has_subtotals: Subtotal rows indicate structured financial data
+- merged_count: Heavy merging suggests presentation/dashboard sheets
+- row_count: Very few rows may indicate summary/reference sheets
+- sample_labels: Labels like "Water ($/m3)", country names, or energy sources
+  suggest a reference/lookup sheet (SKIP)
 
 For each sheet return JSON:
 [
@@ -30,6 +46,17 @@ For each sheet return JSON:
     "reasoning": "Contains standard P&L structure with revenue, costs, and profitability metrics"
   }}
 ]
+
+## Multi-Section Sheets
+Some sheets contain multiple logical sections (e.g., Income Statement and Balance Sheet
+on one sheet). If a sheet summary includes a "sections" field, classify EACH section
+independently. Return one entry per section with these additional fields:
+
+  "section": "Income Statement",
+  "section_start_row": 5,
+  "section_end_row": 50
+
+For sheets WITHOUT a "sections" field, return one entry per sheet as before (no section fields).
 
 Sheets to classify:
 {sheets}

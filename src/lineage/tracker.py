@@ -30,6 +30,7 @@ class LineageTracker:
         self.job_id = job_id
         self.events: List[Dict] = []
         self.lineage_chain: Dict[str, Optional[str]] = {}  # Maps lineage_id -> parent_lineage_id
+        self.item_lineage: Dict[str, List[Dict]] = {}  # canonical_name -> transformations
 
     def emit(
         self,
@@ -143,6 +144,31 @@ class LineageTracker:
         except Exception as e:
             logger.error(f"Failed to save lineage to database for job {self.job_id}: {str(e)}")
             raise LineageError(f"Failed to persist lineage: {str(e)}", job_id=self.job_id)
+
+    def emit_item_transformation(
+        self,
+        canonical_name: str,
+        original_label: str,
+        stage: str,
+        action: str,
+        details: Optional[Dict] = None,
+    ) -> None:
+        """Record a transformation for a specific line item."""
+        self.item_lineage.setdefault(canonical_name, []).append({
+            "stage": stage,
+            "action": action,
+            "original_label": original_label,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            **(details or {}),
+        })
+
+    def get_item_lineage(self, canonical_name: str) -> List[Dict]:
+        """Get transformation chain for a specific item."""
+        return self.item_lineage.get(canonical_name, [])
+
+    def get_all_item_lineage(self) -> Dict[str, List[Dict]]:
+        """Get all item lineage for persistence."""
+        return dict(self.item_lineage)
 
     def get_summary(self) -> Dict:
         """

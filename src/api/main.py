@@ -1,27 +1,21 @@
 """
-Excel Model Intelligence - API Server
+DebtFund - API Server
 """
+from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, UploadFile, HTTPException, Depends, Request
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from typing import Optional
-import hashlib
-import uuid
 from sqlalchemy.orm import Session
-from uuid import UUID
 
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-from sqlalchemy.exc import IntegrityError
-
-from src.core.logging import setup_logging, api_logger as logger, log_exception
-from src.core.exceptions import ExtractionError, ClaudeAPIError, InvalidFileError, DatabaseError, FileStorageError, LineageIncompleteError
-from src.db.constraint_handler import handle_integrity_error
+from src.api.rate_limit import limiter
+from src.core.logging import setup_logging, api_logger as logger
+from src.core.exceptions import FileStorageError
 from src.core.config import get_settings
 # Tracing is optional (Week 3 feature) - don't block if not installed
 try:
@@ -30,21 +24,18 @@ try:
 except ImportError:
     TRACING_AVAILABLE = False
     logger.warning("OpenTelemetry not installed - tracing disabled (install for Week 3)")
-from src.api.middleware import RequestIDMiddleware, log_audit_event, get_client_ip
-from src.api.metrics import MetricsMiddleware, metrics_endpoint, file_uploads_total, file_upload_bytes, duplicate_uploads_total
+from src.api.middleware import RequestIDMiddleware
+from src.api.metrics import MetricsMiddleware, metrics_endpoint
 from src.api.health import router as health_router
 from src.api.taxonomy import router as taxonomy_router
 from src.api.entities import router as entities_router
 from src.api.files import router as files_router
 from src.api.jobs import router as jobs_router
 from src.api.dlq import router as dlq_router
-from src.db.session import get_db, get_db_context
-from src.db import crud
-from src.db.models import JobStatusEnum, ExtractionJob
+from src.api.corrections import router as corrections_router
+from src.api.analytics import router as analytics_router
+from src.db.session import get_db
 from src.storage.s3 import get_s3_client
-from src.jobs.tasks import run_extraction_task
-from src.auth.dependencies import get_current_api_key
-from src.auth.models import APIKey
 
 # Initialize logging
 # Use JSON format in production for machine-parseable logs
@@ -52,69 +43,18 @@ import os
 use_json_logging = os.getenv("LOG_FORMAT", "plain").lower() == "json"
 setup_logging(level="INFO", use_json=use_json_logging)
 
-app = FastAPI(
-    title="Excel Model Intelligence",
-    version="0.1.0",
-    description="Guided hybrid extraction platform"
-)
 
-logger.info("DebtFund API server starting...")
+# ============================================================================
+# Lifespan context manager (replaces deprecated @app.on_event)
+# ============================================================================
 
-# Get settings for CORS configuration
-settings = get_settings()
-
-# Initialize rate limiter
-limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Add request ID middleware for correlation tracking
-app.add_middleware(RequestIDMiddleware)
-
-# Add Prometheus metrics middleware
-app.add_middleware(MetricsMiddleware)
-
-# Prometheus metrics endpoint (no auth required for scraping)
-app.add_api_route("/metrics", metrics_endpoint, methods=["GET"], include_in_schema=False)
-
-# Kubernetes-style health probes (liveness, readiness, database health)
-app.include_router(health_router)
-
-# Taxonomy browsing and search endpoints
-app.include_router(taxonomy_router)
-
-# Entity CRUD endpoints
-app.include_router(entities_router)
-
-# File browsing endpoints
-app.include_router(files_router)
-
-# Job management endpoints (lineage, retry)
-app.include_router(jobs_router)
-
-# DLQ admin endpoints
-app.include_router(dlq_router)
-
-# Serve frontend static files
-_static_dir = Path(__file__).parent.parent.parent / "static"
-if _static_dir.is_dir():
-    app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize database and S3 bucket on application startup."""
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application startup and shutdown lifecycle."""
+    # --- STARTUP ---
     from src.db.base import create_tables
 
-    # Initialize distributed tracing (optional - Week 3 feature)
+    # Initialize distributed tracing (optional)
     if TRACING_AVAILABLE:
         setup_tracing(service_name="debtfund-api")
         instrument_fastapi(app)
@@ -122,7 +62,7 @@ async def startup_event():
     else:
         logger.info("Distributed tracing disabled (OpenTelemetry not installed)")
 
-    # Initialize database
+    # Initialize database tables (supplement to alembic)
     create_tables()
     logger.info("Database initialized successfully")
 
@@ -142,8 +82,84 @@ async def startup_event():
         logger.error(f"S3 bucket initialization failed: {str(e)}")
         logger.warning("Application starting without S3 storage")
 
+    logger.info("DebtFund API server started")
+    yield
 
-# Database models replace in-memory storage (jobs dict removed)
+    # --- SHUTDOWN ---
+    logger.info("DebtFund API server shutting down...")
+    from src.db.session import async_engine, get_sync_engine
+    try:
+        await async_engine.dispose()
+        get_sync_engine().dispose()
+        logger.info("Database connections closed")
+    except Exception as e:
+        logger.warning(f"Error closing database connections: {e}")
+    logger.info("DebtFund API server stopped")
+
+
+_settings = get_settings()
+
+app = FastAPI(
+    title="DebtFund",
+    version=_settings.app_version,
+    description="Excel Model Intelligence — Guided hybrid extraction platform",
+    lifespan=lifespan,
+)
+
+logger.info("DebtFund API module loaded")
+
+# Attach shared rate limiter to app
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Add request ID middleware for correlation tracking
+app.add_middleware(RequestIDMiddleware)
+
+# Add Prometheus metrics middleware
+app.add_middleware(MetricsMiddleware)
+
+# Prometheus metrics endpoint — protected by auth in production
+# In production, prefer network-level protection (e.g. internal-only port).
+# The endpoint is still hidden from OpenAPI schema.
+app.add_api_route("/metrics", metrics_endpoint, methods=["GET"], include_in_schema=False)
+
+# Kubernetes-style health probes (liveness, readiness, database health)
+app.include_router(health_router)
+
+# Taxonomy browsing and search endpoints
+app.include_router(taxonomy_router)
+
+# Entity CRUD endpoints
+app.include_router(entities_router)
+
+# File browsing and upload endpoints
+app.include_router(files_router)
+
+# Job management endpoints (list, status, export, retry, review, lineage)
+app.include_router(jobs_router)
+
+# DLQ admin endpoints
+app.include_router(dlq_router)
+
+# User correction and entity pattern endpoints
+app.include_router(corrections_router)
+
+# Analytics endpoints (cross-entity, portfolio, trends, coverage, costs)
+app.include_router(analytics_router)
+
+# Serve frontend static files
+_static_dir = Path(__file__).parent.parent.parent / "static"
+if _static_dir.is_dir():
+    app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
+
 
 
 @app.get("/")
@@ -154,7 +170,7 @@ async def root():
         return FileResponse(str(index))
     return {
         "service": "DebtFund - Excel Model Intelligence",
-        "version": "0.1.0",
+        "version": _settings.app_version,
         "status": "operational"
     }
 
@@ -174,7 +190,7 @@ async def health(db: Session = Depends(get_db)):
 
     checks = {
         "status": "healthy",
-        "version": "0.1.0",
+        "version": _settings.app_version,
         "timestamp": datetime.now(tz.utc).isoformat(),
         "components": {}
     }
@@ -200,547 +216,6 @@ async def health(db: Session = Depends(get_db)):
 
     status_code = 200 if checks["status"] == "healthy" else 503
     return JSONResponse(content=checks, status_code=status_code)
-
-
-@app.post("/api/v1/files/upload")
-@limiter.limit("100/hour")
-async def upload_file(
-    request: Request,
-    file: UploadFile,
-    db: Session = Depends(get_db),
-    api_key: APIKey = Depends(get_current_api_key),
-    entity_id: Optional[str] = None
-):
-    """Upload Excel file for extraction."""
-    logger.info(f"File upload requested: {file.filename}, entity_id: {entity_id}")
-
-    # Validate file type
-    if not file.filename or not file.filename.endswith(('.xlsx', '.xls')):
-        logger.warning(f"Invalid file type rejected: {file.filename}")
-        raise HTTPException(400, "File must be an Excel file (.xlsx or .xls)")
-
-    try:
-        # Define max file size (100MB)
-        MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
-
-        # Check file size without loading into memory
-        file.file.seek(0, 2)  # Seek to end
-        file_size = file.file.tell()
-        file.file.seek(0)  # Reset to beginning
-
-        if file_size > MAX_FILE_SIZE:
-            logger.warning(f"File too large rejected: {file.filename} ({file_size} bytes)")
-            raise HTTPException(
-                status_code=413,
-                detail=f"File too large. Maximum size is {MAX_FILE_SIZE / (1024*1024):.0f}MB"
-            )
-
-        # Now safe to read
-        file_bytes = await file.read()
-
-        # Compute content hash for deduplication
-        content_hash = hashlib.sha256(file_bytes).hexdigest()
-
-        # Check for duplicate file (optimistic fast path)
-        existing_file = crud.get_file_by_hash(db, content_hash)
-        if existing_file:
-            existing_job = (
-                db.query(ExtractionJob)
-                .filter(ExtractionJob.file_id == existing_file.file_id)
-                .order_by(ExtractionJob.created_at.desc())
-                .first()
-            )
-
-            logger.info(
-                f"Duplicate file detected: hash={content_hash[:16]}..., "
-                f"existing_file_id={existing_file.file_id}"
-            )
-            duplicate_uploads_total.inc()
-
-            return {
-                "file_id": str(existing_file.file_id),
-                "job_id": str(existing_job.job_id) if existing_job else None,
-                "status": "duplicate",
-                "message": "File with identical content already uploaded",
-                "original_upload": existing_file.uploaded_at.isoformat() if existing_file.uploaded_at else None,
-            }
-
-        # --- Fix 1: Upload to S3 FIRST, before creating any DB records ---
-        # This ensures no orphaned DB records if S3 fails.
-        filename = file.filename or "unknown.xlsx"
-        file_id_for_key = uuid.uuid4()  # Pre-generate for S3 key
-
-        settings = get_settings()
-        s3_client = get_s3_client(settings)
-
-        s3_key = s3_client.generate_s3_key(
-            file_id=file_id_for_key,
-            filename=filename
-        )
-
-        s3_client.upload_file(
-            file_bytes=file_bytes,
-            s3_key=s3_key,
-            metadata={
-                "filename": filename,
-                "entity_id": str(entity_id) if entity_id else ""
-            }
-        )
-
-        # --- S3 upload succeeded. Now create DB records in a single transaction ---
-        # If DB commit fails, we log a warning about the orphaned S3 object.
-        try:
-            # Fix 2: Wrap in try/except IntegrityError for dedup race condition.
-            # Two concurrent uploads of the same file may both pass the optimistic
-            # get_file_by_hash() check. The unique constraint on content_hash
-            # will catch the race — we re-query and return the existing file.
-            db_file = crud.create_file(
-                db,
-                filename=filename,
-                file_size=file_size,
-                s3_key=s3_key,
-                entity_id=UUID(entity_id) if entity_id else None,
-                content_hash=content_hash,
-            )
-        except (IntegrityError, DatabaseError):
-            db.rollback()
-            # Race condition: another request inserted the same content_hash
-            existing_file = crud.get_file_by_hash(db, content_hash)
-            if existing_file:
-                existing_job = (
-                    db.query(ExtractionJob)
-                    .filter(ExtractionJob.file_id == existing_file.file_id)
-                    .order_by(ExtractionJob.created_at.desc())
-                    .first()
-                )
-
-                logger.info(
-                    f"Duplicate file detected (race condition): hash={content_hash[:16]}..., "
-                    f"existing_file_id={existing_file.file_id}"
-                )
-                duplicate_uploads_total.inc()
-
-                return {
-                    "file_id": str(existing_file.file_id),
-                    "job_id": str(existing_job.job_id) if existing_job else None,
-                    "status": "duplicate",
-                    "message": "File with identical content already uploaded",
-                    "original_upload": existing_file.uploaded_at.isoformat() if existing_file.uploaded_at else None,
-                }
-            # Not a dedup race — re-raise
-            raise
-
-        # Create extraction job record (same transaction scope via crud)
-        db_job = crud.create_extraction_job(db, file_id=db_file.file_id)
-
-        logger.info(
-            f"File uploaded - filename: {file.filename}, file_id: {db_file.file_id}, "
-            f"job_id: {db_job.job_id}, size: {file_size} bytes, s3_key: {s3_key}"
-        )
-
-        # --- Fix 3: Celery enqueue with error handling ---
-        # Fix 4: Pass s3_key instead of file_bytes (no pickle, no large Redis payloads)
-        try:
-            task = run_extraction_task.delay(
-                job_id=str(db_job.job_id),
-                s3_key=s3_key,
-                entity_id=entity_id
-            )
-        except Exception as enqueue_err:
-            # Redis/Celery unavailable — mark job FAILED and return 503
-            logger.error(f"Failed to enqueue Celery task: {enqueue_err}")
-            try:
-                crud.fail_job(
-                    db, db_job.job_id, "Task queue unavailable, please retry"
-                )
-            except Exception:
-                logger.error("Failed to mark job as FAILED after enqueue failure")
-            raise HTTPException(
-                status_code=503,
-                detail="Task queue unavailable, please retry"
-            )
-
-        logger.info(f"Celery task enqueued: task_id={task.id}, job_id={db_job.job_id}")
-
-        # Track upload metrics
-        file_uploads_total.inc()
-        file_upload_bytes.observe(file_size)
-
-        # Audit trail
-        log_audit_event(
-            db=db,
-            action="upload",
-            resource_type="file",
-            resource_id=db_file.file_id,
-            api_key_id=api_key.id,
-            ip_address=get_client_ip(request),
-            user_agent=request.headers.get("User-Agent"),
-            details={"filename": file.filename, "file_size": file_size, "job_id": str(db_job.job_id)},
-            status_code=200,
-        )
-
-        return {
-            "file_id": str(db_file.file_id),
-            "job_id": str(db_job.job_id),
-            "s3_key": s3_key,
-            "task_id": task.id,
-            "status": "processing",
-            "message": "Extraction started"
-        }
-
-    except HTTPException:
-        raise
-
-    except FileStorageError as e:
-        logger.error(f"Storage error during file upload: {str(e)}")
-        raise HTTPException(500, f"Storage error: {str(e)}")
-
-    except IntegrityError as e:
-        db.rollback()
-        raise handle_integrity_error(e)
-
-    except DatabaseError as e:
-        logger.error(f"Database error during file upload: {str(e)}")
-        raise HTTPException(500, f"Database error: {str(e)}")
-
-    except Exception as e:
-        logger.error(f"File upload failed: {str(e)}")
-        log_exception(logger, e, {"filename": file.filename})
-        raise HTTPException(500, f"Upload failed: {str(e)}")
-
-
-@app.get("/api/v1/jobs")
-@limiter.limit("500/hour")
-async def list_jobs(
-    request: Request,
-    limit: int = 50,
-    offset: int = 0,
-    status: Optional[str] = None,
-    db: Session = Depends(get_db),
-    api_key: APIKey = Depends(get_current_api_key),
-):
-    """List extraction jobs with optional status filtering and pagination."""
-    # Validate status if provided
-    status_enum = None
-    if status:
-        try:
-            status_enum = JobStatusEnum(status)
-        except ValueError:
-            valid = [s.value for s in JobStatusEnum]
-            raise HTTPException(400, f"Invalid status. Must be one of: {valid}")
-
-    try:
-        jobs = crud.list_jobs(db, limit=min(limit, 200), offset=offset, status=status_enum)
-        return {
-            "count": len(jobs),
-            "limit": limit,
-            "offset": offset,
-            "jobs": [
-                {
-                    "job_id": str(j.job_id),
-                    "file_id": str(j.file_id),
-                    "status": j.status.value,
-                    "current_stage": j.current_stage,
-                    "progress_percent": j.progress_percent,
-                    "error": j.error,
-                    "filename": j.file.filename if j.file else None,
-                    "created_at": j.created_at.isoformat() if j.created_at else None,
-                    "updated_at": j.updated_at.isoformat() if j.updated_at else None,
-                }
-                for j in jobs
-            ],
-        }
-    except DatabaseError as e:
-        logger.error(f"Database error listing jobs: {str(e)}")
-        raise HTTPException(500, "Database error listing jobs")
-
-
-@app.get("/api/v1/jobs/{job_id}")
-@limiter.limit("500/hour")
-async def get_job_status(
-    request: Request,
-    job_id: str,
-    db: Session = Depends(get_db),
-    api_key: APIKey = Depends(get_current_api_key)
-):
-    """Get job status."""
-    logger.debug(f"Job status requested: {job_id}")
-
-    try:
-        job_uuid = UUID(job_id)
-    except ValueError:
-        logger.warning(f"Invalid job_id format: {job_id}")
-        raise HTTPException(400, "Invalid job_id format")
-
-    try:
-        job = crud.get_job(db, job_uuid)
-
-        if not job:
-            logger.warning(f"Job not found: {job_id}")
-            raise HTTPException(404, "Job not found")
-
-        # Audit trail
-        log_audit_event(
-            db=db,
-            action="view",
-            resource_type="job",
-            resource_id=job_uuid,
-            api_key_id=api_key.id,
-            ip_address=get_client_ip(request),
-            user_agent=request.headers.get("User-Agent"),
-            status_code=200,
-        )
-
-        # Convert database model to API response format
-        return {
-            "job_id": str(job.job_id),
-            "file_id": str(job.file_id),
-            "status": job.status.value,
-            "current_stage": job.current_stage,
-            "progress_percent": job.progress_percent,
-            "result": job.result,
-            "error": job.error,
-        }
-
-    except DatabaseError as e:
-        logger.error(f"Database error retrieving job: {str(e)}")
-        raise HTTPException(500, "Database error retrieving job status")
-
-
-@app.get("/api/v1/jobs/{job_id}/export")
-@limiter.limit("500/hour")
-async def export_job_result(
-    request: Request,
-    job_id: str,
-    format: str = "json",
-    min_confidence: Optional[float] = None,
-    canonical_name: Optional[str] = None,
-    sheet: Optional[str] = None,
-    db: Session = Depends(get_db),
-    api_key: APIKey = Depends(get_current_api_key),
-):
-    """
-    Export extraction results in JSON or CSV format.
-
-    Query parameters:
-        format: "json" (default) or "csv"
-        min_confidence: Filter line items by minimum confidence (0.0 - 1.0)
-        canonical_name: Filter by canonical name (e.g. "revenue")
-        sheet: Filter by sheet name
-    """
-    # Validate format
-    if format not in ("json", "csv"):
-        raise HTTPException(400, "format must be 'json' or 'csv'")
-
-    if min_confidence is not None and not (0.0 <= min_confidence <= 1.0):
-        raise HTTPException(400, "min_confidence must be between 0.0 and 1.0")
-
-    # Validate job_id
-    try:
-        job_uuid = UUID(job_id)
-    except ValueError:
-        raise HTTPException(400, "Invalid job_id format")
-
-    # Fetch job
-    try:
-        job = crud.get_job(db, job_uuid)
-    except DatabaseError as e:
-        logger.error(f"Database error exporting job: {str(e)}")
-        raise HTTPException(500, "Database error")
-
-    if not job:
-        raise HTTPException(404, "Job not found")
-
-    if job.status != JobStatusEnum.COMPLETED:
-        raise HTTPException(
-            409,
-            f"Job is not completed (status: {job.status.value}). "
-            f"Export is only available for completed jobs."
-        )
-
-    if not job.result:
-        raise HTTPException(404, "Job has no results")
-
-    result = job.result
-    line_items = result.get("line_items", [])
-
-    # Apply filters
-    if min_confidence is not None:
-        line_items = [
-            li for li in line_items
-            if li.get("confidence", 0) >= min_confidence
-        ]
-
-    if canonical_name:
-        line_items = [
-            li for li in line_items
-            if li.get("canonical_name") == canonical_name
-        ]
-
-    if sheet:
-        line_items = [
-            li for li in line_items
-            if li.get("sheet") == sheet
-        ]
-
-    # Audit trail
-    log_audit_event(
-        db=db,
-        action="export",
-        resource_type="job",
-        resource_id=job_uuid,
-        api_key_id=api_key.id,
-        ip_address=get_client_ip(request),
-        user_agent=request.headers.get("User-Agent"),
-        details={
-            "format": format,
-            "min_confidence": min_confidence,
-            "line_items_exported": len(line_items),
-        },
-        status_code=200,
-    )
-
-    if format == "csv":
-        return _build_csv_response(result, line_items, job_id)
-
-    # JSON export — return filtered result
-    return {
-        "job_id": str(job.job_id),
-        "file_id": str(job.file_id),
-        "sheets": result.get("sheets", []),
-        "line_items": line_items,
-        "line_items_count": len(line_items),
-        "tokens_used": result.get("tokens_used", 0),
-        "cost_usd": result.get("cost_usd", 0.0),
-        "validation": result.get("validation"),
-        "filters_applied": {
-            "min_confidence": min_confidence,
-            "canonical_name": canonical_name,
-            "sheet": sheet,
-        },
-    }
-
-
-@app.post("/api/v1/jobs/{job_id}/retry")
-@limiter.limit("20/hour")
-async def retry_job(
-    request: Request,
-    job_id: str,
-    db: Session = Depends(get_db),
-    api_key: APIKey = Depends(get_current_api_key),
-):
-    """
-    Retry a failed extraction job.
-
-    Creates a new job for the same file and enqueues a new Celery task.
-    Only failed jobs can be retried.
-    """
-    try:
-        job_uuid = UUID(job_id)
-    except ValueError:
-        raise HTTPException(400, "Invalid job_id format")
-
-    job = crud.get_job(db, job_uuid)
-    if not job:
-        raise HTTPException(404, "Job not found")
-
-    if job.status != JobStatusEnum.FAILED:
-        raise HTTPException(
-            409,
-            f"Only failed jobs can be retried (current status: {job.status.value})"
-        )
-
-    # Look up file record to get s3_key for re-extraction
-    file_record = crud.get_file(db, job.file_id)
-    if not file_record or not file_record.s3_key:
-        raise HTTPException(404, "Original file not found in storage")
-
-    # Create new job for the same file
-    new_job = crud.create_extraction_job(db, file_id=job.file_id)
-
-    # Enqueue Celery task (task downloads from S3 itself using s3_key)
-    entity_id = str(file_record.entity_id) if file_record.entity_id else None
-    task = run_extraction_task.delay(
-        job_id=str(new_job.job_id),
-        s3_key=file_record.s3_key,
-        entity_id=entity_id,
-    )
-
-    logger.info(
-        f"Job retry: original={job_id}, new_job={new_job.job_id}, task={task.id}"
-    )
-
-    # Audit trail
-    log_audit_event(
-        db=db,
-        action="retry",
-        resource_type="job",
-        resource_id=job_uuid,
-        api_key_id=api_key.id,
-        ip_address=get_client_ip(request),
-        user_agent=request.headers.get("User-Agent"),
-        details={"original_job_id": job_id, "new_job_id": str(new_job.job_id)},
-        status_code=201,
-    )
-
-    return {
-        "original_job_id": job_id,
-        "new_job_id": str(new_job.job_id),
-        "task_id": task.id,
-        "status": "processing",
-        "message": "Re-extraction started",
-    }
-
-
-def _build_csv_response(result: dict, line_items: list, job_id: str):
-    """Build a CSV response from extraction line items."""
-    import csv
-    import io
-    from starlette.responses import StreamingResponse
-
-    output = io.StringIO()
-    writer = csv.writer(output)
-
-    # Collect all period columns from values across all line items
-    period_columns_set: set[str] = set()
-    for li in line_items:
-        period_columns_set.update(li.get("values", {}).keys())
-    period_columns = sorted(period_columns_set)
-
-    # Write header
-    header: list[str] = [
-        "sheet",
-        "row",
-        "original_label",
-        "canonical_name",
-        "confidence",
-        "hierarchy_level",
-    ] + period_columns
-    writer.writerow(header)
-
-    # Write data rows
-    for li in line_items:
-        values = li.get("values", {})
-        row = [
-            li.get("sheet", ""),
-            li.get("row", ""),
-            li.get("original_label", ""),
-            li.get("canonical_name", ""),
-            li.get("confidence", ""),
-            li.get("hierarchy_level", ""),
-        ] + [values.get(period, "") for period in period_columns]
-        writer.writerow(row)
-
-    csv_content = output.getvalue()
-    output.close()
-
-    return StreamingResponse(
-        iter([csv_content]),
-        media_type="text/csv",
-        headers={
-            "Content-Disposition": f'attachment; filename="extraction_{job_id}.csv"',
-        },
-    )
 
 
 if __name__ == "__main__":

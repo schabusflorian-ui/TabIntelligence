@@ -1,11 +1,12 @@
 """Dead Letter Queue admin API endpoints."""
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from uuid import UUID
 
 from src.db.session import get_db
 from src.db import crud
 from src.auth.dependencies import get_current_api_key
+from src.api.rate_limit import limiter
 from src.core.exceptions import DatabaseError
 from src.core.logging import api_logger as logger
 
@@ -13,7 +14,9 @@ router = APIRouter(prefix="/api/v1/admin/dlq", tags=["admin-dlq"])
 
 
 @router.get("/")
+@limiter.limit("500/hour")
 def list_dlq_entries(
+    request: Request,
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     only_unreplayed: bool = Query(False),
@@ -81,7 +84,9 @@ def get_dlq_entry(
 
 
 @router.post("/{dlq_id}/replay")
+@limiter.limit("20/hour")
 def replay_dlq_entry(
+    request: Request,
     dlq_id: str,
     db: Session = Depends(get_db),
     _api_key=Depends(get_current_api_key),

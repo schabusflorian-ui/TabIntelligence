@@ -25,6 +25,37 @@ class ExtractionStage(ABC):
         """Human-readable description."""
         return f"Stage {self.stage_number}: {self.name}"
 
+    @property
+    def timeout_seconds(self) -> Optional[float]:
+        """Default maximum seconds for this stage. None means no timeout."""
+        return None
+
+    def get_timeout(self, context: "PipelineContext") -> Optional[float]:
+        """Compute timeout for this execution, optionally using context.
+
+        Override for adaptive timeouts based on file size or prior results.
+        Falls back to the static timeout_seconds property.
+        """
+        return self.timeout_seconds
+
+    @property
+    def max_retries(self) -> int:
+        """Maximum retry attempts for this stage."""
+        return 2
+
+    def should_skip(self, context: "PipelineContext") -> bool:
+        """Check if this stage should be skipped. Override in subclasses."""
+        return False
+
+    def validate_output(self, result: Dict[str, Any]) -> Optional[str]:
+        """Validate stage output meets minimum requirements.
+
+        Returns None if valid, or an error message string if the output
+        is too degraded for downstream stages to use meaningfully.
+        Override in subclasses for stage-specific checks.
+        """
+        return None
+
     @abstractmethod
     async def execute(self, context: "PipelineContext") -> Dict[str, Any]:
         """
@@ -59,6 +90,10 @@ class PipelineContext:
         self.tracker = LineageTracker(job_id=job_id)
         self.results: Dict[str, Dict[str, Any]] = {}
         self.total_tokens = 0
+        self.total_input_tokens = 0
+        self.total_output_tokens = 0
+        self._result_cache: Dict[str, Dict[str, Any]] = {}
+        self.completed_stages: List[str] = []
 
     def get_result(self, stage_name: str) -> Dict[str, Any]:
         """Get result from a previous stage."""
@@ -73,3 +108,29 @@ class PipelineContext:
         """Store result from a stage."""
         self.results[stage_name] = result
         self.total_tokens += result.get("tokens", 0)
+        self.total_input_tokens += result.get("input_tokens", 0)
+        self.total_output_tokens += result.get("output_tokens", 0)
+
+    def cache_result(self, stage_name: str, result: Dict[str, Any]):
+        """Cache a stage result for retry/resume scenarios."""
+        self._result_cache[stage_name] = result
+
+    def get_cached_result(self, stage_name: str) -> Optional[Dict[str, Any]]:
+        """Get a cached result, or None if not cached."""
+        return self._result_cache.get(stage_name)
+
+    def preload_results(self, partial_result: Dict[str, Any], stage_names: List[str]):
+        """Load checkpoint data from job.result into cache and results.
+
+        Unlike set_result(), this does NOT accumulate tokens into the totals,
+        because the preloaded stages were already billed in the original run.
+        """
+        stage_results = partial_result.get("_stage_results", {})
+        for stage_name in stage_names:
+            if stage_name in stage_results:
+                result = stage_results[stage_name]
+                self._result_cache[stage_name] = result
+                # Store result for downstream stages to read, but skip
+                # token accumulation — those tokens were already counted.
+                self.results[stage_name] = result
+                self.completed_stages.append(stage_name)

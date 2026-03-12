@@ -1,0 +1,111 @@
+{
+  "description": "Ground truth for seed_burn.xlsx accuracy measurement",
+  "model_info": {
+    "file": "seed_burn.xlsx",
+    "sheets": 3,
+    "company_type": "Pre-revenue seed-stage startup",
+    "periods": ["Jan-25", "Feb-25", "Mar-25", "Apr-25", "May-25", "Jun-25", "Jul-25", "Aug-25", "Sep-25", "Oct-25", "Nov-25", "Dec-25"],
+    "notes": "Monthly periods, <20 items, cash burn focus. Revenue near-zero."
+  },
+  "expected_triage": [
+    {
+      "sheet_name": "Monthly P&L",
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "rationale": "Income statement with revenue, expenses, net income"
+    },
+    {
+      "sheet_name": "Cash",
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "rationale": "Cash tracker with beginning/ending cash and burn metrics"
+    },
+    {
+      "sheet_name": "Notes",
+      "tier": 4,
+      "decision": "SKIP",
+      "rationale": "Text notes, no financial data"
+    }
+  ],
+  "expected_mappings": [
+    {
+      "original_label": "Revenue",
+      "canonical_name": "revenue",
+      "sheet": "Monthly P&L"
+    },
+    {
+      "original_label": "Cost of Revenue",
+      "canonical_name": "cogs",
+      "sheet": "Monthly P&L",
+      "notes": "May also map to 'cost_of_sales'"
+    },
+    {
+      "original_label": "Gross Profit",
+      "canonical_name": "gross_profit",
+      "sheet": "Monthly P&L"
+    },
+    {
+      "original_label": "Payroll",
+      "canonical_name": "labor_costs",
+      "sheet": "Monthly P&L",
+      "notes": "May map to 'sga' or 'operating_expenses'"
+    },
+    {
+      "original_label": "Rent",
+      "canonical_name": "other_expense",
+      "sheet": "Monthly P&L",
+      "notes": "Generic expense — may map to 'opex' or 'operating_expenses'"
+    },
+    {
+      "original_label": "Software",
+      "canonical_name": "other_expense",
+      "sheet": "Monthly P&L",
+      "notes": "May map to 'rd_expense' or 'operating_expenses'"
+    },
+    {
+      "original_label": "Total Expenses",
+      "canonical_name": "operating_expenses",
+      "sheet": "Monthly P&L",
+      "notes": "May also map to 'opex'"
+    },
+    {
+      "original_label": "Net Income",
+      "canonical_name": "net_income",
+      "sheet": "Monthly P&L"
+    },
+    {
+      "original_label": "Beginning Cash",
+      "canonical_name": "beginning_cash",
+      "sheet": "Cash"
+    },
+    {
+      "original_label": "Ending Cash",
+      "canonical_name": "ending_cash",
+      "sheet": "Cash"
+    },
+    {
+      "original_label": "Net Burn",
+      "canonical_name": "burn_rate",
+      "sheet": "Cash",
+      "notes": "May map to 'monthly_burn' or 'net_income'"
+    },
+    {
+      "original_label": "Runway (months)",
+      "canonical_name": "cash_runway_months",
+      "sheet": "Cash"
+    }
+  ],
+  "acceptable_alternatives": {
+    "revenue": ["revenue"],
+    "cogs": ["cogs", "cost_of_sales"],
+    "gross_profit": ["gross_profit"],
+    "labor_costs": ["labor_costs", "sga", "operating_expenses", "opex"],
+    "other_expense": ["other_expense", "opex", "operating_expenses", "rd_expense", "general_admin"],
+    "operating_expenses": ["operating_expenses", "opex"],
+    "net_income": ["net_income", "net_profit"],
+    "beginning_cash": ["beginning_cash", "cash_and_equivalents", "cash"],
+    "ending_cash": ["ending_cash", "cash_and_equivalents", "cash"],
+    "burn_rate": ["burn_rate", "monthly_burn", "net_income"],
+    "cash_runway_months": ["cash_runway_months"]
+  }
+}

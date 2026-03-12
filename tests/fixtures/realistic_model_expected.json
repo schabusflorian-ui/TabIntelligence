@@ -1,0 +1,409 @@
+{
+  "description": "Ground truth for realistic_model.xlsx accuracy measurement",
+  "model_info": {
+    "file": "realistic_model.xlsx",
+    "sheets": 8,
+    "company_type": "Mid-market LBO (~$250M revenue)",
+    "periods": ["FY2022A", "FY2023A", "FY2024E", "FY2025E", "FY2026E"]
+  },
+  "expected_triage": [
+    {
+      "sheet_name": "Income Statement",
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "rationale": "Core financial statement with revenue, EBITDA, net income"
+    },
+    {
+      "sheet_name": "Balance Sheet",
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "rationale": "Core financial statement with assets, liabilities, equity"
+    },
+    {
+      "sheet_name": "Cash Flow Statement",
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "rationale": "Core financial statement with CFO, CFI, CFF, FCF"
+    },
+    {
+      "sheet_name": "Debt Schedule",
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "rationale": "Detailed debt breakdown - important for credit analysis"
+    },
+    {
+      "sheet_name": "Working Capital",
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "rationale": "Working capital metrics and drivers"
+    },
+    {
+      "sheet_name": "Assumptions",
+      "tier": 3,
+      "decision": "PROCESS_LOW",
+      "rationale": "Input assumptions - rates and percentages"
+    },
+    {
+      "sheet_name": "D&A Schedule",
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "rationale": "Depreciation and amortization detail"
+    },
+    {
+      "sheet_name": "Scratch - Notes",
+      "tier": 4,
+      "decision": "SKIP",
+      "rationale": "Informal notes, no financial data"
+    }
+  ],
+  "expected_mappings": [
+    {
+      "original_label": "Net Revenues",
+      "canonical_name": "revenue",
+      "sheet": "Income Statement",
+      "notes": "May also map to 'net_revenue' if taxonomy has it"
+    },
+    {
+      "original_label": "Product Revenue",
+      "canonical_name": "product_revenue",
+      "sheet": "Income Statement"
+    },
+    {
+      "original_label": "Service Revenue",
+      "canonical_name": "service_revenue",
+      "sheet": "Income Statement"
+    },
+    {
+      "original_label": "Cost of Sales",
+      "canonical_name": "cogs",
+      "sheet": "Income Statement",
+      "notes": "May also map to 'cost_of_sales'"
+    },
+    {
+      "original_label": "Gross Profit",
+      "canonical_name": "gross_profit",
+      "sheet": "Income Statement"
+    },
+    {
+      "original_label": "SG&A",
+      "canonical_name": "sga",
+      "sheet": "Income Statement",
+      "notes": "May also map to 'sales_marketing' or 'general_admin'"
+    },
+    {
+      "original_label": "R&D Expenses",
+      "canonical_name": "rd_expense",
+      "sheet": "Income Statement"
+    },
+    {
+      "original_label": "Other Operating Expenses",
+      "canonical_name": "other_expense",
+      "sheet": "Income Statement",
+      "notes": "May map to 'opex' or 'operating_expenses'"
+    },
+    {
+      "original_label": "Total Operating Expenses",
+      "canonical_name": "operating_expenses",
+      "sheet": "Income Statement",
+      "notes": "May also map to 'opex'"
+    },
+    {
+      "original_label": "EBITDA",
+      "canonical_name": "ebitda",
+      "sheet": "Income Statement"
+    },
+    {
+      "original_label": "Depreciation & Amortization",
+      "canonical_name": "depreciation_and_amortization",
+      "sheet": "Income Statement",
+      "notes": "May also map to 'depreciation' or 'amortization'"
+    },
+    {
+      "original_label": "EBIT",
+      "canonical_name": "ebit",
+      "sheet": "Income Statement",
+      "notes": "May also map to 'operating_income'"
+    },
+    {
+      "original_label": "Interest Expense",
+      "canonical_name": "interest_expense",
+      "sheet": "Income Statement"
+    },
+    {
+      "original_label": "Other (Income) / Expense, Net",
+      "canonical_name": "other_expense",
+      "sheet": "Income Statement",
+      "notes": "Tricky label - may map to 'other_income' or stay unmapped"
+    },
+    {
+      "original_label": "Pre-Tax Income",
+      "canonical_name": "earnings_before_tax",
+      "sheet": "Income Statement",
+      "notes": "May also map to 'ebt'"
+    },
+    {
+      "original_label": "Income Tax Provision",
+      "canonical_name": "income_tax",
+      "sheet": "Income Statement",
+      "notes": "May also map to 'tax_expense'"
+    },
+    {
+      "original_label": "Net Income",
+      "canonical_name": "net_income",
+      "sheet": "Income Statement"
+    },
+    {
+      "original_label": "Cash & Equivalents",
+      "canonical_name": "cash_and_equivalents",
+      "sheet": "Balance Sheet",
+      "notes": "May also map to 'cash'"
+    },
+    {
+      "original_label": "Accounts Receivable",
+      "canonical_name": "accounts_receivable",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Inventory",
+      "canonical_name": "inventory",
+      "sheet": "Balance Sheet",
+      "notes": "May also map to 'inventories'"
+    },
+    {
+      "original_label": "Prepaid Expenses",
+      "canonical_name": "prepaid_expenses",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Other Current Assets",
+      "canonical_name": "other_current_assets",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Total Current Assets",
+      "canonical_name": "total_current_assets",
+      "sheet": "Balance Sheet",
+      "notes": "May also map to 'current_assets'"
+    },
+    {
+      "original_label": "PP&E (Net)",
+      "canonical_name": "net_ppe",
+      "sheet": "Balance Sheet",
+      "notes": "May also map to 'ppe', 'property_plant_equipment', or 'fixed_assets'"
+    },
+    {
+      "original_label": "Goodwill",
+      "canonical_name": "goodwill",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Other Intangibles (Net)",
+      "canonical_name": "intangible_assets",
+      "sheet": "Balance Sheet",
+      "notes": "May also map to 'intangibles'"
+    },
+    {
+      "original_label": "Other Non-Current Assets",
+      "canonical_name": "other_non_current_assets",
+      "sheet": "Balance Sheet",
+      "notes": "May also map to 'other_noncurrent_assets'"
+    },
+    {
+      "original_label": "Total Assets",
+      "canonical_name": "total_assets",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Accounts Payable",
+      "canonical_name": "accounts_payable",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Accrued Liabilities",
+      "canonical_name": "accrued_liabilities",
+      "sheet": "Balance Sheet",
+      "notes": "May also map to 'accrued_expenses'"
+    },
+    {
+      "original_label": "Current Portion of LT Debt",
+      "canonical_name": "current_portion_lt_debt",
+      "sheet": "Balance Sheet",
+      "notes": "May also map to 'current_portion_debt'"
+    },
+    {
+      "original_label": "Other Current Liabilities",
+      "canonical_name": "other_current_liabilities",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Total Current Liabilities",
+      "canonical_name": "total_current_liabilities",
+      "sheet": "Balance Sheet",
+      "notes": "May also map to 'current_liabilities'"
+    },
+    {
+      "original_label": "Term Loan A",
+      "canonical_name": "term_loan_a",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Senior Notes",
+      "canonical_name": "senior_debt",
+      "sheet": "Balance Sheet",
+      "notes": "May also map to 'notes_payable' or 'long_term_debt'"
+    },
+    {
+      "original_label": "Total Long-Term Debt",
+      "canonical_name": "long_term_debt",
+      "sheet": "Balance Sheet",
+      "notes": "May also map to 'total_debt'"
+    },
+    {
+      "original_label": "Total Liabilities",
+      "canonical_name": "total_liabilities",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Common Stock",
+      "canonical_name": "common_stock",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Retained Earnings",
+      "canonical_name": "retained_earnings",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Total Shareholders' Equity",
+      "canonical_name": "total_equity",
+      "sheet": "Balance Sheet",
+      "notes": "May also map to 'shareholders_equity' or 'stockholders_equity'"
+    },
+    {
+      "original_label": "Total Liabilities & Shareholders' Equity",
+      "canonical_name": "total_liabilities_and_equity",
+      "sheet": "Balance Sheet",
+      "notes": "Maps to new total_liabilities_and_equity canonical entry"
+    },
+    {
+      "original_label": "Cash from Operations",
+      "canonical_name": "operating_cash_flow",
+      "sheet": "Cash Flow Statement",
+      "notes": "May also map to 'cfo' or 'cash_from_operations'"
+    },
+    {
+      "original_label": "Capital Expenditures",
+      "canonical_name": "capex",
+      "sheet": "Cash Flow Statement",
+      "notes": "May also map to 'capital_expenditures'"
+    },
+    {
+      "original_label": "Cash from Investing",
+      "canonical_name": "investing_cash_flow",
+      "sheet": "Cash Flow Statement",
+      "notes": "May also map to 'cfi'"
+    },
+    {
+      "original_label": "Debt Repayment",
+      "canonical_name": "debt_repayment",
+      "sheet": "Cash Flow Statement"
+    },
+    {
+      "original_label": "Cash from Financing",
+      "canonical_name": "financing_cash_flow",
+      "sheet": "Cash Flow Statement",
+      "notes": "May also map to 'cff'"
+    },
+    {
+      "original_label": "Net Change in Cash",
+      "canonical_name": "net_change_cash",
+      "sheet": "Cash Flow Statement",
+      "notes": "May also map to 'change_in_cash'"
+    },
+    {
+      "original_label": "Beginning Cash",
+      "canonical_name": "beginning_cash",
+      "sheet": "Cash Flow Statement"
+    },
+    {
+      "original_label": "Ending Cash",
+      "canonical_name": "ending_cash",
+      "sheet": "Cash Flow Statement"
+    },
+    {
+      "original_label": "Free Cash Flow",
+      "canonical_name": "free_cash_flow",
+      "sheet": "Cash Flow Statement",
+      "notes": "May also map to 'fcf'"
+    },
+    {
+      "original_label": "Total Debt Outstanding",
+      "canonical_name": "total_debt",
+      "sheet": "Debt Schedule",
+      "notes": "May also map to 'gross_debt'"
+    },
+    {
+      "original_label": "Total Interest Expense",
+      "canonical_name": "interest_expense_debt",
+      "sheet": "Debt Schedule",
+      "notes": "May also map to 'interest_expense' or 'interest_payment'"
+    },
+    {
+      "original_label": "Days Sales Outstanding",
+      "canonical_name": "days_sales_outstanding",
+      "sheet": "Working Capital"
+    },
+    {
+      "original_label": "Days Inventory Outstanding",
+      "canonical_name": "days_inventory_outstanding",
+      "sheet": "Working Capital"
+    },
+    {
+      "original_label": "Days Payable Outstanding",
+      "canonical_name": "days_payable_outstanding",
+      "sheet": "Working Capital"
+    },
+    {
+      "original_label": "Net Working Capital",
+      "canonical_name": "net_working_capital",
+      "sheet": "Working Capital",
+      "notes": "Maps to new net_working_capital canonical entry"
+    }
+  ],
+  "acceptable_alternatives": {
+    "revenue": ["revenue"],
+    "cogs": ["cogs", "cost_of_sales"],
+    "sga": ["sga", "sales_marketing", "general_admin"],
+    "other_expense": ["other_expense", "other_income", "opex", "operating_expenses"],
+    "operating_expenses": ["operating_expenses", "opex"],
+    "depreciation_and_amortization": ["depreciation_and_amortization", "depreciation", "amortization"],
+    "ebit": ["ebit", "operating_income"],
+    "earnings_before_tax": ["earnings_before_tax", "ebt"],
+    "income_tax": ["income_tax", "tax_expense"],
+    "cash_and_equivalents": ["cash_and_equivalents", "cash"],
+    "inventory": ["inventory", "inventories"],
+    "total_current_assets": ["total_current_assets", "current_assets"],
+    "net_ppe": ["net_ppe", "ppe", "property_plant_equipment", "fixed_assets", "gross_ppe"],
+    "intangible_assets": ["intangible_assets", "intangibles"],
+    "other_non_current_assets": ["other_non_current_assets", "other_noncurrent_assets"],
+    "accrued_liabilities": ["accrued_liabilities", "accrued_expenses"],
+    "current_portion_lt_debt": ["current_portion_lt_debt", "current_portion_debt"],
+    "total_current_liabilities": ["total_current_liabilities", "current_liabilities"],
+    "senior_debt": ["senior_debt", "notes_payable", "long_term_debt", "bonds_payable"],
+    "long_term_debt": ["long_term_debt", "total_debt"],
+    "total_equity": ["total_equity", "shareholders_equity", "stockholders_equity"],
+    "operating_cash_flow": ["operating_cash_flow", "cfo", "cash_from_operations"],
+    "capex": ["capex", "capital_expenditures"],
+    "investing_cash_flow": ["investing_cash_flow", "cfi"],
+    "financing_cash_flow": ["financing_cash_flow", "cff"],
+    "net_change_cash": ["net_change_cash", "change_in_cash"],
+    "free_cash_flow": ["free_cash_flow", "fcf"],
+    "total_debt": ["total_debt", "gross_debt"],
+    "interest_expense_debt": ["interest_expense_debt", "interest_expense", "interest_payment"],
+    "change_working_capital": ["change_working_capital", "change_in_working_capital"],
+    "total_liabilities_and_equity": ["total_liabilities_and_equity", "total_assets", "total_liabilities"],
+    "net_working_capital": ["net_working_capital", "change_working_capital", "change_in_working_capital"],
+    "net_income": ["net_income", "net_income_cf"],
+    "interest_expense": ["interest_expense", "interest_expense_debt"]
+  }
+}

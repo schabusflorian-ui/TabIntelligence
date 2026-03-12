@@ -1,0 +1,2065 @@
+{
+  "timestamp": "2026-03-12T09:23:57.331089+00:00",
+  "file": "saas_startup.xlsx",
+  "duration_seconds": 112.61,
+  "sheets": [
+    "P&L",
+    "Balance Sheet",
+    "SaaS Metrics",
+    "Headcount",
+    "Scratch"
+  ],
+  "triage": [
+    {
+      "sheet_name": "P&L",
+      "section": "AcmeSoft Inc - P&L",
+      "section_start_row": 1,
+      "section_end_row": 9,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Core P&L section with revenue components including subscription and services revenue, standard income statement structure"
+    },
+    {
+      "sheet_name": "P&L",
+      "section": "Operating Expenses",
+      "section_start_row": 11,
+      "section_end_row": 15,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.9,
+      "reasoning": "Operating expenses section of P&L with standard categories (S&M, R&D, G&A) and subtotals, integral part of income statement"
+    },
+    {
+      "sheet_name": "P&L",
+      "section": "EBITDA",
+      "section_start_row": 17,
+      "section_end_row": 19,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.9,
+      "reasoning": "Profitability metrics section (EBITDA, D&A, EBIT) completing the P&L statement structure"
+    },
+    {
+      "sheet_name": "Balance Sheet",
+      "section": "Balance Sheet",
+      "section_start_row": 1,
+      "section_end_row": 15,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.95,
+      "reasoning": "Core balance sheet section with standard asset and liability categories, subtotals present indicating proper financial statement structure"
+    },
+    {
+      "sheet_name": "Balance Sheet",
+      "section": "Total Equity",
+      "section_start_row": 17,
+      "section_end_row": 18,
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "confidence": 0.9,
+      "reasoning": "Equity section completing the balance sheet with balancing totals, essential part of statement of financial position"
+    },
+    {
+      "sheet_name": "SaaS Metrics",
+      "tier": 3,
+      "decision": "PROCESS_LOW",
+      "confidence": 0.85,
+      "reasoning": "Analytical metrics sheet with KPIs (ARR, MRR, NRR, CAC) used for performance analysis rather than core financial reporting",
+      "section": null,
+      "section_start_row": null,
+      "section_end_row": null
+    },
+    {
+      "sheet_name": "Headcount",
+      "tier": 3,
+      "decision": "PROCESS_LOW",
+      "confidence": 0.8,
+      "reasoning": "Operational assumptions/drivers sheet showing team composition and productivity metrics, analytical in nature with subtotals",
+      "section": null,
+      "section_start_row": null,
+      "section_end_row": null
+    },
+    {
+      "sheet_name": "Scratch",
+      "tier": 4,
+      "decision": "SKIP",
+      "confidence": 0.98,
+      "reasoning": "Sheet name contains 'scratch' and has no data (0 rows), clearly a temporary working sheet",
+      "section": null,
+      "section_start_row": null,
+      "section_end_row": null
+    }
+  ],
+  "line_items_count": 41,
+  "tokens_used": 37928,
+  "cost_usd": 0.23053200000000001,
+  "validation": {
+    "period_results": {
+      "FY2023": {
+        "total_checks": 60,
+        "passed": 54,
+        "failed": 6,
+        "success_rate": 0.9
+      },
+      "FY2024": {
+        "total_checks": 58,
+        "passed": 54,
+        "failed": 4,
+        "success_rate": 0.931
+      },
+      "FY2025E": {
+        "total_checks": 57,
+        "passed": 54,
+        "failed": 3,
+        "success_rate": 0.947
+      }
+    },
+    "flags": [
+      {
+        "period": "FY2023",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "must_be_positive",
+        "message": "cogs must be positive, got -1260000.0",
+        "actual": "-1260000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "FY2023",
+        "severity": "error",
+        "item": "logo_churn_rate",
+        "rule": "0 <= logo_churn_rate <= 1",
+        "message": "Logo churn rate must be between 0% and 100%",
+        "actual": "80.00",
+        "expected": "0 to 1"
+      },
+      {
+        "period": "FY2023",
+        "severity": "warning",
+        "item": "headcount",
+        "rule": "sign_convention",
+        "message": "headcount is negative (-420000.0) but typically positive",
+        "actual": "-420000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "FY2023",
+        "severity": "warning",
+        "item": "ebitda",
+        "rule": "sign_convention",
+        "message": "ebitda is negative (-210000.0) but typically positive",
+        "actual": "-210000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "FY2023",
+        "severity": "warning",
+        "item": "ebit",
+        "rule": "sign_convention",
+        "message": "ebit is negative (-378000.0) but typically positive",
+        "actual": "-378000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "FY2023",
+        "severity": "warning",
+        "item": "burn_rate",
+        "rule": "sign_convention",
+        "message": "burn_rate is positive (210000.0) but typically negative",
+        "actual": "210000.0",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2024",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "must_be_positive",
+        "message": "cogs must be positive, got -1646000.0",
+        "actual": "-1646000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "FY2024",
+        "severity": "error",
+        "item": "logo_churn_rate",
+        "rule": "0 <= logo_churn_rate <= 1",
+        "message": "Logo churn rate must be between 0% and 100%",
+        "actual": "65.00",
+        "expected": "0 to 1"
+      },
+      {
+        "period": "FY2024",
+        "severity": "warning",
+        "item": "headcount",
+        "rule": "sign_convention",
+        "message": "headcount is negative (-529000.0) but typically positive",
+        "actual": "-529000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "FY2024",
+        "severity": "warning",
+        "item": "ebit",
+        "rule": "sign_convention",
+        "message": "ebit is negative (-58000.0) but typically positive",
+        "actual": "-58000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "FY2025E",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "must_be_positive",
+        "message": "cogs must be positive, got -1911000.0",
+        "actual": "-1911000.0",
+        "expected": "positive"
+      },
+      {
+        "period": "FY2025E",
+        "severity": "error",
+        "item": "logo_churn_rate",
+        "rule": "0 <= logo_churn_rate <= 1",
+        "message": "Logo churn rate must be between 0% and 100%",
+        "actual": "50.00",
+        "expected": "0 to 1"
+      },
+      {
+        "period": "FY2025E",
+        "severity": "warning",
+        "item": "headcount",
+        "rule": "sign_convention",
+        "message": "headcount is negative (-612000.0) but typically positive",
+        "actual": "-612000.0",
+        "expected": "positive"
+      }
+    ],
+    "claude_reasoning": [
+      {
+        "flag_index": 0,
+        "assessment": "error",
+        "confidence": 0.95,
+        "reasoning": "COGS should always be positive in financial statements. The negative value of -1,260,000 suggests incorrect sign convention during extraction, as this would represent a credit to COGS which is nonsensical.",
+        "suggested_fix": "1260000.0"
+      },
+      {
+        "flag_index": 1,
+        "assessment": "error",
+        "confidence": 0.95,
+        "reasoning": "Logo churn rate of 80.00 appears to be in percentage format (80%) rather than decimal format (0.80). This is a unit conversion error.",
+        "suggested_fix": "0.80"
+      },
+      {
+        "flag_index": 2,
+        "assessment": "error",
+        "confidence": 0.99,
+        "reasoning": "Headcount of -420,000 is impossible. This appears to be a sign convention error - headcount should be 420 employees, not -420,000.",
+        "suggested_fix": "420.0"
+      },
+      {
+        "flag_index": 3,
+        "assessment": "acceptable",
+        "confidence": 0.85,
+        "reasoning": "Negative EBITDA of -210,000 is legitimate for a loss-making company. Given positive revenue but high expenses, this represents actual operating losses.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 4,
+        "assessment": "acceptable",
+        "confidence": 0.85,
+        "reasoning": "Negative EBIT of -378,000 is consistent with the company's loss-making status and follows logically from negative EBITDA minus depreciation.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 5,
+        "assessment": "acceptable",
+        "confidence": 0.8,
+        "reasoning": "Burn rate of 210,000 (positive) could be legitimate if defined as absolute cash consumption rather than cash flow. The magnitude matches EBITDA losses.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 6,
+        "assessment": "error",
+        "confidence": 0.95,
+        "reasoning": "COGS should be positive. The negative value of -1,646,000 indicates the same sign convention error as FY2023.",
+        "suggested_fix": "1646000.0"
+      },
+      {
+        "flag_index": 7,
+        "assessment": "error",
+        "confidence": 0.95,
+        "reasoning": "Logo churn rate of 65.00 is in percentage format rather than decimal. Should be 0.65 (65%).",
+        "suggested_fix": "0.65"
+      },
+      {
+        "flag_index": 8,
+        "assessment": "error",
+        "confidence": 0.99,
+        "reasoning": "Headcount of -529,000 is impossible. This should be approximately 529 employees based on revenue per employee calculations.",
+        "suggested_fix": "529.0"
+      },
+      {
+        "flag_index": 9,
+        "assessment": "acceptable",
+        "confidence": 0.85,
+        "reasoning": "Negative EBIT of -58,000 is legitimate and shows the company improving from -378,000 in FY2023, indicating progress toward profitability.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 10,
+        "assessment": "error",
+        "confidence": 0.95,
+        "reasoning": "COGS should be positive. The pattern continues with -1,911,000 showing the same systematic sign error.",
+        "suggested_fix": "1911000.0"
+      },
+      {
+        "flag_index": 11,
+        "assessment": "error",
+        "confidence": 0.95,
+        "reasoning": "Logo churn rate of 50.00 should be in decimal format (0.50) representing 50% churn rate.",
+        "suggested_fix": "0.50"
+      },
+      {
+        "flag_index": 12,
+        "assessment": "error",
+        "confidence": 0.99,
+        "reasoning": "Headcount of -612,000 is impossible. Based on revenue per employee of 65.9, this should be approximately 612 employees.",
+        "suggested_fix": "612.0"
+      }
+    ],
+    "overall_confidence": 0.926,
+    "time_series": {
+      "total_checks": 252,
+      "flags": [
+        {
+          "check_type": "yoy_change",
+          "canonical_name": "burn_rate",
+          "period": "FY2024",
+          "severity": "warning",
+          "message": "burn_rate declined -100% from FY2023 to FY2024 (threshold: -80%)",
+          "details": {
+            "pct_change": -1.0,
+            "threshold": -0.8
+          }
+        },
+        {
+          "check_type": "yoy_change",
+          "canonical_name": "cash_runway_months",
+          "period": "FY2024",
+          "severity": "warning",
+          "message": "cash_runway_months declined -100% from FY2023 to FY2024 (threshold: -80%)",
+          "details": {
+            "pct_change": -1.0,
+            "threshold": -0.8
+          }
+        },
+        {
+          "check_type": "yoy_change",
+          "canonical_name": "convertible_notes",
+          "period": "FY2025E",
+          "severity": "warning",
+          "message": "convertible_notes declined -100% from FY2024 to FY2025E (threshold: -80%)",
+          "details": {
+            "pct_change": -1.0,
+            "threshold": -0.8
+          }
+        },
+        {
+          "check_type": "yoy_change",
+          "canonical_name": "ebit",
+          "period": "FY2025E",
+          "severity": "warning",
+          "message": "ebit grew 1286% from FY2024 to FY2025E (threshold: 200%)",
+          "details": {
+            "pct_change": 12.8621,
+            "threshold": 2.0
+          }
+        },
+        {
+          "check_type": "sign_flip",
+          "canonical_name": "ebit",
+          "period": "FY2025E",
+          "severity": "error",
+          "message": "ebit flipped sign from negative to positive between FY2024 and FY2025E",
+          "details": {
+            "prev_value": -58000.0,
+            "curr_value": 688000.0
+          }
+        },
+        {
+          "check_type": "yoy_change",
+          "canonical_name": "ebitda",
+          "period": "FY2025E",
+          "severity": "warning",
+          "message": "ebitda grew 462% from FY2024 to FY2025E (threshold: 200%)",
+          "details": {
+            "pct_change": 4.6158,
+            "threshold": 2.0
+          }
+        },
+        {
+          "check_type": "sign_flip",
+          "canonical_name": "ebitda",
+          "period": "FY2024",
+          "severity": "error",
+          "message": "ebitda flipped sign from negative to positive between FY2023 and FY2024",
+          "details": {
+            "prev_value": -210000.0,
+            "curr_value": 177000.0
+          }
+        }
+      ],
+      "consistency_score": 0.964,
+      "items_checked": 36,
+      "periods_analyzed": 3
+    },
+    "completeness": {
+      "model_type": "saas",
+      "overall_score": 0.643,
+      "detected_statements": [
+        "balance_sheet",
+        "income_statement",
+        "saas_metrics"
+      ],
+      "total_expected": 31,
+      "total_found": 19,
+      "total_missing": 12,
+      "missing_items": [
+        {
+          "canonical_name": "current_assets",
+          "category": "balance_sheet",
+          "weight": 0.8,
+          "is_core": true
+        },
+        {
+          "canonical_name": "current_liabilities",
+          "category": "balance_sheet",
+          "weight": 0.8,
+          "is_core": true
+        },
+        {
+          "canonical_name": "long_term_debt",
+          "category": "balance_sheet",
+          "weight": 0.75,
+          "is_core": false
+        },
+        {
+          "canonical_name": "ppe",
+          "category": "balance_sheet",
+          "weight": 0.65,
+          "is_core": false
+        },
+        {
+          "canonical_name": "gross_profit",
+          "category": "income_statement",
+          "weight": 0.95,
+          "is_core": true
+        },
+        {
+          "canonical_name": "net_income",
+          "category": "income_statement",
+          "weight": 0.95,
+          "is_core": true
+        },
+        {
+          "canonical_name": "depreciation",
+          "category": "income_statement",
+          "weight": 0.6,
+          "is_core": false
+        },
+        {
+          "canonical_name": "interest_expense",
+          "category": "income_statement",
+          "weight": 0.7,
+          "is_core": false
+        },
+        {
+          "canonical_name": "tax_expense",
+          "category": "income_statement",
+          "weight": 0.65,
+          "is_core": false
+        },
+        {
+          "canonical_name": "ebt",
+          "category": "income_statement",
+          "weight": 0.6,
+          "is_core": false
+        },
+        {
+          "canonical_name": "opex",
+          "category": "income_statement",
+          "weight": 0.7,
+          "is_core": false
+        },
+        {
+          "canonical_name": "churn_rate",
+          "category": "metrics",
+          "weight": 0.6,
+          "is_core": false
+        }
+      ],
+      "per_statement": {
+        "balance_sheet": {
+          "raw_score": 0.6,
+          "weighted_score": 0.632,
+          "core_score": 0.701,
+          "found": [
+            "total_assets",
+            "total_liabilities",
+            "total_equity",
+            "cash",
+            "accounts_receivable",
+            "accounts_payable"
+          ],
+          "missing": [
+            "current_assets",
+            "current_liabilities",
+            "long_term_debt",
+            "ppe"
+          ]
+        },
+        "income_statement": {
+          "raw_score": 0.364,
+          "weighted_score": 0.408,
+          "core_score": 0.651,
+          "found": [
+            "revenue",
+            "cogs",
+            "ebitda",
+            "ebit"
+          ],
+          "missing": [
+            "gross_profit",
+            "net_income",
+            "depreciation",
+            "interest_expense",
+            "tax_expense",
+            "ebt",
+            "opex"
+          ]
+        },
+        "saas_metrics": {
+          "raw_score": 0.9,
+          "weighted_score": 0.912,
+          "core_score": 1.0,
+          "found": [
+            "arr",
+            "mrr",
+            "net_revenue_retention",
+            "cac",
+            "ltv",
+            "burn_rate",
+            "customer_count",
+            "ltv_cac_ratio",
+            "cash_runway_months"
+          ],
+          "missing": [
+            "churn_rate"
+          ]
+        }
+      }
+    },
+    "quality": {
+      "numeric_score": 0.858,
+      "letter_grade": "B",
+      "label": "trustworthy",
+      "dimensions": [
+        {
+          "name": "mapping_confidence",
+          "score": 0.962,
+          "weight": 0.25,
+          "details": null
+        },
+        {
+          "name": "validation_success",
+          "score": 0.926,
+          "weight": 0.25,
+          "details": null
+        },
+        {
+          "name": "completeness",
+          "score": 0.643,
+          "weight": 0.3,
+          "details": null
+        },
+        {
+          "name": "time_series_consistency",
+          "score": 0.964,
+          "weight": 0.2,
+          "details": null
+        }
+      ],
+      "model_type": "saas"
+    },
+    "lifecycle": {
+      "is_project_finance": false,
+      "confidence": 0.2,
+      "signals_used": [
+        "revenue"
+      ],
+      "phases": {
+        "FY2023": "operations",
+        "FY2024": "operations",
+        "FY2025E": "operations"
+      }
+    },
+    "unit_normalization": {
+      "P&L": "1000.0",
+      "SaaS Metrics": "1000.0"
+    }
+  },
+  "lineage_summary": {
+    "total_events": 5,
+    "stages": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "event_types": [
+      "enhanced_mapping",
+      "mapping",
+      "triage",
+      "validation",
+      "parsing"
+    ]
+  },
+  "triage_accuracy": {
+    "correct": 4,
+    "total": 5,
+    "accuracy": 0.8,
+    "details": [
+      {
+        "sheet_name": "P&L",
+        "expected_tier": 1,
+        "actual_tier": 1,
+        "correct": true
+      },
+      {
+        "sheet_name": "Balance Sheet",
+        "expected_tier": 1,
+        "actual_tier": 1,
+        "correct": true
+      },
+      {
+        "sheet_name": "SaaS Metrics",
+        "expected_tier": 1,
+        "actual_tier": 3,
+        "correct": false
+      },
+      {
+        "sheet_name": "Headcount",
+        "expected_tier": 3,
+        "actual_tier": 3,
+        "correct": true
+      },
+      {
+        "sheet_name": "Scratch",
+        "expected_tier": 4,
+        "actual_tier": 4,
+        "correct": true
+      }
+    ]
+  },
+  "mapping_accuracy": {
+    "correct": 36,
+    "total": 37,
+    "accuracy": 0.973,
+    "unmapped_count": 0,
+    "unmapped_labels": [],
+    "mismatches": [
+      {
+        "label": "G&A",
+        "expected": "general_admin",
+        "actual": "headcount",
+        "acceptable": [
+          "general_admin",
+          "sga"
+        ]
+      }
+    ],
+    "per_statement": {
+      "P&L": {
+        "correct": 11,
+        "total": 12,
+        "mismatches": [
+          {
+            "label": "G&A",
+            "expected": "general_admin",
+            "actual": "headcount"
+          }
+        ],
+        "accuracy": 0.9166666666666666
+      },
+      "Balance Sheet": {
+        "correct": 13,
+        "total": 13,
+        "mismatches": [],
+        "accuracy": 1.0
+      },
+      "SaaS Metrics": {
+        "correct": 11,
+        "total": 11,
+        "mismatches": [],
+        "accuracy": 1.0
+      },
+      "Headcount": {
+        "correct": 1,
+        "total": 1,
+        "mismatches": [],
+        "accuracy": 1.0
+      }
+    }
+  },
+  "completeness": {
+    "model_type": "saas",
+    "overall_score": 0.643,
+    "detected_statements": [
+      "balance_sheet",
+      "income_statement",
+      "saas_metrics"
+    ],
+    "total_expected": 31,
+    "total_found": 19,
+    "total_missing": 12,
+    "missing_items": [
+      {
+        "canonical_name": "current_assets",
+        "category": "balance_sheet",
+        "weight": 0.8,
+        "is_core": true
+      },
+      {
+        "canonical_name": "current_liabilities",
+        "category": "balance_sheet",
+        "weight": 0.8,
+        "is_core": true
+      },
+      {
+        "canonical_name": "long_term_debt",
+        "category": "balance_sheet",
+        "weight": 0.75,
+        "is_core": false
+      },
+      {
+        "canonical_name": "ppe",
+        "category": "balance_sheet",
+        "weight": 0.65,
+        "is_core": false
+      },
+      {
+        "canonical_name": "gross_profit",
+        "category": "income_statement",
+        "weight": 0.95,
+        "is_core": true
+      },
+      {
+        "canonical_name": "net_income",
+        "category": "income_statement",
+        "weight": 0.95,
+        "is_core": true
+      },
+      {
+        "canonical_name": "depreciation",
+        "category": "income_statement",
+        "weight": 0.6,
+        "is_core": false
+      },
+      {
+        "canonical_name": "interest_expense",
+        "category": "income_statement",
+        "weight": 0.7,
+        "is_core": false
+      },
+      {
+        "canonical_name": "tax_expense",
+        "category": "income_statement",
+        "weight": 0.65,
+        "is_core": false
+      },
+      {
+        "canonical_name": "ebt",
+        "category": "income_statement",
+        "weight": 0.6,
+        "is_core": false
+      },
+      {
+        "canonical_name": "opex",
+        "category": "income_statement",
+        "weight": 0.7,
+        "is_core": false
+      },
+      {
+        "canonical_name": "churn_rate",
+        "category": "metrics",
+        "weight": 0.6,
+        "is_core": false
+      }
+    ],
+    "per_statement": {
+      "balance_sheet": {
+        "raw_score": 0.6,
+        "weighted_score": 0.632,
+        "core_score": 0.701,
+        "found": [
+          "total_assets",
+          "total_liabilities",
+          "total_equity",
+          "cash",
+          "accounts_receivable",
+          "accounts_payable"
+        ],
+        "missing": [
+          "current_assets",
+          "current_liabilities",
+          "long_term_debt",
+          "ppe"
+        ]
+      },
+      "income_statement": {
+        "raw_score": 0.364,
+        "weighted_score": 0.408,
+        "core_score": 0.651,
+        "found": [
+          "revenue",
+          "cogs",
+          "ebitda",
+          "ebit"
+        ],
+        "missing": [
+          "gross_profit",
+          "net_income",
+          "depreciation",
+          "interest_expense",
+          "tax_expense",
+          "ebt",
+          "opex"
+        ]
+      },
+      "saas_metrics": {
+        "raw_score": 0.9,
+        "weighted_score": 0.912,
+        "core_score": 1.0,
+        "found": [
+          "arr",
+          "mrr",
+          "net_revenue_retention",
+          "cac",
+          "ltv",
+          "burn_rate",
+          "customer_count",
+          "ltv_cac_ratio",
+          "cash_runway_months"
+        ],
+        "missing": [
+          "churn_rate"
+        ]
+      }
+    }
+  },
+  "quality": {
+    "numeric_score": 0.858,
+    "letter_grade": "B",
+    "label": "trustworthy",
+    "dimensions": [
+      {
+        "name": "mapping_confidence",
+        "score": 0.962,
+        "weight": 0.25,
+        "details": null
+      },
+      {
+        "name": "validation_success",
+        "score": 0.926,
+        "weight": 0.25,
+        "details": null
+      },
+      {
+        "name": "completeness",
+        "score": 0.643,
+        "weight": 0.3,
+        "details": null
+      },
+      {
+        "name": "time_series_consistency",
+        "score": 0.964,
+        "weight": 0.2,
+        "details": null
+      }
+    ],
+    "model_type": "saas"
+  },
+  "sample_line_items": [
+    {
+      "sheet": "P&L",
+      "row": 4,
+      "original_label": "Rev",
+      "canonical_name": "revenue",
+      "values": {
+        "FY2023": 4200,
+        "FY2024": 5880,
+        "FY2025E": 7644
+      },
+      "confidence": 0.95,
+      "hierarchy_level": 0,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "P&L",
+            "cell_ref": "A4",
+            "raw_value": "Rev"
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "C4",
+            "raw_value": 4200
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "D4",
+            "raw_value": 5880
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "E4",
+            "raw_value": 7644
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 0,
+          "is_bold": true,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Rev is a common abbreviation for revenue on P&L statements"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "P&L",
+      "row": 5,
+      "original_label": "Subscription Revenue",
+      "canonical_name": "subscription_revenue",
+      "values": {
+        "FY2023": 3570,
+        "FY2024": 5058,
+        "FY2025E": 6879
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "P&L",
+            "cell_ref": "A5",
+            "raw_value": "  Subscription Revenue"
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "C5",
+            "raw_value": 3570
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "D5",
+            "raw_value": 5058
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "E5",
+            "raw_value": 6879
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Direct match for subscription revenue in the Income Statement taxonomy"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "P&L",
+      "row": 6,
+      "original_label": "Services Revenue",
+      "canonical_name": "service_revenue",
+      "values": {
+        "FY2023": 630,
+        "FY2024": 822,
+        "FY2025E": 765
+      },
+      "confidence": 0.95,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "P&L",
+            "cell_ref": "A6",
+            "raw_value": "  Services Revenue"
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "C6",
+            "raw_value": 630
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "D6",
+            "raw_value": 822
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "E6",
+            "raw_value": 765
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Services Revenue maps to service_revenue in the Income Statement taxonomy"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "P&L",
+      "row": 8,
+      "original_label": "COGS",
+      "canonical_name": "cogs",
+      "values": {
+        "FY2023": -1260,
+        "FY2024": -1646,
+        "FY2025E": -1911
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "P&L",
+            "cell_ref": "A8",
+            "raw_value": "COGS"
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "C8",
+            "raw_value": -1260
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "D8",
+            "raw_value": -1646
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "E8",
+            "raw_value": -1911
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "COGS is an exact match in the Income Statement taxonomy"
+        },
+        "validation": {
+          "rules_applied": [
+            "must_be_positive"
+          ],
+          "all_passed": false,
+          "flags": [
+            {
+              "period": "FY2023",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "must_be_positive",
+              "message": "cogs must be positive, got -1260000.0",
+              "actual": "-1260000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "FY2024",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "must_be_positive",
+              "message": "cogs must be positive, got -1646000.0",
+              "actual": "-1646000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "FY2025E",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "must_be_positive",
+              "message": "cogs must be positive, got -1911000.0",
+              "actual": "-1911000.0",
+              "expected": "positive"
+            }
+          ]
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "P&L",
+      "row": 9,
+      "original_label": "GP",
+      "canonical_name": "gross_profit",
+      "values": {},
+      "confidence": 0.95,
+      "hierarchy_level": 0,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "P&L",
+            "cell_ref": "A9",
+            "raw_value": "GP"
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 0,
+          "is_bold": true,
+          "is_formula": true,
+          "is_subtotal": true
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "GP is a common abbreviation for Gross Profit, which is a subtotal on P&L"
+        },
+        "validation": null,
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "P&L",
+      "row": 12,
+      "original_label": "S&M",
+      "canonical_name": "sales_marketing",
+      "values": {
+        "FY2023": -1680,
+        "FY2024": -2117,
+        "FY2025E": -2446
+      },
+      "confidence": 0.95,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "P&L",
+            "cell_ref": "A12",
+            "raw_value": "  S&M"
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "C12",
+            "raw_value": -1680
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "D12",
+            "raw_value": -2117
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "E12",
+            "raw_value": -2446
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "S&M commonly refers to Sales & Marketing expenses"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "P&L",
+      "row": 13,
+      "original_label": "R&D",
+      "canonical_name": "rd_expense",
+      "values": {
+        "FY2023": -1050,
+        "FY2024": -1411,
+        "FY2025E": -1681
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "P&L",
+            "cell_ref": "A13",
+            "raw_value": "  R&D"
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "C13",
+            "raw_value": -1050
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "D13",
+            "raw_value": -1411
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "E13",
+            "raw_value": -1681
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "R&D directly maps to rd_expense in the Income Statement taxonomy"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "P&L",
+      "row": 14,
+      "original_label": "G&A",
+      "canonical_name": "headcount",
+      "values": {
+        "FY2023": -420,
+        "FY2024": -529,
+        "FY2025E": -612
+      },
+      "confidence": 0.85,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "P&L",
+            "cell_ref": "A14",
+            "raw_value": "  G&A"
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "C14",
+            "raw_value": -420
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "D14",
+            "raw_value": -529
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "E14",
+            "raw_value": -612
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "metrics",
+          "reasoning": "G&A headcount is a subset of total headcount; using general headcount canonical"
+        },
+        "validation": {
+          "rules_applied": [
+            "sign_convention"
+          ],
+          "all_passed": true,
+          "flags": [
+            {
+              "period": "FY2023",
+              "severity": "warning",
+              "item": "headcount",
+              "rule": "sign_convention",
+              "message": "headcount is negative (-420000.0) but typically positive",
+              "actual": "-420000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "FY2024",
+              "severity": "warning",
+              "item": "headcount",
+              "rule": "sign_convention",
+              "message": "headcount is negative (-529000.0) but typically positive",
+              "actual": "-529000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "FY2025E",
+              "severity": "warning",
+              "item": "headcount",
+              "rule": "sign_convention",
+              "message": "headcount is negative (-612000.0) but typically positive",
+              "actual": "-612000.0",
+              "expected": "positive"
+            }
+          ]
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "P&L",
+      "row": 15,
+      "original_label": "Total Opex",
+      "canonical_name": "operating_expenses",
+      "values": {
+        "FY2023": -3150,
+        "FY2024": -4057,
+        "FY2025E": -4739
+      },
+      "confidence": 0.95,
+      "hierarchy_level": 0,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "P&L",
+            "cell_ref": "A15",
+            "raw_value": "Total Opex"
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "C15",
+            "raw_value": -3150
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "D15",
+            "raw_value": -4057
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "E15",
+            "raw_value": -4739
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 0,
+          "is_bold": true,
+          "is_formula": false,
+          "is_subtotal": true
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "Total Opex represents total operating expenses, matching the subtotal context"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "P&L",
+      "row": 17,
+      "original_label": "EBITDA",
+      "canonical_name": "ebitda",
+      "values": {
+        "FY2023": -210,
+        "FY2024": 177,
+        "FY2025E": 994
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 0,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "P&L",
+            "cell_ref": "A17",
+            "raw_value": "EBITDA"
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "C17",
+            "raw_value": -210
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "D17",
+            "raw_value": 177
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "E17",
+            "raw_value": 994
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 0,
+          "is_bold": true,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "EBITDA is an exact match in the Income Statement taxonomy"
+        },
+        "validation": {
+          "rules_applied": [
+            "sign_convention"
+          ],
+          "all_passed": true,
+          "flags": [
+            {
+              "period": "FY2023",
+              "severity": "warning",
+              "item": "ebitda",
+              "rule": "sign_convention",
+              "message": "ebitda is negative (-210000.0) but typically positive",
+              "actual": "-210000.0",
+              "expected": "positive"
+            }
+          ]
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "P&L",
+      "row": 18,
+      "original_label": "D&A",
+      "canonical_name": "depreciation_and_amortization",
+      "values": {
+        "FY2023": -168,
+        "FY2024": -235,
+        "FY2025E": -306
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "P&L",
+            "cell_ref": "A18",
+            "raw_value": "D&A"
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "C18",
+            "raw_value": -168
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "D18",
+            "raw_value": -235
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "E18",
+            "raw_value": -306
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "D&A on P&L sheet maps to depreciation_and_amortization (not depreciation_cf which is for cash flow)"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "P&L",
+      "row": 19,
+      "original_label": "EBIT",
+      "canonical_name": "ebit",
+      "values": {
+        "FY2023": -378,
+        "FY2024": -58,
+        "FY2025E": 688
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 0,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "P&L",
+            "cell_ref": "A19",
+            "raw_value": "EBIT"
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "C19",
+            "raw_value": -378
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "D19",
+            "raw_value": -58
+          },
+          {
+            "sheet": "P&L",
+            "cell_ref": "E19",
+            "raw_value": 688
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 0,
+          "is_bold": true,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "income_statement",
+          "reasoning": "EBIT is an exact match in the Income Statement taxonomy"
+        },
+        "validation": {
+          "rules_applied": [
+            "sign_convention"
+          ],
+          "all_passed": true,
+          "flags": [
+            {
+              "period": "FY2023",
+              "severity": "warning",
+              "item": "ebit",
+              "rule": "sign_convention",
+              "message": "ebit is negative (-378000.0) but typically positive",
+              "actual": "-378000.0",
+              "expected": "positive"
+            },
+            {
+              "period": "FY2024",
+              "severity": "warning",
+              "item": "ebit",
+              "rule": "sign_convention",
+              "message": "ebit is negative (-58000.0) but typically positive",
+              "actual": "-58000.0",
+              "expected": "positive"
+            }
+          ]
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Balance Sheet",
+      "row": 3,
+      "original_label": "Cash & Equivalents",
+      "canonical_name": "cash",
+      "values": {
+        "FY2023": 8500,
+        "FY2024": 6200,
+        "FY2025E": 5800
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 0,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "A3",
+            "raw_value": "Cash & Equivalents"
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "B3",
+            "raw_value": 8500
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "C3",
+            "raw_value": 6200
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "D3",
+            "raw_value": 5800
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 0,
+          "is_bold": true,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "balance_sheet",
+          "reasoning": "Cash & Equivalents matches cash_and_equivalents in the Balance Sheet taxonomy"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Balance Sheet",
+      "row": 4,
+      "original_label": "Accounts Receivable",
+      "canonical_name": "accounts_receivable",
+      "values": {
+        "FY2023": 1050,
+        "FY2024": 1470,
+        "FY2025E": 1911
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "A4",
+            "raw_value": "Accounts Receivable"
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "B4",
+            "raw_value": 1050
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "C4",
+            "raw_value": 1470
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "D4",
+            "raw_value": 1911
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "balance_sheet",
+          "reasoning": "Direct match for accounts_receivable in the Balance Sheet taxonomy"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Balance Sheet",
+      "row": 5,
+      "original_label": "Prepaid Expenses",
+      "canonical_name": "prepaid_expenses",
+      "values": {
+        "FY2023": 210,
+        "FY2024": 294,
+        "FY2025E": 382
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "A5",
+            "raw_value": "Prepaid Expenses"
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "B5",
+            "raw_value": 210
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "C5",
+            "raw_value": 294
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "D5",
+            "raw_value": 382
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "balance_sheet",
+          "reasoning": "Direct match for prepaid_expenses in the Balance Sheet taxonomy"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Balance Sheet",
+      "row": 6,
+      "original_label": "Total Current Assets",
+      "canonical_name": "total_current_assets",
+      "values": {
+        "FY2023": 9760,
+        "FY2024": 7964,
+        "FY2025E": 8093
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 0,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "A6",
+            "raw_value": "Total Current Assets"
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "B6",
+            "raw_value": 9760
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "C6",
+            "raw_value": 7964
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "D6",
+            "raw_value": 8093
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 0,
+          "is_bold": true,
+          "is_formula": false,
+          "is_subtotal": true
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "balance_sheet",
+          "reasoning": "Direct match for total_current_assets in the Balance Sheet taxonomy"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Balance Sheet",
+      "row": 8,
+      "original_label": "PP&E, Net",
+      "canonical_name": "net_ppe",
+      "values": {
+        "FY2023": 840,
+        "FY2024": 1176,
+        "FY2025E": 1529
+      },
+      "confidence": 0.95,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "A8",
+            "raw_value": "PP&E, Net"
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "B8",
+            "raw_value": 840
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "C8",
+            "raw_value": 1176
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "D8",
+            "raw_value": 1529
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "balance_sheet",
+          "reasoning": "PP&E, Net refers to net property, plant & equipment"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Balance Sheet",
+      "row": 9,
+      "original_label": "Total Assets",
+      "canonical_name": "total_assets",
+      "values": {
+        "FY2023": 10600,
+        "FY2024": 9140,
+        "FY2025E": 9622
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 0,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "A9",
+            "raw_value": "Total Assets"
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "B9",
+            "raw_value": 10600
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "C9",
+            "raw_value": 9140
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "D9",
+            "raw_value": 9622
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 0,
+          "is_bold": true,
+          "is_formula": false,
+          "is_subtotal": true
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "balance_sheet",
+          "reasoning": "Direct match for total_assets in the Balance Sheet taxonomy"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Balance Sheet",
+      "row": 11,
+      "original_label": "Accounts Payable",
+      "canonical_name": "accounts_payable",
+      "values": {
+        "FY2023": 315,
+        "FY2024": 412,
+        "FY2025E": 478
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "A11",
+            "raw_value": "Accounts Payable"
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "B11",
+            "raw_value": 315
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "C11",
+            "raw_value": 412
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "D11",
+            "raw_value": 478
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "balance_sheet",
+          "reasoning": "Direct match for accounts_payable in the Balance Sheet taxonomy"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    },
+    {
+      "sheet": "Balance Sheet",
+      "row": 12,
+      "original_label": "Deferred Revenue",
+      "canonical_name": "deferred_revenue",
+      "values": {
+        "FY2023": 700,
+        "FY2024": 980,
+        "FY2025E": 1274
+      },
+      "confidence": 0.98,
+      "hierarchy_level": 1,
+      "provenance": {
+        "source_cells": [
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "A12",
+            "raw_value": "Deferred Revenue"
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "B12",
+            "raw_value": 700
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "C12",
+            "raw_value": 980
+          },
+          {
+            "sheet": "Balance Sheet",
+            "cell_ref": "D12",
+            "raw_value": 1274
+          }
+        ],
+        "parsing": {
+          "hierarchy_level": 1,
+          "is_bold": false,
+          "is_formula": false,
+          "is_subtotal": false
+        },
+        "mapping": {
+          "method": "claude",
+          "stage": 3,
+          "taxonomy_category": "balance_sheet",
+          "reasoning": "Direct match for deferred_revenue in the Balance Sheet taxonomy"
+        },
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      }
+    }
+  ]
+}

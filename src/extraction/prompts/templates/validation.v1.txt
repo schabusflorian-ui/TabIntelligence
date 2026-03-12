@@ -14,6 +14,22 @@ For each flag, assess whether it indicates:
 2. A legitimate business variation (acceptable)
 3. Insufficient data to validate (skip)
 
+PROJECT LIFECYCLE AWARENESS (CRITICAL):
+Many financial models have distinct phases where certain metrics are legitimately zero:
+- **Construction/Development phase**: Revenue, EBITDA, net income are all zero during construction.
+  Capex and debt drawdowns are active. Zero revenue in these periods is NOT an error.
+- **Operations phase**: Revenue should be positive, debt service is active, returns are generated.
+- **Post-operations / Tail phase**: After operations end (e.g., concession expiry, asset end-of-life),
+  all financial metrics return to zero. Zero revenue after the operations window is NOT an error.
+
+Look for signals of project lifecycle:
+- If early periods show capex/investment with zero revenue -> construction phase (acceptable)
+- If later periods show sudden drop to zero across ALL metrics -> operations ended (acceptable)
+- Only flag zero revenue as an error if it occurs WITHIN an otherwise active operational period
+  (e.g., period 10 has zero revenue but periods 9 and 11 have positive revenue)
+
+When cell references are available, use them to trace values back to the source for verification.
+
 Return JSON:
 [
   {{

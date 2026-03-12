@@ -133,6 +133,12 @@ class Settings(BaseSettings):
         description="Claude model to use for extraction"
     )
 
+    quality_gate_min_grade: str = Field(
+        default="F",
+        description="Minimum passing quality grade. Jobs at or below this grade "
+                    "are flagged NEEDS_REVIEW. One of: A, B, C, D, F."
+    )
+
     # =========================================================================
     # Validators
     # =========================================================================
@@ -182,6 +188,15 @@ class Settings(BaseSettings):
                 "Max file size must be between 1 and 1000 MB"
             )
         return v
+
+    @field_validator("quality_gate_min_grade")
+    @classmethod
+    def validate_quality_gate_min_grade(cls, v: str) -> str:
+        """Validate quality gate minimum grade."""
+        v_upper = v.upper()
+        if v_upper not in ("A", "B", "C", "D", "F"):
+            raise ValueError(f"Invalid grade: {v}. Must be one of A, B, C, D, F")
+        return v_upper
 
     # =========================================================================
     # Computed Properties
