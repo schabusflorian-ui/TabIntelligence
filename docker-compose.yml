@@ -69,54 +69,98 @@ services:
       timeout: 5s
       retries: 5
 
-  # --- Application services (uncomment to run full stack via Docker) ---
-  # api:
-  #   build:
-  #     context: .
-  #     target: api
-  #   container_name: debtfund-api
-  #   ports:
-  #     - "8000:8000"
-  #   environment:
-  #     DATABASE_URL: postgresql://emi:${POSTGRES_PASSWORD:-emi_dev}@postgres:5432/emi
-  #     REDIS_URL: redis://redis:6379/0
-  #     S3_ENDPOINT_URL: http://minio:9000
-  #     S3_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
-  #     S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
-  #     S3_BUCKET: debtfund-files
-  #     ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-  #     LOG_FORMAT: json
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #     minio:
-  #       condition: service_healthy
+  # --- Application services ---
+  api:
+    build:
+      context: .
+      target: api
+    container_name: debtfund-api
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://emi:${POSTGRES_PASSWORD:-emi_dev}@postgres:5432/emi
+      REDIS_URL: redis://redis:6379/0
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      S3_BUCKET: debtfund-files
+      S3_VERIFY_SSL: "false"
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      LOG_FORMAT: json
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/liveness"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
 
-  # worker:
-  #   build:
-  #     context: .
-  #     target: worker
-  #   container_name: debtfund-worker
-  #   environment:
-  #     DATABASE_URL: postgresql://emi:${POSTGRES_PASSWORD:-emi_dev}@postgres:5432/emi
-  #     REDIS_URL: redis://redis:6379/0
-  #     S3_ENDPOINT_URL: http://minio:9000
-  #     S3_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
-  #     S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
-  #     S3_BUCKET: debtfund-files
-  #     ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-  #     LOG_FORMAT: json
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #     minio:
-  #       condition: service_healthy
+  worker:
+    build:
+      context: .
+      target: worker
+    container_name: debtfund-worker
+    environment:
+      DATABASE_URL: postgresql://emi:${POSTGRES_PASSWORD:-emi_dev}@postgres:5432/emi
+      REDIS_URL: redis://redis:6379/0
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      S3_BUCKET: debtfund-files
+      S3_VERIFY_SSL: "false"
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      LOG_FORMAT: json
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # --- Monitoring ---
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: debtfund-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=30d"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: debtfund-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    restart: unless-stopped
 
 volumes:
   postgres_data:
   redis_data:
   minio_data:
+  prometheus_data:
+  grafana_data:

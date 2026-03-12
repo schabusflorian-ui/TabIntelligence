@@ -1,5 +1,5 @@
 """Tests for file management API endpoints."""
-import pytest
+
 from uuid import uuid4
 
 from src.db import crud
@@ -71,16 +71,59 @@ class TestGetFile:
 
     def test_get_file_has_all_fields(self, test_client_with_db, db_session):
         file = crud.create_file(
-            db_session, filename="model.xlsx", file_size=4096,
+            db_session,
+            filename="model.xlsx",
+            file_size=4096,
             content_hash="abc123",
         )
 
         resp = test_client_with_db.get(f"/api/v1/files/{file.file_id}")
         assert resp.status_code == 200
         data = resp.json()
-        expected_keys = {"file_id", "filename", "file_size", "s3_key",
-                         "content_hash", "entity_id", "uploaded_at"}
+        expected_keys = {
+            "file_id",
+            "filename",
+            "file_size",
+            "s3_key",
+            "content_hash",
+            "entity_id",
+            "uploaded_at",
+        }
         assert set(data.keys()) == expected_keys
+
+
+class TestDownloadFile:
+    """Test GET /api/v1/files/{file_id}/download endpoint."""
+
+    def test_download_not_found(self, test_client_with_db):
+        fake_id = str(uuid4())
+        resp = test_client_with_db.get(f"/api/v1/files/{fake_id}/download")
+        assert resp.status_code == 404
+
+    def test_download_no_s3_key(self, test_client_with_db, db_session):
+        file = crud.create_file(db_session, filename="test.xlsx", file_size=1024)
+        resp = test_client_with_db.get(f"/api/v1/files/{file.file_id}/download")
+        # File has no s3_key → 400
+        assert resp.status_code == 400
+
+    def test_download_success(self, test_client_with_db, db_session):
+        from unittest.mock import MagicMock, patch
+
+        file = crud.create_file(db_session, filename="test.xlsx", file_size=1024)
+        file.s3_key = "uploads/2026/03/test.xlsx"
+        db_session.commit()
+
+        mock_s3 = MagicMock()
+        mock_s3.generate_presigned_url.return_value = "https://s3/presigned-url"
+
+        with patch("src.api.files.get_s3_client", return_value=mock_s3):
+            resp = test_client_with_db.get(f"/api/v1/files/{file.file_id}/download")
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["download_url"] == "https://s3/presigned-url"
+        assert data["expires_in"] == 3600
+        assert data["filename"] == "test.xlsx"
 
 
 class TestListFilesCRUD:

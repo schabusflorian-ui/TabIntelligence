@@ -4,9 +4,11 @@ Tests for S3/MinIO storage client.
 Note: boto3 is mocked at the module level in conftest.py, so all S3 operations
 use the mock client. No real S3/MinIO connection is needed.
 """
-import pytest
+
 from unittest.mock import MagicMock, patch
 from uuid import UUID
+
+import pytest
 
 
 class TestS3ClientInit:
@@ -35,6 +37,7 @@ class TestUploadFile:
 
     def _make_client(self):
         from src.storage.s3 import S3Client
+
         return S3Client(
             endpoint="http://localhost:9000",
             access_key="minioadmin",
@@ -90,6 +93,7 @@ class TestDownloadFile:
 
     def _make_client(self):
         from src.storage.s3 import S3Client
+
         return S3Client(
             endpoint="http://localhost:9000",
             access_key="minioadmin",
@@ -126,6 +130,7 @@ class TestGenerateS3Key:
 
     def _make_client(self):
         from src.storage.s3 import S3Client
+
         return S3Client(
             endpoint="http://localhost:9000",
             access_key="minioadmin",
@@ -169,6 +174,7 @@ class TestEnsureBucketExists:
 
     def _make_client(self):
         from src.storage.s3 import S3Client
+
         return S3Client(
             endpoint="http://localhost:9000",
             access_key="minioadmin",
@@ -203,6 +209,7 @@ class TestFileExists:
 
     def _make_client(self):
         from src.storage.s3 import S3Client
+
         return S3Client(
             endpoint="http://localhost:9000",
             access_key="minioadmin",
@@ -235,6 +242,7 @@ class TestDeleteFile:
 
     def _make_client(self):
         from src.storage.s3 import S3Client
+
         return S3Client(
             endpoint="http://localhost:9000",
             access_key="minioadmin",
@@ -274,6 +282,7 @@ class TestGetFileMetadata:
 
     def _make_client(self):
         from src.storage.s3 import S3Client
+
         return S3Client(
             endpoint="http://localhost:9000",
             access_key="minioadmin",
@@ -316,6 +325,7 @@ class TestUploadClientError:
 
     def _make_client(self):
         from src.storage.s3 import S3Client
+
         return S3Client(
             endpoint="http://localhost:9000",
             access_key="minioadmin",
@@ -325,6 +335,7 @@ class TestUploadClientError:
 
     def _make_client_error(self, code="Unknown"):
         from botocore.exceptions import ClientError
+
         return ClientError(
             error_response={"Error": {"Code": code, "Message": "test error"}},
             operation_name="PutObject",
@@ -355,6 +366,7 @@ class TestUploadClientError:
     def test_upload_no_credentials(self):
         """Test upload raises on NoCredentialsError."""
         from botocore.exceptions import NoCredentialsError
+
         from src.core.exceptions import FileStorageError
 
         client = self._make_client()
@@ -367,6 +379,7 @@ class TestUploadClientError:
     def test_upload_endpoint_connection_error(self):
         """Test upload raises on EndpointConnectionError."""
         from botocore.exceptions import EndpointConnectionError
+
         from src.core.exceptions import FileStorageError
 
         client = self._make_client()
@@ -382,6 +395,7 @@ class TestDownloadClientError:
 
     def _make_client(self):
         from src.storage.s3 import S3Client
+
         return S3Client(
             endpoint="http://localhost:9000",
             access_key="minioadmin",
@@ -391,6 +405,7 @@ class TestDownloadClientError:
 
     def _make_client_error(self, code="Unknown"):
         from botocore.exceptions import ClientError
+
         return ClientError(
             error_response={"Error": {"Code": code, "Message": "test error"}},
             operation_name="GetObject",
@@ -432,6 +447,7 @@ class TestDownloadClientError:
     def test_download_no_credentials(self):
         """Test download raises on NoCredentialsError."""
         from botocore.exceptions import NoCredentialsError
+
         from src.core.exceptions import FileStorageError
 
         client = self._make_client()
@@ -444,6 +460,7 @@ class TestDownloadClientError:
     def test_download_endpoint_connection_error(self):
         """Test download raises on EndpointConnectionError."""
         from botocore.exceptions import EndpointConnectionError
+
         from src.core.exceptions import FileStorageError
 
         client = self._make_client()
@@ -459,6 +476,7 @@ class TestEnsureBucketClientError:
 
     def _make_client(self):
         from src.storage.s3 import S3Client
+
         return S3Client(
             endpoint="http://localhost:9000",
             access_key="minioadmin",
@@ -468,6 +486,7 @@ class TestEnsureBucketClientError:
 
     def _make_client_error(self, code="Unknown"):
         from botocore.exceptions import ClientError
+
         return ClientError(
             error_response={"Error": {"Code": code, "Message": "test error"}},
             operation_name="HeadBucket",
@@ -513,6 +532,7 @@ class TestFileExistsClientError:
 
     def _make_client(self):
         from src.storage.s3 import S3Client
+
         return S3Client(
             endpoint="http://localhost:9000",
             access_key="minioadmin",
@@ -522,6 +542,7 @@ class TestFileExistsClientError:
 
     def _make_client_error(self, code="Unknown"):
         from botocore.exceptions import ClientError
+
         return ClientError(
             error_response={"Error": {"Code": code, "Message": "test error"}},
             operation_name="HeadObject",
@@ -552,6 +573,7 @@ class TestGetMetadataClientError:
 
     def _make_client(self):
         from src.storage.s3 import S3Client
+
         return S3Client(
             endpoint="http://localhost:9000",
             access_key="minioadmin",
@@ -561,6 +583,7 @@ class TestGetMetadataClientError:
 
     def _make_client_error(self, code="Unknown"):
         from botocore.exceptions import ClientError
+
         return ClientError(
             error_response={"Error": {"Code": code, "Message": "test error"}},
             operation_name="HeadObject",
@@ -587,6 +610,74 @@ class TestGetMetadataClientError:
 
         with pytest.raises(FileStorageError, match="Failed to get file metadata"):
             client.get_file_metadata("uploads/test.xlsx")
+
+
+class TestPresignedUrl:
+    """Test generate_presigned_url method."""
+
+    def _make_client(self):
+        from src.storage.s3 import S3Client
+
+        return S3Client(
+            endpoint="http://localhost:9000",
+            access_key="minioadmin",
+            secret_key="minioadmin",
+            bucket_name="debtfund-test",
+        )
+
+    def test_presigned_url_success(self):
+        """Test successful presigned URL generation."""
+        client = self._make_client()
+        client.s3_client = MagicMock()
+        client.s3_client.generate_presigned_url.return_value = "https://s3/presigned-url"
+
+        url = client.generate_presigned_url("uploads/test.xlsx")
+
+        assert url == "https://s3/presigned-url"
+        client.s3_client.generate_presigned_url.assert_called_once()
+        call_kwargs = client.s3_client.generate_presigned_url.call_args
+        assert call_kwargs[0][0] == "get_object"
+        assert call_kwargs[1]["ExpiresIn"] == 3600
+
+    def test_presigned_url_with_filename(self):
+        """Test presigned URL includes Content-Disposition when filename given."""
+        client = self._make_client()
+        client.s3_client = MagicMock()
+        client.s3_client.generate_presigned_url.return_value = "https://s3/url"
+
+        client.generate_presigned_url("uploads/test.xlsx", filename="model.xlsx")
+
+        call_kwargs = client.s3_client.generate_presigned_url.call_args
+        params = call_kwargs[1]["Params"]
+        assert "ResponseContentDisposition" in params
+        assert "model.xlsx" in params["ResponseContentDisposition"]
+
+    def test_presigned_url_clamps_expiry(self):
+        """Test expires_in is clamped to 7 days max."""
+        client = self._make_client()
+        client.s3_client = MagicMock()
+        client.s3_client.generate_presigned_url.return_value = "https://s3/url"
+
+        client.generate_presigned_url("uploads/test.xlsx", expires_in=999999)
+
+        call_kwargs = client.s3_client.generate_presigned_url.call_args
+        assert call_kwargs[1]["ExpiresIn"] == 604800
+
+    def test_presigned_url_client_error(self):
+        """Test raises FileStorageError on ClientError."""
+        from botocore.exceptions import ClientError
+
+        from src.core.exceptions import FileStorageError
+
+        client = self._make_client()
+        client.s3_client = MagicMock()
+        client.s3_client.generate_presigned_url.side_effect = ClientError(
+            error_response={"Error": {"Code": "AccessDenied", "Message": "denied"}},
+            operation_name="GeneratePresignedUrl",
+        )
+
+        with pytest.raises(FileStorageError):
+            client.generate_presigned_url("uploads/test.xlsx")
 
 
 class TestGetS3ClientFactory:

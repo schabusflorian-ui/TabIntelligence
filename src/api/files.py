@@ -1,20 +1,22 @@
 """File management API endpoints."""
+
 import hashlib
-from typing import Optional
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from src.api.metrics import file_uploads_total, file_upload_bytes, duplicate_uploads_total
-from src.api.middleware import log_audit_event, get_client_ip
+from src.api.metrics import duplicate_uploads_total, file_upload_bytes, file_uploads_total
+from src.api.middleware import get_client_ip, log_audit_event
 from src.api.rate_limit import limiter
 from src.auth.dependencies import get_current_api_key
 from src.auth.models import APIKey
 from src.core.config import get_settings
 from src.core.exceptions import DatabaseError, FileStorageError
-from src.core.logging import api_logger as logger, log_exception
+from src.core.logging import api_logger as logger
+from src.core.logging import log_exception
 from src.db import crud
 from src.db.constraint_handler import handle_integrity_error
 from src.db.models import ExtractionJob
@@ -36,7 +38,7 @@ async def upload_file(
     file: UploadFile,
     db: Session = Depends(get_db),
     api_key: APIKey = Depends(get_current_api_key),
-    entity_id: Optional[str] = None
+    entity_id: Optional[str] = None,
 ):
     """Upload Excel file for extraction."""
     logger.info(f"File upload requested: {file.filename}, entity_id: {entity_id}")
@@ -50,7 +52,7 @@ async def upload_file(
             raise HTTPException(400, "Invalid entity_id format")
 
     # Validate file extension
-    if not file.filename or not file.filename.endswith(('.xlsx', '.xls')):
+    if not file.filename or not file.filename.endswith((".xlsx", ".xls")):
         logger.warning(f"Invalid file type rejected: {file.filename}")
         raise HTTPException(400, "File must be an Excel file (.xlsx or .xls)")
 
@@ -66,15 +68,15 @@ async def upload_file(
             logger.warning(f"File too large rejected: {file.filename} ({file_size} bytes)")
             raise HTTPException(
                 status_code=413,
-                detail=f"File too large. Maximum size is {max_file_size // (1024*1024)}MB"
+                detail=f"File too large. Maximum size is {max_file_size // (1024 * 1024)}MB",
             )
 
         # Validate magic bytes — ensure the file is actually an Excel file
-        if file.filename.endswith('.xlsx'):
+        if file.filename.endswith(".xlsx"):
             if not file_bytes[:4].startswith(_XLSX_MAGIC):
                 logger.warning(f"Invalid XLSX magic bytes rejected: {file.filename}")
                 raise HTTPException(400, "File content is not a valid XLSX file")
-        elif file.filename.endswith('.xls'):
+        elif file.filename.endswith(".xls"):
             if not file_bytes[:4].startswith(_XLS_MAGIC):
                 logger.warning(f"Invalid XLS magic bytes rejected: {file.filename}")
                 raise HTTPException(400, "File content is not a valid XLS file")
@@ -103,7 +105,9 @@ async def upload_file(
                 "job_id": str(existing_job.job_id) if existing_job else None,
                 "status": "duplicate",
                 "message": "File with identical content already uploaded",
-                "original_upload": existing_file.uploaded_at.isoformat() if existing_file.uploaded_at else None,
+                "original_upload": existing_file.uploaded_at.isoformat()
+                if existing_file.uploaded_at
+                else None,
             }
 
         # --- Upload to S3 if available ---
@@ -119,25 +123,19 @@ async def upload_file(
         if s3_client:
             # S3 is configured — upload failures are fatal (no silent fallback)
             file_id_for_key = uuid4()
-            s3_key = s3_client.generate_s3_key(
-                file_id=file_id_for_key,
-                filename=filename
-            )
+            s3_key = s3_client.generate_s3_key(file_id=file_id_for_key, filename=filename)
             try:
                 s3_client.upload_file(
                     file_bytes=file_bytes,
                     s3_key=s3_key,
                     metadata={
                         "filename": filename,
-                        "entity_id": str(entity_id) if entity_id else ""
-                    }
+                        "entity_id": str(entity_id) if entity_id else "",
+                    },
                 )
             except (FileStorageError, Exception) as upload_err:
                 logger.error(f"S3 upload failed: {upload_err}")
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Storage error: {upload_err}"
-                )
+                raise HTTPException(status_code=500, detail=f"Storage error: {upload_err}")
 
         # --- Create DB records ---
         try:
@@ -172,7 +170,9 @@ async def upload_file(
                     "job_id": str(existing_job.job_id) if existing_job else None,
                     "status": "duplicate",
                     "message": "File with identical content already uploaded",
-                    "original_upload": existing_file.uploaded_at.isoformat() if existing_file.uploaded_at else None,
+                    "original_upload": existing_file.uploaded_at.isoformat()
+                    if existing_file.uploaded_at
+                    else None,
                 }
             raise
 
@@ -186,7 +186,7 @@ async def upload_file(
         # --- Enqueue Celery task ---
         # Pass file_bytes directly when S3 is not available (local dev)
         try:
-            task_kwargs = {
+            task_kwargs: dict[str, Any] = {
                 "job_id": str(db_job.job_id),
                 "entity_id": entity_id,
             }
@@ -198,15 +198,10 @@ async def upload_file(
         except Exception as enqueue_err:
             logger.error(f"Failed to enqueue Celery task: {enqueue_err}")
             try:
-                crud.fail_job(
-                    db, db_job.job_id, "Task queue unavailable, please retry"
-                )
+                crud.fail_job(db, db_job.job_id, "Task queue unavailable, please retry")
             except Exception:
                 logger.error("Failed to mark job as FAILED after enqueue failure")
-            raise HTTPException(
-                status_code=503,
-                detail="Task queue unavailable, please retry"
-            )
+            raise HTTPException(status_code=503, detail="Task queue unavailable, please retry")
 
         logger.info(f"Celery task enqueued: task_id={task.id}, job_id={db_job.job_id}")
 
@@ -223,7 +218,11 @@ async def upload_file(
             api_key_id=api_key.id,
             ip_address=get_client_ip(request),
             user_agent=request.headers.get("User-Agent"),
-            details={"filename": file.filename, "file_size": file_size, "job_id": str(db_job.job_id)},
+            details={
+                "filename": file.filename,
+                "file_size": file_size,
+                "job_id": str(db_job.job_id),
+            },
             status_code=200,
         )
 
@@ -233,7 +232,7 @@ async def upload_file(
             "s3_key": s3_key,
             "task_id": task.id,
             "status": "processing",
-            "message": "Extraction started"
+            "message": "Extraction started",
         }
 
     except HTTPException:
@@ -298,6 +297,30 @@ def get_file(
     except DatabaseError as e:
         logger.error(f"Database error getting file: {str(e)}")
         raise HTTPException(500, "Database error getting file")
+
+
+@router.get("/{file_id}/download")
+async def download_file(
+    file_id: UUID,
+    db: Session = Depends(get_db),
+    _api_key: APIKey = Depends(get_current_api_key),
+):
+    """Generate a presigned URL for temporary file download."""
+    file = crud.get_file(db, file_id)
+    if not file:
+        raise HTTPException(404, "File not found")
+
+    if not file.s3_key:
+        raise HTTPException(400, "File is not stored in S3 and cannot be downloaded via presigned URL")
+
+    try:
+        s3_client = get_s3_client()
+        url = s3_client.generate_presigned_url(file.s3_key, filename=file.filename)
+    except FileStorageError as e:
+        logger.error(f"Failed to generate presigned URL for file {file_id}: {str(e)}")
+        raise HTTPException(500, f"Storage error: {str(e)}")
+
+    return {"download_url": url, "expires_in": 3600, "filename": file.filename}
 
 
 def _serialize_file(file) -> dict:

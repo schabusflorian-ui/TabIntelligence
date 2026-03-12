@@ -1,0 +1,90 @@
+groups:
+  - name: debtfund-api
+    rules:
+      # High error rate — more than 5% of requests returning 5xx in 5 minutes
+      - alert: HighErrorRate
+        expr: >
+          sum(rate(debtfund_http_requests_total{status_code=~"5.."}[5m]))
+          /
+          sum(rate(debtfund_http_requests_total[5m]))
+          > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High HTTP error rate ({{ $value | humanizePercentage }})"
+          description: "More than 5% of API requests are returning 5xx errors."
+
+      # Slow response times — p95 latency above 2 seconds
+      - alert: HighLatency
+        expr: >
+          histogram_quantile(0.95, rate(debtfund_http_request_duration_seconds_bucket[5m]))
+          > 2.0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API latency (p95 = {{ $value | humanizeDuration }})"
+          description: "95th percentile response time is above 2 seconds."
+
+  - name: debtfund-extraction
+    rules:
+      # Extraction failures — more than 3 failed jobs in 30 minutes
+      - alert: ExtractionFailureSpike
+        expr: >
+          increase(debtfund_extraction_jobs_total{status="FAILED"}[30m]) > 3
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Extraction failure spike ({{ $value }} failures in 30m)"
+          description: "Multiple extraction jobs have failed recently."
+
+      # Low quality scores — average quality below 0.5 in last hour
+      - alert: LowExtractionQuality
+        expr: >
+          avg(rate(debtfund_extraction_quality_score_sum[1h]))
+          /
+          avg(rate(debtfund_extraction_quality_score_count[1h]))
+          < 0.5
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low extraction quality (avg = {{ $value }})"
+          description: "Average extraction quality score is below 0.5 over the last hour."
+
+      # Slow extraction — p95 above 5 minutes
+      - alert: SlowExtraction
+        expr: >
+          histogram_quantile(0.95, rate(debtfund_extraction_duration_seconds_bucket[1h]))
+          > 300
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow extractions (p95 = {{ $value | humanizeDuration }})"
+          description: "95th percentile extraction time is above 5 minutes."
+
+  - name: debtfund-infrastructure
+    rules:
+      # Database circuit breaker open
+      - alert: DatabaseCircuitBreakerOpen
+        expr: database_circuit_breaker_state == 2
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database circuit breaker is OPEN"
+          description: "The database circuit breaker has tripped, blocking all DB queries."
+
+      # High database connection pool utilization
+      - alert: HighDBPoolUtilization
+        expr: >
+          database_pool_checked_out / database_pool_size > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database pool nearly exhausted ({{ $value | humanizePercentage }})"
+          description: "More than 90% of database connections are in use."

@@ -4,20 +4,26 @@ S3/MinIO storage client for file operations.
 Provides S3Client class for uploading, downloading, and managing files
 in MinIO or AWS S3 compatible storage.
 """
-import boto3
-from botocore.config import Config
-from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError, EndpointConnectionError
-from datetime import datetime
-from io import BytesIO
-from typing import Dict, Any, Optional
-from uuid import UUID
+
 import re
 import time
+from datetime import datetime
+from io import BytesIO
+from typing import Any, Dict, Optional
+from uuid import UUID
 
-from src.core.logging import get_logger, log_exception, log_performance
-from src.core.exceptions import FileStorageError
+import boto3
+from botocore.config import Config
+from botocore.exceptions import (
+    ClientError,
+    EndpointConnectionError,
+    NoCredentialsError,
+    PartialCredentialsError,
+)
+
 from src.core.config import Settings
-
+from src.core.exceptions import FileStorageError
+from src.core.logging import get_logger, log_exception, log_performance
 
 # Module logger
 storage_logger = get_logger("debtfund.storage")
@@ -61,7 +67,7 @@ class S3Client:
         access_key: str,
         secret_key: str,
         bucket_name: str,
-        verify_ssl: bool = True
+        verify_ssl: bool = True,
     ) -> None:
         """
         Initialize S3 client.
@@ -86,19 +92,19 @@ class S3Client:
             # Configure retries with exponential backoff
             retry_config = Config(
                 retries={
-                    'max_attempts': 3,
-                    'mode': 'adaptive'  # Exponential backoff
+                    "max_attempts": 3,
+                    "mode": "adaptive",  # Exponential backoff
                 }
             )
 
             # Initialize boto3 S3 client
             self.s3_client = boto3.client(
-                's3',
+                "s3",
                 endpoint_url=endpoint,
                 aws_access_key_id=access_key,
                 aws_secret_access_key=secret_key,
                 verify=verify_ssl,
-                config=retry_config
+                config=retry_config,
             )
 
             logger.info(
@@ -108,17 +114,14 @@ class S3Client:
 
         except Exception as e:
             logger.error(f"Failed to initialize S3Client: {str(e)}")
-            raise FileStorageError(
-                f"Failed to initialize S3 client: {str(e)}",
-                bucket=bucket_name
-            )
+            raise FileStorageError(f"Failed to initialize S3 client: {str(e)}", bucket=bucket_name)
 
     def upload_file(
         self,
         file_bytes: bytes,
         s3_key: str,
         content_type: str = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        metadata: Optional[Dict[str, str]] = None
+        metadata: Optional[Dict[str, str]] = None,
     ) -> str:
         """
         Upload file bytes to S3/MinIO.
@@ -150,16 +153,16 @@ class S3Client:
 
             # Prepare upload arguments
             upload_args = {
-                'Bucket': self.bucket_name,
-                'Key': s3_key,
-                'Body': file_obj,
-                'ContentType': content_type
+                "Bucket": self.bucket_name,
+                "Key": s3_key,
+                "Body": file_obj,
+                "ContentType": content_type,
             }
 
             # Add metadata if provided
             if metadata:
                 # S3 metadata keys must be lowercase
-                upload_args['Metadata'] = {k.lower(): str(v) for k, v in metadata.items()}
+                upload_args["Metadata"] = {k.lower(): str(v) for k, v in metadata.items()}
 
             # Perform upload
             self.s3_client.put_object(**upload_args)
@@ -172,53 +175,40 @@ class S3Client:
             )
 
             log_performance(
-                logger,
-                "upload_file",
-                duration,
-                {"size_bytes": len(file_bytes), "s3_key": s3_key}
+                logger, "upload_file", duration, {"size_bytes": len(file_bytes), "s3_key": s3_key}
             )
 
             return s3_key
 
         except ClientError as e:
-            error_code = e.response.get('Error', {}).get('Code', 'Unknown')
+            error_code = e.response.get("Error", {}).get("Code", "Unknown")
 
-            if error_code == 'NoSuchBucket':
+            if error_code == "NoSuchBucket":
                 logger.error(f"Bucket not found: {self.bucket_name}")
                 raise FileStorageError(
-                    f"Bucket '{self.bucket_name}' not found",
-                    bucket=self.bucket_name,
-                    key=s3_key
+                    f"Bucket '{self.bucket_name}' not found", bucket=self.bucket_name, key=s3_key
                 )
             else:
                 logger.error(f"S3 upload failed: {str(e)}")
                 raise FileStorageError(
-                    f"Failed to upload file: {str(e)}",
-                    bucket=self.bucket_name,
-                    key=s3_key
+                    f"Failed to upload file: {str(e)}", bucket=self.bucket_name, key=s3_key
                 )
 
         except (NoCredentialsError, PartialCredentialsError) as e:
             logger.error(f"S3 credentials error: {str(e)}")
-            raise FileStorageError(
-                "Invalid S3 credentials",
-                bucket=self.bucket_name
-            )
+            raise FileStorageError("Invalid S3 credentials", bucket=self.bucket_name)
 
         except EndpointConnectionError as e:
             logger.error(f"Cannot connect to S3: {str(e)}")
             raise FileStorageError(
-                f"Cannot connect to S3 endpoint: {self.endpoint}",
-                bucket=self.bucket_name
+                f"Cannot connect to S3 endpoint: {self.endpoint}", bucket=self.bucket_name
             )
 
         except Exception as e:
             logger.error(f"Unexpected storage error during upload: {str(e)}")
             log_exception(logger, e, {"s3_key": s3_key, "bucket": self.bucket_name})
             raise FileStorageError(
-                f"Unexpected storage error: {str(e)}",
-                bucket=self.bucket_name,
-                key=s3_key
+                f"Unexpected storage error: {str(e)}", bucket=self.bucket_name, key=s3_key
             )
 
     def download_file(self, s3_key: str) -> bytes:
@@ -241,13 +231,10 @@ class S3Client:
 
         try:
             # Download file
-            response = self.s3_client.get_object(
-                Bucket=self.bucket_name,
-                Key=s3_key
-            )
+            response = self.s3_client.get_object(Bucket=self.bucket_name, Key=s3_key)
 
             # Read file bytes
-            file_bytes = response['Body'].read()
+            file_bytes = response["Body"].read()
 
             duration = time.time() - start_time
 
@@ -257,68 +244,48 @@ class S3Client:
             )
 
             log_performance(
-                logger,
-                "download_file",
-                duration,
-                {"size_bytes": len(file_bytes), "s3_key": s3_key}
+                logger, "download_file", duration, {"size_bytes": len(file_bytes), "s3_key": s3_key}
             )
 
             return file_bytes
 
         except ClientError as e:
-            error_code = e.response.get('Error', {}).get('Code', 'Unknown')
+            error_code = e.response.get("Error", {}).get("Code", "Unknown")
 
-            if error_code == '404' or error_code == 'NoSuchKey':
+            if error_code == "404" or error_code == "NoSuchKey":
                 logger.error(f"File not found: {s3_key}")
                 raise FileStorageError(
-                    f"File not found: {s3_key}",
-                    bucket=self.bucket_name,
-                    key=s3_key
+                    f"File not found: {s3_key}", bucket=self.bucket_name, key=s3_key
                 )
-            elif error_code == 'NoSuchBucket':
+            elif error_code == "NoSuchBucket":
                 logger.error(f"Bucket not found: {self.bucket_name}")
                 raise FileStorageError(
-                    f"Bucket '{self.bucket_name}' not found",
-                    bucket=self.bucket_name,
-                    key=s3_key
+                    f"Bucket '{self.bucket_name}' not found", bucket=self.bucket_name, key=s3_key
                 )
             else:
                 logger.error(f"S3 download failed: {str(e)}")
                 raise FileStorageError(
-                    f"Failed to download file: {str(e)}",
-                    bucket=self.bucket_name,
-                    key=s3_key
+                    f"Failed to download file: {str(e)}", bucket=self.bucket_name, key=s3_key
                 )
 
         except (NoCredentialsError, PartialCredentialsError) as e:
             logger.error(f"S3 credentials error: {str(e)}")
-            raise FileStorageError(
-                "Invalid S3 credentials",
-                bucket=self.bucket_name
-            )
+            raise FileStorageError("Invalid S3 credentials", bucket=self.bucket_name)
 
         except EndpointConnectionError as e:
             logger.error(f"Cannot connect to S3: {str(e)}")
             raise FileStorageError(
-                f"Cannot connect to S3 endpoint: {self.endpoint}",
-                bucket=self.bucket_name
+                f"Cannot connect to S3 endpoint: {self.endpoint}", bucket=self.bucket_name
             )
 
         except Exception as e:
             logger.error(f"Unexpected storage error during download: {str(e)}")
             log_exception(logger, e, {"s3_key": s3_key, "bucket": self.bucket_name})
             raise FileStorageError(
-                f"Unexpected storage error: {str(e)}",
-                bucket=self.bucket_name,
-                key=s3_key
+                f"Unexpected storage error: {str(e)}", bucket=self.bucket_name, key=s3_key
             )
 
-    def generate_s3_key(
-        self,
-        file_id: UUID,
-        filename: str,
-        prefix: str = "uploads"
-    ) -> str:
+    def generate_s3_key(self, file_id: UUID, filename: str, prefix: str = "uploads") -> str:
         """
         Generate standardized S3 key for file storage.
 
@@ -345,7 +312,7 @@ class S3Client:
         month = now.strftime("%m")
 
         # Sanitize filename (keep alphanumeric, dash, underscore, dot)
-        safe_filename = re.sub(r'[^a-zA-Z0-9._-]', '_', filename)
+        safe_filename = re.sub(r"[^a-zA-Z0-9._-]", "_", filename)
 
         # Build key with file_id for uniqueness
         s3_key = f"{prefix}/{year}/{month}/{file_id}_{safe_filename}"
@@ -369,9 +336,9 @@ class S3Client:
             logger.info(f"Bucket exists: {self.bucket_name}")
 
         except ClientError as e:
-            error_code = e.response.get('Error', {}).get('Code', 'Unknown')
+            error_code = e.response.get("Error", {}).get("Code", "Unknown")
 
-            if error_code == '404' or error_code == 'NoSuchBucket':
+            if error_code == "404" or error_code == "NoSuchBucket":
                 # Bucket doesn't exist, create it
                 try:
                     self.s3_client.create_bucket(Bucket=self.bucket_name)
@@ -381,36 +348,29 @@ class S3Client:
                     logger.error(f"Failed to create bucket: {str(create_error)}")
                     raise FileStorageError(
                         f"Failed to create bucket '{self.bucket_name}': {str(create_error)}",
-                        bucket=self.bucket_name
+                        bucket=self.bucket_name,
                     )
             else:
                 logger.error(f"Failed to check bucket: {str(e)}")
                 raise FileStorageError(
                     f"Failed to check bucket '{self.bucket_name}': {str(e)}",
-                    bucket=self.bucket_name
+                    bucket=self.bucket_name,
                 )
 
         except (NoCredentialsError, PartialCredentialsError) as e:
             logger.error(f"S3 credentials error: {str(e)}")
-            raise FileStorageError(
-                "Invalid S3 credentials",
-                bucket=self.bucket_name
-            )
+            raise FileStorageError("Invalid S3 credentials", bucket=self.bucket_name)
 
         except EndpointConnectionError as e:
             logger.error(f"Cannot connect to S3: {str(e)}")
             raise FileStorageError(
-                f"Cannot connect to S3 endpoint: {self.endpoint}",
-                bucket=self.bucket_name
+                f"Cannot connect to S3 endpoint: {self.endpoint}", bucket=self.bucket_name
             )
 
         except Exception as e:
             logger.error(f"Unexpected error checking bucket: {str(e)}")
             log_exception(logger, e, {"bucket": self.bucket_name})
-            raise FileStorageError(
-                f"Unexpected error: {str(e)}",
-                bucket=self.bucket_name
-            )
+            raise FileStorageError(f"Unexpected error: {str(e)}", bucket=self.bucket_name)
 
     def file_exists(self, s3_key: str) -> bool:
         """
@@ -431,26 +391,22 @@ class S3Client:
             return True
 
         except ClientError as e:
-            error_code = e.response.get('Error', {}).get('Code', 'Unknown')
+            error_code = e.response.get("Error", {}).get("Code", "Unknown")
 
-            if error_code == '404' or error_code == 'NoSuchKey':
+            if error_code == "404" or error_code == "NoSuchKey":
                 logger.debug(f"File does not exist: {s3_key}")
                 return False
             else:
                 logger.error(f"Failed to check file existence: {str(e)}")
                 raise FileStorageError(
-                    f"Failed to check if file exists: {str(e)}",
-                    bucket=self.bucket_name,
-                    key=s3_key
+                    f"Failed to check if file exists: {str(e)}", bucket=self.bucket_name, key=s3_key
                 )
 
         except Exception as e:
             logger.error(f"Unexpected error checking file existence: {str(e)}")
             log_exception(logger, e, {"s3_key": s3_key, "bucket": self.bucket_name})
             raise FileStorageError(
-                f"Unexpected error: {str(e)}",
-                bucket=self.bucket_name,
-                key=s3_key
+                f"Unexpected error: {str(e)}", bucket=self.bucket_name, key=s3_key
             )
 
     def delete_file(self, s3_key: str) -> bool:
@@ -481,18 +437,14 @@ class S3Client:
         except ClientError as e:
             logger.error(f"Failed to delete file: {str(e)}")
             raise FileStorageError(
-                f"Failed to delete file: {str(e)}",
-                bucket=self.bucket_name,
-                key=s3_key
+                f"Failed to delete file: {str(e)}", bucket=self.bucket_name, key=s3_key
             )
 
         except Exception as e:
             logger.error(f"Unexpected error during deletion: {str(e)}")
             log_exception(logger, e, {"s3_key": s3_key, "bucket": self.bucket_name})
             raise FileStorageError(
-                f"Unexpected error: {str(e)}",
-                bucket=self.bucket_name,
-                key=s3_key
+                f"Unexpected error: {str(e)}", bucket=self.bucket_name, key=s3_key
             )
 
     def get_file_metadata(self, s3_key: str) -> Dict[str, Any]:
@@ -512,47 +464,98 @@ class S3Client:
             response = self.s3_client.head_object(Bucket=self.bucket_name, Key=s3_key)
 
             metadata = {
-                'size': response.get('ContentLength', 0),
-                'last_modified': response.get('LastModified'),
-                'content_type': response.get('ContentType', 'unknown'),
-                'etag': response.get('ETag', '').strip('"'),
-                'metadata': response.get('Metadata', {})
+                "size": response.get("ContentLength", 0),
+                "last_modified": response.get("LastModified"),
+                "content_type": response.get("ContentType", "unknown"),
+                "etag": response.get("ETag", "").strip('"'),
+                "metadata": response.get("Metadata", {}),
             }
 
             logger.debug(f"Retrieved metadata for: {s3_key}")
             return metadata
 
         except ClientError as e:
-            error_code = e.response.get('Error', {}).get('Code', 'Unknown')
+            error_code = e.response.get("Error", {}).get("Code", "Unknown")
 
-            if error_code == '404' or error_code == 'NoSuchKey':
+            if error_code == "404" or error_code == "NoSuchKey":
                 logger.error(f"File not found: {s3_key}")
                 raise FileStorageError(
-                    f"File not found: {s3_key}",
-                    bucket=self.bucket_name,
-                    key=s3_key
+                    f"File not found: {s3_key}", bucket=self.bucket_name, key=s3_key
                 )
             else:
                 logger.error(f"Failed to get metadata: {str(e)}")
                 raise FileStorageError(
-                    f"Failed to get file metadata: {str(e)}",
-                    bucket=self.bucket_name,
-                    key=s3_key
+                    f"Failed to get file metadata: {str(e)}", bucket=self.bucket_name, key=s3_key
                 )
 
         except Exception as e:
             logger.error(f"Unexpected error getting metadata: {str(e)}")
             log_exception(logger, e, {"s3_key": s3_key, "bucket": self.bucket_name})
             raise FileStorageError(
-                f"Unexpected error: {str(e)}",
-                bucket=self.bucket_name,
-                key=s3_key
+                f"Unexpected error: {str(e)}", bucket=self.bucket_name, key=s3_key
+            )
+
+    def generate_presigned_url(
+        self, s3_key: str, expires_in: int = 3600, filename: Optional[str] = None
+    ) -> str:
+        """
+        Generate a presigned URL for temporary file download.
+
+        Args:
+            s3_key: S3 object key
+            expires_in: URL validity in seconds (default: 1 hour, max: 7 days)
+            filename: Optional filename for Content-Disposition header
+
+        Returns:
+            str: Presigned download URL
+
+        Raises:
+            FileStorageError: If URL generation fails
+        """
+        # Clamp expires_in to 7-day maximum
+        max_expires = 604800
+        expires_in = min(expires_in, max_expires)
+
+        try:
+            params: Dict[str, Any] = {
+                "Bucket": self.bucket_name,
+                "Key": s3_key,
+            }
+
+            if filename:
+                params["ResponseContentDisposition"] = f'attachment; filename="{filename}"'
+
+            url = self.s3_client.generate_presigned_url(
+                "get_object",
+                Params=params,
+                ExpiresIn=expires_in,
+            )
+
+            logger.info(
+                f"Presigned URL generated: {s3_key}, expires_in: {expires_in}s, "
+                f"bucket: {self.bucket_name}"
+            )
+
+            return url
+
+        except ClientError as e:
+            logger.error(f"Failed to generate presigned URL: {str(e)}")
+            raise FileStorageError(
+                f"Failed to generate presigned URL: {str(e)}", bucket=self.bucket_name, key=s3_key
+            )
+
+        except Exception as e:
+            logger.error(f"Unexpected error generating presigned URL: {str(e)}")
+            log_exception(logger, e, {"s3_key": s3_key, "bucket": self.bucket_name})
+            raise FileStorageError(
+                f"Unexpected error: {str(e)}", bucket=self.bucket_name, key=s3_key
             )
 
 
 # ============================================================================
 # Factory Function for Dependency Injection
 # ============================================================================
+
 
 def get_s3_client(settings: Optional[Settings] = None) -> S3Client:
     """
@@ -576,6 +579,7 @@ def get_s3_client(settings: Optional[Settings] = None) -> S3Client:
     """
     if settings is None:
         from src.core.config import get_settings
+
         settings = get_settings()
 
     return S3Client(
@@ -583,5 +587,5 @@ def get_s3_client(settings: Optional[Settings] = None) -> S3Client:
         access_key=settings.s3_access_key,
         secret_key=settings.s3_secret_key,
         bucket_name=settings.s3_bucket,
-        verify_ssl=settings.s3_verify_ssl  # Use configured value (secure by default)
+        verify_ssl=settings.s3_verify_ssl,  # Use configured value (secure by default)
     )

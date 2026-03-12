@@ -13,7 +13,7 @@ from src.extraction.base import ExtractionStage, PipelineContext
 from src.extraction.claude_client import get_claude_client
 from src.extraction.prompts import get_prompt
 from src.extraction.taxonomy_loader import (
-    TAXONOMY_PATH,
+    TAXONOMY_PATH,  # Re-exported for backward compat
     format_taxonomy_for_prompt,
     get_alias_to_canonicals_with_promoted,
     get_canonical_to_category,
@@ -68,39 +68,67 @@ def _disambiguate_by_sheet_category(
 
     Mutates mappings in-place. Returns count of overrides applied.
     """
-    label_to_sheet = {item["label"]: item["sheet"] for item in grouped_items}
-    label_to_section_category = {
-        item["label"]: item.get("section_category") for item in grouped_items
-    }
+    # Build multi-value lookups: same label can appear on multiple sheets
+    from collections import defaultdict
+
+    label_to_sheets: dict[str, list[str]] = defaultdict(list)
+    label_to_section_categories: dict[str, list[str | None]] = defaultdict(list)
+    for item in grouped_items:
+        lbl = item["label"]
+        label_to_sheets[lbl].append(item["sheet"])
+        label_to_section_categories[lbl].append(item.get("section_category"))
+
+    def _resolve_categories(label: str) -> list[tuple[str, str]]:
+        """Return list of (sheet, expected_category) for a label."""
+        sheets = label_to_sheets.get(label, [])
+        section_cats = label_to_section_categories.get(label, [])
+        results = []
+        for sheet, sec_cat in zip(sheets, section_cats):
+            if sec_cat:
+                results.append((sheet, sec_cat))
+            else:
+                sheet_lower = sheet.lower()
+                for pattern, cat in _SHEET_TO_CATEGORY.items():
+                    if pattern in sheet_lower:
+                        results.append((sheet, cat))
+                        break
+        return results
 
     overrides = 0
     for m in mappings:
         label = m.get("original_label", "")
-        sheet = label_to_sheet.get(label, "")
-
-        # Determine expected category: prefer section_category, fall back to sheet name
-        expected_category = label_to_section_category.get(label)
-        if not expected_category:
-            sheet_lower = sheet.lower()
-            for pattern, cat in _SHEET_TO_CATEGORY.items():
-                if pattern in sheet_lower:
-                    expected_category = cat
-                    break
-
-        if not expected_category:
-            continue
-
         current_canonical = m.get("canonical_name", "unmapped")
         if current_canonical == "unmapped":
             continue
 
-        # Check if label has an exact alias match in the expected category
         candidates = alias_lookup.get(label.lower().strip(), [])
-        matching = [c for c in candidates if c[1] == expected_category]
+        if not candidates:
+            continue
 
-        if len(matching) == 1:
-            correct_canonical, correct_category = matching[0]
-            if correct_canonical != current_canonical:
+        # Try each sheet context this label appears on
+        sheet_categories = _resolve_categories(label)
+        if not sheet_categories:
+            continue
+
+        # Check if current canonical already matches one of the expected categories
+        current_cat = next(
+            (cat for c, cat in candidates if c == current_canonical), None
+        )
+        current_matches_sheet = current_cat and any(
+            ec == current_cat for _, ec in sheet_categories
+        )
+
+        if not current_matches_sheet:
+            # Current canonical is in the WRONG category — find the right one
+            best_override = None
+            for sheet, expected_category in sheet_categories:
+                matching = [c for c in candidates if c[1] == expected_category]
+                if len(matching) == 1 and matching[0][0] != current_canonical:
+                    best_override = (matching[0][0], matching[0][1], sheet)
+                    break  # First valid single match wins
+
+            if best_override:
+                correct_canonical, correct_category, sheet = best_override
                 logger.info(
                     f"Stage 3: Disambiguation override: '{label}' on '{sheet}' "
                     f"changed from {current_canonical} to {correct_canonical} "
@@ -112,33 +140,45 @@ def _disambiguate_by_sheet_category(
                     "reason": f"exact alias match in {correct_category} category",
                 }
                 overrides += 1
-        elif len(matching) > 1:
-            # Multiple matches in expected category — prefer closest canonical name
-            label_normalized = label.lower().replace("&", "and").replace("-", " ").strip()
-            best, best_score = None, -1
-            for canonical, category in matching:
-                canonical_words = canonical.replace("_", " ")
-                if canonical_words == label_normalized:
-                    score = 100
-                elif canonical_words in label_normalized or label_normalized in canonical_words:
-                    score = 50 + len(canonical_words)
-                else:
-                    score = 0
-                if score > best_score:
-                    best_score = score
-                    best = (canonical, category)
-            if best and best_score > 0 and best[0] != current_canonical:
-                logger.info(
-                    f"Stage 3: Multi-match override: '{label}' on '{sheet}' "
-                    f"changed from {current_canonical} to {best[0]} "
-                    f"(best of {len(matching)} in {expected_category})"
+                continue
+
+        # Multi-match: try across all sheet categories (even if current is valid,
+        # there might be a BETTER canonical in the same category)
+        for sheet, expected_category in sheet_categories:
+            matching = [c for c in candidates if c[1] == expected_category]
+            if len(matching) > 1:
+                # Multiple matches in expected category — prefer closest canonical name
+                label_normalized = (
+                    label.lower().replace("&", "and").replace("-", " ").strip()
                 )
-                m["canonical_name"] = best[0]
-                m["disambiguation_override"] = {
-                    "original": current_canonical,
-                    "reason": f"best of {len(matching)} candidates in {expected_category}",
-                }
-                overrides += 1
+                best, best_score = None, -1
+                for canonical, category in matching:
+                    canonical_words = canonical.replace("_", " ")
+                    if canonical_words == label_normalized:
+                        score = 100
+                    elif (
+                        canonical_words in label_normalized
+                        or label_normalized in canonical_words
+                    ):
+                        score = 50 + len(canonical_words)
+                    else:
+                        score = 0
+                    if score > best_score:
+                        best_score = score
+                        best = (canonical, category)
+                if best and best_score > 0 and best[0] != current_canonical:
+                    logger.info(
+                        f"Stage 3: Multi-match override: '{label}' on '{sheet}' "
+                        f"changed from {current_canonical} to {best[0]} "
+                        f"(best of {len(matching)} in {expected_category})"
+                    )
+                    m["canonical_name"] = best[0]
+                    m["disambiguation_override"] = {
+                        "original": current_canonical,
+                        "reason": f"best of {len(matching)} candidates in {expected_category}",
+                    }
+                    overrides += 1
+                    break  # Applied override, stop trying other sheet categories
 
     # Second pass: rescue unmapped items via exact alias match
     for m in mappings:
@@ -149,17 +189,9 @@ def _disambiguate_by_sheet_category(
         if not candidates:
             continue
 
-        # Determine expected category from sheet context
-        sheet = label_to_sheet.get(label, "")
-        expected_category = label_to_section_category.get(label)
-        if not expected_category:
-            sheet_lower = sheet.lower()
-            for pattern, cat in _SHEET_TO_CATEGORY.items():
-                if pattern in sheet_lower:
-                    expected_category = cat
-                    break
-
-        if expected_category:
+        # Try each sheet context for this label
+        sheet_categories = _resolve_categories(label)
+        for sheet, expected_category in sheet_categories:
             matching = [c for c in candidates if c[1] == expected_category]
             if len(matching) == 1:
                 logger.info(
@@ -173,20 +205,20 @@ def _disambiguate_by_sheet_category(
                     "reason": f"rescued: exact alias in {expected_category}",
                 }
                 overrides += 1
-                continue
-
-        # No category context or no category match: use unique global match
-        if len(candidates) == 1:
-            logger.info(
-                f"Stage 3: Unmapped rescue: '{label}' "
-                f"resolved to {candidates[0][0]} (unique global alias)"
-            )
-            m["canonical_name"] = candidates[0][0]
-            m["disambiguation_override"] = {
-                "original": "unmapped",
-                "reason": "rescued: unique global alias match",
-            }
-            overrides += 1
+                break
+        else:
+            # No category context or no category match: use unique global match
+            if len(candidates) == 1:
+                logger.info(
+                    f"Stage 3: Unmapped rescue: '{label}' "
+                    f"resolved to {candidates[0][0]} (unique global alias)"
+                )
+                m["canonical_name"] = candidates[0][0]
+                m["disambiguation_override"] = {
+                    "original": "unmapped",
+                    "reason": "rescued: unique global alias match",
+                }
+                overrides += 1
 
     return overrides
 
