@@ -460,44 +460,47 @@ class MappingStage(ExtractionStage):
             taxonomy_str = taxonomy_str + "\n\n" + entity_hints
 
         try:
-            logger.debug(f"Calling Claude API for mapping {len(remaining_labels)} items")
+            BATCH_SIZE = 60  # items per batch; keeps output within 8192 tokens
 
-            response = get_claude_client().messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=8192,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": get_prompt("mapping").render(
-                            line_items=json.dumps(remaining_grouped_items, indent=2),
-                            taxonomy=taxonomy_str,
-                        ),
-                    }
-                ],
-            )
-
-            # Check for truncation — incomplete JSON causes silent data loss
-            if response.stop_reason == "max_tokens":
-                logger.warning(
-                    f"Stage 3: Response truncated at max_tokens "
-                    f"({response.usage.output_tokens} tokens). "
-                    f"Too many labels for single-pass mapping."
+            if len(remaining_grouped_items) <= BATCH_SIZE:
+                # Single pass (existing behavior)
+                claude_mappings_list, input_tokens, output_tokens = (
+                    self._call_claude_mapping(remaining_grouped_items, taxonomy_str)
                 )
-                raise ExtractionError(
-                    "Mapping response truncated: output exceeded token limit. "
-                    f"Tried to map {len(remaining_labels)} labels in one pass.",
-                    stage="mapping",
+                tokens = input_tokens + output_tokens
+                batch_count = 1
+            else:
+                # Batched: split items into chunks
+                batches = [
+                    remaining_grouped_items[i : i + BATCH_SIZE]
+                    for i in range(0, len(remaining_grouped_items), BATCH_SIZE)
+                ]
+                batch_count = len(batches)
+                logger.info(
+                    f"Stage 3: Splitting {len(remaining_grouped_items)} items "
+                    f"into {batch_count} batches"
                 )
 
-            content = response.content[0].text  # type: ignore[union-attr]
-            mappings = extract_json(content)
+                claude_mappings_list = []
+                total_input = 0
+                total_output = 0
+                for i, batch in enumerate(batches):
+                    logger.info(
+                        f"Stage 3: Mapping batch {i + 1}/{batch_count} "
+                        f"({len(batch)} items)"
+                    )
+                    batch_mappings, inp, out = self._call_claude_mapping(
+                        batch, taxonomy_str
+                    )
+                    claude_mappings_list.extend(batch_mappings)
+                    total_input += inp
+                    total_output += out
+
+                input_tokens = total_input
+                output_tokens = total_output
+                tokens = total_input + total_output
 
             duration = time.time() - start_time
-            input_tokens = response.usage.input_tokens
-            output_tokens = response.usage.output_tokens
-            tokens = input_tokens + output_tokens
-
-            claude_mappings_list = mappings if isinstance(mappings, list) else []
 
             # Validate canonical names against taxonomy
             validate_canonical_names(claude_mappings_list, stage="3")
@@ -563,6 +566,8 @@ class MappingStage(ExtractionStage):
                     "avg_confidence": round(avg_conf, 3),
                     "pattern_matched": len(pre_mapped),
                     "claude_mapped": len(claude_mappings_list),
+                    "batched": batch_count > 1,
+                    "batch_count": batch_count,
                 },
             }
 
@@ -589,6 +594,50 @@ class MappingStage(ExtractionStage):
         except Exception as e:
             logger.error(f"Stage 3: Unexpected error - {str(e)}")
             raise ExtractionError(f"Mapping failed: {str(e)}", stage="mapping")
+
+    def _call_claude_mapping(
+        self,
+        items: list,
+        taxonomy_str: str,
+    ) -> tuple[list, int, int]:
+        """Call Claude to map a batch of items.
+
+        Returns (mappings, input_tokens, output_tokens).
+        """
+        response = get_claude_client().messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=8192,
+            messages=[
+                {
+                    "role": "user",
+                    "content": get_prompt("mapping").render(
+                        line_items=json.dumps(items, indent=2),
+                        taxonomy=taxonomy_str,
+                    ),
+                }
+            ],
+        )
+
+        # Check for truncation — incomplete JSON causes silent data loss
+        if response.stop_reason == "max_tokens":
+            logger.warning(
+                f"Stage 3: Response truncated at max_tokens "
+                f"({response.usage.output_tokens} tokens). "
+                f"Batch had {len(items)} items."
+            )
+            raise ExtractionError(
+                "Mapping response truncated: output exceeded token limit. "
+                f"Tried to map {len(items)} items in one pass.",
+                stage="mapping",
+            )
+
+        content = response.content[0].text  # type: ignore[union-attr]
+        mappings = extract_json(content)
+        return (
+            mappings if isinstance(mappings, list) else [],
+            response.usage.input_tokens,
+            response.usage.output_tokens,
+        )
 
     def _build_entity_hints(self, context: PipelineContext) -> str:
         """Load learned entity patterns from DB as mapping hints.

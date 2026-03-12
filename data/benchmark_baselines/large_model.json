@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-03-12T12:34:57.316262+00:00",
+  "timestamp": "2026-03-12T13:17:54.712568+00:00",
   "file": "large_model.xlsx",
-  "duration_seconds": 576.99,
+  "duration_seconds": 425.47,
   "sheets": [
     "Income Statement",
     "Balance Sheet",
@@ -25,7 +25,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Core income statement header section with clear financial statement structure"
+      "reasoning": "Core income statement section with standard P&L structure including revenue, expenses, and profitability metrics"
     },
     {
       "sheet_name": "Income Statement",
@@ -35,7 +35,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Revenue section of income statement with product breakdown and subtotals"
+      "reasoning": "Revenue section of core income statement with product breakdown and subtotals"
     },
     {
       "sheet_name": "Income Statement",
@@ -45,7 +45,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Operating expense section of income statement with detailed expense categories"
+      "reasoning": "Operating expense section of core income statement including S&M, R&D, G&A"
     },
     {
       "sheet_name": "Income Statement",
@@ -55,7 +55,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Total operating expenses subtotal line - critical income statement component"
+      "reasoning": "Operating expense total section of core income statement"
     },
     {
       "sheet_name": "Income Statement",
@@ -65,7 +65,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Operating income and non-operating items section of income statement"
+      "reasoning": "Operating income and non-operating items section of core income statement"
     },
     {
       "sheet_name": "Income Statement",
@@ -75,7 +75,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Pre-tax income and tax expense section of income statement"
+      "reasoning": "Pre-tax income and tax expense section of core income statement"
     },
     {
       "sheet_name": "Income Statement",
@@ -85,7 +85,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Net income bottom line - critical income statement component"
+      "reasoning": "Net income section of core income statement"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -95,7 +95,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Balance sheet assets section with current assets breakdown"
+      "reasoning": "Core balance sheet header and current assets section"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -105,7 +105,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Total current assets subtotal - key balance sheet line"
+      "reasoning": "Current assets total section of core balance sheet"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -115,7 +115,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Non-current assets section including PP&E and intangibles"
+      "reasoning": "Non-current assets section of core balance sheet"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -125,7 +125,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Total non-current assets subtotal - key balance sheet line"
+      "reasoning": "Non-current assets total section of core balance sheet"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -135,7 +135,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Total assets - critical balance sheet balancing figure"
+      "reasoning": "Total assets section of core balance sheet"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -145,7 +145,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Current liabilities section with detailed breakdown"
+      "reasoning": "Current liabilities section of core balance sheet"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -155,7 +155,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Total current liabilities subtotal - key balance sheet line"
+      "reasoning": "Current liabilities total section of core balance sheet"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -165,7 +165,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Non-current liabilities including long-term debt"
+      "reasoning": "Non-current liabilities section of core balance sheet"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -175,7 +175,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Total non-current liabilities subtotal - key balance sheet line"
+      "reasoning": "Non-current liabilities total section of core balance sheet"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -185,7 +185,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Total liabilities - critical balance sheet component"
+      "reasoning": "Total liabilities section of core balance sheet"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -195,7 +195,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Shareholders' equity section with detailed breakdown"
+      "reasoning": "Shareholders' equity section of core balance sheet"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -205,7 +205,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Total shareholders' equity - critical balance sheet component"
+      "reasoning": "Total shareholders' equity section of core balance sheet"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -215,7 +215,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Total liabilities & equity - critical balance sheet balancing figure"
+      "reasoning": "Total liabilities and equity balancing section of core balance sheet"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -225,7 +225,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Operating activities section of cash flow statement with detailed cash flow items"
+      "reasoning": "Core cash flow statement operating activities section"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -235,7 +235,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Cash from operations subtotal - key cash flow statement line"
+      "reasoning": "Operating cash flow total section of core cash flow statement"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -245,7 +245,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Investing activities section of cash flow statement"
+      "reasoning": "Investing activities section of core cash flow statement"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -255,7 +255,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Cash from investing subtotal - key cash flow statement line"
+      "reasoning": "Investing cash flow total section of core cash flow statement"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -265,7 +265,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Financing activities section of cash flow statement"
+      "reasoning": "Financing activities section of core cash flow statement"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -275,7 +275,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Cash from financing subtotal - key cash flow statement line"
+      "reasoning": "Financing cash flow total section of core cash flow statement"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -285,7 +285,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Net change in cash calculation - critical cash flow statement component"
+      "reasoning": "Net change in cash section of core cash flow statement"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -295,7 +295,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Ending cash balance - critical cash flow statement bottom line"
+      "reasoning": "Ending cash balance section of core cash flow statement"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -304,7 +304,7 @@
       "section_end_row": 2,
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
-      "confidence": 0.85,
+      "confidence": 0.9,
       "reasoning": "Debt schedule header - supporting schedule for debt tracking"
     },
     {
@@ -314,8 +314,8 @@
       "section_end_row": 6,
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
-      "confidence": 0.85,
-      "reasoning": "Term Loan A details with draws and repayments - supporting debt schedule"
+      "confidence": 0.9,
+      "reasoning": "Term Loan A section of debt schedule with beginning balance, draws, repayments"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -324,8 +324,8 @@
       "section_end_row": 9,
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
-      "confidence": 0.85,
-      "reasoning": "Debt ending balance and interest calculations - supporting schedule"
+      "confidence": 0.9,
+      "reasoning": "Term Loan A ending balance and interest calculation section"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -334,8 +334,8 @@
       "section_end_row": 14,
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
-      "confidence": 0.85,
-      "reasoning": "Term Loan B details with draws and repayments - supporting debt schedule"
+      "confidence": 0.9,
+      "reasoning": "Term Loan B section of debt schedule with beginning balance, draws, repayments"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -344,8 +344,8 @@
       "section_end_row": 17,
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
-      "confidence": 0.85,
-      "reasoning": "Debt ending balance and interest calculations - supporting schedule"
+      "confidence": 0.9,
+      "reasoning": "Term Loan B ending balance and interest calculation section"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -354,8 +354,8 @@
       "section_end_row": 22,
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
-      "confidence": 0.85,
-      "reasoning": "Revolving credit facility details - supporting debt schedule"
+      "confidence": 0.9,
+      "reasoning": "Revolving credit facility section of debt schedule"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -364,8 +364,8 @@
       "section_end_row": 25,
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
-      "confidence": 0.85,
-      "reasoning": "Credit facility ending balance and interest - supporting schedule"
+      "confidence": 0.9,
+      "reasoning": "Revolving credit facility ending balance and interest calculation section"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -374,8 +374,8 @@
       "section_end_row": 27,
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
-      "confidence": 0.85,
-      "reasoning": "Total debt summary - key supporting schedule subtotal"
+      "confidence": 0.9,
+      "reasoning": "Total debt summary section of debt schedule"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -384,8 +384,8 @@
       "section_end_row": 28,
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
-      "confidence": 0.85,
-      "reasoning": "Total interest expense - key supporting schedule subtotal"
+      "confidence": 0.9,
+      "reasoning": "Total interest expense summary section of debt schedule"
     },
     {
       "sheet_name": "Revenue Build",
@@ -395,7 +395,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Product A revenue breakdown by geography - supporting revenue schedule"
+      "reasoning": "Revenue breakdown by product and geography - supporting schedule for P&L revenue"
     },
     {
       "sheet_name": "Revenue Build",
@@ -405,7 +405,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Product A total - revenue build subtotal"
+      "reasoning": "Product A revenue total section with subtotals"
     },
     {
       "sheet_name": "Revenue Build",
@@ -415,7 +415,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Product B revenue breakdown by geography - supporting revenue schedule"
+      "reasoning": "Product B revenue breakdown by geography"
     },
     {
       "sheet_name": "Revenue Build",
@@ -425,7 +425,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Product B total - revenue build subtotal"
+      "reasoning": "Product B revenue total section with subtotals"
     },
     {
       "sheet_name": "Revenue Build",
@@ -435,7 +435,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Product C revenue breakdown - supporting revenue schedule"
+      "reasoning": "Product C revenue breakdown by domestic/international"
     },
     {
       "sheet_name": "Revenue Build",
@@ -445,7 +445,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Product C total - revenue build subtotal"
+      "reasoning": "Product C revenue total section with subtotals"
     },
     {
       "sheet_name": "Revenue Build",
@@ -455,7 +455,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Licensing revenue line - supporting revenue schedule"
+      "reasoning": "Licensing revenue section"
     },
     {
       "sheet_name": "Revenue Build",
@@ -465,7 +465,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Licensing total - revenue build subtotal"
+      "reasoning": "Licensing revenue total section with subtotals"
     },
     {
       "sheet_name": "Revenue Build",
@@ -475,7 +475,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Total revenue - key revenue build summary"
+      "reasoning": "Total revenue summary section with subtotals"
     },
     {
       "sheet_name": "OpEx Build",
@@ -485,7 +485,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Sales & Marketing OpEx breakdown - supporting expense schedule"
+      "reasoning": "Operating expense breakdown by department - supporting schedule for P&L expenses"
     },
     {
       "sheet_name": "OpEx Build",
@@ -495,7 +495,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Sales & Marketing total - OpEx build subtotal"
+      "reasoning": "Sales & Marketing expense total with subtotals"
     },
     {
       "sheet_name": "OpEx Build",
@@ -505,7 +505,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "R&D OpEx breakdown - supporting expense schedule"
+      "reasoning": "R&D expense breakdown by category"
     },
     {
       "sheet_name": "OpEx Build",
@@ -515,7 +515,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "R&D total - OpEx build subtotal"
+      "reasoning": "R&D expense total with subtotals"
     },
     {
       "sheet_name": "OpEx Build",
@@ -525,7 +525,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "G&A OpEx breakdown - supporting expense schedule"
+      "reasoning": "G&A expense breakdown by category"
     },
     {
       "sheet_name": "OpEx Build",
@@ -535,7 +535,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "G&A total - OpEx build subtotal"
+      "reasoning": "G&A expense total with subtotals"
     },
     {
       "sheet_name": "OpEx Build",
@@ -545,7 +545,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Total cash OpEx - key expense build summary"
+      "reasoning": "Total operating expenses summary with subtotals"
     },
     {
       "sheet_name": "Working Capital",
@@ -555,7 +555,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Working capital components with days calculations - supporting schedule"
+      "reasoning": "Working capital components and ratios - supporting schedule for balance sheet and cash flow"
     },
     {
       "sheet_name": "Working Capital",
@@ -565,7 +565,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Net working capital total - key supporting schedule subtotal"
+      "reasoning": "Net working capital calculation with subtotals"
     },
     {
       "sheet_name": "Working Capital",
@@ -575,7 +575,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Change in NWC for cash flow - supporting schedule calculation"
+      "reasoning": "Working capital change calculation for cash flow statement"
     },
     {
       "sheet_name": "D&A Schedule",
@@ -585,7 +585,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Depreciation components - supporting D&A schedule"
+      "reasoning": "Depreciation & amortization schedule - supporting schedule for P&L and balance sheet"
     },
     {
       "sheet_name": "D&A Schedule",
@@ -595,7 +595,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Total depreciation and amortization components - supporting schedule"
+      "reasoning": "Total depreciation calculation with subtotals"
     },
     {
       "sheet_name": "D&A Schedule",
@@ -605,7 +605,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Total amortization subtotal - supporting schedule"
+      "reasoning": "Total amortization calculation with subtotals"
     },
     {
       "sheet_name": "D&A Schedule",
@@ -615,7 +615,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Total D&A summary - key supporting schedule total"
+      "reasoning": "Total D&A summary calculation with subtotals"
     },
     {
       "sheet_name": "Tax Schedule",
@@ -625,7 +625,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Tax schedule header - supporting tax calculation schedule"
+      "reasoning": "Tax schedule header - supporting schedule for P&L tax provision"
     },
     {
       "sheet_name": "Tax Schedule",
@@ -635,7 +635,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Tax calculation components with rates - supporting tax schedule"
+      "reasoning": "Tax calculation components including statutory rate, current tax, deferred tax"
     },
     {
       "sheet_name": "Tax Schedule",
@@ -645,7 +645,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Total tax expense - key supporting schedule subtotal"
+      "reasoning": "Total tax expense calculation with subtotals"
     },
     {
       "sheet_name": "Assumptions",
@@ -654,8 +654,8 @@
       "section_end_row": 8,
       "tier": 3,
       "decision": "PROCESS_LOW",
-      "confidence": 0.75,
-      "reasoning": "Financial assumptions and ratios - analytical inputs with lower accuracy target"
+      "confidence": 0.8,
+      "reasoning": "Model assumptions and drivers - analytical inputs for financial projections"
     },
     {
       "sheet_name": "Assumptions",
@@ -664,8 +664,8 @@
       "section_end_row": 15,
       "tier": 3,
       "decision": "PROCESS_LOW",
-      "confidence": 0.75,
-      "reasoning": "Working capital and other ratio assumptions - analytical drivers"
+      "confidence": 0.8,
+      "reasoning": "Working capital ratio assumptions - analytical inputs and ratios"
     },
     {
       "sheet_name": "Returns Analysis",
@@ -675,7 +675,7 @@
       "tier": 3,
       "decision": "PROCESS_LOW",
       "confidence": 0.75,
-      "reasoning": "Investment returns inputs - analytical calculations with lower accuracy target"
+      "reasoning": "Investment returns analysis - analytical calculations for equity returns"
     },
     {
       "sheet_name": "Returns Analysis",
@@ -685,53 +685,53 @@
       "tier": 3,
       "decision": "PROCESS_LOW",
       "confidence": 0.75,
-      "reasoning": "Returns metrics (MOIC, ROE, ROIC) - analytical calculations"
+      "reasoning": "Return metrics (MOIC, ROE, ROIC) - analytical ratios and performance measures"
     },
     {
       "sheet_name": "Cover Page",
       "tier": 4,
       "decision": "SKIP",
       "confidence": 0.95,
-      "reasoning": "Cover page with no data rows - presentation sheet with no financial content",
+      "reasoning": "Cover page with no data rows - presentation sheet with project title only",
       "section": null,
       "section_start_row": null,
       "section_end_row": null
     }
   ],
   "line_items_count": 166,
-  "tokens_used": 108901,
-  "cost_usd": 0.844071,
+  "tokens_used": 124211,
+  "cost_usd": 0.9066569999999999,
   "validation": {
     "period_results": {
       "FY2022A": {
-        "total_checks": 114,
-        "passed": 107,
+        "total_checks": 118,
+        "passed": 111,
         "failed": 7,
-        "success_rate": 0.939
+        "success_rate": 0.941
       },
       "FY2023A": {
-        "total_checks": 118,
-        "passed": 111,
+        "total_checks": 122,
+        "passed": 115,
         "failed": 7,
-        "success_rate": 0.941
+        "success_rate": 0.943
       },
       "FY2024E": {
-        "total_checks": 119,
-        "passed": 112,
+        "total_checks": 123,
+        "passed": 116,
         "failed": 7,
-        "success_rate": 0.941
+        "success_rate": 0.943
       },
       "FY2025E": {
-        "total_checks": 118,
-        "passed": 111,
+        "total_checks": 122,
+        "passed": 115,
         "failed": 7,
-        "success_rate": 0.941
+        "success_rate": 0.943
       },
       "FY2026E": {
-        "total_checks": 118,
-        "passed": 111,
+        "total_checks": 122,
+        "passed": 115,
         "failed": 7,
-        "success_rate": 0.941
+        "success_rate": 0.943
       }
     },
     "flags": [
@@ -774,15 +774,6 @@
       {
         "period": "FY2022A",
         "severity": "warning",
-        "item": "interest_expense_debt",
-        "rule": "sign_convention",
-        "message": "interest_expense_debt is negative (-12000) but typically positive",
-        "actual": "-12000",
-        "expected": "positive"
-      },
-      {
-        "period": "FY2022A",
-        "severity": "warning",
         "item": "marketing_expense",
         "rule": "sign_convention",
         "message": "marketing_expense is negative (-8000) but typically positive",
@@ -795,6 +786,15 @@
         "item": "depreciation_and_amortization",
         "rule": "sign_convention",
         "message": "depreciation_and_amortization is positive (20000) but typically negative",
+        "actual": "20000",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2022A",
+        "severity": "warning",
+        "item": "dividends",
+        "rule": "sign_convention",
+        "message": "dividends is positive (20000) but typically negative",
         "actual": "20000",
         "expected": "negative"
       },
@@ -837,15 +837,6 @@
       {
         "period": "FY2023A",
         "severity": "warning",
-        "item": "interest_expense_debt",
-        "rule": "sign_convention",
-        "message": "interest_expense_debt is negative (-11000) but typically positive",
-        "actual": "-11000",
-        "expected": "positive"
-      },
-      {
-        "period": "FY2023A",
-        "severity": "warning",
         "item": "marketing_expense",
         "rule": "sign_convention",
         "message": "marketing_expense is negative (-8480) but typically positive",
@@ -859,6 +850,15 @@
         "rule": "sign_convention",
         "message": "depreciation_and_amortization is positive (20900) but typically negative",
         "actual": "20900",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2023A",
+        "severity": "warning",
+        "item": "dividends",
+        "rule": "sign_convention",
+        "message": "dividends is positive (42000) but typically negative",
+        "actual": "42000",
         "expected": "negative"
       },
       {
@@ -900,15 +900,6 @@
       {
         "period": "FY2024E",
         "severity": "warning",
-        "item": "interest_expense_debt",
-        "rule": "sign_convention",
-        "message": "interest_expense_debt is negative (-10000) but typically positive",
-        "actual": "-10000",
-        "expected": "positive"
-      },
-      {
-        "period": "FY2024E",
-        "severity": "warning",
         "item": "marketing_expense",
         "rule": "sign_convention",
         "message": "marketing_expense is negative (-8989) but typically positive",
@@ -922,6 +913,15 @@
         "rule": "sign_convention",
         "message": "depreciation_and_amortization is positive (21854) but typically negative",
         "actual": "21854",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2024E",
+        "severity": "warning",
+        "item": "dividends",
+        "rule": "sign_convention",
+        "message": "dividends is positive (66000) but typically negative",
+        "actual": "66000",
         "expected": "negative"
       },
       {
@@ -963,15 +963,6 @@
       {
         "period": "FY2025E",
         "severity": "warning",
-        "item": "interest_expense_debt",
-        "rule": "sign_convention",
-        "message": "interest_expense_debt is negative (-9000) but typically positive",
-        "actual": "-9000",
-        "expected": "positive"
-      },
-      {
-        "period": "FY2025E",
-        "severity": "warning",
         "item": "marketing_expense",
         "rule": "sign_convention",
         "message": "marketing_expense is negative (-9529) but typically positive",
@@ -985,6 +976,15 @@
         "rule": "sign_convention",
         "message": "depreciation_and_amortization is positive (22865) but typically negative",
         "actual": "22865",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2025E",
+        "severity": "warning",
+        "item": "dividends",
+        "rule": "sign_convention",
+        "message": "dividends is positive (92000) but typically negative",
+        "actual": "92000",
         "expected": "negative"
       },
       {
@@ -1026,15 +1026,6 @@
       {
         "period": "FY2026E",
         "severity": "warning",
-        "item": "interest_expense_debt",
-        "rule": "sign_convention",
-        "message": "interest_expense_debt is negative (-8000) but typically positive",
-        "actual": "-8000",
-        "expected": "positive"
-      },
-      {
-        "period": "FY2026E",
-        "severity": "warning",
         "item": "marketing_expense",
         "rule": "sign_convention",
         "message": "marketing_expense is negative (-10101) but typically positive",
@@ -1049,6 +1040,51 @@
         "message": "depreciation_and_amortization is positive (23937) but typically negative",
         "actual": "23937",
         "expected": "negative"
+      },
+      {
+        "period": "FY2026E",
+        "severity": "warning",
+        "item": "dividends",
+        "rule": "sign_convention",
+        "message": "dividends is positive (120000) but typically negative",
+        "actual": "120000",
+        "expected": "negative"
+      },
+      {
+        "period": "cross_statement",
+        "severity": "warning",
+        "item": "retained_earnings",
+        "rule": "cross_statement:retained_earnings_ni",
+        "message": "retained_earnings change (82850) differs from net_income (104850) in period FY2023A",
+        "actual": "82850",
+        "expected": "104850"
+      },
+      {
+        "period": "cross_statement",
+        "severity": "warning",
+        "item": "retained_earnings",
+        "rule": "cross_statement:retained_earnings_ni",
+        "message": "retained_earnings change (88591) differs from net_income (112591) in period FY2024E",
+        "actual": "88591",
+        "expected": "112591"
+      },
+      {
+        "period": "cross_statement",
+        "severity": "warning",
+        "item": "retained_earnings",
+        "rule": "cross_statement:retained_earnings_ni",
+        "message": "retained_earnings change (94749) differs from net_income (120749) in period FY2025E",
+        "actual": "94749",
+        "expected": "120749"
+      },
+      {
+        "period": "cross_statement",
+        "severity": "warning",
+        "item": "retained_earnings",
+        "rule": "cross_statement:retained_earnings_ni",
+        "message": "retained_earnings change (101345) differs from net_income (129345) in period FY2026E",
+        "actual": "101345",
+        "expected": "129345"
       }
     ],
     "claude_reasoning": [
@@ -1056,251 +1092,279 @@
         "flag_index": 0,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "COGS is showing as negative (-225000) but should be positive. The validation expects positive COGS values, and negative COGS makes no economic sense.",
+        "reasoning": "COGS should always be positive in absolute terms. The negative value (-225000) indicates incorrect sign convention during extraction.",
         "suggested_fix": "225000"
       },
       {
         "flag_index": 1,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Gross profit calculation is incorrect due to negative COGS. If COGS were positive 225000, then gross profit would be 500000 - 225000 = 275000, which matches the actual value. This confirms COGS sign error.",
-        "suggested_fix": "Fix COGS sign convention"
+        "reasoning": "Gross profit calculation is incorrect due to negative COGS. Should be 500000 - 225000 = 275000, which matches the actual extracted gross profit.",
+        "suggested_fix": "Fix COGS sign to make calculation consistent"
       },
       {
         "flag_index": 2,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Same root cause as flag 1 - gross profit calculation fails because COGS has wrong sign. The actual gross profit of 275000 is correct if COGS is positive.",
-        "suggested_fix": "Fix COGS sign convention"
+        "reasoning": "Same issue as flag 1 - gross profit is actually correct at 275000, but validation fails due to negative COGS input.",
+        "suggested_fix": "Fix COGS sign to resolve validation"
       },
       {
         "flag_index": 3,
         "assessment": "acceptable",
         "confidence": 0.8,
-        "reasoning": "D&A shows as positive 20000 but validation expects negative. However, depreciation (-15000) + amortization (-5000) = -20000. The model may legitimately present D&A as positive in this context while individual components are negative.",
+        "reasoning": "D&A components likely extracted with opposite signs. The absolute values (20000 vs -20000) suggest correct magnitude but sign convention difference.",
         "suggested_fix": null
       },
       {
         "flag_index": 4,
-        "assessment": "acceptable",
-        "confidence": 0.7,
-        "reasoning": "Interest expense showing as negative (-12000) is actually correct accounting convention - expenses are typically negative. The validation rule expecting positive may be incorrect.",
-        "suggested_fix": null
+        "assessment": "error",
+        "confidence": 0.9,
+        "reasoning": "Marketing expense should be positive (8000). Negative value suggests extraction error in sign convention.",
+        "suggested_fix": "8000"
       },
       {
         "flag_index": 5,
         "assessment": "acceptable",
         "confidence": 0.7,
-        "reasoning": "Marketing expense as negative (-8000) follows proper expense convention. Expenses should be negative in financial statements.",
+        "reasoning": "D&A sign convention varies by model. Some models treat it as positive expense, others as negative impact. Context suggests this may be acceptable.",
         "suggested_fix": null
       },
       {
         "flag_index": 6,
         "assessment": "acceptable",
-        "confidence": 0.7,
-        "reasoning": "D&A presentation as positive (20000) may be legitimate - some models show D&A as positive for cash flow purposes while underlying depreciation/amortization components remain negative.",
+        "confidence": 0.8,
+        "reasoning": "Dividends sign convention depends on statement context. As a cash outflow it can be positive, as equity reduction it can be negative.",
         "suggested_fix": null
       },
       {
         "flag_index": 7,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Same COGS sign issue in FY2023A. COGS should be positive 238500, not negative.",
+        "reasoning": "Same systematic COGS sign error continues in FY2023A. Should be positive 238500.",
         "suggested_fix": "238500"
       },
       {
         "flag_index": 8,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Gross profit calculation error due to negative COGS in FY2023A. Root cause is COGS sign convention.",
-        "suggested_fix": "Fix COGS sign convention"
+        "reasoning": "Same gross profit validation error due to negative COGS input.",
+        "suggested_fix": "Fix COGS sign to resolve validation"
       },
       {
         "flag_index": 9,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Same gross profit calculation issue in FY2023A due to COGS sign error.",
-        "suggested_fix": "Fix COGS sign convention"
+        "reasoning": "Same gross profit validation error due to negative COGS input.",
+        "suggested_fix": "Fix COGS sign to resolve validation"
       },
       {
         "flag_index": 10,
         "assessment": "acceptable",
         "confidence": 0.8,
-        "reasoning": "D&A sign convention issue consistent with previous period. Likely acceptable model presentation.",
+        "reasoning": "Same D&A sign convention issue as before - likely acceptable model variation.",
         "suggested_fix": null
       },
       {
         "flag_index": 11,
-        "assessment": "acceptable",
-        "confidence": 0.7,
-        "reasoning": "Interest expense as negative follows proper accounting convention.",
-        "suggested_fix": null
+        "assessment": "error",
+        "confidence": 0.9,
+        "reasoning": "Marketing expense sign error continues. Should be positive 8480.",
+        "suggested_fix": "8480"
       },
       {
         "flag_index": 12,
         "assessment": "acceptable",
         "confidence": 0.7,
-        "reasoning": "Marketing expense as negative is proper expense convention.",
+        "reasoning": "Consistent with previous D&A sign convention.",
         "suggested_fix": null
       },
       {
         "flag_index": 13,
         "assessment": "acceptable",
-        "confidence": 0.7,
-        "reasoning": "D&A presentation consistent with model convention.",
+        "confidence": 0.8,
+        "reasoning": "Consistent dividends sign convention with previous periods.",
         "suggested_fix": null
       },
       {
         "flag_index": 14,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "COGS sign error continues in FY2024E. Should be positive 252810.",
+        "reasoning": "COGS sign error continues in projections. Should be positive 252810.",
         "suggested_fix": "252810"
       },
       {
         "flag_index": 15,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Gross profit calculation error in FY2024E due to COGS sign issue.",
-        "suggested_fix": "Fix COGS sign convention"
+        "reasoning": "Gross profit validation error due to negative COGS.",
+        "suggested_fix": "Fix COGS sign to resolve validation"
       },
       {
         "flag_index": 16,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Same gross profit calculation issue in FY2024E.",
-        "suggested_fix": "Fix COGS sign convention"
+        "reasoning": "Gross profit validation error due to negative COGS.",
+        "suggested_fix": "Fix COGS sign to resolve validation"
       },
       {
         "flag_index": 17,
         "assessment": "acceptable",
         "confidence": 0.8,
-        "reasoning": "D&A sign convention consistent with model approach.",
+        "reasoning": "Consistent D&A sign convention issue.",
         "suggested_fix": null
       },
       {
         "flag_index": 18,
-        "assessment": "acceptable",
-        "confidence": 0.7,
-        "reasoning": "Interest expense as negative is proper convention.",
-        "suggested_fix": null
+        "assessment": "error",
+        "confidence": 0.9,
+        "reasoning": "Marketing expense should be positive 8989.",
+        "suggested_fix": "8989"
       },
       {
         "flag_index": 19,
         "assessment": "acceptable",
         "confidence": 0.7,
-        "reasoning": "Marketing expense as negative follows proper convention.",
+        "reasoning": "Consistent D&A sign convention.",
         "suggested_fix": null
       },
       {
         "flag_index": 20,
         "assessment": "acceptable",
-        "confidence": 0.7,
-        "reasoning": "D&A presentation consistent across periods.",
+        "confidence": 0.8,
+        "reasoning": "Consistent dividends sign convention.",
         "suggested_fix": null
       },
       {
         "flag_index": 21,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "COGS sign error in FY2025E. Should be positive 267978.",
+        "reasoning": "COGS sign error continues. Should be positive 267978.",
         "suggested_fix": "267978"
       },
       {
         "flag_index": 22,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Gross profit calculation error in FY2025E due to COGS sign issue.",
-        "suggested_fix": "Fix COGS sign convention"
+        "reasoning": "Gross profit validation error due to negative COGS.",
+        "suggested_fix": "Fix COGS sign to resolve validation"
       },
       {
         "flag_index": 23,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Same gross profit issue in FY2025E.",
-        "suggested_fix": "Fix COGS sign convention"
+        "reasoning": "Gross profit validation error due to negative COGS.",
+        "suggested_fix": "Fix COGS sign to resolve validation"
       },
       {
         "flag_index": 24,
         "assessment": "acceptable",
         "confidence": 0.8,
-        "reasoning": "D&A sign convention consistent with model.",
+        "reasoning": "Consistent D&A sign convention issue.",
         "suggested_fix": null
       },
       {
         "flag_index": 25,
-        "assessment": "acceptable",
-        "confidence": 0.7,
-        "reasoning": "Interest expense negative is proper accounting.",
-        "suggested_fix": null
+        "assessment": "error",
+        "confidence": 0.9,
+        "reasoning": "Marketing expense should be positive 9529.",
+        "suggested_fix": "9529"
       },
       {
         "flag_index": 26,
         "assessment": "acceptable",
         "confidence": 0.7,
-        "reasoning": "Marketing expense negative is proper convention.",
+        "reasoning": "Consistent D&A sign convention.",
         "suggested_fix": null
       },
       {
         "flag_index": 27,
         "assessment": "acceptable",
-        "confidence": 0.7,
-        "reasoning": "D&A presentation consistent.",
+        "confidence": 0.8,
+        "reasoning": "Consistent dividends sign convention.",
         "suggested_fix": null
       },
       {
         "flag_index": 28,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "COGS sign error in FY2026E. Should be positive 284057.",
+        "reasoning": "COGS sign error continues. Should be positive 284057.",
         "suggested_fix": "284057"
       },
       {
         "flag_index": 29,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Gross profit calculation error in FY2026E due to COGS sign issue.",
-        "suggested_fix": "Fix COGS sign convention"
+        "reasoning": "Gross profit validation error due to negative COGS.",
+        "suggested_fix": "Fix COGS sign to resolve validation"
       },
       {
         "flag_index": 30,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Same gross profit issue in FY2026E.",
-        "suggested_fix": "Fix COGS sign convention"
+        "reasoning": "Gross profit validation error due to negative COGS.",
+        "suggested_fix": "Fix COGS sign to resolve validation"
       },
       {
         "flag_index": 31,
         "assessment": "acceptable",
         "confidence": 0.8,
-        "reasoning": "D&A sign convention consistent.",
+        "reasoning": "Consistent D&A sign convention issue.",
         "suggested_fix": null
       },
       {
         "flag_index": 32,
-        "assessment": "acceptable",
-        "confidence": 0.7,
-        "reasoning": "Interest expense negative is proper.",
-        "suggested_fix": null
+        "assessment": "error",
+        "confidence": 0.9,
+        "reasoning": "Marketing expense should be positive 10101.",
+        "suggested_fix": "10101"
       },
       {
         "flag_index": 33,
         "assessment": "acceptable",
         "confidence": 0.7,
-        "reasoning": "Marketing expense negative is proper.",
+        "reasoning": "Consistent D&A sign convention.",
         "suggested_fix": null
       },
       {
         "flag_index": 34,
         "assessment": "acceptable",
-        "confidence": 0.7,
-        "reasoning": "D&A presentation consistent across all periods.",
+        "confidence": 0.8,
+        "reasoning": "Consistent dividends sign convention.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 35,
+        "assessment": "acceptable",
+        "confidence": 0.85,
+        "reasoning": "Retained earnings change differs from net income by dividend amounts (22000, 24000, 26000, 28000 respectively), indicating proper dividend distributions.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 36,
+        "assessment": "acceptable",
+        "confidence": 0.85,
+        "reasoning": "Difference matches expected dividend payment pattern.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 37,
+        "assessment": "acceptable",
+        "confidence": 0.85,
+        "reasoning": "Difference matches expected dividend payment pattern.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 38,
+        "assessment": "acceptable",
+        "confidence": 0.85,
+        "reasoning": "Difference matches expected dividend payment pattern.",
         "suggested_fix": null
       }
     ],
-    "overall_confidence": 0.941,
+    "overall_confidence": 0.937,
     "time_series": {
-      "total_checks": 1570,
+      "total_checks": 1606,
       "flags": [
         {
           "check_type": "yoy_change",
@@ -1347,12 +1411,12 @@
         }
       ],
       "consistency_score": 0.997,
-      "items_checked": 87,
+      "items_checked": 89,
       "periods_analyzed": 5
     },
     "completeness": {
       "model_type": "corporate",
-      "overall_score": 0.501,
+      "overall_score": 0.595,
       "detected_statements": [
         "balance_sheet",
         "cash_flow",
@@ -1360,8 +1424,8 @@
         "income_statement"
       ],
       "total_expected": 32,
-      "total_found": 16,
-      "total_missing": 16,
+      "total_found": 18,
+      "total_missing": 14,
       "missing_items": [
         {
           "canonical_name": "current_assets",
@@ -1418,12 +1482,6 @@
           "is_core": true
         },
         {
-          "canonical_name": "interest_expense",
-          "category": "income_statement",
-          "weight": 0.8,
-          "is_core": true
-        },
-        {
           "canonical_name": "debt_mandatory_repayment",
           "category": "debt_schedule",
           "weight": 0.7,
@@ -1439,12 +1497,6 @@
           "canonical_name": "ebit",
           "category": "income_statement",
           "weight": 0.8,
-          "is_core": true
-        },
-        {
-          "canonical_name": "net_income",
-          "category": "income_statement",
-          "weight": 0.95,
           "is_core": true
         },
         {
@@ -1496,36 +1548,36 @@
           ]
         },
         "debt_schedule": {
-          "raw_score": 0.5,
-          "weighted_score": 0.515,
-          "core_score": 0.522,
+          "raw_score": 0.667,
+          "weighted_score": 0.68,
+          "core_score": 0.754,
           "found": [
             "debt_opening_balance",
             "debt_closing_balance",
+            "interest_expense",
             "debt_drawdown"
           ],
           "missing": [
             "debt_service",
-            "interest_expense",
             "debt_mandatory_repayment"
           ]
         },
         "income_statement": {
-          "raw_score": 0.455,
-          "weighted_score": 0.471,
-          "core_score": 0.523,
+          "raw_score": 0.636,
+          "weighted_score": 0.661,
+          "core_score": 0.697,
           "found": [
             "revenue",
             "cogs",
             "gross_profit",
+            "net_income",
             "depreciation",
+            "interest_expense",
             "tax_expense"
           ],
           "missing": [
             "ebitda",
             "ebit",
-            "net_income",
-            "interest_expense",
             "ebt",
             "opex"
           ]
@@ -1533,25 +1585,25 @@
       }
     },
     "quality": {
-      "numeric_score": 0.824,
+      "numeric_score": 0.851,
       "letter_grade": "B",
       "label": "trustworthy",
       "dimensions": [
         {
           "name": "mapping_confidence",
-          "score": 0.882,
+          "score": 0.895,
           "weight": 0.3,
           "details": null
         },
         {
           "name": "validation_success",
-          "score": 0.941,
+          "score": 0.937,
           "weight": 0.25,
           "details": null
         },
         {
           "name": "completeness",
-          "score": 0.501,
+          "score": 0.595,
           "weight": 0.25,
           "details": null
         },
@@ -1591,11 +1643,11 @@
       5
     ],
     "event_types": [
-      "mapping",
-      "triage",
-      "validation",
       "parsing",
-      "enhanced_mapping"
+      "enhanced_mapping",
+      "validation",
+      "triage",
+      "mapping"
     ]
   },
   "triage_accuracy": {
@@ -1678,9 +1730,9 @@
     ]
   },
   "mapping_accuracy": {
-    "correct": 39,
+    "correct": 41,
     "total": 50,
-    "accuracy": 0.78,
+    "accuracy": 0.82,
     "unmapped_count": 9,
     "unmapped_labels": [
       "Cash & Equivalents",
@@ -1693,42 +1745,13 @@
       "Days Payable Outstanding",
       "Revenue Growth"
     ],
-    "mismatches": [
-      {
-        "label": "Interest Expense",
-        "expected": "interest_expense",
-        "actual": "interest_expense_debt",
-        "acceptable": [
-          "interest_expense"
-        ]
-      },
-      {
-        "label": "Net Income",
-        "expected": "net_income",
-        "actual": "net_income_cf",
-        "acceptable": [
-          "net_income",
-          "net_profit"
-        ]
-      }
-    ],
+    "mismatches": [],
     "per_statement": {
       "Income Statement": {
-        "correct": 15,
+        "correct": 17,
         "total": 17,
-        "mismatches": [
-          {
-            "label": "Interest Expense",
-            "expected": "interest_expense",
-            "actual": "interest_expense_debt"
-          },
-          {
-            "label": "Net Income",
-            "expected": "net_income",
-            "actual": "net_income_cf"
-          }
-        ],
-        "accuracy": 0.8823529411764706
+        "mismatches": [],
+        "accuracy": 1.0
       },
       "Balance Sheet": {
         "correct": 12,
@@ -1776,7 +1799,7 @@
   },
   "completeness": {
     "model_type": "corporate",
-    "overall_score": 0.501,
+    "overall_score": 0.595,
     "detected_statements": [
       "balance_sheet",
       "cash_flow",
@@ -1784,8 +1807,8 @@
       "income_statement"
     ],
     "total_expected": 32,
-    "total_found": 16,
-    "total_missing": 16,
+    "total_found": 18,
+    "total_missing": 14,
     "missing_items": [
       {
         "canonical_name": "current_assets",
@@ -1842,12 +1865,6 @@
         "is_core": true
       },
       {
-        "canonical_name": "interest_expense",
-        "category": "income_statement",
-        "weight": 0.8,
-        "is_core": true
-      },
-      {
         "canonical_name": "debt_mandatory_repayment",
         "category": "debt_schedule",
         "weight": 0.7,
@@ -1863,12 +1880,6 @@
         "canonical_name": "ebit",
         "category": "income_statement",
         "weight": 0.8,
-        "is_core": true
-      },
-      {
-        "canonical_name": "net_income",
-        "category": "income_statement",
-        "weight": 0.95,
         "is_core": true
       },
       {
@@ -1920,36 +1931,36 @@
         ]
       },
       "debt_schedule": {
-        "raw_score": 0.5,
-        "weighted_score": 0.515,
-        "core_score": 0.522,
+        "raw_score": 0.667,
+        "weighted_score": 0.68,
+        "core_score": 0.754,
         "found": [
           "debt_opening_balance",
           "debt_closing_balance",
+          "interest_expense",
           "debt_drawdown"
         ],
         "missing": [
           "debt_service",
-          "interest_expense",
           "debt_mandatory_repayment"
         ]
       },
       "income_statement": {
-        "raw_score": 0.455,
-        "weighted_score": 0.471,
-        "core_score": 0.523,
+        "raw_score": 0.636,
+        "weighted_score": 0.661,
+        "core_score": 0.697,
         "found": [
           "revenue",
           "cogs",
           "gross_profit",
+          "net_income",
           "depreciation",
+          "interest_expense",
           "tax_expense"
         ],
         "missing": [
           "ebitda",
           "ebit",
-          "net_income",
-          "interest_expense",
           "ebt",
           "opex"
         ]
@@ -1957,25 +1968,25 @@
     }
   },
   "quality": {
-    "numeric_score": 0.824,
+    "numeric_score": 0.851,
     "letter_grade": "B",
     "label": "trustworthy",
     "dimensions": [
       {
         "name": "mapping_confidence",
-        "score": 0.882,
+        "score": 0.895,
         "weight": 0.3,
         "details": null
       },
       {
         "name": "validation_success",
-        "score": 0.941,
+        "score": 0.937,
         "weight": 0.25,
         "details": null
       },
       {
         "name": "completeness",
-        "score": 0.501,
+        "score": 0.595,
         "weight": 0.25,
         "details": null
       },
@@ -2046,7 +2057,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Net Revenue on Income Statement is a section header (level 0) and subtotal for total revenue"
+          "reasoning": "Net Revenue on Income Statement is a standard term for total revenue/sales"
         },
         "validation": {
           "rules_applied": [],
@@ -2113,7 +2124,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Product A under Net Revenue section represents product-based revenue stream"
+          "reasoning": "Product A is a sub-component of revenue representing product sales"
         },
         "validation": {
           "rules_applied": [],
@@ -2180,7 +2191,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Product B under Net Revenue section represents product-based revenue stream"
+          "reasoning": "Product B is a sub-component of revenue representing product sales"
         },
         "validation": {
           "rules_applied": [],
@@ -2247,7 +2258,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Product C under Net Revenue section represents product-based revenue stream"
+          "reasoning": "Product C is a sub-component of revenue representing product sales"
         },
         "validation": {
           "rules_applied": [],
@@ -2314,7 +2325,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Licensing Revenue is a distinct revenue stream, best categorized as other revenue"
+          "reasoning": "Licensing Revenue is a specific type of revenue that fits best under other_revenue category"
         },
         "validation": {
           "rules_applied": [],
@@ -2336,7 +2347,7 @@
         "FY2025E": -267978,
         "FY2026E": -284057
       },
-      "confidence": 0.95,
+      "confidence": 0.98,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -2381,7 +2392,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to Cost of Goods Sold canonical name"
+          "reasoning": "Cost of Goods Sold is exactly matched in the taxonomy as COGS"
         },
         "validation": {
           "rules_applied": [
@@ -2497,7 +2508,7 @@
         "FY2025E": 327530,
         "FY2026E": 347181
       },
-      "confidence": 0.95,
+      "confidence": 0.98,
       "hierarchy_level": 0,
       "provenance": {
         "source_cells": [
@@ -2542,7 +2553,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to gross profit canonical name"
+          "reasoning": "Gross Profit is exactly matched in the taxonomy"
         },
         "validation": {
           "rules_applied": [
@@ -2657,7 +2668,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to sales and marketing expenses"
+          "reasoning": "Sales & Marketing matches the canonical name sales_marketing"
         },
         "validation": {
           "rules_applied": [],
@@ -2724,7 +2735,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to R&D expense canonical name"
+          "reasoning": "Research & Development is a standard alias for R&D expense"
         },
         "validation": {
           "rules_applied": [],
@@ -2791,7 +2802,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to G&A expenses canonical name"
+          "reasoning": "General & Administrative matches G&A in the taxonomy"
         },
         "validation": {
           "rules_applied": [],
@@ -2813,7 +2824,7 @@
         "FY2025E": -17865,
         "FY2026E": -18937
       },
-      "confidence": 0.95,
+      "confidence": 0.98,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -2858,7 +2869,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "On Income Statement, maps to depreciation expense (not cash flow depreciation_cf)"
+          "reasoning": "Depreciation on Income Statement maps to depreciation expense"
         },
         "validation": {
           "rules_applied": [],
@@ -2880,7 +2891,7 @@
         "FY2025E": -5000,
         "FY2026E": -5000
       },
-      "confidence": 0.95,
+      "confidence": 0.98,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -2925,7 +2936,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "On Income Statement, maps to amortization expense (not cash flow amortization_cf)"
+          "reasoning": "Amortization on Income Statement maps to amortization expense"
         },
         "validation": {
           "rules_applied": [],
@@ -2947,7 +2958,7 @@
         "FY2025E": -159831,
         "FY2026E": -169121
       },
-      "confidence": 0.95,
+      "confidence": 0.98,
       "hierarchy_level": 0,
       "provenance": {
         "source_cells": [
@@ -2992,7 +3003,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to total operating expenses"
+          "reasoning": "Total Operating Expenses is exactly matched in the taxonomy"
         },
         "validation": {
           "rules_applied": [],
@@ -3014,7 +3025,7 @@
         "FY2025E": 167699,
         "FY2026E": 178060
       },
-      "confidence": 0.95,
+      "confidence": 0.98,
       "hierarchy_level": 0,
       "provenance": {
         "source_cells": [
@@ -3059,7 +3070,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to operating income canonical name"
+          "reasoning": "Operating Income is exactly matched in the taxonomy"
         },
         "validation": {
           "rules_applied": [],
@@ -3073,7 +3084,7 @@
       "sheet": "Income Statement",
       "row": 20,
       "original_label": "Interest Expense",
-      "canonical_name": "interest_expense_debt",
+      "canonical_name": "interest_expense",
       "values": {
         "FY2022A": -12000,
         "FY2023A": -11000,
@@ -3125,61 +3136,13 @@
         "mapping": {
           "method": "claude",
           "stage": 3,
-          "taxonomy_category": "debt_schedule",
-          "reasoning": "On Debt Schedule, Interest Expense maps to interest_expense_debt (not income statement interest_expense)"
+          "taxonomy_category": "income_statement",
+          "reasoning": "Interest Expense on Debt Schedule maps to interest_expense_debt (debt-specific interest expense)"
         },
         "validation": {
-          "rules_applied": [
-            "sign_convention"
-          ],
+          "rules_applied": [],
           "all_passed": true,
-          "flags": [
-            {
-              "period": "FY2022A",
-              "severity": "warning",
-              "item": "interest_expense_debt",
-              "rule": "sign_convention",
-              "message": "interest_expense_debt is negative (-12000) but typically positive",
-              "actual": "-12000",
-              "expected": "positive"
-            },
-            {
-              "period": "FY2023A",
-              "severity": "warning",
-              "item": "interest_expense_debt",
-              "rule": "sign_convention",
-              "message": "interest_expense_debt is negative (-11000) but typically positive",
-              "actual": "-11000",
-              "expected": "positive"
-            },
-            {
-              "period": "FY2024E",
-              "severity": "warning",
-              "item": "interest_expense_debt",
-              "rule": "sign_convention",
-              "message": "interest_expense_debt is negative (-10000) but typically positive",
-              "actual": "-10000",
-              "expected": "positive"
-            },
-            {
-              "period": "FY2025E",
-              "severity": "warning",
-              "item": "interest_expense_debt",
-              "rule": "sign_convention",
-              "message": "interest_expense_debt is negative (-9000) but typically positive",
-              "actual": "-9000",
-              "expected": "positive"
-            },
-            {
-              "period": "FY2026E",
-              "severity": "warning",
-              "item": "interest_expense_debt",
-              "rule": "sign_convention",
-              "message": "interest_expense_debt is negative (-8000) but typically positive",
-              "actual": "-8000",
-              "expected": "positive"
-            }
-          ]
+          "flags": []
         },
         "enhanced_mapping": null
       }
@@ -3241,7 +3204,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to other income canonical name"
+          "reasoning": "Other Income is exactly matched in the taxonomy"
         },
         "validation": {
           "rules_applied": [],
@@ -3308,7 +3271,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Income Before Tax matches earnings before tax canonical name"
+          "reasoning": "Income Before Tax is a standard alias for earnings before tax"
         },
         "validation": {
           "rules_applied": [],
@@ -3375,7 +3338,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to income tax expense"
+          "reasoning": "Income Tax Expense matches the taxonomy aliases for income_tax"
         },
         "validation": {
           "rules_applied": [],
@@ -3389,7 +3352,7 @@
       "sheet": "Income Statement",
       "row": 24,
       "original_label": "Net Income",
-      "canonical_name": "net_income_cf",
+      "canonical_name": "net_income",
       "values": {
         "FY2022A": 97500,
         "FY2023A": 104850,
@@ -3397,7 +3360,7 @@
         "FY2025E": 120749,
         "FY2026E": 129345
       },
-      "confidence": 0.95,
+      "confidence": 0.98,
       "hierarchy_level": 0,
       "provenance": {
         "source_cells": [
@@ -3441,8 +3404,8 @@
         "mapping": {
           "method": "claude",
           "stage": 3,
-          "taxonomy_category": "cash_flow",
-          "reasoning": "On Cash Flow Statement, Net Income maps to net_income_cf (not net_income)"
+          "taxonomy_category": "income_statement",
+          "reasoning": "Net Income on Cash Flow Statement maps to net_income_cf per disambiguation rules"
         },
         "validation": {
           "rules_applied": [],
@@ -3464,7 +3427,7 @@
         "FY2025E": 361861,
         "FY2026E": 463106
       },
-      "confidence": 0.95,
+      "confidence": 0.98,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -3509,7 +3472,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "balance_sheet",
-          "reasoning": "Direct match to cash and cash equivalents"
+          "reasoning": "Cash & Cash Equivalents is exactly matched in the taxonomy"
         },
         "validation": {
           "rules_applied": [],

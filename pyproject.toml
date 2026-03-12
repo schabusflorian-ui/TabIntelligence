@@ -82,6 +82,7 @@ addopts = [
 markers = [
     "slow: marks tests as slow (>2s, deselect with -m 'not slow')",
     "integration: marks integration tests requiring external services",
+    "realdata: marks tests that require real Excel files in tests/real data/",
 ]
 
 [tool.mypy]

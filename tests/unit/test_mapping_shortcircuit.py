@@ -611,3 +611,116 @@ class TestSheetCategoryDisambiguation:
 
         assert count == 0
         assert mappings[0]["canonical_name"] == "net_income"  # Unchanged
+
+
+class TestMappingBatching:
+    """Test that large label sets are split into batches."""
+
+    def test_batch_size_constant_exists(self):
+        """BATCH_SIZE is defined inside execute(); verify the helper method exists."""
+        from src.extraction.stages.mapping import MappingStage
+
+        stage = MappingStage()
+        assert hasattr(stage, "_call_claude_mapping")
+
+    @patch("src.extraction.stages.mapping.get_claude_client")
+    @patch("src.extraction.stages.mapping.get_prompt")
+    @patch("src.extraction.stages.mapping.get_alias_to_canonicals_with_promoted")
+    @patch("src.extraction.stages.mapping.get_canonical_to_category")
+    @patch("src.extraction.stages.mapping.validate_canonical_names")
+    def test_batching_merges_results(
+        self,
+        mock_validate,
+        mock_cat_lookup,
+        mock_alias_lookup,
+        mock_get_prompt,
+        mock_get_client,
+    ):
+        """When items exceed BATCH_SIZE, results from multiple batches are merged."""
+        from src.extraction.stages.mapping import MappingStage
+
+        mock_cat_lookup.return_value = {}
+        mock_alias_lookup.return_value = {}
+        mock_get_prompt.return_value.render.return_value = "prompt text"
+
+        # Create a mock Claude response
+        def make_response(items):
+            """Build a mock response that returns one mapping per input item."""
+            mappings = [
+                {
+                    "original_label": item["label"],
+                    "canonical_name": "revenue",
+                    "confidence": 0.9,
+                    "reasoning": "test",
+                }
+                for item in json.loads(
+                    mock_get_prompt.return_value.render.call_args[1]["line_items"]
+                    if mock_get_prompt.return_value.render.call_args
+                    else "[]"
+                )
+            ]
+            resp = MagicMock()
+            resp.stop_reason = "end_turn"
+            resp.content = [MagicMock(text=json.dumps(mappings))]
+            resp.usage.input_tokens = 100
+            resp.usage.output_tokens = 50
+            return resp
+
+        # Simpler approach: make _call_claude_mapping return deterministic results
+        stage = MappingStage()
+
+        # Patch the helper directly to count calls and return mapped items
+        call_count = 0
+
+        def fake_call(items, taxonomy_str):
+            nonlocal call_count
+            call_count += 1
+            mappings = [
+                {
+                    "original_label": item["label"],
+                    "canonical_name": "revenue",
+                    "confidence": 0.9,
+                    "reasoning": "test",
+                }
+                for item in items
+            ]
+            return mappings, 100, 50
+
+        stage._call_claude_mapping = fake_call
+
+        # Build a context with > 60 items to trigger batching
+        rows = [
+            {
+                "label": f"Item {i}",
+                "hierarchy_level": 1,
+                "is_formula": False,
+                "is_subtotal": False,
+            }
+            for i in range(80)
+        ]
+        context = MagicMock()
+        context.entity_id = None
+        context.get_result.side_effect = lambda stage_name: {
+            "parsing": {
+                "parsed": {
+                    "sheets": [{"sheet_name": "Income Statement", "rows": rows}]
+                }
+            },
+            "triage": {
+                "triage": [
+                    {"sheet_name": "Income Statement", "classification": "income_statement"}
+                ]
+            },
+        }[stage_name]
+
+        import asyncio
+
+        result = asyncio.get_event_loop().run_until_complete(stage.execute(context))
+
+        # 80 items / 60 batch size = 2 batches
+        assert call_count == 2
+        assert len(result["mappings"]) == 80
+        assert result["lineage_metadata"]["batched"] is True
+        assert result["lineage_metadata"]["batch_count"] == 2
+        # Tokens: 2 batches * (100 input + 50 output) = 300
+        assert result["tokens"] == 300
