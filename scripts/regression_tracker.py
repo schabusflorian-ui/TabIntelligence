@@ -37,7 +37,7 @@ from pathlib import Path
 # Default thresholds: max allowed accuracy drop (as fraction, e.g. 0.02 = 2%)
 DEFAULT_THRESHOLDS = {
     "mapping": 0.02,  # 2% mapping accuracy drop
-    "triage": 0.00,   # 0% triage accuracy drop (triage should be stable)
+    "triage": 0.00,  # 0% triage accuracy drop (triage should be stable)
 }
 
 # Per-fixture threshold overrides for fixtures expected to have lower accuracy
@@ -55,6 +55,7 @@ FIXTURE_THRESHOLDS = {
 @dataclass
 class RegressionResult:
     """Result of comparing a fixture against its baseline."""
+
     fixture_name: str
     passed: bool
     baseline_mapping: float | None = None
@@ -198,13 +199,9 @@ def compare_fixture(
 
     # Note improvements
     if reg.mapping_delta is not None and reg.mapping_delta > 0:
-        reg.warnings.append(
-            f"Mapping improved +{reg.mapping_delta:.1%}"
-        )
+        reg.warnings.append(f"Mapping improved +{reg.mapping_delta:.1%}")
     if reg.triage_delta is not None and reg.triage_delta > 0:
-        reg.warnings.append(
-            f"Triage improved +{reg.triage_delta:.1%}"
-        )
+        reg.warnings.append(f"Triage improved +{reg.triage_delta:.1%}")
 
     return reg
 
@@ -271,9 +268,7 @@ def print_results(results: list[RegressionResult]):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Check benchmark results for accuracy regressions"
-    )
+    parser = argparse.ArgumentParser(description="Check benchmark results for accuracy regressions")
     parser.add_argument(
         "--results-dir",
         default="data/benchmark_results/",
@@ -338,9 +333,7 @@ def main():
             reg.warnings.append("No baseline — first run, skipping comparison")
             regression_results.append(reg)
         else:
-            reg = compare_fixture(
-                fixture_name, result, baseline, args.threshold_file
-            )
+            reg = compare_fixture(fixture_name, result, baseline, args.threshold_file)
             regression_results.append(reg)
 
     print_results(regression_results)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Create tests/fixtures/seed_burn.xlsx — pre-revenue seed-stage monthly burn model."""
+
 from pathlib import Path
 
 import openpyxl
@@ -8,8 +9,18 @@ from openpyxl.styles import Font
 OUTPUT = Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "seed_burn.xlsx"
 
 MONTHS = [
-    "Jan-25", "Feb-25", "Mar-25", "Apr-25", "May-25", "Jun-25",
-    "Jul-25", "Aug-25", "Sep-25", "Oct-25", "Nov-25", "Dec-25",
+    "Jan-25",
+    "Feb-25",
+    "Mar-25",
+    "Apr-25",
+    "May-25",
+    "Jun-25",
+    "Jul-25",
+    "Aug-25",
+    "Sep-25",
+    "Oct-25",
+    "Nov-25",
+    "Dec-25",
 ]
 
 # ---------------------------------------------------------------------------
@@ -23,9 +34,7 @@ PAYROLL = [-85, -85, -95, -95, -95, -100, -100, -100, -110, -110, -110, -120]
 RENT = [-8] * 12
 SOFTWARE = [-5, -5, -5, -5, -5, -6, -6, -6, -6, -6, -7, -7]
 LEGAL = [-12, -3, -3, -15, -3, -3, -3, -3, -3, -3, -3, -3]
-TOTAL_EXPENSES = [
-    PAYROLL[i] + RENT[i] + SOFTWARE[i] + LEGAL[i] for i in range(12)
-]
+TOTAL_EXPENSES = [PAYROLL[i] + RENT[i] + SOFTWARE[i] + LEGAL[i] for i in range(12)]
 NET_INCOME = [GROSS_PROFIT[i] + TOTAL_EXPENSES[i] for i in range(12)]
 
 # ---------------------------------------------------------------------------

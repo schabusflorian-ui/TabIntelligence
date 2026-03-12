@@ -3,13 +3,15 @@
 Cross-entity comparison, portfolio aggregation, trends,
 taxonomy coverage, and cost tracking.
 """
+
 from collections import defaultdict
 from typing import List, Optional
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
-from uuid import UUID
 
+from src.api.rate_limit import limiter
 from src.api.schemas import (
     CostAnalyticsResponse,
     CrossEntityComparisonResponse,
@@ -20,12 +22,10 @@ from src.api.schemas import (
     PortfolioSummaryResponse,
     TaxonomyCoverageResponse,
 )
-from src.db.session import get_db
-from src.db import crud
 from src.auth.dependencies import get_current_api_key
-from src.api.rate_limit import limiter
 from src.core.exceptions import DatabaseError
-from src.core.logging import api_logger as logger
+from src.db import crud
+from src.db.session import get_db
 
 router = APIRouter(prefix="/api/v1/analytics", tags=["analytics"])
 
@@ -33,6 +33,7 @@ router = APIRouter(prefix="/api/v1/analytics", tags=["analytics"])
 # ============================================================================
 # GET /entity/{entity_id}/financials
 # ============================================================================
+
 
 @router.get(
     "/entity/{entity_id}/financials",
@@ -48,7 +49,8 @@ def entity_financials(
     period_start: Optional[str] = Query(None),
     period_end: Optional[str] = Query(None),
     statement_type: Optional[str] = Query(
-        None, description="Filter by statement type (e.g. income_statement, balance_sheet, cash_flow)"
+        None,
+        description="Filter by statement type (e.g. income_statement, balance_sheet, cash_flow)",
     ),
     limit: int = Query(100, ge=1, le=500, description="Max items to return"),
     offset: int = Query(0, ge=0, description="Items to skip"),
@@ -66,9 +68,7 @@ def entity_financials(
         raise HTTPException(404, "Entity not found")
 
     name_list = (
-        [n.strip() for n in canonical_names.split(",") if n.strip()]
-        if canonical_names
-        else None
+        [n.strip() for n in canonical_names.split(",") if n.strip()] if canonical_names else None
     )
 
     try:
@@ -110,29 +110,28 @@ def entity_financials(
 
     all_items = []
     for cn in sorted(grouped):
-        values = [
-            {"period": p, "amount": grouped[cn][p]}
-            for p in sorted(grouped[cn])
-        ]
+        values = [{"period": p, "amount": grouped[cn][p]} for p in sorted(grouped[cn])]
         # Find taxonomy_category from any fact with this canonical_name
         cat = next(
             (f.taxonomy_category for f in facts if f.canonical_name == cn and f.taxonomy_category),
             None,
         )
-        all_items.append({
-            "canonical_name": cn,
-            "taxonomy_category": cat,
-            "values": values,
-        })
+        all_items.append(
+            {
+                "canonical_name": cn,
+                "taxonomy_category": cat,
+                "values": values,
+            }
+        )
 
     # Apply pagination
     total_items = len(all_items)
-    items = all_items[offset:offset + limit]
+    items = all_items[offset : offset + limit]
 
     return EntityFinancialsResponse(
         entity_id=entity_id,
         entity_name=entity.name,
-        items=items,
+        items=items,  # type: ignore[arg-type]
         periods=sorted(all_periods),
         source=source,
         total_items=total_items,
@@ -145,7 +144,7 @@ def _financials_from_json(
     canonical_names: Optional[List[str]],
 ) -> Optional[EntityFinancialsResponse]:
     """Fallback: build financials from ExtractionJob.result JSON."""
-    from src.db.models import File, ExtractionJob, JobStatusEnum
+    from src.db.models import ExtractionJob, File, JobStatusEnum
 
     jobs = (
         db.query(ExtractionJob)
@@ -186,20 +185,19 @@ def _financials_from_json(
     for cn in sorted(grouped):
         if not grouped[cn]:
             continue  # skip items where all values failed parsing
-        values = [
-            {"period": p, "amount": grouped[cn][p]}
-            for p in sorted(grouped[cn])
-        ]
-        items.append({
-            "canonical_name": cn,
-            "taxonomy_category": None,
-            "values": values,
-        })
+        values = [{"period": p, "amount": grouped[cn][p]} for p in sorted(grouped[cn])]
+        items.append(
+            {
+                "canonical_name": cn,
+                "taxonomy_category": None,
+                "values": values,
+            }
+        )
 
     return EntityFinancialsResponse(
         entity_id=str(entity_id),
         entity_name=None,
-        items=items,
+        items=items,  # type: ignore[arg-type]
         periods=sorted(all_periods),
         source="json_fallback",
     )
@@ -208,6 +206,7 @@ def _financials_from_json(
 # ============================================================================
 # GET /compare
 # ============================================================================
+
 
 @router.get("/compare", response_model=CrossEntityComparisonResponse)
 @limiter.limit("500/hour")
@@ -234,8 +233,7 @@ def cross_entity_compare(
 
     # Resolve entity names
     entities = {
-        str(e.id): e.name
-        for e in db.query(crud.Entity).filter(crud.Entity.id.in_(id_list)).all()
+        str(e.id): e.name for e in db.query(crud.Entity).filter(crud.Entity.id.in_(id_list)).all()
     }
 
     try:
@@ -257,12 +255,14 @@ def cross_entity_compare(
         if key in seen:
             continue  # keep first (latest) only
         seen.add(key)
-        grouped[f.canonical_name].append({
-            "entity_id": str(f.entity_id),
-            "entity_name": entities.get(str(f.entity_id)),
-            "amount": float(f.value),
-            "confidence": f.confidence,
-        })
+        grouped[f.canonical_name].append(
+            {
+                "entity_id": str(f.entity_id),
+                "entity_name": entities.get(str(f.entity_id)),
+                "amount": float(f.value),
+                "confidence": f.confidence,
+            }
+        )
 
     # Ensure all entities appear even if no facts
     comparisons = []
@@ -271,28 +271,33 @@ def cross_entity_compare(
         seen_entity_ids = {ev["entity_id"] for ev in entity_values}
         for eid in id_list:
             if str(eid) not in seen_entity_ids:
-                entity_values.append({
-                    "entity_id": str(eid),
-                    "entity_name": entities.get(str(eid)),
-                    "amount": None,
-                    "confidence": None,
-                })
-        comparisons.append({
-            "canonical_name": cn,
-            "period": period,
-            "entities": entity_values,
-        })
+                entity_values.append(
+                    {
+                        "entity_id": str(eid),
+                        "entity_name": entities.get(str(eid)),
+                        "amount": None,
+                        "confidence": None,
+                    }
+                )
+        comparisons.append(
+            {
+                "canonical_name": cn,
+                "period": period,
+                "entities": entity_values,
+            }
+        )
 
     return CrossEntityComparisonResponse(
         canonical_names=name_list,
         period=period,
-        comparisons=comparisons,
+        comparisons=comparisons,  # type: ignore[arg-type]
     )
 
 
 # ============================================================================
 # GET /portfolio/summary
 # ============================================================================
+
 
 @router.get("/portfolio/summary", response_model=PortfolioSummaryResponse)
 @limiter.limit("500/hour")
@@ -324,7 +329,7 @@ def portfolio_summary(
         total_facts=summary["total_facts"],
         avg_confidence=summary["avg_confidence"],
         quality_distribution=[
-            {"grade": q["grade"], "count": q["count"]}
+            {"grade": q["grade"], "count": q["count"]}  # type: ignore[misc]
             for q in summary["quality_distribution"]
         ],
         period=period,
@@ -334,6 +339,7 @@ def portfolio_summary(
 # ============================================================================
 # GET /entity/{entity_id}/trends
 # ============================================================================
+
 
 @router.get(
     "/entity/{entity_id}/trends",
@@ -383,13 +389,14 @@ def entity_trends(
     return EntityTrendsResponse(
         entity_id=entity_id,
         canonical_name=canonical_name,
-        trend=trend,
+        trend=trend,  # type: ignore[arg-type]
     )
 
 
 # ============================================================================
 # GET /taxonomy/coverage
 # ============================================================================
+
 
 @router.get("/taxonomy/coverage", response_model=TaxonomyCoverageResponse)
 @limiter.limit("500/hour")
@@ -409,7 +416,7 @@ def taxonomy_coverage(
         items_ever_mapped=result["items_ever_mapped"],
         coverage_pct=result["coverage_pct"],
         most_common=[
-            {
+            {  # type: ignore[misc]
                 "canonical_name": item["canonical_name"],
                 "category": item["category"],
                 "times_mapped": item["times_mapped"],
@@ -424,6 +431,7 @@ def taxonomy_coverage(
 # ============================================================================
 # GET /costs
 # ============================================================================
+
 
 @router.get("/costs", response_model=CostAnalyticsResponse)
 @limiter.limit("500/hour")
@@ -458,7 +466,7 @@ def cost_analytics(
         total_jobs=result["total_jobs"],
         avg_cost_per_job=result["avg_cost_per_job"],
         cost_by_entity=[
-            {
+            {  # type: ignore[misc]
                 "entity_id": e["entity_id"],
                 "entity_name": e["entity_name"],
                 "total_cost": e["total_cost"],
@@ -467,7 +475,7 @@ def cost_analytics(
             for e in result["cost_by_entity"]
         ],
         cost_trend_daily=[
-            {"date": d["date"], "cost": d["cost"], "job_count": d["job_count"]}
+            {"date": d["date"], "cost": d["cost"], "job_count": d["job_count"]}  # type: ignore[misc]
             for d in result["cost_trend_daily"]
         ],
     )
@@ -476,6 +484,7 @@ def cost_analytics(
 # ============================================================================
 # GET /facts — Query Decomposed Extraction Facts
 # ============================================================================
+
 
 @router.get("/facts", response_model=FactsListResponse)
 @limiter.limit("500/hour")

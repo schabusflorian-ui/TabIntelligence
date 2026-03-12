@@ -11,10 +11,11 @@ Catches extraction errors like:
 All checks are lifecycle-aware: phase transitions (construction→operations)
 are expected to produce large changes and are not flagged.
 """
+
+import statistics
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Dict, List, Optional, Set, Tuple
-import statistics
 
 from src.validation.utils import sort_periods
 
@@ -22,10 +23,11 @@ from src.validation.utils import sort_periods
 @dataclass
 class TimeSeriesFlag:
     """A single time-series anomaly flag."""
-    check_type: str          # "yoy_change", "sign_flip", "outlier", "gap", "monotonicity"
+
+    check_type: str  # "yoy_change", "sign_flip", "outlier", "gap", "monotonicity"
     canonical_name: str
     period: str
-    severity: str            # "error", "warning", "info"
+    severity: str  # "error", "warning", "info"
     message: str
     details: Optional[Dict] = None
 
@@ -33,6 +35,7 @@ class TimeSeriesFlag:
 @dataclass
 class TimeSeriesSummary:
     """Summary of all time-series validation results."""
+
     total_checks: int
     flags: List[TimeSeriesFlag]
     items_checked: int
@@ -55,17 +58,20 @@ class TimeSeriesSummary:
 @dataclass
 class TimeSeriesConfig:
     """Configuration for time-series thresholds."""
-    yoy_max_growth: float = 2.0         # 200% growth threshold
-    yoy_max_decline: float = -0.8       # 80% decline threshold
-    outlier_sigma: float = 3.0          # standard deviations for outlier detection
-    min_periods_for_outlier: int = 4    # need at least 4 periods for sigma calc
-    min_periods_for_yoy: int = 2        # need at least 2 consecutive periods
-    lifecycle_aware: bool = True        # suppress flags at construction/ops transitions
-    cumulative_items: Set[str] = field(default_factory=lambda: {
-        "accumulated_depreciation",
-        "retained_earnings",
-        "debt_closing_balance",
-    })
+
+    yoy_max_growth: float = 2.0  # 200% growth threshold
+    yoy_max_decline: float = -0.8  # 80% decline threshold
+    outlier_sigma: float = 3.0  # standard deviations for outlier detection
+    min_periods_for_outlier: int = 4  # need at least 4 periods for sigma calc
+    min_periods_for_yoy: int = 2  # need at least 2 consecutive periods
+    lifecycle_aware: bool = True  # suppress flags at construction/ops transitions
+    cumulative_items: Set[str] = field(
+        default_factory=lambda: {
+            "accumulated_depreciation",
+            "retained_earnings",
+            "debt_closing_balance",
+        }
+    )
 
 
 # Per-category threshold overrides
@@ -108,12 +114,17 @@ class TimeSeriesValidator:
         """
         if not multi_period_data:
             return TimeSeriesSummary(
-                total_checks=0, flags=[], items_checked=0,
-                periods_analyzed=0, consistency_score=1.0,
+                total_checks=0,
+                flags=[],
+                items_checked=0,
+                periods_analyzed=0,
+                consistency_score=1.0,
             )
 
         sorted_periods = sort_periods(list(multi_period_data.keys()))
-        phases = self._detect_lifecycle_phases(multi_period_data) if self.config.lifecycle_aware else {}
+        phases = (
+            self._detect_lifecycle_phases(multi_period_data) if self.config.lifecycle_aware else {}
+        )
 
         # Collect all canonical names across all periods
         all_items: Set[str] = set()
@@ -138,28 +149,38 @@ class TimeSeriesValidator:
 
             # YoY change checks
             yoy_flags, yoy_checks = self._check_yoy_changes(
-                canonical_name, item_periods, values_by_period, phases,
+                canonical_name,
+                item_periods,
+                values_by_period,
+                phases,
             )
             all_flags.extend(yoy_flags)
             total_checks += yoy_checks
 
             # Sign flip checks
             flip_flags, flip_checks = self._check_sign_flips(
-                canonical_name, item_periods, values_by_period, phases,
+                canonical_name,
+                item_periods,
+                values_by_period,
+                phases,
             )
             all_flags.extend(flip_flags)
             total_checks += flip_checks
 
             # Outlier checks
             outlier_flags, outlier_checks = self._check_outliers(
-                canonical_name, item_periods, values_by_period,
+                canonical_name,
+                item_periods,
+                values_by_period,
             )
             all_flags.extend(outlier_flags)
             total_checks += outlier_checks
 
             # Gap checks
             gap_flags, gap_checks = self._check_gaps(
-                sorted_periods, values_by_period, canonical_name,
+                sorted_periods,
+                values_by_period,
+                canonical_name,
             )
             all_flags.extend(gap_flags)
             total_checks += gap_checks
@@ -167,7 +188,9 @@ class TimeSeriesValidator:
             # Monotonicity checks
             if canonical_name in self.config.cumulative_items:
                 mono_flags, mono_checks = self._check_monotonicity(
-                    canonical_name, item_periods, values_by_period,
+                    canonical_name,
+                    item_periods,
+                    values_by_period,
                 )
                 all_flags.extend(mono_flags)
                 total_checks += mono_checks
@@ -200,7 +223,10 @@ class TimeSeriesValidator:
         return result.phases
 
     def _is_transition_period(
-        self, period: str, prev_period: str, phases: Dict[str, str],
+        self,
+        period: str,
+        prev_period: str,
+        phases: Dict[str, str],
     ) -> bool:
         """Check if period crosses a lifecycle phase boundary."""
         if not phases:
@@ -261,31 +287,39 @@ class TimeSeriesValidator:
                 continue
 
             if pct_change > thresholds["yoy_max_growth"]:
-                flags.append(TimeSeriesFlag(
-                    check_type="yoy_change",
-                    canonical_name=canonical_name,
-                    period=curr_p,
-                    severity="warning",
-                    message=(
-                        f"{canonical_name} grew {pct_change:.0%} from {prev_p} to {curr_p} "
-                        f"(threshold: {thresholds['yoy_max_growth']:.0%})"
-                    ),
-                    details={"pct_change": round(pct_change, 4),
-                             "threshold": thresholds["yoy_max_growth"]},
-                ))
+                flags.append(
+                    TimeSeriesFlag(
+                        check_type="yoy_change",
+                        canonical_name=canonical_name,
+                        period=curr_p,
+                        severity="warning",
+                        message=(
+                            f"{canonical_name} grew {pct_change:.0%} from {prev_p} to {curr_p} "
+                            f"(threshold: {thresholds['yoy_max_growth']:.0%})"
+                        ),
+                        details={
+                            "pct_change": round(pct_change, 4),
+                            "threshold": thresholds["yoy_max_growth"],
+                        },
+                    )
+                )
             elif pct_change < thresholds["yoy_max_decline"]:
-                flags.append(TimeSeriesFlag(
-                    check_type="yoy_change",
-                    canonical_name=canonical_name,
-                    period=curr_p,
-                    severity="warning",
-                    message=(
-                        f"{canonical_name} declined {pct_change:.0%} from {prev_p} to {curr_p} "
-                        f"(threshold: {thresholds['yoy_max_decline']:.0%})"
-                    ),
-                    details={"pct_change": round(pct_change, 4),
-                             "threshold": thresholds["yoy_max_decline"]},
-                ))
+                flags.append(
+                    TimeSeriesFlag(
+                        check_type="yoy_change",
+                        canonical_name=canonical_name,
+                        period=curr_p,
+                        severity="warning",
+                        message=(
+                            f"{canonical_name} declined {pct_change:.0%} from {prev_p} to {curr_p} "
+                            f"(threshold: {thresholds['yoy_max_decline']:.0%})"
+                        ),
+                        details={
+                            "pct_change": round(pct_change, 4),
+                            "threshold": thresholds["yoy_max_decline"],
+                        },
+                    )
+                )
 
         return flags, checks
 
@@ -320,19 +354,21 @@ class TimeSeriesValidator:
             curr_sign = curr_val > 0
 
             if prev_sign != curr_sign:
-                flags.append(TimeSeriesFlag(
-                    check_type="sign_flip",
-                    canonical_name=canonical_name,
-                    period=curr_p,
-                    severity="error",
-                    message=(
-                        f"{canonical_name} flipped sign from "
-                        f"{'positive' if prev_sign else 'negative'} to "
-                        f"{'positive' if curr_sign else 'negative'} "
-                        f"between {prev_p} and {curr_p}"
-                    ),
-                    details={"prev_value": prev_val, "curr_value": curr_val},
-                ))
+                flags.append(
+                    TimeSeriesFlag(
+                        check_type="sign_flip",
+                        canonical_name=canonical_name,
+                        period=curr_p,
+                        severity="error",
+                        message=(
+                            f"{canonical_name} flipped sign from "
+                            f"{'positive' if prev_sign else 'negative'} to "
+                            f"{'positive' if curr_sign else 'negative'} "
+                            f"between {prev_p} and {curr_p}"
+                        ),
+                        details={"prev_value": prev_val, "curr_value": curr_val},
+                    )
+                )
 
         return flags, checks
 
@@ -360,18 +396,24 @@ class TimeSeriesValidator:
         for i, period in enumerate(sorted_periods):
             z_score = abs(float_values[i] - mean) / stdev
             if z_score > self.config.outlier_sigma:
-                flags.append(TimeSeriesFlag(
-                    check_type="outlier",
-                    canonical_name=canonical_name,
-                    period=period,
-                    severity="warning",
-                    message=(
-                        f"{canonical_name} in period {period} is {z_score:.1f}σ "
-                        f"from mean (threshold: {self.config.outlier_sigma}σ)"
-                    ),
-                    details={"z_score": round(z_score, 2), "mean": round(mean, 2),
-                             "stdev": round(stdev, 2), "value": float_values[i]},
-                ))
+                flags.append(
+                    TimeSeriesFlag(
+                        check_type="outlier",
+                        canonical_name=canonical_name,
+                        period=period,
+                        severity="warning",
+                        message=(
+                            f"{canonical_name} in period {period} is {z_score:.1f}σ "
+                            f"from mean (threshold: {self.config.outlier_sigma}σ)"
+                        ),
+                        details={
+                            "z_score": round(z_score, 2),
+                            "mean": round(mean, 2),
+                            "stdev": round(stdev, 2),
+                            "value": float_values[i],
+                        },
+                    )
+                )
 
         return flags, checks
 
@@ -394,18 +436,20 @@ class TimeSeriesValidator:
 
         first_idx = all_sorted_periods.index(present[0])
         last_idx = all_sorted_periods.index(present[-1])
-        span = all_sorted_periods[first_idx:last_idx + 1]
+        span = all_sorted_periods[first_idx : last_idx + 1]
 
         checks = len(span)
         for period in span:
             if period not in values_by_period:
-                flags.append(TimeSeriesFlag(
-                    check_type="gap",
-                    canonical_name=canonical_name,
-                    period=period,
-                    severity="info",
-                    message=f"{canonical_name} missing in period {period} (gap in series)",
-                ))
+                flags.append(
+                    TimeSeriesFlag(
+                        check_type="gap",
+                        canonical_name=canonical_name,
+                        period=period,
+                        severity="info",
+                        message=f"{canonical_name} missing in period {period} (gap in series)",
+                    )
+                )
 
         return flags, checks
 
@@ -425,17 +469,19 @@ class TimeSeriesValidator:
             checks += 1
 
             if values_by_period[curr_p] < values_by_period[prev_p]:
-                flags.append(TimeSeriesFlag(
-                    check_type="monotonicity",
-                    canonical_name=canonical_name,
-                    period=curr_p,
-                    severity="warning",
-                    message=(
-                        f"{canonical_name} decreased from {values_by_period[prev_p]} "
-                        f"to {values_by_period[curr_p]} between {prev_p} and {curr_p} "
-                        f"(expected non-decreasing)"
-                    ),
-                ))
+                flags.append(
+                    TimeSeriesFlag(
+                        check_type="monotonicity",
+                        canonical_name=canonical_name,
+                        period=curr_p,
+                        severity="warning",
+                        message=(
+                            f"{canonical_name} decreased from {values_by_period[prev_p]} "
+                            f"to {values_by_period[curr_p]} between {prev_p} and {curr_p} "
+                            f"(expected non-decreasing)"
+                        ),
+                    )
+                )
 
         return flags, checks
 
@@ -445,7 +491,8 @@ class TimeSeriesValidator:
 
     @staticmethod
     def _compute_consistency_score(
-        flags: List[TimeSeriesFlag], total_checks: int,
+        flags: List[TimeSeriesFlag],
+        total_checks: int,
     ) -> float:
         """Compute consistency score from flags.
 
@@ -456,8 +503,6 @@ class TimeSeriesValidator:
             return 1.0
 
         severity_weights = {"error": 2.0, "warning": 1.0, "info": 0.5}
-        weighted_count = sum(
-            severity_weights.get(f.severity, 1.0) for f in flags
-        )
+        weighted_count = sum(severity_weights.get(f.severity, 1.0) for f in flags)
         score = 1.0 - (weighted_count / total_checks)
         return max(0.0, min(1.0, score))

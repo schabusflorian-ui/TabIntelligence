@@ -1,8 +1,6 @@
 """Tests for the admin review workflow (approve/reject NEEDS_REVIEW jobs)."""
-import pytest
-from uuid import uuid4
 
-from src.db.models import JobStatusEnum
+from uuid import uuid4
 
 
 class TestReviewEndpoint:
@@ -14,7 +12,9 @@ class TestReviewEndpoint:
 
         session = test_db()
         file = crud.create_file(
-            session, filename="review_test.xlsx", file_size=1024,
+            session,
+            filename="review_test.xlsx",
+            file_size=1024,
             s3_key="uploads/review_test.xlsx",
         )
         job = crud.create_extraction_job(session, file_id=file.file_id)
@@ -26,8 +26,12 @@ class TestReviewEndpoint:
             },
         }
         crud.complete_job(
-            session, job.job_id, result=result,
-            tokens_used=500, cost_usd=0.01, quality_grade="F",
+            session,
+            job.job_id,
+            result=result,
+            tokens_used=500,
+            cost_usd=0.01,
+            quality_grade="F",
         )
         session.close()
         return str(job.job_id)
@@ -63,7 +67,9 @@ class TestReviewEndpoint:
 
         session = test_db()
         file = crud.create_file(
-            session, filename="ok.xlsx", file_size=1024,
+            session,
+            filename="ok.xlsx",
+            file_size=1024,
             s3_key="uploads/ok.xlsx",
         )
         job = crud.create_extraction_job(session, file_id=file.file_id)
@@ -75,8 +81,12 @@ class TestReviewEndpoint:
             },
         }
         crud.complete_job(
-            session, job.job_id, result=result,
-            tokens_used=100, cost_usd=0.005, quality_grade="A",
+            session,
+            job.job_id,
+            result=result,
+            tokens_used=100,
+            cost_usd=0.005,
+            quality_grade="A",
         )
         session.close()
 
@@ -110,7 +120,9 @@ class TestReviewEndpoint:
 
         session = test_db()
         file = crud.create_file(
-            session, filename="export_test.xlsx", file_size=1024,
+            session,
+            filename="export_test.xlsx",
+            file_size=1024,
             s3_key="uploads/export_test.xlsx",
         )
         job = crud.create_extraction_job(session, file_id=file.file_id)
@@ -124,8 +136,12 @@ class TestReviewEndpoint:
             },
         }
         crud.complete_job(
-            session, job.job_id, result=result,
-            tokens_used=100, cost_usd=0.005, quality_grade="F",
+            session,
+            job.job_id,
+            result=result,
+            tokens_used=100,
+            cost_usd=0.005,
+            quality_grade="F",
         )
         session.close()
 
@@ -140,15 +156,15 @@ class TestReviewEndpoint:
 class TestExportEnhancements:
     """Test E4 (model_type) and E5 (validation_delta) in export response."""
 
-    def test_export_includes_model_type_and_validation_delta(
-        self, test_client_with_db, test_db
-    ):
+    def test_export_includes_model_type_and_validation_delta(self, test_client_with_db, test_db):
         """Export JSON should include model_type and validation_delta."""
         from src.db import crud
 
         session = test_db()
         file = crud.create_file(
-            session, filename="enhanced.xlsx", file_size=1024,
+            session,
+            filename="enhanced.xlsx",
+            file_size=1024,
             s3_key="uploads/enhanced.xlsx",
         )
         job = crud.create_extraction_job(session, file_id=file.file_id)
@@ -169,8 +185,12 @@ class TestExportEnhancements:
             },
         }
         crud.complete_job(
-            session, job.job_id, result=result,
-            tokens_used=200, cost_usd=0.01, quality_grade="B",
+            session,
+            job.job_id,
+            result=result,
+            tokens_used=200,
+            cost_usd=0.01,
+            quality_grade="B",
         )
         session.close()
 
@@ -183,15 +203,15 @@ class TestExportEnhancements:
         assert data["validation_delta"]["delta"] == 0.05
         assert data["quality"]["letter_grade"] == "B"
 
-    def test_export_model_type_null_when_absent(
-        self, test_client_with_db, test_db
-    ):
+    def test_export_model_type_null_when_absent(self, test_client_with_db, test_db):
         """Export JSON model_type should be null when not in result."""
         from src.db import crud
 
         session = test_db()
         file = crud.create_file(
-            session, filename="plain.xlsx", file_size=1024,
+            session,
+            filename="plain.xlsx",
+            file_size=1024,
             s3_key="uploads/plain.xlsx",
         )
         job = crud.create_extraction_job(session, file_id=file.file_id)
@@ -205,8 +225,12 @@ class TestExportEnhancements:
             },
         }
         crud.complete_job(
-            session, job.job_id, result=result,
-            tokens_used=100, cost_usd=0.005, quality_grade="C",
+            session,
+            job.job_id,
+            result=result,
+            tokens_used=100,
+            cost_usd=0.005,
+            quality_grade="C",
         )
         session.close()
 

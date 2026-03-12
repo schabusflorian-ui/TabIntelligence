@@ -1,8 +1,9 @@
 """Stage registry for managing extraction pipeline stages."""
+
 from typing import Dict, List, Optional
 
-from src.extraction.base import ExtractionStage
 from src.core.logging import get_logger
+from src.extraction.base import ExtractionStage
 
 logger = get_logger(__name__)
 
@@ -23,15 +24,10 @@ class StageRegistry:
     def get(self, name: str) -> ExtractionStage:
         """Get a stage by name."""
         if name not in self._stages:
-            raise KeyError(
-                f"Stage '{name}' not registered. "
-                f"Available: {list(self._stages.keys())}"
-            )
+            raise KeyError(f"Stage '{name}' not registered. Available: {list(self._stages.keys())}")
         return self._stages[name]
 
-    def get_pipeline(
-        self, stage_names: Optional[List[str]] = None
-    ) -> List[ExtractionStage]:
+    def get_pipeline(self, stage_names: Optional[List[str]] = None) -> List[ExtractionStage]:
         """
         Get ordered list of stages for pipeline execution.
 

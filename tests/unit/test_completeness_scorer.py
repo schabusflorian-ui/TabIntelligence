@@ -1,9 +1,9 @@
 """Unit tests for completeness scorer."""
-from src.validation.completeness_scorer import (
-    CompletenessScorer,
-    STATEMENT_TEMPLATES,
-)
 
+from src.validation.completeness_scorer import (
+    STATEMENT_TEMPLATES,
+    CompletenessScorer,
+)
 
 # ============================================================================
 # STATEMENT DETECTION
@@ -305,8 +305,16 @@ class TestModelTypeDetection:
 
     def test_construction_with_is_items_not_construction_only(self):
         """If IS items are present alongside construction, should NOT be construction_only."""
-        names = {"total_investment", "development_costs", "equity_contribution",
-                 "revenue", "net_income", "cfads", "dscr", "debt_service"}
+        names = {
+            "total_investment",
+            "development_costs",
+            "equity_contribution",
+            "revenue",
+            "net_income",
+            "cfads",
+            "dscr",
+            "debt_service",
+        }
         result = self.scorer.detect_model_type(names)
         assert result != "construction_only"
 
@@ -367,8 +375,14 @@ class TestConstructionExclusion:
 
     def test_construction_still_detects_other_templates(self):
         """Other templates should still work for construction_only."""
-        names = {"total_investment", "development_costs", "equity_contribution",
-                 "construction_cost", "dscr", "llcr"}
+        names = {
+            "total_investment",
+            "development_costs",
+            "equity_contribution",
+            "construction_cost",
+            "dscr",
+            "llcr",
+        }
         result = self.scorer.score(names, model_type="construction_only")
         assert "construction_budget" in result.detected_statements
 
@@ -470,16 +484,17 @@ class TestSaaSMetricsTemplate:
         items = STATEMENT_TEMPLATES["saas_metrics"]["items"]
         core_weights = [w for w, c in items.values() if c]
         optional_weights = [w for w, c in items.values() if not c]
-        assert min(core_weights) > max(optional_weights), \
+        assert min(core_weights) > max(optional_weights), (
             "All core item weights must exceed all optional item weights"
+        )
 
     def test_saas_indicators_subset_of_template_items(self):
         """_SAAS_INDICATORS should be a subset of saas_metrics template items."""
         from src.validation.completeness_scorer import _SAAS_INDICATORS
+
         template_items = set(STATEMENT_TEMPLATES["saas_metrics"]["items"].keys())
         missing = _SAAS_INDICATORS - template_items
-        assert not missing, \
-            f"_SAAS_INDICATORS has items not in saas_metrics template: {missing}"
+        assert not missing, f"_SAAS_INDICATORS has items not in saas_metrics template: {missing}"
 
     def test_saas_detection_with_nrr_triggers_model_type(self):
         """arr + net_revenue_retention should trigger both model_type and template."""
@@ -526,8 +541,13 @@ class TestTemplateOverlapDedup:
         """Items in both PF and covenant templates should be counted once."""
         # dscr, llcr, plcr appear in both project_finance and covenant_compliance
         names = {
-            "cfads", "dscr", "debt_service", "cfae",  # PF detection
-            "llcr", "plcr", "debt_covenants",          # covenant detection
+            "cfads",
+            "dscr",
+            "debt_service",
+            "cfae",  # PF detection
+            "llcr",
+            "plcr",
+            "debt_covenants",  # covenant detection
         }
         result = self.scorer.score(names)
         assert "project_finance" in result.detected_statements
@@ -543,13 +563,17 @@ class TestTemplateOverlapDedup:
     def test_overlapping_templates_missing_not_duplicated(self):
         """Missing items should not have duplicates across templates."""
         names = {
-            "cfads", "dscr", "debt_service",  # PF detection (min 2)
-            "llcr", "plcr",                    # covenant detection (min 2)
+            "cfads",
+            "dscr",
+            "debt_service",  # PF detection (min 2)
+            "llcr",
+            "plcr",  # covenant detection (min 2)
         }
         result = self.scorer.score(names)
         missing_names = [m.canonical_name for m in result.missing_items]
-        assert len(missing_names) == len(set(missing_names)), \
+        assert len(missing_names) == len(set(missing_names)), (
             f"Duplicate missing items: {missing_names}"
+        )
 
 
 # ============================================================================
@@ -578,8 +602,12 @@ class TestDetectModelTypeWithHint:
         """Construction indicators + PF hint should still return construction_only."""
         # Construction indicators + PF indicators but no IS items
         names = {
-            "total_investment", "development_costs", "equity_contribution",
-            "cfads", "dscr", "debt_service",
+            "total_investment",
+            "development_costs",
+            "equity_contribution",
+            "cfads",
+            "dscr",
+            "debt_service",
         }
         result = self.scorer.detect_model_type(names, is_project_finance=True)
         assert result == "construction_only"

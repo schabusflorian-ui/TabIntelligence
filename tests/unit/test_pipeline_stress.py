@@ -10,21 +10,20 @@ Tests scalability across:
   - Messy metadata (deep headers, shifted labels, units)
   - Edge case structures that push heuristics to their limits
 """
+
 import io
 import time
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import openpyxl
 import pytest
-from openpyxl.styles import Font, PatternFill, Border, Side
-from openpyxl.utils import get_column_letter
+from openpyxl.styles import Border, Font, PatternFill, Side
 
 from src.extraction.section_detector import SectionDetector, _guess_category
 from src.extraction.stages.mapping import MappingStage
 from src.extraction.stages.parsing import ParsingStage
 from src.extraction.stages.triage import TriageStage
-
 
 # ---------------------------------------------------------------------------
 # Excel builder helpers
@@ -58,10 +57,17 @@ def _add_is_sheet(
         ws.cell(row=header_row, column=lc + 2 + i, value=p).font = Font(bold=True)
 
     is_labels = [
-        "Revenue", "Cost of Goods Sold", "Gross Profit",
-        "SG&A", "R&D", "Depreciation & Amortization",
-        "Operating Income", "Interest Expense",
-        "Income Before Tax", "Tax Provision", "Net Income",
+        "Revenue",
+        "Cost of Goods Sold",
+        "Gross Profit",
+        "SG&A",
+        "R&D",
+        "Depreciation & Amortization",
+        "Operating Income",
+        "Interest Expense",
+        "Income Before Tax",
+        "Tax Provision",
+        "Net Income",
     ]
     for i, label in enumerate(is_labels[:num_rows]):
         row = start_row + i + (1 if header_row == start_row else 0)
@@ -90,12 +96,22 @@ def _add_bs_sheet(
         ws.cell(row=1, column=lc + 2 + i, value=p).font = Font(bold=True)
 
     bs_labels = [
-        "Cash & Equivalents", "Accounts Receivable", "Inventory",
-        "Total Current Assets", "PP&E", "Goodwill",
-        "Total Assets", "Accounts Payable", "Short-term Debt",
-        "Total Current Liabilities", "Long-term Debt",
-        "Total Liabilities", "Common Equity", "Retained Earnings",
-        "Total Equity", "Total Liabilities & Equity",
+        "Cash & Equivalents",
+        "Accounts Receivable",
+        "Inventory",
+        "Total Current Assets",
+        "PP&E",
+        "Goodwill",
+        "Total Assets",
+        "Accounts Payable",
+        "Short-term Debt",
+        "Total Current Liabilities",
+        "Long-term Debt",
+        "Total Liabilities",
+        "Common Equity",
+        "Retained Earnings",
+        "Total Equity",
+        "Total Liabilities & Equity",
     ]
     for i, label in enumerate(bs_labels):
         row = 2 + i
@@ -219,6 +235,7 @@ def _run_deterministic_pipeline(file_bytes: bytes) -> Dict[str, Any]:
 def _get_first_label(row: dict, label_column: str) -> str:
     """Extract label from the label column of a row."""
     import re
+
     for cell in row.get("cells", []):
         ref = cell.get("ref", "")
         m = re.match(r"([A-Z]+)", ref)
@@ -250,33 +267,26 @@ class TestStandardWorkbook:
 
     def test_is_metadata(self, result):
         is_sheet = next(
-            s for s in result["structured"]["sheets"]
-            if s["sheet_name"] == "Income Statement"
+            s for s in result["structured"]["sheets"] if s["sheet_name"] == "Income Statement"
         )
         assert is_sheet["label_column"] == "A"
         assert is_sheet["header_row_index"] is not None
 
     def test_bs_metadata(self, result):
         bs_sheet = next(
-            s for s in result["structured"]["sheets"]
-            if s["sheet_name"] == "Balance Sheet"
+            s for s in result["structured"]["sheets"] if s["sheet_name"] == "Balance Sheet"
         )
         assert bs_sheet["label_column"] == "A"
 
     def test_notes_few_formulas(self, result):
-        notes_summary = next(
-            s for s in result["summaries"]
-            if s["name"] == "Notes"
-        )
+        notes_summary = next(s for s in result["summaries"] if s["name"] == "Notes")
         assert notes_summary.get("formula_count", 0) == 0
 
     def test_no_sections_on_single_sheets(self, result):
         """Single-purpose sheets should have exactly 1 section."""
         for name in ["Income Statement", "Balance Sheet"]:
             sections = result["sections_by_sheet"][name]
-            assert len(sections) == 1, (
-                f"{name} should have 1 section, got {len(sections)}"
-            )
+            assert len(sections) == 1, f"{name} should have 1 section, got {len(sections)}"
 
     def test_markdown_not_empty(self, result):
         assert len(result["markdown"]) > 100
@@ -298,8 +308,7 @@ class TestMultiSectionSheet:
     def test_two_sections_detected(self, result):
         sections = result["sections_by_sheet"]["Combined FS"]
         assert len(sections) >= 2, (
-            f"Expected 2+ sections, got {len(sections)}: "
-            f"{[s.label for s in sections]}"
+            f"Expected 2+ sections, got {len(sections)}: {[s.label for s in sections]}"
         )
 
     def test_first_section_is_pl(self, result):
@@ -371,8 +380,19 @@ class TestLabelColumnB:
         # Row numbers in col A, labels in col B, values in C-D
         for i, p in enumerate(periods):
             ws.cell(row=1, column=3 + i, value=p).font = Font(bold=True)
-        labels = ["Revenue", "COGS", "Gross Profit", "SG&A", "EBITDA",
-                  "D&A", "EBIT", "Interest", "EBT", "Tax", "Net Income"]
+        labels = [
+            "Revenue",
+            "COGS",
+            "Gross Profit",
+            "SG&A",
+            "EBITDA",
+            "D&A",
+            "EBIT",
+            "Interest",
+            "EBT",
+            "Tax",
+            "Net Income",
+        ]
         for i, label in enumerate(labels):
             ws.cell(row=2 + i, column=1, value=i + 1)  # Row number
             ws.cell(row=2 + i, column=2, value=label)
@@ -382,9 +402,7 @@ class TestLabelColumnB:
 
     def test_label_column_detected(self, result):
         sheet = result["structured"]["sheets"][0]
-        assert sheet["label_column"] == "B", (
-            f"Expected label_column=B, got {sheet['label_column']}"
-        )
+        assert sheet["label_column"] == "B", f"Expected label_column=B, got {sheet['label_column']}"
 
     def test_labels_in_summary(self, result):
         summary = result["summaries"][0]
@@ -402,12 +420,18 @@ class TestDeepHeaders:
         ws = wb.create_sheet("IS Deep")
         # Rows 1-12: disclaimers
         disclaimers = [
-            "CONFIDENTIAL", "Draft - Not for Distribution",
-            "Prepared by: Finance Team", "Date: March 2024",
-            "Source: Internal Estimates", "Subject to change",
-            "Reviewed by: CFO", "Version 3.2",
-            "Preliminary results", "Management estimates",
-            "Unaudited figures", "For internal use only",
+            "CONFIDENTIAL",
+            "Draft - Not for Distribution",
+            "Prepared by: Finance Team",
+            "Date: March 2024",
+            "Source: Internal Estimates",
+            "Subject to change",
+            "Reviewed by: CFO",
+            "Version 3.2",
+            "Preliminary results",
+            "Management estimates",
+            "Unaudited figures",
+            "For internal use only",
         ]
         for i, d in enumerate(disclaimers):
             ws.cell(row=i + 1, column=1, value=d)
@@ -503,9 +527,7 @@ class TestColorBoundaries:
 
     def test_two_sections_detected(self, result):
         sections = result["sections_by_sheet"]["Model"]
-        assert len(sections) >= 2, (
-            f"Expected 2+ sections, got {[s.label for s in sections]}"
-        )
+        assert len(sections) >= 2, f"Expected 2+ sections, got {[s.label for s in sections]}"
 
     def test_section_categories(self, result):
         sections = result["sections_by_sheet"]["Model"]
@@ -632,22 +654,25 @@ class TestThreeSectionSheet:
         # Test row assignment using midpoints of each section
         sections = summary["sections"]
         sec_by_cat = {s["category_hint"]: s for s in sections}
-        is_mid = (sec_by_cat["income_statement"]["start_row"] +
-                  sec_by_cat["income_statement"]["end_row"]) // 2
-        bs_mid = (sec_by_cat["balance_sheet"]["start_row"] +
-                  sec_by_cat["balance_sheet"]["end_row"]) // 2
-        cf_mid = (sec_by_cat["cash_flow"]["start_row"] +
-                  sec_by_cat["cash_flow"]["end_row"]) // 2
+        is_mid = (
+            sec_by_cat["income_statement"]["start_row"] + sec_by_cat["income_statement"]["end_row"]
+        ) // 2
+        bs_mid = (
+            sec_by_cat["balance_sheet"]["start_row"] + sec_by_cat["balance_sheet"]["end_row"]
+        ) // 2
+        cf_mid = (sec_by_cat["cash_flow"]["start_row"] + sec_by_cat["cash_flow"]["end_row"]) // 2
 
         parsed = {
-            "sheets": [{
-                "sheet_name": "Combined",
-                "rows": [
-                    {"label": "Revenue", "row_index": is_mid},
-                    {"label": "Cash", "row_index": bs_mid},
-                    {"label": "CFO", "row_index": cf_mid},
-                ],
-            }],
+            "sheets": [
+                {
+                    "sheet_name": "Combined",
+                    "rows": [
+                        {"label": "Revenue", "row_index": is_mid},
+                        {"label": "Cash", "row_index": bs_mid},
+                        {"label": "CFO", "row_index": cf_mid},
+                    ],
+                }
+            ],
         }
         items = MappingStage._build_grouped_line_items(parsed, lookup)
         assert items[0].get("section_category") == "income_statement"
@@ -691,9 +716,7 @@ class TestBorderBasedBoundaries:
         boundaries = sheet.get("section_boundaries", [])
         # Should detect at least the border-based headers
         boundary_labels = [b["label"] for b in boundaries]
-        assert len(boundaries) >= 1, (
-            f"Expected border-based boundaries, got: {boundary_labels}"
-        )
+        assert len(boundaries) >= 1, f"Expected border-based boundaries, got: {boundary_labels}"
 
 
 class TestEmptyAndMinimalSheets:
@@ -731,10 +754,7 @@ class TestEmptyAndMinimalSheets:
         assert len(sections) <= 1  # 0 or 1
 
     def test_hidden_sheet_flagged(self, result):
-        hidden = next(
-            s for s in result["structured"]["sheets"]
-            if s["sheet_name"] == "Hidden IS"
-        )
+        hidden = next(s for s in result["structured"]["sheets"] if s["sheet_name"] == "Hidden IS")
         assert hidden["is_hidden"] is True
 
     def test_all_sheets_in_summaries(self, result):
@@ -746,37 +766,40 @@ class TestEmptyAndMinimalSheets:
 class TestCategoryKeywordRobustness:
     """Verify _guess_category does not produce false positives."""
 
-    @pytest.mark.parametrize("label,expected", [
-        # True positives
-        ("Income Statement", "income_statement"),
-        ("Profit & Loss", "income_statement"),
-        ("P/L", "income_statement"),
-        ("I/S", "income_statement"),
-        ("Balance Sheet", "balance_sheet"),
-        ("B/S", "balance_sheet"),
-        ("Statement of Financial Position", "balance_sheet"),
-        ("Cash Flow Statement", "cash_flow"),
-        ("Statement of Cash Flows", "cash_flow"),
-        ("C/F", "cash_flow"),
-        ("Debt Schedule", "debt_schedule"),
-        ("Loan Facility", "debt_schedule"),
-        # True negatives (line items, NOT section headers)
-        ("Net Income", None),
-        ("Gross Loss", None),
-        ("Total Assets", None),
-        ("Bad Debt Expense", None),
-        ("Total Debt", None),
-        ("Operating Income", None),
-        ("Cash and Cash Equivalents", None),
-        ("Revenue", None),
-        ("SG&A", None),
-        ("Depreciation & Amortization", None),
-        ("Interest Income", None),
-        ("Retained Earnings", None),
-        ("Accounts Receivable", None),
-        ("Goodwill", None),
-        ("", None),
-    ])
+    @pytest.mark.parametrize(
+        "label,expected",
+        [
+            # True positives
+            ("Income Statement", "income_statement"),
+            ("Profit & Loss", "income_statement"),
+            ("P/L", "income_statement"),
+            ("I/S", "income_statement"),
+            ("Balance Sheet", "balance_sheet"),
+            ("B/S", "balance_sheet"),
+            ("Statement of Financial Position", "balance_sheet"),
+            ("Cash Flow Statement", "cash_flow"),
+            ("Statement of Cash Flows", "cash_flow"),
+            ("C/F", "cash_flow"),
+            ("Debt Schedule", "debt_schedule"),
+            ("Loan Facility", "debt_schedule"),
+            # True negatives (line items, NOT section headers)
+            ("Net Income", None),
+            ("Gross Loss", None),
+            ("Total Assets", None),
+            ("Bad Debt Expense", None),
+            ("Total Debt", None),
+            ("Operating Income", None),
+            ("Cash and Cash Equivalents", None),
+            ("Revenue", None),
+            ("SG&A", None),
+            ("Depreciation & Amortization", None),
+            ("Interest Income", None),
+            ("Retained Earnings", None),
+            ("Accounts Receivable", None),
+            ("Goodwill", None),
+            ("", None),
+        ],
+    )
     def test_category_classification(self, label, expected):
         assert _guess_category(label) == expected, (
             f"_guess_category('{label}') should be {expected}"
@@ -802,10 +825,7 @@ class TestRealFixture:
         assert len(sections) >= 2
 
     def test_saas_model_label_column(self, result):
-        saas = next(
-            s for s in result["structured"]["sheets"]
-            if s["sheet_name"] == "SaaS Model"
-        )
+        saas = next(s for s in result["structured"]["sheets"] if s["sheet_name"] == "SaaS Model")
         assert saas["label_column"] == "B"
 
     def test_full_pipeline_under_2s(self):

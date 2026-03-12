@@ -4,25 +4,23 @@ Query helpers for common database patterns.
 Provides high-level database operations for frequently used queries,
 batch operations, and complex joins.
 """
+
 from decimal import Decimal
 from typing import List, Optional
 from uuid import UUID
 
-from sqlalchemy import select, update, insert, func, and_
+from sqlalchemy import and_, func, insert, select, update
 from sqlalchemy.orm import Session, joinedload
 
+from src.core.logging import database_logger as logger
 from src.db.models import (
+    AuditLog,
     Entity,
     EntityPattern,
     ExtractionJob,
-    File,
-    LineageEvent,
-    Taxonomy,
-    AuditLog,
     JobStatusEnum,
+    LineageEvent,
 )
-from src.core.logging import database_logger as logger
-
 
 # ============================================================================
 # ENTITY QUERIES
@@ -41,16 +39,12 @@ def get_entity_with_files(db: Session, entity_id: UUID) -> Optional[Entity]:
         Entity with files loaded, or None if not found
     """
     result = db.execute(
-        select(Entity)
-        .options(joinedload(Entity.entity_patterns))
-        .where(Entity.id == entity_id)
+        select(Entity).options(joinedload(Entity.entity_patterns)).where(Entity.id == entity_id)
     )
     return result.unique().scalar_one_or_none()
 
 
-def get_or_create_entity(
-    db: Session, name: str, industry: Optional[str] = None
-) -> Entity:
+def get_or_create_entity(db: Session, name: str, industry: Optional[str] = None) -> Entity:
     """
     Get existing entity by name or create new one.
 
@@ -101,9 +95,7 @@ def get_job_with_lineage(db: Session, job_id: UUID) -> Optional[ExtractionJob]:
     return result.unique().scalar_one_or_none()
 
 
-def get_jobs_by_status(
-    db: Session, status: JobStatusEnum, limit: int = 50
-) -> List[ExtractionJob]:
+def get_jobs_by_status(db: Session, status: JobStatusEnum, limit: int = 50) -> List[ExtractionJob]:
     """
     Get extraction jobs filtered by status.
 
@@ -136,9 +128,7 @@ def get_recent_jobs(db: Session, limit: int = 20) -> List[ExtractionJob]:
         List of recent ExtractionJob records
     """
     result = db.execute(
-        select(ExtractionJob)
-        .order_by(ExtractionJob.created_at.desc())
-        .limit(limit)
+        select(ExtractionJob).order_by(ExtractionJob.created_at.desc()).limit(limit)
     )
     return list(result.scalars().all())
 
@@ -160,9 +150,7 @@ def get_lineage_chain(db: Session, job_id: UUID) -> List[LineageEvent]:
         List of lineage events in chronological order
     """
     result = db.execute(
-        select(LineageEvent)
-        .where(LineageEvent.job_id == job_id)
-        .order_by(LineageEvent.timestamp)
+        select(LineageEvent).where(LineageEvent.job_id == job_id).order_by(LineageEvent.timestamp)
     )
     return list(result.scalars().all())
 
@@ -189,9 +177,7 @@ def validate_lineage_completeness(
 
     missing = set(required_stages) - present_stages
     if missing:
-        logger.warning(
-            f"Lineage incomplete for job {job_id}: missing stages {missing}"
-        )
+        logger.warning(f"Lineage incomplete for job {job_id}: missing stages {missing}")
         return False
 
     return True
@@ -265,9 +251,7 @@ def find_pattern_match(
 # ============================================================================
 
 
-def bulk_create_lineage_events(
-    db: Session, events: List[dict]
-) -> None:
+def bulk_create_lineage_events(db: Session, events: List[dict]) -> None:
     """
     Bulk insert lineage events for better performance.
 
@@ -377,8 +361,7 @@ def get_job_statistics(db: Session) -> dict:
     stats = {}
     for status in JobStatusEnum:
         result = db.execute(
-            select(func.count(ExtractionJob.job_id))
-            .where(ExtractionJob.status == status)
+            select(func.count(ExtractionJob.job_id)).where(ExtractionJob.status == status)
         )
         stats[status.value] = result.scalar() or 0
 

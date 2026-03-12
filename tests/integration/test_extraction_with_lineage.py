@@ -10,11 +10,13 @@ Tests that the orchestrator correctly:
 These tests use the mock_anthropic fixture to avoid real API calls
 and mock save_to_db to avoid needing PostgreSQL.
 """
-import pytest
+
 import uuid
 
-from src.extraction.orchestrator import extract
+import pytest
+
 from src.db.models import JobStatusEnum
+from src.extraction.orchestrator import extract
 
 
 @pytest.mark.asyncio
@@ -147,6 +149,7 @@ async def test_item_lineage_to_dict_roundtrip(mock_anthropic):
     assert "item_lineage" in result
     # Should be JSON-serializable (no custom objects)
     import json
+
     if result["item_lineage"]:
         json.dumps(result["item_lineage"])  # Should not raise
 
@@ -159,10 +162,9 @@ async def test_item_lineage_to_dict_roundtrip(mock_anthropic):
 def _create_completed_job(session, line_items, sheets=None):
     """Helper: create entity + file + completed job. Returns job_id as str."""
     from src.db import crud
+
     entity = crud.create_entity(session, name="Test Corp", industry="Finance")
-    file = crud.create_file(
-        session, filename="test.xlsx", file_size=1024, entity_id=entity.id
-    )
+    file = crud.create_file(session, filename="test.xlsx", file_size=1024, entity_id=entity.id)
     job = crud.create_extraction_job(session, file_id=file.file_id)
     job.status = JobStatusEnum.COMPLETED
     job.result = {
@@ -174,44 +176,54 @@ def _create_completed_job(session, line_items, sheets=None):
 
 
 class TestDiffEndpointIntegration:
-
     def test_diff_two_real_jobs(self, test_client_with_db, test_db):
         """Diff endpoint works with two real completed jobs in DB."""
         session = test_db()
         try:
             items_a = [
-                {"original_label": "Revenue", "canonical_name": "revenue",
-                 "values": {"FY2023": 1000}, "confidence": 0.9},
-                {"original_label": "COGS", "canonical_name": "cogs",
-                 "values": {"FY2023": 500}, "confidence": 0.85},
+                {
+                    "original_label": "Revenue",
+                    "canonical_name": "revenue",
+                    "values": {"FY2023": 1000},
+                    "confidence": 0.9,
+                },
+                {
+                    "original_label": "COGS",
+                    "canonical_name": "cogs",
+                    "values": {"FY2023": 500},
+                    "confidence": 0.85,
+                },
             ]
             items_b = [
-                {"original_label": "Revenue", "canonical_name": "revenue",
-                 "values": {"FY2023": 1200}, "confidence": 0.95},
-                {"original_label": "EBITDA", "canonical_name": "ebitda",
-                 "values": {"FY2023": 700}, "confidence": 0.88},
+                {
+                    "original_label": "Revenue",
+                    "canonical_name": "revenue",
+                    "values": {"FY2023": 1200},
+                    "confidence": 0.95,
+                },
+                {
+                    "original_label": "EBITDA",
+                    "canonical_name": "ebitda",
+                    "values": {"FY2023": 700},
+                    "confidence": 0.88,
+                },
             ]
             job_a = _create_completed_job(session, items_a)
             job_b = _create_completed_job(session, items_b)
         finally:
             session.close()
 
-        resp = test_client_with_db.get(
-            f"/api/v1/jobs/{job_a}/diff/{job_b}"
-        )
+        resp = test_client_with_db.get(f"/api/v1/jobs/{job_a}/diff/{job_b}")
         assert resp.status_code == 200
         data = resp.json()
 
-        assert data["summary"]["added"] == 1   # EBITDA
+        assert data["summary"]["added"] == 1  # EBITDA
         assert data["summary"]["removed"] == 1  # COGS
         assert data["summary"]["changed"] >= 1  # Revenue value changed
         assert len(data["value_changes"]) >= 1
 
         # Verify value change detail
-        rev_changes = [
-            vc for vc in data["value_changes"]
-            if vc["canonical_name"] == "revenue"
-        ]
+        rev_changes = [vc for vc in data["value_changes"] if vc["canonical_name"] == "revenue"]
         assert len(rev_changes) == 1
         assert rev_changes[0]["old_value"] == 1000
         assert rev_changes[0]["new_value"] == 1200
@@ -222,17 +234,19 @@ class TestDiffEndpointIntegration:
         session = test_db()
         try:
             items = [
-                {"original_label": "Revenue", "canonical_name": "revenue",
-                 "values": {"FY2023": 1000}, "confidence": 0.9},
+                {
+                    "original_label": "Revenue",
+                    "canonical_name": "revenue",
+                    "values": {"FY2023": 1000},
+                    "confidence": 0.9,
+                },
             ]
             job_a = _create_completed_job(session, items)
             job_b = _create_completed_job(session, items)
         finally:
             session.close()
 
-        resp = test_client_with_db.get(
-            f"/api/v1/jobs/{job_a}/diff/{job_b}"
-        )
+        resp = test_client_with_db.get(f"/api/v1/jobs/{job_a}/diff/{job_b}")
         assert resp.status_code == 200
         data = resp.json()
         assert data["summary"]["unchanged"] == 1
@@ -245,16 +259,32 @@ class TestDiffEndpointIntegration:
         session = test_db()
         try:
             items_a = [
-                {"original_label": "Revenue", "canonical_name": "revenue",
-                 "values": {"FY2023": 1000}, "confidence": 0.9},
-                {"original_label": "COGS", "canonical_name": "cogs",
-                 "values": {"FY2023": 500}, "confidence": 0.85},
+                {
+                    "original_label": "Revenue",
+                    "canonical_name": "revenue",
+                    "values": {"FY2023": 1000},
+                    "confidence": 0.9,
+                },
+                {
+                    "original_label": "COGS",
+                    "canonical_name": "cogs",
+                    "values": {"FY2023": 500},
+                    "confidence": 0.85,
+                },
             ]
             items_b = [
-                {"original_label": "Revenue", "canonical_name": "revenue",
-                 "values": {"FY2023": 1200}, "confidence": 0.9},
-                {"original_label": "COGS", "canonical_name": "cogs",
-                 "values": {"FY2023": 600}, "confidence": 0.85},
+                {
+                    "original_label": "Revenue",
+                    "canonical_name": "revenue",
+                    "values": {"FY2023": 1200},
+                    "confidence": 0.9,
+                },
+                {
+                    "original_label": "COGS",
+                    "canonical_name": "cogs",
+                    "values": {"FY2023": 600},
+                    "confidence": 0.85,
+                },
             ]
             job_a = _create_completed_job(session, items_a)
             job_b = _create_completed_job(session, items_b)
@@ -274,19 +304,17 @@ class TestDiffEndpointIntegration:
     def test_diff_job_not_found(self, test_client_with_db):
         """Returns 404 for nonexistent job."""
         fake_id = str(uuid.uuid4())
-        resp = test_client_with_db.get(
-            f"/api/v1/jobs/{fake_id}/diff/{fake_id}"
-        )
+        resp = test_client_with_db.get(f"/api/v1/jobs/{fake_id}/diff/{fake_id}")
         assert resp.status_code == 404
 
 
 class TestItemLineageEndpointIntegration:
-
     def test_item_lineage_from_real_job(self, test_client_with_db, test_db):
         """item-lineage endpoint works with real job result containing item_lineage."""
         session = test_db()
         try:
             from src.db import crud
+
             entity = crud.create_entity(session, name="Test Corp", industry="Finance")
             file = crud.create_file(
                 session, filename="test.xlsx", file_size=1024, entity_id=entity.id
@@ -295,17 +323,31 @@ class TestItemLineageEndpointIntegration:
             job.status = JobStatusEnum.COMPLETED
             job.result = {
                 "line_items": [
-                    {"original_label": "Revenue", "canonical_name": "revenue",
-                     "values": {"FY2023": 1000}, "confidence": 0.9},
+                    {
+                        "original_label": "Revenue",
+                        "canonical_name": "revenue",
+                        "values": {"FY2023": 1000},
+                        "confidence": 0.9,
+                    },
                 ],
                 "item_lineage": {
                     "revenue": [
-                        {"stage": "parsing", "action": "parsed",
-                         "original_label": "Revenue", "timestamp": "2026-01-01T00:00:00",
-                         "sheet": "Sheet1", "row": 2},
-                        {"stage": "mapping", "action": "mapped",
-                         "original_label": "Revenue", "timestamp": "2026-01-01T00:00:01",
-                         "method": "claude", "confidence": 0.9},
+                        {
+                            "stage": "parsing",
+                            "action": "parsed",
+                            "original_label": "Revenue",
+                            "timestamp": "2026-01-01T00:00:00",
+                            "sheet": "Sheet1",
+                            "row": 2,
+                        },
+                        {
+                            "stage": "mapping",
+                            "action": "mapped",
+                            "original_label": "Revenue",
+                            "timestamp": "2026-01-01T00:00:01",
+                            "method": "claude",
+                            "confidence": 0.9,
+                        },
                     ],
                 },
             }
@@ -314,9 +356,7 @@ class TestItemLineageEndpointIntegration:
         finally:
             session.close()
 
-        resp = test_client_with_db.get(
-            f"/api/v1/jobs/{job_id}/item-lineage/revenue"
-        )
+        resp = test_client_with_db.get(f"/api/v1/jobs/{job_id}/item-lineage/revenue")
         assert resp.status_code == 200
         data = resp.json()
         assert data["canonical_name"] == "revenue"
@@ -329,6 +369,7 @@ class TestItemLineageEndpointIntegration:
         session = test_db()
         try:
             from src.db import crud
+
             entity = crud.create_entity(session, name="Test Corp", industry="Finance")
             file = crud.create_file(
                 session, filename="test.xlsx", file_size=1024, entity_id=entity.id
@@ -341,7 +382,5 @@ class TestItemLineageEndpointIntegration:
         finally:
             session.close()
 
-        resp = test_client_with_db.get(
-            f"/api/v1/jobs/{job_id}/item-lineage/nonexistent"
-        )
+        resp = test_client_with_db.get(f"/api/v1/jobs/{job_id}/item-lineage/nonexistent")
         assert resp.status_code == 404

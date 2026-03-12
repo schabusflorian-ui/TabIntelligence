@@ -10,18 +10,20 @@ Provides:
 These endpoints are used by Kubernetes and monitoring systems to
 determine service health and route traffic accordingly.
 """
+
 import time
 from datetime import datetime, timedelta
-from typing import Dict, Any, List
+from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, Response, status as http_status
+from fastapi import APIRouter, Depends, Response
+from fastapi import status as http_status
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
-from src.db.session import get_db_async, async_engine
-from src.db.resilience import db_circuit_breaker
 from src.auth.dependencies import get_current_api_key
 from src.core.logging import api_logger as logger
+from src.db.resilience import db_circuit_breaker
+from src.db.session import async_engine, get_db_async
 
 router = APIRouter(prefix="/health", tags=["health"])
 
@@ -29,6 +31,7 @@ router = APIRouter(prefix="/health", tags=["health"])
 # ============================================================================
 # Liveness Probe
 # ============================================================================
+
 
 @router.get("/liveness", status_code=200)
 async def liveness():
@@ -61,6 +64,7 @@ async def liveness():
 # ============================================================================
 # Readiness Probe
 # ============================================================================
+
 
 @router.get("/readiness")
 async def readiness():
@@ -126,6 +130,7 @@ async def readiness():
 # ============================================================================
 # Detailed Database Health
 # ============================================================================
+
 
 @router.get("/database")
 async def database_health(_api_key=Depends(get_current_api_key)) -> Dict[str, Any]:
@@ -249,7 +254,7 @@ async def database_health(_api_key=Depends(get_current_api_key)) -> Dict[str, An
             "query_time_ms": round(query_time, 2),
             "pool": pool_info,
             "circuit_breaker": circuit_info,
-            "postgresql_version": pg_version.split(',')[0] if pg_version else "unknown",
+            "postgresql_version": pg_version.split(",")[0] if pg_version else "unknown",
             "timestamp": datetime.utcnow().isoformat(),
         }
 
@@ -276,6 +281,7 @@ async def database_health(_api_key=Depends(get_current_api_key)) -> Dict[str, An
 # ============================================================================
 # Circuit Breaker Status
 # ============================================================================
+
 
 @router.get("/circuit-breaker")
 async def circuit_breaker_status(_api_key=Depends(get_current_api_key)):
@@ -310,6 +316,7 @@ async def circuit_breaker_status(_api_key=Depends(get_current_api_key)):
 # ============================================================================
 # Metrics Endpoint (Prometheus-compatible)
 # ============================================================================
+
 
 @router.get("/db-metrics", include_in_schema=False)
 async def db_metrics(_api_key=Depends(get_current_api_key)):
@@ -347,6 +354,14 @@ async def db_metrics(_api_key=Depends(get_current_api_key)):
         # Get circuit breaker stats
         breaker_stats = db_circuit_breaker.get_stats()
 
+        breaker_state = (
+            0
+            if breaker_stats["state"] == "closed"
+            else 1
+            if breaker_stats["state"] == "half_open"
+            else 2
+        )
+
         # Format as Prometheus metrics
         metrics_output = f"""# HELP database_query_time_ms Database query time in milliseconds
 # TYPE database_query_time_ms gauge
@@ -366,19 +381,19 @@ database_pool_overflow {pool_overflow}
 
 # HELP database_circuit_breaker_state Circuit breaker state (0=closed, 1=half_open, 2=open)
 # TYPE database_circuit_breaker_state gauge
-database_circuit_breaker_state {0 if breaker_stats['state'] == 'closed' else 1 if breaker_stats['state'] == 'half_open' else 2}
+database_circuit_breaker_state {breaker_state}
 
 # HELP database_requests_total Total database requests
 # TYPE database_requests_total counter
-database_requests_total {breaker_stats['total_requests']}
+database_requests_total {breaker_stats["total_requests"]}
 
 # HELP database_requests_failed Failed database requests
 # TYPE database_requests_failed counter
-database_requests_failed {breaker_stats['failed_requests']}
+database_requests_failed {breaker_stats["failed_requests"]}
 
 # HELP database_requests_rejected Rejected database requests (circuit open)
 # TYPE database_requests_rejected counter
-database_requests_rejected {breaker_stats['rejected_requests']}
+database_requests_rejected {breaker_stats["rejected_requests"]}
 """
 
         return Response(content=metrics_output, media_type="text/plain")
@@ -388,13 +403,14 @@ database_requests_rejected {breaker_stats['rejected_requests']}
         return Response(
             content=f"# Error collecting metrics: {e}\n",
             media_type="text/plain",
-            status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE
+            status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
         )
 
 
 # ============================================================================
 # Stale Job Detection
 # ============================================================================
+
 
 @router.get("/stale-jobs")
 async def stale_jobs(_api_key=Depends(get_current_api_key)):
@@ -434,8 +450,8 @@ async def stale_jobs(_api_key=Depends(get_current_api_key)):
         }
     """
     try:
-        from src.db.session import get_db_context
         from src.db.models import ExtractionJob, JobStatusEnum
+        from src.db.session import get_db_context
 
         now = datetime.utcnow()
         pending_cutoff = now - timedelta(minutes=10)
@@ -467,8 +483,7 @@ async def stale_jobs(_api_key=Depends(get_current_api_key)):
         if pending_ids or processing_ids:
             status = "warning"
             logger.warning(
-                f"Stale jobs detected: {len(pending_ids)} pending, "
-                f"{len(processing_ids)} processing"
+                f"Stale jobs detected: {len(pending_ids)} pending, {len(processing_ids)} processing"
             )
 
         return {

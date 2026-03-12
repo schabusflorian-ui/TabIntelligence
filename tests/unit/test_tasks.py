@@ -3,9 +3,11 @@ Tests for Celery task execution flow.
 Tests async_extraction_wrapper directly (run_extraction_task is Celery-decorated
 and cannot be tested directly due to module-level Celery mock in conftest).
 """
-import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
+
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
+
+import pytest
 
 
 def _mock_s3_client(file_bytes=b"fake-bytes"):
@@ -39,11 +41,12 @@ class TestAsyncExtractionWrapper:
             "cost_usd": 0.003,
         }
 
-        with patch("src.jobs.tasks.get_db_context") as mock_db_ctx, \
-             patch("src.jobs.tasks.crud") as mock_crud, \
-             patch("src.extraction.orchestrator.extract", new_callable=AsyncMock) as mock_extract, \
-             patch("src.storage.s3.get_s3_client", return_value=_mock_s3_client()):
-
+        with (
+            patch("src.jobs.tasks.get_db_context") as mock_db_ctx,
+            patch("src.jobs.tasks.crud") as mock_crud,
+            patch("src.extraction.orchestrator.extract", new_callable=AsyncMock) as mock_extract,
+            patch("src.storage.s3.get_s3_client", return_value=_mock_s3_client()),
+        ):
             mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_db)
             mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
             mock_crud.get_job.return_value = mock_job
@@ -58,19 +61,20 @@ class TestAsyncExtractionWrapper:
     @pytest.mark.asyncio
     async def test_wrapper_handles_extraction_error(self):
         """Test wrapper raises ExtractionError on extraction failure."""
-        from src.jobs.tasks import async_extraction_wrapper
         from src.core.exceptions import ExtractionError
+        from src.jobs.tasks import async_extraction_wrapper
 
         job_id = str(uuid4())
         mock_db = MagicMock()
         mock_job = MagicMock()
         mock_job.file_id = uuid4()
 
-        with patch("src.jobs.tasks.get_db_context") as mock_db_ctx, \
-             patch("src.jobs.tasks.crud") as mock_crud, \
-             patch("src.extraction.orchestrator.extract", new_callable=AsyncMock) as mock_extract, \
-             patch("src.storage.s3.get_s3_client", return_value=_mock_s3_client()):
-
+        with (
+            patch("src.jobs.tasks.get_db_context") as mock_db_ctx,
+            patch("src.jobs.tasks.crud") as mock_crud,
+            patch("src.extraction.orchestrator.extract", new_callable=AsyncMock) as mock_extract,
+            patch("src.storage.s3.get_s3_client", return_value=_mock_s3_client()),
+        ):
             mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_db)
             mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
             mock_crud.get_job.return_value = mock_job
@@ -82,19 +86,20 @@ class TestAsyncExtractionWrapper:
     @pytest.mark.asyncio
     async def test_wrapper_handles_claude_api_error(self):
         """Test wrapper raises ClaudeAPIError."""
-        from src.jobs.tasks import async_extraction_wrapper
         from src.core.exceptions import ClaudeAPIError
+        from src.jobs.tasks import async_extraction_wrapper
 
         job_id = str(uuid4())
         mock_db = MagicMock()
         mock_job = MagicMock()
         mock_job.file_id = uuid4()
 
-        with patch("src.jobs.tasks.get_db_context") as mock_db_ctx, \
-             patch("src.jobs.tasks.crud") as mock_crud, \
-             patch("src.extraction.orchestrator.extract", new_callable=AsyncMock) as mock_extract, \
-             patch("src.storage.s3.get_s3_client", return_value=_mock_s3_client()):
-
+        with (
+            patch("src.jobs.tasks.get_db_context") as mock_db_ctx,
+            patch("src.jobs.tasks.crud") as mock_crud,
+            patch("src.extraction.orchestrator.extract", new_callable=AsyncMock) as mock_extract,
+            patch("src.storage.s3.get_s3_client", return_value=_mock_s3_client()),
+        ):
             mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_db)
             mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
             mock_crud.get_job.return_value = mock_job
@@ -106,19 +111,20 @@ class TestAsyncExtractionWrapper:
     @pytest.mark.asyncio
     async def test_wrapper_handles_lineage_incomplete_error(self):
         """Test wrapper raises LineageIncompleteError as critical."""
-        from src.jobs.tasks import async_extraction_wrapper
         from src.core.exceptions import LineageIncompleteError
+        from src.jobs.tasks import async_extraction_wrapper
 
         job_id = str(uuid4())
         mock_db = MagicMock()
         mock_job = MagicMock()
         mock_job.file_id = uuid4()
 
-        with patch("src.jobs.tasks.get_db_context") as mock_db_ctx, \
-             patch("src.jobs.tasks.crud") as mock_crud, \
-             patch("src.extraction.orchestrator.extract", new_callable=AsyncMock) as mock_extract, \
-             patch("src.storage.s3.get_s3_client", return_value=_mock_s3_client()):
-
+        with (
+            patch("src.jobs.tasks.get_db_context") as mock_db_ctx,
+            patch("src.jobs.tasks.crud") as mock_crud,
+            patch("src.extraction.orchestrator.extract", new_callable=AsyncMock) as mock_extract,
+            patch("src.storage.s3.get_s3_client", return_value=_mock_s3_client()),
+        ):
             mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_db)
             mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
             mock_crud.get_job.return_value = mock_job
@@ -139,11 +145,12 @@ class TestAsyncExtractionWrapper:
         mock_job = MagicMock()
         mock_job.file_id = uuid4()
 
-        with patch("src.jobs.tasks.get_db_context") as mock_db_ctx, \
-             patch("src.jobs.tasks.crud") as mock_crud, \
-             patch("src.extraction.orchestrator.extract", new_callable=AsyncMock) as mock_extract, \
-             patch("src.storage.s3.get_s3_client", return_value=_mock_s3_client()):
-
+        with (
+            patch("src.jobs.tasks.get_db_context") as mock_db_ctx,
+            patch("src.jobs.tasks.crud") as mock_crud,
+            patch("src.extraction.orchestrator.extract", new_callable=AsyncMock) as mock_extract,
+            patch("src.storage.s3.get_s3_client", return_value=_mock_s3_client()),
+        ):
             mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_db)
             mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
             mock_crud.get_job.return_value = mock_job
@@ -174,11 +181,12 @@ class TestAsyncExtractionWrapper:
             "cost_usd": 0.001,
         }
 
-        with patch("src.jobs.tasks.get_db_context") as mock_db_ctx, \
-             patch("src.jobs.tasks.crud") as mock_crud, \
-             patch("src.extraction.orchestrator.extract", new_callable=AsyncMock) as mock_extract, \
-             patch("src.storage.s3.get_s3_client", return_value=mock_s3):
-
+        with (
+            patch("src.jobs.tasks.get_db_context") as mock_db_ctx,
+            patch("src.jobs.tasks.crud") as mock_crud,
+            patch("src.extraction.orchestrator.extract", new_callable=AsyncMock) as mock_extract,
+            patch("src.storage.s3.get_s3_client", return_value=mock_s3),
+        ):
             mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_db)
             mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
             mock_crud.get_job.return_value = mock_job
@@ -208,11 +216,12 @@ class TestAsyncExtractionWrapper:
             "cost_usd": 0.003,
         }
 
-        with patch("src.jobs.tasks.get_db_context") as mock_db_ctx, \
-             patch("src.jobs.tasks.crud") as mock_crud, \
-             patch("src.extraction.orchestrator.extract", new_callable=AsyncMock) as mock_extract, \
-             patch("src.storage.s3.get_s3_client", return_value=_mock_s3_client()):
-
+        with (
+            patch("src.jobs.tasks.get_db_context") as mock_db_ctx,
+            patch("src.jobs.tasks.crud") as mock_crud,
+            patch("src.extraction.orchestrator.extract", new_callable=AsyncMock) as mock_extract,
+            patch("src.storage.s3.get_s3_client", return_value=_mock_s3_client()),
+        ):
             mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_db)
             mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
             mock_crud.get_job.return_value = mock_job
@@ -232,8 +241,8 @@ class TestAutoretryConfiguration:
 
     def test_autoretry_excludes_code_bugs(self):
         """Verify autoretry_for does NOT include generic Exception or code bugs."""
-        from src.jobs.tasks import _TRANSIENT_EXCEPTIONS
         from src.core.exceptions import ClaudeAPIError, RateLimitError
+        from src.jobs.tasks import _TRANSIENT_EXCEPTIONS
 
         # Should include transient errors
         assert ClaudeAPIError in _TRANSIENT_EXCEPTIONS

@@ -4,8 +4,10 @@ Unit tests for taxonomy model and TaxonomyManager.
 Tests taxonomy CRUD operations, search functionality, and prompt formatting.
 Uses sync sessions with SQLite for fast, isolated testing.
 """
-import pytest
+
 from uuid import uuid4
+
+import pytest
 
 from src.db.models import Taxonomy
 from src.guidelines.taxonomy import TaxonomyManager, load_taxonomy_for_stage3

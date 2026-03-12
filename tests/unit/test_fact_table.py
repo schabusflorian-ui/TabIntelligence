@@ -1,12 +1,11 @@
 """Tests for ExtractionFact decomposition, persistence, and querying (WS-H)."""
-import pytest
+
 from decimal import Decimal
+from unittest.mock import patch
 from uuid import uuid4
-from unittest.mock import patch, MagicMock
 
-from src.db.models import ExtractionFact, File, ExtractionJob, JobStatusEnum
 from src.db.crud import persist_extraction_facts, query_extraction_facts
-
+from src.db.models import ExtractionFact, ExtractionJob, File, JobStatusEnum
 
 # ============================================================================
 # Helpers
@@ -52,10 +51,12 @@ class TestFactDecomposition:
     def test_basic_decomposition(self, db_session):
         """Each (canonical_name, period, value) triple becomes one fact."""
         job_id, _ = _seed_job(db_session)
-        line_items = _make_line_items([
-            ("revenue", {"FY2022": 100, "FY2023": 200}, 0.95),
-            ("cogs", {"FY2022": 50, "FY2023": 70}, 0.90),
-        ])
+        line_items = _make_line_items(
+            [
+                ("revenue", {"FY2022": 100, "FY2023": 200}, 0.95),
+                ("cogs", {"FY2022": 50, "FY2023": 70}, 0.90),
+            ]
+        )
 
         count = persist_extraction_facts(db_session, job_id, None, line_items)
 
@@ -66,9 +67,11 @@ class TestFactDecomposition:
     def test_null_values_skipped(self, db_session):
         """None values are not persisted as facts."""
         job_id, _ = _seed_job(db_session)
-        line_items = _make_line_items([
-            ("revenue", {"FY2022": 100, "FY2023": None}, 0.95),
-        ])
+        line_items = _make_line_items(
+            [
+                ("revenue", {"FY2022": 100, "FY2023": None}, 0.95),
+            ]
+        )
 
         count = persist_extraction_facts(db_session, job_id, None, line_items)
 
@@ -82,7 +85,14 @@ class TestFactDecomposition:
         job_id, _ = _seed_job(db_session)
         line_items = [
             {"canonical_name": "unmapped", "values": {"FY2022": 100}, "confidence": 0.5},
-            {"canonical_name": "revenue", "original_label": "Revenue", "values": {"FY2022": 200}, "confidence": 0.95, "method": "claude", "taxonomy_category": "income_statement"},
+            {
+                "canonical_name": "revenue",
+                "original_label": "Revenue",
+                "values": {"FY2022": 200},
+                "confidence": 0.95,
+                "method": "claude",
+                "taxonomy_category": "income_statement",
+            },
         ]
 
         count = persist_extraction_facts(db_session, job_id, None, line_items)
@@ -100,9 +110,11 @@ class TestFactDecomposition:
     def test_malformed_value_skipped(self, db_session):
         """Non-numeric values are skipped with a warning."""
         job_id, _ = _seed_job(db_session)
-        line_items = _make_line_items([
-            ("revenue", {"FY2022": "not_a_number", "FY2023": 100}, 0.95),
-        ])
+        line_items = _make_line_items(
+            [
+                ("revenue", {"FY2022": "not_a_number", "FY2023": 100}, 0.95),
+            ]
+        )
 
         count = persist_extraction_facts(db_session, job_id, None, line_items)
 
@@ -112,17 +124,19 @@ class TestFactDecomposition:
     def test_fact_fields_populated(self, db_session):
         """All fact fields are correctly populated from line_item."""
         job_id, _ = _seed_job(db_session)
-        line_items = [{
-            "canonical_name": "revenue",
-            "original_label": "Total Revenue",
-            "values": {"FY2022": 500},
-            "confidence": 0.95,
-            "sheet_name": "Income Statement",
-            "row_index": 5,
-            "hierarchy_level": 1,
-            "method": "claude",
-            "taxonomy_category": "income_statement",
-        }]
+        line_items = [
+            {
+                "canonical_name": "revenue",
+                "original_label": "Total Revenue",
+                "values": {"FY2022": 500},
+                "confidence": 0.95,
+                "sheet_name": "Income Statement",
+                "row_index": 5,
+                "hierarchy_level": 1,
+                "method": "claude",
+                "taxonomy_category": "income_statement",
+            }
+        ]
 
         persist_extraction_facts(db_session, job_id, None, line_items)
 
@@ -150,9 +164,11 @@ class TestValidationAttachment:
     def test_validation_status_attached(self, db_session):
         """validation_passed comes from validation_lookup dict."""
         job_id, _ = _seed_job(db_session)
-        line_items = _make_line_items([
-            ("revenue", {"FY2022": 100}, 0.95),
-        ])
+        line_items = _make_line_items(
+            [
+                ("revenue", {"FY2022": 100}, 0.95),
+            ]
+        )
         validation_lookup = {"revenue": {"passed": True}}
 
         persist_extraction_facts(db_session, job_id, None, line_items, validation_lookup)
@@ -163,9 +179,11 @@ class TestValidationAttachment:
     def test_validation_none_when_missing(self, db_session):
         """validation_passed is None when no validation lookup provided."""
         job_id, _ = _seed_job(db_session)
-        line_items = _make_line_items([
-            ("revenue", {"FY2022": 100}, 0.95),
-        ])
+        line_items = _make_line_items(
+            [
+                ("revenue", {"FY2022": 100}, 0.95),
+            ]
+        )
 
         persist_extraction_facts(db_session, job_id, None, line_items)
 
@@ -184,11 +202,13 @@ class TestFactQueries:
     def _seed_facts(self, db_session):
         """Seed 6 facts for query testing."""
         job_id, _ = _seed_job(db_session)
-        line_items = _make_line_items([
-            ("revenue", {"FY2022": 100, "FY2023": 200}, 0.95),
-            ("cogs", {"FY2022": 50, "FY2023": 70}, 0.60),
-            ("net_income", {"FY2022": 30}, 0.85),
-        ])
+        line_items = _make_line_items(
+            [
+                ("revenue", {"FY2022": 100, "FY2023": 200}, 0.95),
+                ("cogs", {"FY2022": 50, "FY2023": 70}, 0.60),
+                ("net_income", {"FY2022": 30}, 0.85),
+            ]
+        )
         persist_extraction_facts(db_session, job_id, None, line_items)
         return job_id
 
@@ -259,8 +279,9 @@ class TestBestEffortPersistence:
         with patch("src.db.session.get_db_sync", side_effect=Exception("DB unavailable")):
             # Simulating what the orchestrator does
             try:
-                from src.db.session import get_db_sync
                 from src.db.crud import persist_extraction_facts
+                from src.db.session import get_db_sync
+
                 with get_db_sync() as db:
                     persist_extraction_facts(db, uuid4(), None, [])
                 fact_persisted = True

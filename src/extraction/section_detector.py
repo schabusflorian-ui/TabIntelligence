@@ -4,8 +4,9 @@ Detects logical sections within a single Excel sheet (e.g., Income Statement
 rows 1-30, Balance Sheet rows 35-65) using structural signals: bold headers
 preceded by blank rows, and large row-index gaps.
 """
+
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from src.core.logging import extraction_logger as logger
@@ -29,19 +30,32 @@ class SheetSection:
 # Keyword map for deterministic category hints
 _SECTION_CATEGORY_KEYWORDS: Dict[str, List[str]] = {
     "income_statement": [
-        "income statement", "profit & loss", "profit and loss",
-        "p&l", "p/l", "pl statement", "i/s",
+        "income statement",
+        "profit & loss",
+        "profit and loss",
+        "p&l",
+        "p/l",
+        "pl statement",
+        "i/s",
     ],
     "balance_sheet": [
-        "balance sheet", "statement of financial position",
-        "financial position", "b/s",
+        "balance sheet",
+        "statement of financial position",
+        "financial position",
+        "b/s",
     ],
     "cash_flow": [
-        "cash flow", "cash flows", "statement of cash", "c/f",
+        "cash flow",
+        "cash flows",
+        "statement of cash",
+        "c/f",
     ],
     "debt_schedule": [
-        "debt schedule", "debt service",
-        "loan", "facility", "borrowing",
+        "debt schedule",
+        "debt service",
+        "loan",
+        "facility",
+        "borrowing",
     ],
 }
 
@@ -100,6 +114,7 @@ def _dominant_fill(row: Dict[str, Any]) -> Optional[str]:
     if not colors:
         return None
     from collections import Counter
+
     most_common, count = Counter(colors).most_common(1)[0]
     return most_common if count >= len(row.get("cells", [])) // 2 else None
 
@@ -165,9 +180,13 @@ class SectionDetector:
 
         if len(rows) < 5:
             first_label = _get_label_cell_value(rows[0], label_column)
-            return [self._build_section(
-                rows, sheet, label=first_label or "(single section)",
-            )]
+            return [
+                self._build_section(
+                    rows,
+                    sheet,
+                    label=first_label or "(single section)",
+                )
+            ]
 
         # Find boundary row indices
         boundary_indices: List[int] = [0]  # first row is always a boundary
@@ -213,9 +232,7 @@ class SectionDetector:
         precomputed = sheet.get("section_boundaries", [])
         if precomputed:
             precomputed_indices = {b["row_index"] for b in precomputed}
-            row_index_to_pos = {
-                row["row_index"]: i for i, row in enumerate(rows)
-            }
+            row_index_to_pos = {row["row_index"]: i for i, row in enumerate(rows)}
             existing = set(boundary_indices)
             for ri in precomputed_indices:
                 pos = row_index_to_pos.get(ri)
@@ -239,7 +256,9 @@ class SectionDetector:
         if len(boundary_indices) <= 1:
             first_label = _get_label_cell_value(rows[0], label_column)
             section = self._build_section(
-                rows, sheet, label=first_label or "(single section)",
+                rows,
+                sheet,
+                label=first_label or "(single section)",
             )
             logger.debug(
                 f"Section detection: sheet='{sheet_name}', "
@@ -256,17 +275,18 @@ class SectionDetector:
             else:
                 end_pos = len(rows) - 1
 
-            section_rows = rows[start_pos:end_pos + 1]
+            section_rows = rows[start_pos : end_pos + 1]
             if not section_rows:
                 continue
 
-            label = (
-                _get_label_cell_value(section_rows[0], label_column)
-                or f"Section {b_idx + 1}"
+            label = _get_label_cell_value(section_rows[0], label_column) or f"Section {b_idx + 1}"
+            sections.append(
+                self._build_section(
+                    section_rows,
+                    sheet,
+                    label=label,
+                )
             )
-            sections.append(self._build_section(
-                section_rows, sheet, label=label,
-            ))
 
         logger.debug(
             f"Section detection: sheet='{sheet_name}', "

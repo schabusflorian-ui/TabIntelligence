@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-03-12T09:46:37.803723+00:00",
+  "timestamp": "2026-03-12T12:40:00.720398+00:00",
   "file": "realistic_model.xlsx",
-  "duration_seconds": 285.93,
+  "duration_seconds": 288.07,
   "sheets": [
     "Income Statement",
     "Balance Sheet",
@@ -21,7 +21,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Title section of a core Income Statement - fundamental financial statement requiring highest accuracy"
+      "reasoning": "Header section for core Income Statement - part of fundamental financial statement"
     },
     {
       "sheet_name": "Income Statement",
@@ -31,7 +31,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Revenue and cost of sales section of Income Statement with subtotals - core P&L components"
+      "reasoning": "Revenue section with Product Revenue, Service Revenue, and Cost of Sales - core P&L components"
     },
     {
       "sheet_name": "Income Statement",
@@ -41,7 +41,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Gross profit calculation - key P&L metric requiring high accuracy"
+      "reasoning": "Gross Profit calculation - essential P&L metric"
     },
     {
       "sheet_name": "Income Statement",
@@ -51,7 +51,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Operating expenses section of Income Statement - core P&L component"
+      "reasoning": "Operating expenses section with SG&A, R&D - core P&L components"
     },
     {
       "sheet_name": "Income Statement",
@@ -61,7 +61,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Operating expense subtotal - critical P&L calculation"
+      "reasoning": "Total operating expenses - key P&L subtotal"
     },
     {
       "sheet_name": "Income Statement",
@@ -71,7 +71,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "EBITDA and depreciation section - key profitability metrics in P&L"
+      "reasoning": "EBITDA and D&A section - core profitability metrics"
     },
     {
       "sheet_name": "Income Statement",
@@ -81,7 +81,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "EBIT and interest expense section - core P&L profitability calculations"
+      "reasoning": "EBIT and interest expense section - core P&L components"
     },
     {
       "sheet_name": "Income Statement",
@@ -101,7 +101,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Net income - the bottom line of P&L requiring highest accuracy"
+      "reasoning": "Net Income - bottom line of P&L statement"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -111,7 +111,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Title section of core Balance Sheet - fundamental financial statement"
+      "reasoning": "Header section for core Balance Sheet statement"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -121,7 +121,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Assets section of Balance Sheet including current assets - core financial statement component"
+      "reasoning": "Current Assets section with Cash, AR, Inventory - core Balance Sheet components"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -131,7 +131,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Current assets subtotal - critical Balance Sheet calculation"
+      "reasoning": "Total Current Assets - key Balance Sheet subtotal"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -141,7 +141,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Non-current assets section with subtotals - core Balance Sheet component"
+      "reasoning": "Non-current assets section with PP&E, Goodwill - core Balance Sheet components"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -151,7 +151,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Total assets - critical Balance Sheet balancing figure"
+      "reasoning": "Total Assets - fundamental Balance Sheet total"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -161,7 +161,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Liabilities section including current liabilities - core Balance Sheet component"
+      "reasoning": "Current Liabilities section with AP, accrued liabilities - core Balance Sheet components"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -171,7 +171,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Current liabilities subtotal - critical Balance Sheet calculation"
+      "reasoning": "Total Current Liabilities - key Balance Sheet subtotal"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -191,7 +191,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Long-term debt subtotal - critical Balance Sheet calculation"
+      "reasoning": "Total Long-Term Debt - key Balance Sheet subtotal"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -201,7 +201,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Total liabilities - critical Balance Sheet balancing component"
+      "reasoning": "Total Liabilities - fundamental Balance Sheet total"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -221,7 +221,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Total shareholders' equity - critical Balance Sheet calculation"
+      "reasoning": "Total Shareholders' Equity - fundamental Balance Sheet total"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -231,7 +231,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Total liabilities & equity - critical Balance Sheet balancing figure that must equal total assets"
+      "reasoning": "Total L&E - fundamental Balance Sheet balancing total"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -241,7 +241,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Title section of core Cash Flow Statement - fundamental financial statement"
+      "reasoning": "Header section for core Cash Flow Statement"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -251,7 +251,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Operating activities section with subtotals - core Cash Flow Statement component"
+      "reasoning": "Operating activities section with Net Income, D&A, working capital changes - core Cash Flow components"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -261,7 +261,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Operating cash flow subtotal - critical Cash Flow Statement metric"
+      "reasoning": "Cash from Operations - key Cash Flow subtotal"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -271,7 +271,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Investing activities section - core Cash Flow Statement component"
+      "reasoning": "Investing activities section with CapEx - core Cash Flow component"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -281,7 +281,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Investing cash flow subtotal - critical Cash Flow Statement calculation"
+      "reasoning": "Cash from Investing - key Cash Flow subtotal"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -291,7 +291,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Financing activities section - core Cash Flow Statement component"
+      "reasoning": "Financing activities section with debt repayment - core Cash Flow component"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -301,7 +301,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Financing cash flow subtotal - critical Cash Flow Statement calculation"
+      "reasoning": "Cash from Financing - key Cash Flow subtotal"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -311,7 +311,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Net change in cash with subtotals - critical Cash Flow Statement reconciliation"
+      "reasoning": "Net change in cash and beginning cash - core Cash Flow components"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -321,7 +321,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Ending cash balance - critical Cash Flow Statement total that ties to Balance Sheet"
+      "reasoning": "Ending Cash - fundamental Cash Flow total"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -330,8 +330,8 @@
       "section_end_row": 25,
       "tier": 1,
       "decision": "PROCESS_HIGH",
-      "confidence": 0.9,
-      "reasoning": "Free cash flow calculation - key metric typically part of core Cash Flow Statement analysis"
+      "confidence": 0.95,
+      "reasoning": "Free Cash Flow - key financial metric derived from Cash Flow Statement"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -341,7 +341,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.9,
-      "reasoning": "Title section of debt schedule - supporting schedule for core financial statements"
+      "reasoning": "Header section for Debt Schedule - supporting schedule"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -351,17 +351,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.9,
-      "reasoning": "Term loan debt service calculations - supporting debt schedule component"
-    },
-    {
-      "sheet_name": "Debt Schedule",
-      "section": "Ending Balance",
-      "section_start_row": 7,
-      "section_end_row": 7,
-      "tier": 2,
-      "decision": "PROCESS_MEDIUM",
-      "confidence": 0.9,
-      "reasoning": "Debt ending balance calculation - supporting debt schedule metric"
+      "reasoning": "Term Loan A section with beginning balance and repayments - core debt schedule component"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -371,17 +361,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.9,
-      "reasoning": "Revolver debt calculations - supporting debt schedule component"
-    },
-    {
-      "sheet_name": "Debt Schedule",
-      "section": "Ending Balance",
-      "section_start_row": 12,
-      "section_end_row": 12,
-      "tier": 2,
-      "decision": "PROCESS_MEDIUM",
-      "confidence": 0.9,
-      "reasoning": "Revolver ending balance - supporting debt schedule metric"
+      "reasoning": "Revolver section with draws/repayments - core debt schedule component"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -391,17 +371,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.9,
-      "reasoning": "Senior notes debt calculations - supporting debt schedule component"
-    },
-    {
-      "sheet_name": "Debt Schedule",
-      "section": "Ending Balance",
-      "section_start_row": 16,
-      "section_end_row": 16,
-      "tier": 2,
-      "decision": "PROCESS_MEDIUM",
-      "confidence": 0.9,
-      "reasoning": "Senior notes ending balance - supporting debt schedule metric"
+      "reasoning": "Senior Notes section - core debt schedule component"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -411,7 +381,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.9,
-      "reasoning": "Interest expense calculations by debt type - supporting debt schedule component"
+      "reasoning": "Interest expense calculation by debt instrument - supporting debt schedule component"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -421,7 +391,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.9,
-      "reasoning": "Total interest expense with subtotal - key debt schedule output that feeds P&L"
+      "reasoning": "Total interest expense - key debt schedule subtotal"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -431,7 +401,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.9,
-      "reasoning": "Total debt outstanding with subtotal - key debt schedule output that feeds Balance Sheet"
+      "reasoning": "Total debt outstanding - key debt schedule total"
     },
     {
       "sheet_name": "Working Capital",
@@ -441,7 +411,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Title section of working capital schedule - supporting financial schedule"
+      "reasoning": "Header section for Working Capital schedule - supporting schedule"
     },
     {
       "sheet_name": "Working Capital",
@@ -451,7 +421,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Working capital components and calculations - supporting schedule for Balance Sheet and Cash Flow"
+      "reasoning": "Working capital components with DSO, DIO, DPO and balance calculations - supporting financial schedule"
     },
     {
       "sheet_name": "Working Capital",
@@ -461,7 +431,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Net working capital subtotal - key working capital metric feeding other statements"
+      "reasoning": "Net working capital total - key supporting metric"
     },
     {
       "sheet_name": "Working Capital",
@@ -471,7 +441,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Change in working capital subtotal - feeds Cash Flow Statement operating activities"
+      "reasoning": "Change in net working capital - key cash flow input"
     },
     {
       "sheet_name": "Assumptions",
@@ -481,7 +451,7 @@
       "tier": 3,
       "decision": "PROCESS_LOW",
       "confidence": 0.9,
-      "reasoning": "Title section of assumptions sheet - analytical inputs and drivers"
+      "reasoning": "Header section for Assumptions - analytical input sheet"
     },
     {
       "sheet_name": "Assumptions",
@@ -491,7 +461,7 @@
       "tier": 3,
       "decision": "PROCESS_LOW",
       "confidence": 0.9,
-      "reasoning": "Model assumptions and drivers like growth rates and margins - analytical inputs for modeling"
+      "reasoning": "Model assumptions with growth rates, margins, and ratios - analytical drivers sheet"
     },
     {
       "sheet_name": "D&A Schedule",
@@ -501,7 +471,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Title section of depreciation & amortization schedule - supporting financial schedule"
+      "reasoning": "Header section for D&A Schedule - supporting depreciation schedule"
     },
     {
       "sheet_name": "D&A Schedule",
@@ -511,7 +481,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Depreciation calculations with subtotals - supporting schedule for P&L and Balance Sheet"
+      "reasoning": "Depreciation calculations for existing and new assets - supporting schedule component"
     },
     {
       "sheet_name": "D&A Schedule",
@@ -521,7 +491,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Total depreciation with subtotals - key D&A schedule output"
+      "reasoning": "Total depreciation and intangible amortization - key supporting calculations"
     },
     {
       "sheet_name": "D&A Schedule",
@@ -531,53 +501,53 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Total D&A subtotal - critical output feeding P&L and Cash Flow Statement"
+      "reasoning": "Total D&A - key supporting metric feeding into financial statements"
     },
     {
       "sheet_name": "Scratch - Notes",
       "tier": 4,
       "decision": "SKIP",
-      "confidence": 0.95,
-      "reasoning": "Contains 'Scratch' in name indicating temporary/working notes sheet - should be skipped",
+      "confidence": 0.99,
+      "reasoning": "Sheet name contains 'Scratch' which indicates temporary/working sheet - classified as SKIP",
       "section": null,
       "section_start_row": null,
       "section_end_row": null
     }
   ],
   "line_items_count": 95,
-  "tokens_used": 65298,
-  "cost_usd": 0.501246,
+  "tokens_used": 84075,
+  "cost_usd": 0.610677,
   "validation": {
     "period_results": {
       "FY2022A": {
-        "total_checks": 107,
-        "passed": 94,
+        "total_checks": 101,
+        "passed": 88,
         "failed": 13,
-        "success_rate": 0.879
+        "success_rate": 0.871
       },
       "FY2023A": {
-        "total_checks": 111,
-        "passed": 97,
+        "total_checks": 105,
+        "passed": 91,
         "failed": 14,
-        "success_rate": 0.874
+        "success_rate": 0.867
       },
       "FY2024E": {
-        "total_checks": 111,
-        "passed": 97,
+        "total_checks": 105,
+        "passed": 91,
         "failed": 14,
-        "success_rate": 0.874
+        "success_rate": 0.867
       },
       "FY2025E": {
-        "total_checks": 111,
-        "passed": 98,
+        "total_checks": 105,
+        "passed": 92,
         "failed": 13,
-        "success_rate": 0.883
+        "success_rate": 0.876
       },
       "FY2026E": {
-        "total_checks": 111,
-        "passed": 98,
+        "total_checks": 105,
+        "passed": 92,
         "failed": 13,
-        "success_rate": 0.883
+        "success_rate": 0.876
       }
     },
     "flags": [
@@ -598,15 +568,6 @@
         "message": "D&A should equal sum of depreciation and amortization",
         "actual": "8946",
         "expected": "10000"
-      },
-      {
-        "period": "FY2022A",
-        "severity": "warning",
-        "item": "net_working_capital",
-        "rule": "net_working_capital == current_assets - current_liabilities",
-        "message": "NWC should equal current assets minus current liabilities",
-        "actual": "31895",
-        "expected": "66500"
       },
       {
         "period": "FY2022A",
@@ -683,6 +644,15 @@
       {
         "period": "FY2022A",
         "severity": "warning",
+        "item": "capex",
+        "rule": "sign_convention",
+        "message": "capex is positive (10440) but typically negative",
+        "actual": "10440",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2022A",
+        "severity": "warning",
         "item": "amortization",
         "rule": "sign_convention",
         "message": "amortization is positive (1800) but typically negative",
@@ -724,15 +694,6 @@
         "message": "D&A should equal sum of depreciation and amortization",
         "actual": "10150",
         "expected": "9300"
-      },
-      {
-        "period": "FY2023A",
-        "severity": "warning",
-        "item": "net_working_capital",
-        "rule": "net_working_capital == current_assets - current_liabilities",
-        "message": "NWC should equal current assets minus current liabilities",
-        "actual": "31852",
-        "expected": "110529"
       },
       {
         "period": "FY2023A",
@@ -809,6 +770,15 @@
       {
         "period": "FY2023A",
         "severity": "warning",
+        "item": "capex",
+        "rule": "sign_convention",
+        "message": "capex is positive (12027) but typically negative",
+        "actual": "12027",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2023A",
+        "severity": "warning",
         "item": "amortization",
         "rule": "sign_convention",
         "message": "amortization is positive (1500) but typically negative",
@@ -850,15 +820,6 @@
         "message": "D&A should equal sum of depreciation and amortization",
         "actual": "11593",
         "expected": "8900"
-      },
-      {
-        "period": "FY2024E",
-        "severity": "warning",
-        "item": "net_working_capital",
-        "rule": "net_working_capital == current_assets - current_liabilities",
-        "message": "NWC should equal current assets minus current liabilities",
-        "actual": "32885",
-        "expected": "160810"
       },
       {
         "period": "FY2024E",
@@ -935,6 +896,15 @@
       {
         "period": "FY2024E",
         "severity": "warning",
+        "item": "capex",
+        "rule": "sign_convention",
+        "message": "capex is positive (13781) but typically negative",
+        "actual": "13781",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2024E",
+        "severity": "warning",
         "item": "amortization",
         "rule": "sign_convention",
         "message": "amortization is positive (1500) but typically negative",
@@ -967,15 +937,6 @@
         "message": "D&A should equal sum of depreciation and amortization",
         "actual": "13208",
         "expected": "8500"
-      },
-      {
-        "period": "FY2025E",
-        "severity": "warning",
-        "item": "net_working_capital",
-        "rule": "net_working_capital == current_assets - current_liabilities",
-        "message": "NWC should equal current assets minus current liabilities",
-        "actual": "34338",
-        "expected": "220057"
       },
       {
         "period": "FY2025E",
@@ -1052,6 +1013,15 @@
       {
         "period": "FY2025E",
         "severity": "warning",
+        "item": "capex",
+        "rule": "sign_convention",
+        "message": "capex is positive (14420) but typically negative",
+        "actual": "14420",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2025E",
+        "severity": "warning",
         "item": "amortization",
         "rule": "sign_convention",
         "message": "amortization is positive (1500) but typically negative",
@@ -1084,15 +1054,6 @@
         "message": "D&A should equal sum of depreciation and amortization",
         "actual": "14871",
         "expected": "8100"
-      },
-      {
-        "period": "FY2026E",
-        "severity": "warning",
-        "item": "net_working_capital",
-        "rule": "net_working_capital == current_assets - current_liabilities",
-        "message": "NWC should equal current assets minus current liabilities",
-        "actual": "33884",
-        "expected": "288945"
       },
       {
         "period": "FY2026E",
@@ -1169,6 +1130,15 @@
       {
         "period": "FY2026E",
         "severity": "warning",
+        "item": "capex",
+        "rule": "sign_convention",
+        "message": "capex is positive (14465) but typically negative",
+        "actual": "14465",
+        "expected": "negative"
+      },
+      {
+        "period": "FY2026E",
+        "severity": "warning",
         "item": "amortization",
         "rule": "sign_convention",
         "message": "amortization is positive (1500) but typically negative",
@@ -1205,11 +1175,29 @@
       {
         "period": "cross_statement",
         "severity": "warning",
+        "item": "capex",
+        "rule": "cross_statement:capex_ppe_change",
+        "message": "capex (12027) inconsistent with PPE change + depreciation (9677) in period FY2023A",
+        "actual": "12027",
+        "expected": "9677"
+      },
+      {
+        "period": "cross_statement",
+        "severity": "warning",
         "item": "total_debt",
         "rule": "cross_statement:total_debt_schedule",
         "message": "total_debt (131000) differs from sum of components (262000) in period FY2024E",
         "actual": "131000",
         "expected": "262000"
+      },
+      {
+        "period": "cross_statement",
+        "severity": "warning",
+        "item": "capex",
+        "rule": "cross_statement:capex_ppe_change",
+        "message": "capex (13781) inconsistent with PPE change + depreciation (9588) in period FY2024E",
+        "actual": "13781",
+        "expected": "9588"
       },
       {
         "period": "cross_statement",
@@ -1223,15 +1211,566 @@
       {
         "period": "cross_statement",
         "severity": "warning",
+        "item": "capex",
+        "rule": "cross_statement:capex_ppe_change",
+        "message": "capex (14420) inconsistent with PPE change + depreciation (8212) in period FY2025E",
+        "actual": "14420",
+        "expected": "8212"
+      },
+      {
+        "period": "cross_statement",
+        "severity": "warning",
         "item": "total_debt",
         "rule": "cross_statement:total_debt_schedule",
         "message": "total_debt (117000) differs from sum of components (234000) in period FY2026E",
         "actual": "117000",
         "expected": "234000"
+      },
+      {
+        "period": "cross_statement",
+        "severity": "warning",
+        "item": "capex",
+        "rule": "cross_statement:capex_ppe_change",
+        "message": "capex (14465) inconsistent with PPE change + depreciation (6194) in period FY2026E",
+        "actual": "14465",
+        "expected": "6194"
       }
     ],
-    "claude_reasoning": {},
-    "overall_confidence": 0.873,
+    "claude_reasoning": [
+      {
+        "flag_index": 0,
+        "assessment": "error",
+        "confidence": 0.9,
+        "reasoning": "Debt balance calculation shows significant discrepancy (95K actual vs 105K expected). This suggests missing debt drawdowns or incorrect repayment amounts in the debt schedule.",
+        "suggested_fix": "10000"
+      },
+      {
+        "flag_index": 1,
+        "assessment": "error",
+        "confidence": 0.85,
+        "reasoning": "D&A total (8946) doesn't equal sum of components (8200 + 1800 = 10000). Mathematical inconsistency in financial statements.",
+        "suggested_fix": "10000"
+      },
+      {
+        "flag_index": 2,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention issue. Model uses positive values for expenses, which is acceptable if consistently applied across all statements.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 3,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention - all expenses are positive values.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 4,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention - all expenses are positive values.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 5,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention - all expenses are positive values.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 6,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention - all expenses are positive values.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 7,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention - all expenses are positive values.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 8,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention - all expenses are positive values.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 9,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention - all expenses are positive values.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 10,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention - capex shown as positive value.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 11,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention - all expenses are positive values.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 12,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention - all expenses are positive values.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 13,
+        "assessment": "error",
+        "confidence": 0.9,
+        "reasoning": "Critical cross-statement validation failure. Cash flow ending cash (91394) must equal balance sheet cash (93194). This breaks fundamental accounting identity.",
+        "suggested_fix": "93194"
+      },
+      {
+        "flag_index": 14,
+        "assessment": "error",
+        "confidence": 0.9,
+        "reasoning": "Debt balance calculation shows significant discrepancy (88K actual vs 102K expected). Pattern continues from FY2022A.",
+        "suggested_fix": "102000"
+      },
+      {
+        "flag_index": 15,
+        "assessment": "error",
+        "confidence": 0.85,
+        "reasoning": "D&A total (10150) doesn't equal sum of components (7800 + 1500 = 9300). Mathematical inconsistency continues.",
+        "suggested_fix": "9300"
+      },
+      {
+        "flag_index": 16,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 17,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 18,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 19,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 20,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 21,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 22,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 23,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 24,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 25,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 26,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Consistent with model's sign convention.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 27,
+        "assessment": "error",
+        "confidence": 0.9,
+        "reasoning": "Critical cross-statement validation failure. Cash flow ending cash (141394) must equal balance sheet cash (143194).",
+        "suggested_fix": "143194"
+      },
+      {
+        "flag_index": 28,
+        "assessment": "error",
+        "confidence": 0.9,
+        "reasoning": "Debt balance calculation shows significant discrepancy (81K actual vs 95K expected). Systematic issue in debt schedule.",
+        "suggested_fix": "95000"
+      },
+      {
+        "flag_index": 29,
+        "assessment": "error",
+        "confidence": 0.85,
+        "reasoning": "D&A total (11593) doesn't equal sum of components (7400 + 1500 = 8900). Systematic calculation error continues.",
+        "suggested_fix": "8900"
+      },
+      {
+        "flag_index": 30,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 31,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 32,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 33,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 34,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 35,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 36,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 37,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 38,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 39,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 40,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 41,
+        "assessment": "error",
+        "confidence": 0.9,
+        "reasoning": "Debt balance calculation error continues (74K actual vs 88K expected).",
+        "suggested_fix": "88000"
+      },
+      {
+        "flag_index": 42,
+        "assessment": "error",
+        "confidence": 0.85,
+        "reasoning": "D&A calculation error (13208 actual vs 7000 + 1500 = 8500 expected).",
+        "suggested_fix": "8500"
+      },
+      {
+        "flag_index": 43,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 44,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 45,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 46,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 47,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 48,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 49,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 50,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 51,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 52,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 53,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 54,
+        "assessment": "error",
+        "confidence": 0.9,
+        "reasoning": "Debt balance calculation error continues (67K actual vs 81K expected).",
+        "suggested_fix": "81000"
+      },
+      {
+        "flag_index": 55,
+        "assessment": "error",
+        "confidence": 0.85,
+        "reasoning": "D&A calculation error (14871 actual vs 6600 + 1500 = 8100 expected).",
+        "suggested_fix": "8100"
+      },
+      {
+        "flag_index": 56,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 57,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 58,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 59,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 60,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 61,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 62,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 63,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 64,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 65,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 66,
+        "assessment": "acceptable",
+        "confidence": 0.95,
+        "reasoning": "Sign convention consistency.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 67,
+        "assessment": "error",
+        "confidence": 0.8,
+        "reasoning": "Total debt (145K) differs significantly from sum of components (290K). This suggests either double-counting in the schedule or missing debt items on balance sheet.",
+        "suggested_fix": "145000"
+      },
+      {
+        "flag_index": 68,
+        "assessment": "error",
+        "confidence": 0.8,
+        "reasoning": "Total debt (138K) differs significantly from sum of components (276K). Systematic issue continues.",
+        "suggested_fix": "138000"
+      },
+      {
+        "flag_index": 69,
+        "assessment": "error",
+        "confidence": 0.75,
+        "reasoning": "Capex (12027) inconsistent with PPE movement analysis (9677). Could indicate timing differences or missing asset transactions.",
+        "suggested_fix": "9677"
+      },
+      {
+        "flag_index": 70,
+        "assessment": "error",
+        "confidence": 0.8,
+        "reasoning": "Total debt calculation inconsistency continues (131K vs 262K).",
+        "suggested_fix": "131000"
+      },
+      {
+        "flag_index": 71,
+        "assessment": "error",
+        "confidence": 0.75,
+        "reasoning": "Capex-PPE inconsistency continues (13781 vs 9588). Systematic issue in asset accounting.",
+        "suggested_fix": "9588"
+      },
+      {
+        "flag_index": 72,
+        "assessment": "error",
+        "confidence": 0.8,
+        "reasoning": "Total debt calculation inconsistency continues.",
+        "suggested_fix": "124000"
+      },
+      {
+        "flag_index": 73,
+        "assessment": "error",
+        "confidence": 0.75,
+        "reasoning": "Capex-PPE inconsistency continues, suggesting systematic extraction or calculation error.",
+        "suggested_fix": "8212"
+      },
+      {
+        "flag_index": 74,
+        "assessment": "error",
+        "confidence": 0.8,
+        "reasoning": "Total debt calculation inconsistency continues.",
+        "suggested_fix": "117000"
+      },
+      {
+        "flag_index": 75,
+        "assessment": "error",
+        "confidence": 0.75,
+        "reasoning": "Capex-PPE inconsistency continues throughout the projection period.",
+        "suggested_fix": "6194"
+      }
+    ],
+    "overall_confidence": 0.859,
     "time_series": {
       "total_checks": 1318,
       "flags": [
@@ -1296,7 +1835,7 @@
     },
     "completeness": {
       "model_type": "corporate",
-      "overall_score": 0.758,
+      "overall_score": 0.697,
       "detected_statements": [
         "balance_sheet",
         "cash_flow",
@@ -1304,9 +1843,21 @@
         "income_statement"
       ],
       "total_expected": 32,
-      "total_found": 24,
-      "total_missing": 8,
+      "total_found": 22,
+      "total_missing": 10,
       "missing_items": [
+        {
+          "canonical_name": "current_assets",
+          "category": "balance_sheet",
+          "weight": 0.8,
+          "is_core": true
+        },
+        {
+          "canonical_name": "current_liabilities",
+          "category": "balance_sheet",
+          "weight": 0.8,
+          "is_core": true
+        },
         {
           "canonical_name": "cfo",
           "category": "cash_flow",
@@ -1314,9 +1865,9 @@
           "is_core": true
         },
         {
-          "canonical_name": "capex",
+          "canonical_name": "net_change_cash",
           "category": "cash_flow",
-          "weight": 0.8,
+          "weight": 0.85,
           "is_core": true
         },
         {
@@ -1358,35 +1909,36 @@
       ],
       "per_statement": {
         "balance_sheet": {
-          "raw_score": 1.0,
-          "weighted_score": 1.0,
-          "core_score": 1.0,
+          "raw_score": 0.8,
+          "weighted_score": 0.804,
+          "core_score": 0.701,
           "found": [
             "total_assets",
             "total_liabilities",
             "total_equity",
-            "current_assets",
             "cash",
-            "current_liabilities",
             "long_term_debt",
             "accounts_receivable",
             "accounts_payable",
             "ppe"
           ],
-          "missing": []
+          "missing": [
+            "current_assets",
+            "current_liabilities"
+          ]
         },
         "cash_flow": {
           "raw_score": 0.5,
-          "weighted_score": 0.51,
-          "core_score": 0.596,
+          "weighted_score": 0.5,
+          "core_score": 0.584,
           "found": [
             "cfi",
             "cff",
-            "net_change_cash"
+            "capex"
           ],
           "missing": [
             "cfo",
-            "capex",
+            "net_change_cash",
             "fcf"
           ]
         },
@@ -1428,25 +1980,25 @@
       }
     },
     "quality": {
-      "numeric_score": 0.894,
+      "numeric_score": 0.875,
       "letter_grade": "B",
       "label": "trustworthy",
       "dimensions": [
         {
           "name": "mapping_confidence",
-          "score": 0.956,
+          "score": 0.955,
           "weight": 0.3,
           "details": null
         },
         {
           "name": "validation_success",
-          "score": 0.873,
+          "score": 0.859,
           "weight": 0.25,
           "details": null
         },
         {
           "name": "completeness",
-          "score": 0.758,
+          "score": 0.697,
           "weight": 0.25,
           "details": null
         },
@@ -1461,9 +2013,10 @@
     },
     "lifecycle": {
       "is_project_finance": false,
-      "confidence": 0.4,
+      "confidence": 0.6,
       "signals_used": [
         "revenue",
+        "capex",
         "debt_drawdown"
       ],
       "phases": {
@@ -1486,11 +2039,11 @@
       5
     ],
     "event_types": [
-      "parsing",
-      "validation",
       "triage",
+      "validation",
+      "mapping",
       "enhanced_mapping",
-      "mapping"
+      "parsing"
     ]
   },
   "triage_accuracy": {
@@ -1607,7 +2160,7 @@
   },
   "completeness": {
     "model_type": "corporate",
-    "overall_score": 0.758,
+    "overall_score": 0.697,
     "detected_statements": [
       "balance_sheet",
       "cash_flow",
@@ -1615,9 +2168,21 @@
       "income_statement"
     ],
     "total_expected": 32,
-    "total_found": 24,
-    "total_missing": 8,
+    "total_found": 22,
+    "total_missing": 10,
     "missing_items": [
+      {
+        "canonical_name": "current_assets",
+        "category": "balance_sheet",
+        "weight": 0.8,
+        "is_core": true
+      },
+      {
+        "canonical_name": "current_liabilities",
+        "category": "balance_sheet",
+        "weight": 0.8,
+        "is_core": true
+      },
       {
         "canonical_name": "cfo",
         "category": "cash_flow",
@@ -1625,9 +2190,9 @@
         "is_core": true
       },
       {
-        "canonical_name": "capex",
+        "canonical_name": "net_change_cash",
         "category": "cash_flow",
-        "weight": 0.8,
+        "weight": 0.85,
         "is_core": true
       },
       {
@@ -1669,35 +2234,36 @@
     ],
     "per_statement": {
       "balance_sheet": {
-        "raw_score": 1.0,
-        "weighted_score": 1.0,
-        "core_score": 1.0,
+        "raw_score": 0.8,
+        "weighted_score": 0.804,
+        "core_score": 0.701,
         "found": [
           "total_assets",
           "total_liabilities",
           "total_equity",
-          "current_assets",
           "cash",
-          "current_liabilities",
           "long_term_debt",
           "accounts_receivable",
           "accounts_payable",
           "ppe"
         ],
-        "missing": []
+        "missing": [
+          "current_assets",
+          "current_liabilities"
+        ]
       },
       "cash_flow": {
         "raw_score": 0.5,
-        "weighted_score": 0.51,
-        "core_score": 0.596,
+        "weighted_score": 0.5,
+        "core_score": 0.584,
         "found": [
           "cfi",
           "cff",
-          "net_change_cash"
+          "capex"
         ],
         "missing": [
           "cfo",
-          "capex",
+          "net_change_cash",
           "fcf"
         ]
       },
@@ -1739,25 +2305,25 @@
     }
   },
   "quality": {
-    "numeric_score": 0.894,
+    "numeric_score": 0.875,
     "letter_grade": "B",
     "label": "trustworthy",
     "dimensions": [
       {
         "name": "mapping_confidence",
-        "score": 0.956,
+        "score": 0.955,
         "weight": 0.3,
         "details": null
       },
       {
         "name": "validation_success",
-        "score": 0.873,
+        "score": 0.859,
         "weight": 0.25,
         "details": null
       },
       {
         "name": "completeness",
-        "score": 0.758,
+        "score": 0.697,
         "weight": 0.25,
         "details": null
       },
@@ -1822,13 +2388,13 @@
           "hierarchy_level": 0,
           "is_bold": true,
           "is_formula": false,
-          "is_subtotal": false
+          "is_subtotal": true
         },
         "mapping": {
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Net Revenues is a standard term for total revenue on Income Statement"
+          "reasoning": "Net Revenues is a common term for total revenue on Income Statement, mapping to revenue canonical name"
         },
         "validation": {
           "rules_applied": [],
@@ -1895,7 +2461,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to product_revenue canonical name"
+          "reasoning": "Direct match with product_revenue canonical name for revenue from product sales"
         },
         "validation": {
           "rules_applied": [],
@@ -1962,7 +2528,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to service_revenue canonical name"
+          "reasoning": "Direct match with service_revenue canonical name for revenue from services"
         },
         "validation": {
           "rules_applied": [],
@@ -2029,7 +2595,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to cost_of_sales canonical name"
+          "reasoning": "Exact match with cost_of_sales canonical name"
         },
         "validation": {
           "rules_applied": [
@@ -2144,7 +2710,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to gross_profit canonical name"
+          "reasoning": "Direct match with gross_profit canonical name"
         },
         "validation": {
           "rules_applied": [],
@@ -2211,7 +2777,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to sga canonical name"
+          "reasoning": "Exact match with sga canonical name for selling, general & administrative expenses"
         },
         "validation": {
           "rules_applied": [
@@ -2326,7 +2892,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to rd_expense canonical name"
+          "reasoning": "R&D Expenses maps to rd_expense canonical name for research & development costs"
         },
         "validation": {
           "rules_applied": [
@@ -2396,7 +2962,7 @@
         "FY2025E": 6609,
         "FY2026E": 6429
       },
-      "confidence": 0.9,
+      "confidence": 0.85,
       "hierarchy_level": 3,
       "provenance": {
         "source_cells": [
@@ -2441,7 +3007,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Maps to other_expense as miscellaneous operating expenses"
+          "reasoning": "Other Operating Expenses maps to other_expense as miscellaneous operating costs"
         },
         "validation": {
           "rules_applied": [
@@ -2556,7 +3122,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to operating_expenses canonical name"
+          "reasoning": "Direct match with operating_expenses canonical name"
         },
         "validation": {
           "rules_applied": [
@@ -2665,13 +3231,13 @@
           "hierarchy_level": 0,
           "is_bold": true,
           "is_formula": false,
-          "is_subtotal": false
+          "is_subtotal": true
         },
         "mapping": {
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to ebitda canonical name"
+          "reasoning": "Exact match with ebitda canonical name"
         },
         "validation": {
           "rules_applied": [],
@@ -2738,7 +3304,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "cash_flow",
-          "reasoning": "On Cash Flow Statement, Depreciation & Amortization maps to depreciation_cf"
+          "reasoning": "On Cash Flow Statement, Depreciation & Amortization maps to depreciation_cf canonical name"
         },
         "validation": {
           "rules_applied": [],
@@ -2799,13 +3365,13 @@
           "hierarchy_level": 0,
           "is_bold": true,
           "is_formula": false,
-          "is_subtotal": false
+          "is_subtotal": true
         },
         "mapping": {
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to ebit canonical name"
+          "reasoning": "Exact match with ebit canonical name"
         },
         "validation": {
           "rules_applied": [],
@@ -2872,7 +3438,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "On Income Statement, maps to interest_expense (not interest_expense_debt)"
+          "reasoning": "On Income Statement, maps to interest_expense canonical name (not interest_expense_debt which is for Debt Schedule)"
         },
         "validation": {
           "rules_applied": [
@@ -2942,7 +3508,7 @@
         "FY2025E": 901,
         "FY2026E": 964
       },
-      "confidence": 0.9,
+      "confidence": 0.85,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -2987,7 +3553,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Non-operating income/expense items map to other_income"
+          "reasoning": "Net other income/expense items map to other_income canonical name for non-operating items"
         },
         "validation": {
           "rules_applied": [],
@@ -3048,7 +3614,7 @@
           "hierarchy_level": 0,
           "is_bold": true,
           "is_formula": false,
-          "is_subtotal": false
+          "is_subtotal": true
         },
         "mapping": {
           "method": "claude",
@@ -3236,7 +3802,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "cash_flow",
-          "reasoning": "On Cash Flow Statement, Net Income maps to net_income_cf"
+          "reasoning": "On Cash Flow Statement, Net Income maps to net_income_cf canonical name"
         },
         "validation": {
           "rules_applied": [],
@@ -3303,7 +3869,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "balance_sheet",
-          "reasoning": "Direct match to cash_and_equivalents canonical name"
+          "reasoning": "Direct match with cash_and_equivalents canonical name"
         },
         "validation": {
           "rules_applied": [],
@@ -3370,7 +3936,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "balance_sheet",
-          "reasoning": "Direct match to accounts_receivable canonical name"
+          "reasoning": "Direct match with accounts_receivable canonical name"
         },
         "validation": {
           "rules_applied": [],
@@ -3437,7 +4003,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "balance_sheet",
-          "reasoning": "Direct match to inventory canonical name"
+          "reasoning": "Direct match with inventory canonical name"
         },
         "validation": {
           "rules_applied": [],

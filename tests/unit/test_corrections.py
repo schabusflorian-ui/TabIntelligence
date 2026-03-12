@@ -1,5 +1,5 @@
 """Tests for user correction and entity pattern endpoints."""
-import pytest
+
 from uuid import uuid4
 
 from src.db.models import JobStatusEnum
@@ -45,9 +45,7 @@ class TestSubmitCorrections:
         assert "Applied 2 corrections" in data["message"]
 
         # Verify patterns were created by querying them
-        patterns_resp = test_client_with_db.get(
-            f"/api/v1/entities/{entity_id}/patterns"
-        )
+        patterns_resp = test_client_with_db.get(f"/api/v1/entities/{entity_id}/patterns")
         assert patterns_resp.status_code == 200
         patterns_data = patterns_resp.json()
         assert patterns_data["total_patterns"] == 2
@@ -169,9 +167,7 @@ class TestListEntityPatterns:
         finally:
             session.close()
 
-        response = test_client_with_db.get(
-            f"/api/v1/entities/{entity_id}/patterns"
-        )
+        response = test_client_with_db.get(f"/api/v1/entities/{entity_id}/patterns")
         assert response.status_code == 200
         data = response.json()
         assert data["entity_id"] == entity_id
@@ -205,9 +201,7 @@ class TestListEntityPatterns:
         finally:
             session.close()
 
-        response = test_client_with_db.get(
-            f"/api/v1/entities/{entity_id}/patterns"
-        )
+        response = test_client_with_db.get(f"/api/v1/entities/{entity_id}/patterns")
         assert response.status_code == 200
         data = response.json()
         assert data["total_patterns"] == 2
@@ -224,9 +218,7 @@ class TestListEntityPatterns:
 
     def test_list_patterns_invalid_entity_id(self, test_client_with_db):
         """Invalid entity_id returns 400."""
-        response = test_client_with_db.get(
-            "/api/v1/entities/not-a-uuid/patterns"
-        )
+        response = test_client_with_db.get("/api/v1/entities/not-a-uuid/patterns")
         assert response.status_code == 400
 
 
@@ -253,15 +245,11 @@ class TestDeleteEntityPattern:
         finally:
             session.close()
 
-        response = test_client_with_db.delete(
-            f"/api/v1/entities/{entity_id}/patterns/{pattern_id}"
-        )
+        response = test_client_with_db.delete(f"/api/v1/entities/{entity_id}/patterns/{pattern_id}")
         assert response.status_code == 204
 
         # Verify it's gone
-        list_resp = test_client_with_db.get(
-            f"/api/v1/entities/{entity_id}/patterns"
-        )
+        list_resp = test_client_with_db.get(f"/api/v1/entities/{entity_id}/patterns")
         assert list_resp.json()["total_patterns"] == 0
 
     def test_delete_pattern_not_found(self, test_client_with_db, test_db):
@@ -283,9 +271,7 @@ class TestDeleteEntityPattern:
 
     def test_delete_pattern_invalid_ids(self, test_client_with_db):
         """Invalid IDs return 400."""
-        response = test_client_with_db.delete(
-            "/api/v1/entities/bad-id/patterns/bad-id"
-        )
+        response = test_client_with_db.delete("/api/v1/entities/bad-id/patterns/bad-id")
         assert response.status_code == 400
 
 
@@ -326,9 +312,7 @@ def _create_job_with_result(session):
     from src.db import crud
 
     entity = crud.create_entity(session, name="Test Corp", industry="Finance")
-    file = crud.create_file(
-        session, filename="test.xlsx", file_size=1024, entity_id=entity.id
-    )
+    file = crud.create_file(session, filename="test.xlsx", file_size=1024, entity_id=entity.id)
     job = crud.create_extraction_job(session, file_id=file.file_id)
     job.status = JobStatusEnum.COMPLETED
     job.result = {
@@ -379,9 +363,7 @@ def _create_job_with_multisheet_result(session):
     from src.db import crud
 
     entity = crud.create_entity(session, name="Multi Corp", industry="Finance")
-    file = crud.create_file(
-        session, filename="multi.xlsx", file_size=2048, entity_id=entity.id
-    )
+    file = crud.create_file(session, filename="multi.xlsx", file_size=2048, entity_id=entity.id)
     job = crud.create_extraction_job(session, file_id=file.file_id)
     job.status = JobStatusEnum.COMPLETED
     job.result = {
@@ -473,9 +455,7 @@ class TestApplyCorrections:
         )
 
         # Check history endpoint
-        history_resp = test_client_with_db.get(
-            f"/api/v1/jobs/{job_id}/corrections/history"
-        )
+        history_resp = test_client_with_db.get(f"/api/v1/jobs/{job_id}/corrections/history")
         assert history_resp.status_code == 200
         history = history_resp.json()
         assert history["total"] == 1
@@ -503,9 +483,7 @@ class TestApplyCorrections:
         )
 
         # Verify pattern was created
-        patterns_resp = test_client_with_db.get(
-            f"/api/v1/entities/{entity_id}/patterns"
-        )
+        patterns_resp = test_client_with_db.get(f"/api/v1/entities/{entity_id}/patterns")
         assert patterns_resp.status_code == 200
         patterns = patterns_resp.json()["patterns"]
         assert len(patterns) >= 1
@@ -727,15 +705,11 @@ class TestUndoCorrection:
         assert apply_resp.status_code == 200
 
         # Get correction_id from history
-        history_resp = test_client_with_db.get(
-            f"/api/v1/jobs/{job_id}/corrections/history"
-        )
+        history_resp = test_client_with_db.get(f"/api/v1/jobs/{job_id}/corrections/history")
         correction_id = history_resp.json()["corrections"][0]["id"]
 
         # Undo
-        undo_resp = test_client_with_db.post(
-            f"/api/v1/corrections/{correction_id}/undo"
-        )
+        undo_resp = test_client_with_db.post(f"/api/v1/corrections/{correction_id}/undo")
         assert undo_resp.status_code == 200
         assert undo_resp.json()["restored_canonical_name"] == "other_revenue"
 
@@ -768,17 +742,13 @@ class TestUndoCorrection:
             },
         )
 
-        history = test_client_with_db.get(
-            f"/api/v1/jobs/{job_id}/corrections/history"
-        ).json()
+        history = test_client_with_db.get(f"/api/v1/jobs/{job_id}/corrections/history").json()
         correction_id = history["corrections"][0]["id"]
 
         test_client_with_db.post(f"/api/v1/corrections/{correction_id}/undo")
 
         # Check history shows reverted
-        history2 = test_client_with_db.get(
-            f"/api/v1/jobs/{job_id}/corrections/history"
-        ).json()
+        history2 = test_client_with_db.get(f"/api/v1/jobs/{job_id}/corrections/history").json()
         assert history2["corrections"][0]["reverted"] is True
         assert history2["corrections"][0]["reverted_at"] is not None
 
@@ -800,9 +770,7 @@ class TestUndoCorrection:
             },
         )
 
-        history = test_client_with_db.get(
-            f"/api/v1/jobs/{job_id}/corrections/history"
-        ).json()
+        history = test_client_with_db.get(f"/api/v1/jobs/{job_id}/corrections/history").json()
         correction_id = history["corrections"][0]["id"]
 
         # First undo succeeds
@@ -848,9 +816,7 @@ class TestUndoCorrection:
         assert resp_b.json()["corrections_applied"] == 1
 
         # Get both correction IDs
-        history = test_client_with_db.get(
-            f"/api/v1/jobs/{job_id}/corrections/history"
-        ).json()
+        history = test_client_with_db.get(f"/api/v1/jobs/{job_id}/corrections/history").json()
         assert history["total"] == 2
         id_a = history["corrections"][1]["id"]
         id_b = history["corrections"][0]["id"]
@@ -890,16 +856,12 @@ class TestUndoCorrection:
             },
         )
 
-        history = test_client_with_db.get(
-            f"/api/v1/jobs/{job_id}/corrections/history"
-        ).json()
+        history = test_client_with_db.get(f"/api/v1/jobs/{job_id}/corrections/history").json()
         assert history["total"] == 2
 
         # Both are for different labels, so both should be independently undoable
         for correction in history["corrections"]:
-            resp = test_client_with_db.post(
-                f"/api/v1/corrections/{correction['id']}/undo"
-            )
+            resp = test_client_with_db.post(f"/api/v1/corrections/{correction['id']}/undo")
             assert resp.status_code == 200
 
         # Verify original state restored
@@ -1005,9 +967,7 @@ class TestCorrectionHistory:
             },
         )
 
-        response = test_client_with_db.get(
-            f"/api/v1/jobs/{job_id}/corrections/history"
-        )
+        response = test_client_with_db.get(f"/api/v1/jobs/{job_id}/corrections/history")
         assert response.status_code == 200
         data = response.json()
         assert data["total"] == 2
@@ -1032,14 +992,10 @@ class TestCorrectionHistory:
             },
         )
 
-        history_resp = test_client_with_db.get(
-            f"/api/v1/jobs/{job_id}/corrections/history"
-        )
+        history_resp = test_client_with_db.get(f"/api/v1/jobs/{job_id}/corrections/history")
         correction_id = history_resp.json()["corrections"][0]["id"]
 
-        test_client_with_db.post(
-            f"/api/v1/corrections/{correction_id}/undo"
-        )
+        test_client_with_db.post(f"/api/v1/corrections/{correction_id}/undo")
 
         # With include_reverted=false
         response = test_client_with_db.get(
@@ -1050,9 +1006,7 @@ class TestCorrectionHistory:
         assert data["total"] == 0
 
         # With include_reverted=true (default)
-        response2 = test_client_with_db.get(
-            f"/api/v1/jobs/{job_id}/corrections/history"
-        )
+        response2 = test_client_with_db.get(f"/api/v1/jobs/{job_id}/corrections/history")
         data2 = response2.json()
         assert data2["total"] == 1
         assert data2["corrections"][0]["reverted"] is True
@@ -1099,15 +1053,11 @@ class TestUndoRevertsFactTable:
         )
 
         # Get correction_id
-        history = test_client_with_db.get(
-            f"/api/v1/jobs/{job_id}/corrections/history"
-        ).json()
+        history = test_client_with_db.get(f"/api/v1/jobs/{job_id}/corrections/history").json()
         correction_id = history["corrections"][0]["id"]
 
         # Undo
-        undo_resp = test_client_with_db.post(
-            f"/api/v1/corrections/{correction_id}/undo"
-        )
+        undo_resp = test_client_with_db.post(f"/api/v1/corrections/{correction_id}/undo")
         assert undo_resp.status_code == 200
 
         # Verify facts restored
@@ -1323,7 +1273,11 @@ class TestHistoryFiltering:
         )
         test_client_with_db.post(
             f"/api/v1/jobs/{job_id}/corrections/apply",
-            json={"corrections": [{"original_label": "COGS", "new_canonical_name": "operating_expenses"}]},
+            json={
+                "corrections": [
+                    {"original_label": "COGS", "new_canonical_name": "operating_expenses"}
+                ]
+            },
         )
 
         # Undo the first one
@@ -1345,7 +1299,6 @@ class TestHistoryFiltering:
 
     def test_history_empty(self, test_client_with_db, test_db):
         """History endpoint for job with no corrections returns empty list."""
-        from src.db import crud
 
         session = test_db()
         try:

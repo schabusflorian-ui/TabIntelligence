@@ -4,6 +4,7 @@ Provides a single source for loading taxonomy data from the JSON file,
 used by Stage 3 (Mapping), Stage 4 (Validation), and Stage 5 (Enhanced Mapping).
 Also merges promoted learned aliases from the database with TTL caching.
 """
+
 import json
 import time
 from pathlib import Path
@@ -112,8 +113,9 @@ def _load_promoted_aliases() -> Dict[str, List[tuple]]:
     if _promoted_cache and (now - _promoted_cache_time) < _PROMOTED_TTL:
         return _promoted_cache
     try:
-        from src.db.session import get_db_sync
         from src.db.crud import get_promoted_aliases_for_lookup
+        from src.db.session import get_db_sync
+
         cat_lookup = get_canonical_to_category()
         with get_db_sync() as db:
             aliases = get_promoted_aliases_for_lookup(db)
@@ -170,10 +172,12 @@ def get_validation_rules() -> List[Dict]:
     for item in items:
         vr = item.get("validation_rules", {})
         if vr.get("cross_item_validation"):
-            rules.append({
-                "canonical_name": item["canonical_name"],
-                "validation_rules": {"cross_item_validation": vr["cross_item_validation"]},
-            })
+            rules.append(
+                {
+                    "canonical_name": item["canonical_name"],
+                    "validation_rules": {"cross_item_validation": vr["cross_item_validation"]},
+                }
+            )
     return rules
 
 
@@ -244,7 +248,9 @@ def format_taxonomy_detailed() -> str:
             aliases_str = ""
             if item.get("aliases"):
                 aliases_str = f" (aliases: {', '.join(item['aliases'][:5])})"
-            names.append(f"  - {item['canonical_name']}: {item.get('display_name', '')}{aliases_str}")
+            names.append(
+                f"  - {item['canonical_name']}: {item.get('display_name', '')}{aliases_str}"
+            )
         lines.append(f"{category_display}:")
         lines.extend(names)
     return "\n".join(lines)

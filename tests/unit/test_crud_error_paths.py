@@ -4,16 +4,16 @@ Unit tests for CRUD error paths (SQLAlchemy exception handling).
 Tests that each CRUD function properly handles SQLAlchemy errors by rolling back
 and raising DatabaseError.
 """
-import pytest
-from uuid import uuid4
-from unittest.mock import patch, MagicMock, PropertyMock
 
+from unittest.mock import patch
+from uuid import uuid4
+
+import pytest
 from sqlalchemy.exc import SQLAlchemyError
 
-from src.db import crud
-from src.db.models import File, ExtractionJob, JobStatusEnum
 from src.core.exceptions import DatabaseError
-
+from src.db import crud
+from src.db.models import JobStatusEnum
 
 # ============================================================================
 # FILE ERROR PATHS
@@ -21,7 +21,6 @@ from src.core.exceptions import DatabaseError
 
 
 class TestCreateFileError:
-
     def test_raises_database_error_on_sqlalchemy_failure(self, db_session):
         """Should rollback and raise DatabaseError on SQLAlchemy error."""
         with patch.object(db_session, "commit", side_effect=SQLAlchemyError("disk full")):
@@ -34,7 +33,6 @@ class TestCreateFileError:
 
 
 class TestGetFileError:
-
     def test_raises_database_error_on_query_failure(self, db_session):
         """Should raise DatabaseError when query fails."""
         with patch.object(db_session, "query", side_effect=SQLAlchemyError("connection lost")):
@@ -46,7 +44,6 @@ class TestGetFileError:
 
 
 class TestUpdateFileS3KeyError:
-
     def test_file_not_found_raises_database_error(self, db_session):
         """Should raise DatabaseError when file not found."""
         with pytest.raises(DatabaseError) as exc_info:
@@ -70,7 +67,6 @@ class TestUpdateFileS3KeyError:
 
 
 class TestCreateExtractionJobError:
-
     def test_raises_database_error_on_sqlalchemy_failure(self, db_session, sample_file):
         """Should rollback and raise DatabaseError on SQLAlchemy error."""
         with patch.object(db_session, "commit", side_effect=SQLAlchemyError("constraint")):
@@ -82,7 +78,6 @@ class TestCreateExtractionJobError:
 
 
 class TestGetJobError:
-
     def test_raises_database_error_on_query_failure(self, db_session):
         """Should raise DatabaseError when query fails."""
         with patch.object(db_session, "query", side_effect=SQLAlchemyError("timeout")):
@@ -93,34 +88,32 @@ class TestGetJobError:
 
 
 class TestUpdateJobStatusError:
-
     def test_sqlalchemy_error_on_commit(self, db_session, sample_job):
         """Should rollback and raise DatabaseError on commit failure."""
         with patch.object(db_session, "commit", side_effect=SQLAlchemyError("deadlock")):
             with pytest.raises(DatabaseError) as exc_info:
-                crud.update_job_status(
-                    db_session, sample_job.job_id, JobStatusEnum.PROCESSING
-                )
+                crud.update_job_status(db_session, sample_job.job_id, JobStatusEnum.PROCESSING)
 
             assert "Failed to update job" in str(exc_info.value)
 
 
 class TestCompleteJobError:
-
     def test_sqlalchemy_error_on_commit(self, db_session, sample_job):
         """Should rollback and raise DatabaseError on commit failure."""
         with patch.object(db_session, "commit", side_effect=SQLAlchemyError("serialization")):
             with pytest.raises(DatabaseError) as exc_info:
                 crud.complete_job(
-                    db_session, sample_job.job_id,
-                    result={"data": "test"}, tokens_used=100, cost_usd=0.01,
+                    db_session,
+                    sample_job.job_id,
+                    result={"data": "test"},
+                    tokens_used=100,
+                    cost_usd=0.01,
                 )
 
             assert "Failed to complete job" in str(exc_info.value)
 
 
 class TestFailJobError:
-
     def test_sqlalchemy_error_on_commit(self, db_session, sample_job):
         """Should rollback and raise DatabaseError on commit failure."""
         with patch.object(db_session, "commit", side_effect=SQLAlchemyError("connection reset")):
@@ -131,7 +124,6 @@ class TestFailJobError:
 
 
 class TestListJobsError:
-
     def test_raises_database_error_on_query_failure(self, db_session):
         """Should raise DatabaseError when query fails."""
         with patch.object(db_session, "query", side_effect=SQLAlchemyError("pool exhausted")):
@@ -148,7 +140,6 @@ class TestListJobsError:
 
 
 class TestCreateLineageEventError:
-
     def test_raises_database_error_on_sqlalchemy_failure(self, db_session, sample_job):
         """Should rollback and raise DatabaseError on SQLAlchemy error."""
         with patch.object(db_session, "commit", side_effect=SQLAlchemyError("fk violation")):
@@ -162,7 +153,6 @@ class TestCreateLineageEventError:
 
 
 class TestGetJobLineageError:
-
     def test_raises_database_error_on_query_failure(self, db_session):
         """Should raise DatabaseError when query fails."""
         with patch.object(db_session, "query", side_effect=SQLAlchemyError("network error")):

@@ -3,18 +3,16 @@ Unit tests for Prometheus metrics module.
 
 Tests metric definitions, path normalization, and metrics middleware behavior.
 """
-import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
-from starlette.testclient import TestClient
+
+from unittest.mock import patch
 
 from src.api.metrics import (
     _normalize_path,
-    http_requests_total,
-    http_request_duration_seconds,
-    file_uploads_total,
-    file_upload_bytes,
     db_query_duration_seconds,
     extraction_jobs_total,
+    file_uploads_total,
+    http_request_duration_seconds,
+    http_requests_total,
 )
 
 
@@ -28,7 +26,12 @@ class TestNormalizePath:
 
     def test_multiple_uuids(self):
         """Multiple UUIDs should all be replaced."""
-        path = "/api/v1/entities/550e8400-e29b-41d4-a716-446655440000/files/660e8400-e29b-41d4-a716-446655440001"
+        path = (
+            "/api/v1/entities"
+            "/550e8400-e29b-41d4-a716-446655440000"
+            "/files"
+            "/660e8400-e29b-41d4-a716-446655440001"
+        )
         result = _normalize_path(path)
         assert "{id}" in result
         assert "550e8400" not in result
@@ -78,7 +81,7 @@ class TestMetricsEndpoint:
 
     def test_metrics_endpoint_returns_prometheus_format(self):
         """The /metrics endpoint should return Prometheus exposition format."""
-        from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+        from prometheus_client import generate_latest
 
         output = generate_latest()
         assert isinstance(output, bytes)
@@ -108,6 +111,7 @@ class TestSlowQueryLog:
     def test_attach_slow_query_logging(self):
         """Should attach event listeners without error."""
         from sqlalchemy import create_engine
+
         from src.db.slow_query_log import attach_slow_query_logging
 
         engine = create_engine("sqlite:///:memory:")
@@ -118,6 +122,7 @@ class TestSlowQueryLog:
         """Slow query logging should detect queries above threshold."""
         from sqlalchemy import create_engine, text
         from sqlalchemy.orm import sessionmaker
+
         from src.db.slow_query_log import attach_slow_query_logging
 
         engine = create_engine("sqlite:///:memory:")
@@ -127,7 +132,7 @@ class TestSlowQueryLog:
         session = Session()
 
         # Execute a query - should be logged (above 0.001ms threshold)
-        with patch("src.db.slow_query_log.logger") as mock_logger:
+        with patch("src.db.slow_query_log.logger"):
             session.execute(text("SELECT 1"))
             # The warning may or may not fire depending on timing,
             # but the listener should not raise

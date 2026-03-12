@@ -7,10 +7,10 @@ Supports variable substitution via str.format().
 To modify a prompt, edit the corresponding .txt file - no code changes needed.
 When a database is available, this can be extended to load from a prompt_templates table.
 """
-import os
+
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict
 
 from src.core.logging import get_logger
 
@@ -22,6 +22,7 @@ TEMPLATES_DIR = Path(__file__).parent / "templates"
 @dataclass
 class PromptTemplate:
     """A versioned prompt template."""
+
     name: str
     version: str
     content: str
@@ -98,6 +99,4 @@ def list_templates() -> list:
     """List all available template files."""
     if not TEMPLATES_DIR.exists():
         return []
-    return sorted(
-        f.stem for f in TEMPLATES_DIR.glob("*.txt")
-    )
+    return sorted(f.stem for f in TEMPLATES_DIR.glob("*.txt"))

@@ -10,31 +10,35 @@ Provides:
 These patterns prevent cascading failures and ensure the system can recover
 automatically from transient database issues.
 """
+
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from functools import wraps
-from typing import TypeVar, Callable, Any, Optional
-from dataclasses import dataclass, field
+from typing import Any, Callable, Optional, TypeVar
 
-from sqlalchemy.exc import OperationalError, TimeoutError as SQLTimeoutError
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import TimeoutError as SQLTimeoutError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.exceptions import DatabaseError
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 # ============================================================================
 # Retry Logic with Exponential Backoff
 # ============================================================================
 
+
 @dataclass
 class RetryConfig:
     """Configuration for retry behavior."""
+
     max_attempts: int = 3
     min_wait: float = 1.0  # seconds
     max_wait: float = 10.0  # seconds
@@ -59,15 +63,13 @@ def calculate_wait_time(attempt: int, config: RetryConfig) -> float:
         attempt=2 -> 4s
         attempt=3 -> 8s (capped at max_wait)
     """
-    wait = min(
-        config.min_wait * (config.exponential_base ** attempt),
-        config.max_wait
-    )
+    wait = min(config.min_wait * (config.exponential_base**attempt), config.max_wait)
 
     # Add jitter to prevent thundering herd
     if config.jitter:
         import random
-        wait *= (0.5 + random.random())  # 50-150% of calculated wait
+
+        wait *= 0.5 + random.random()  # 50-150% of calculated wait
 
     return wait
 
@@ -113,7 +115,7 @@ async def execute_with_retry(
     *args,
     config: Optional[RetryConfig] = None,
     operation_name: str = "database_operation",
-    **kwargs
+    **kwargs,
 ) -> T:
     """
     Execute async operation with automatic retry and exponential backoff.
@@ -158,16 +160,11 @@ async def execute_with_retry(
             # Check if error is retryable
             if not is_retryable_error(e):
                 logger.error(f"Non-retryable error in {operation_name}: {e}")
-                raise DatabaseError(
-                    f"Database operation failed: {e}",
-                    operation=operation_name
-                )
+                raise DatabaseError(f"Database operation failed: {e}", operation=operation_name)
 
             # Last attempt - don't retry
             if attempt == config.max_attempts - 1:
-                logger.error(
-                    f"{operation_name} failed after {config.max_attempts} attempts: {e}"
-                )
+                logger.error(f"{operation_name} failed after {config.max_attempts} attempts: {e}")
                 break
 
             # Calculate wait time and retry
@@ -182,14 +179,13 @@ async def execute_with_retry(
             # Non-database errors should not be retried
             logger.error(f"Unexpected error in {operation_name}: {e}")
             raise DatabaseError(
-                f"Unexpected error in {operation_name}: {e}",
-                operation=operation_name
+                f"Unexpected error in {operation_name}: {e}", operation=operation_name
             )
 
     # All retries exhausted
     raise DatabaseError(
         f"{operation_name} failed after {config.max_attempts} attempts: {last_error}",
-        operation=operation_name
+        operation=operation_name,
     )
 
 
@@ -197,7 +193,7 @@ def with_retry(
     max_attempts: int = 3,
     min_wait: float = 1.0,
     max_wait: float = 10.0,
-    operation_name: Optional[str] = None
+    operation_name: Optional[str] = None,
 ):
     """
     Decorator to add retry logic to async functions.
@@ -214,6 +210,7 @@ def with_retry(
             result = await db.execute(select(Job).where(Job.id == job_id))
             return result.scalar_one_or_none()
     """
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         async def wrapper(*args, **kwargs) -> T:
@@ -223,8 +220,12 @@ def with_retry(
                 max_wait=max_wait,
             )
             op_name = operation_name or func.__name__
-            return await execute_with_retry(func, *args, config=config, operation_name=op_name, **kwargs)
+            return await execute_with_retry(
+                func, *args, config=config, operation_name=op_name, **kwargs
+            )
+
         return wrapper  # type: ignore[return-value]
+
     return decorator
 
 
@@ -232,16 +233,19 @@ def with_retry(
 # Circuit Breaker Pattern
 # ============================================================================
 
+
 class CircuitState(Enum):
     """Circuit breaker states."""
-    CLOSED = "closed"        # Normal operation
-    OPEN = "open"            # Failures detected, blocking requests
+
+    CLOSED = "closed"  # Normal operation
+    OPEN = "open"  # Failures detected, blocking requests
     HALF_OPEN = "half_open"  # Testing if service recovered
 
 
 @dataclass
 class CircuitBreakerStats:
     """Statistics for circuit breaker monitoring."""
+
     total_requests: int = 0
     successful_requests: int = 0
     failed_requests: int = 0
@@ -322,11 +326,13 @@ class CircuitBreaker:
         old_state = self.state
         self.state = new_state
         self.stats.last_state_change = datetime.now()
-        self.stats.state_changes.append({
-            'from': old_state.value,
-            'to': new_state.value,
-            'timestamp': self.stats.last_state_change,
-        })
+        self.stats.state_changes.append(
+            {
+                "from": old_state.value,
+                "to": new_state.value,
+                "timestamp": self.stats.last_state_change,
+            }
+        )
 
         logger.warning(
             f"Circuit breaker state change: {old_state.value} -> {new_state.value} "
@@ -347,7 +353,9 @@ class CircuitBreaker:
             if self.last_failure_time:
                 time_since_failure = (datetime.now() - self.last_failure_time).total_seconds()
                 if time_since_failure >= self.recovery_timeout:
-                    logger.info("Circuit breaker: recovery timeout elapsed, entering HALF_OPEN state")
+                    logger.info(
+                        "Circuit breaker: recovery timeout elapsed, entering HALF_OPEN state"
+                    )
                     self._change_state(CircuitState.HALF_OPEN)
                     return True
 
@@ -409,14 +417,14 @@ class CircuitBreaker:
             raise DatabaseError(
                 f"Circuit breaker is OPEN - database unavailable "
                 f"(will retry in {self.recovery_timeout}s)",
-                operation="circuit_breaker"
+                operation="circuit_breaker",
             )
 
         try:
             # Execute with timeout
             result: Any = await asyncio.wait_for(
                 operation(*args, **kwargs),  # type: ignore[arg-type]
-                timeout=self.timeout
+                timeout=self.timeout,
             )
             self._on_success()
             return result
@@ -425,8 +433,7 @@ class CircuitBreaker:
             logger.error(f"Operation timeout after {self.timeout}s")
             self._on_failure()
             raise DatabaseError(
-                f"Operation timeout after {self.timeout}s",
-                operation="circuit_breaker"
+                f"Operation timeout after {self.timeout}s", operation="circuit_breaker"
             )
 
         except Exception as e:
@@ -437,15 +444,17 @@ class CircuitBreaker:
     def get_stats(self) -> dict:
         """Get circuit breaker statistics."""
         return {
-            'state': self.state.value,
-            'consecutive_failures': self.consecutive_failures,
-            'consecutive_successes': self.consecutive_successes,
-            'total_requests': self.stats.total_requests,
-            'successful_requests': self.stats.successful_requests,
-            'failed_requests': self.stats.failed_requests,
-            'rejected_requests': self.stats.rejected_requests,
-            'success_rate': self.stats.success_rate,
-            'last_state_change': self.stats.last_state_change.isoformat() if self.stats.last_state_change else None,
+            "state": self.state.value,
+            "consecutive_failures": self.consecutive_failures,
+            "consecutive_successes": self.consecutive_successes,
+            "total_requests": self.stats.total_requests,
+            "successful_requests": self.stats.successful_requests,
+            "failed_requests": self.stats.failed_requests,
+            "rejected_requests": self.stats.rejected_requests,
+            "success_rate": self.stats.success_rate,
+            "last_state_change": self.stats.last_state_change.isoformat()
+            if self.stats.last_state_change
+            else None,
         }
 
     def reset(self):
@@ -474,12 +483,13 @@ db_circuit_breaker = CircuitBreaker(
 # Enhanced Session with Resilience
 # ============================================================================
 
+
 async def resilient_execute(
     session: AsyncSession,
     statement: Any,
     *,
     use_circuit_breaker: bool = True,
-    retry_config: Optional[RetryConfig] = None
+    retry_config: Optional[RetryConfig] = None,
 ) -> Any:
     """
     Execute database statement with resilience patterns.
@@ -501,6 +511,7 @@ async def resilient_execute(
             select(Job).where(Job.id == job_id)
         )
     """
+
     async def execute_operation():
         return await session.execute(statement)
 
@@ -510,12 +521,10 @@ async def resilient_execute(
             db_circuit_breaker.call,
             execute_operation,
             config=retry_config,
-            operation_name="resilient_execute"
+            operation_name="resilient_execute",
         )
     else:
         # Execute with retry only
         return await execute_with_retry(
-            execute_operation,
-            config=retry_config,
-            operation_name="resilient_execute"
+            execute_operation, config=retry_config, operation_name="resilient_execute"
         )

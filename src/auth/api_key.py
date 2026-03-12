@@ -71,9 +71,7 @@ def verify_api_key(key: str, db: Session) -> Optional[APIKey]:
 
     # Look up in database (active keys only)
     result = db.execute(
-        select(APIKey)
-        .where(APIKey.key_hash == key_hash)
-        .where(APIKey.is_active == True)
+        select(APIKey).where(APIKey.key_hash == key_hash).where(APIKey.is_active == True)
     )
 
     api_key = result.scalar_one_or_none()
@@ -126,9 +124,7 @@ def create_api_key(
     db.commit()
     db.refresh(api_key)
 
-    logger.info(
-        f"API key created - id: {api_key.id}, name: {name}, entity_id: {entity_id}"
-    )
+    logger.info(f"API key created - id: {api_key.id}, name: {name}, entity_id: {entity_id}")
 
     return api_key, plain_key
 

@@ -6,12 +6,14 @@ Tests:
 - ExtractionDiffer comparison logic
 - API endpoints for diff and item-lineage
 """
-import uuid
-import pytest
-from unittest.mock import patch, MagicMock, Mock
 
+import uuid
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from src.lineage.differ import DiffItem, ExtractionDiff, ExtractionDiffer
 from src.lineage.tracker import LineageTracker
-from src.lineage.differ import ExtractionDiffer, ExtractionDiff, DiffItem
 
 
 @pytest.fixture
@@ -30,11 +32,13 @@ def tracker(job_id):
 
 
 class TestItemLineageEmission:
-
     def test_emit_item_transformation(self, tracker):
         """Single emission creates entry with correct fields."""
         tracker.emit_item_transformation(
-            "revenue", "Total Revenue", "parsing", "parsed",
+            "revenue",
+            "Total Revenue",
+            "parsing",
+            "parsed",
             {"sheet": "IS", "row": 5},
         )
         chain = tracker.get_item_lineage("revenue")
@@ -49,17 +53,23 @@ class TestItemLineageEmission:
     def test_four_stage_chain(self, tracker):
         """Four stages produce a chain of 4 transformations in order."""
         tracker.emit_item_transformation("revenue", "Revenue", "parsing", "parsed")
-        tracker.emit_item_transformation("revenue", "Revenue", "mapping", "mapped",
-                                         {"method": "claude", "confidence": 0.95})
-        tracker.emit_item_transformation("revenue", "Revenue", "validation", "validated",
-                                         {"all_passed": True})
-        tracker.emit_item_transformation("revenue", "Revenue", "enhanced_mapping", "remapped",
-                                         {"new_confidence": 0.98})
+        tracker.emit_item_transformation(
+            "revenue", "Revenue", "mapping", "mapped", {"method": "claude", "confidence": 0.95}
+        )
+        tracker.emit_item_transformation(
+            "revenue", "Revenue", "validation", "validated", {"all_passed": True}
+        )
+        tracker.emit_item_transformation(
+            "revenue", "Revenue", "enhanced_mapping", "remapped", {"new_confidence": 0.98}
+        )
 
         chain = tracker.get_item_lineage("revenue")
         assert len(chain) == 4
         assert [t["stage"] for t in chain] == [
-            "parsing", "mapping", "validation", "enhanced_mapping"
+            "parsing",
+            "mapping",
+            "validation",
+            "enhanced_mapping",
         ]
         assert chain[1]["confidence"] == 0.95
         assert chain[3]["new_confidence"] == 0.98
@@ -98,17 +108,18 @@ class TestItemLineageEmission:
 
 
 class TestExtractionDiffer:
-
     def _make_items(self, items_spec):
         """Helper: build line_items list from spec dicts."""
         result = []
         for spec in items_spec:
-            result.append({
-                "original_label": spec["label"],
-                "canonical_name": spec.get("canonical", "unmapped"),
-                "confidence": spec.get("confidence", 0.9),
-                "values": spec.get("values", {}),
-            })
+            result.append(
+                {
+                    "original_label": spec["label"],
+                    "canonical_name": spec.get("canonical", "unmapped"),
+                    "confidence": spec.get("confidence", 0.9),
+                    "values": spec.get("values", {}),
+                }
+            )
         return result
 
     def _make_job(self, line_items):
@@ -123,16 +134,20 @@ class TestExtractionDiffer:
 
     def test_diff_identical_no_changes(self):
         """Two identical results produce no changes."""
-        items = self._make_items([
-            {"label": "Revenue", "canonical": "revenue", "values": {"FY2023": 1000}},
-            {"label": "COGS", "canonical": "cogs", "values": {"FY2023": 500}},
-        ])
+        items = self._make_items(
+            [
+                {"label": "Revenue", "canonical": "revenue", "values": {"FY2023": 1000}},
+                {"label": "COGS", "canonical": "cogs", "values": {"FY2023": 500}},
+            ]
+        )
         job_a = self._make_job(items)
         job_b = self._make_job(items)
 
         db = MagicMock()
-        with patch.object(ExtractionDiffer, "_load_all_facts", return_value=[]), \
-             patch("src.lineage.differ.crud") as mock_crud:
+        with (
+            patch.object(ExtractionDiffer, "_load_all_facts", return_value=[]),
+            patch("src.lineage.differ.crud") as mock_crud,
+        ):
             mock_crud.get_job.side_effect = [job_a, job_b]
 
             differ = ExtractionDiffer()
@@ -147,20 +162,26 @@ class TestExtractionDiffer:
 
     def test_diff_added_removed(self):
         """Items in A not in B are removed; items in B not in A are added."""
-        items_a = self._make_items([
-            {"label": "Revenue", "canonical": "revenue"},
-            {"label": "COGS", "canonical": "cogs"},
-        ])
-        items_b = self._make_items([
-            {"label": "Revenue", "canonical": "revenue"},
-            {"label": "EBITDA", "canonical": "ebitda"},
-        ])
+        items_a = self._make_items(
+            [
+                {"label": "Revenue", "canonical": "revenue"},
+                {"label": "COGS", "canonical": "cogs"},
+            ]
+        )
+        items_b = self._make_items(
+            [
+                {"label": "Revenue", "canonical": "revenue"},
+                {"label": "EBITDA", "canonical": "ebitda"},
+            ]
+        )
         job_a = self._make_job(items_a)
         job_b = self._make_job(items_b)
 
         db = MagicMock()
-        with patch.object(ExtractionDiffer, "_load_all_facts", return_value=[]), \
-             patch("src.lineage.differ.crud") as mock_crud:
+        with (
+            patch.object(ExtractionDiffer, "_load_all_facts", return_value=[]),
+            patch("src.lineage.differ.crud") as mock_crud,
+        ):
             mock_crud.get_job.side_effect = [job_a, job_b]
 
             a_id, b_id = self._ids()
@@ -176,20 +197,24 @@ class TestExtractionDiffer:
 
     def test_diff_value_changed(self):
         """Same label with different values produces value_changed + value_changes."""
-        items_a = self._make_items([
-            {"label": "Revenue", "canonical": "revenue",
-             "values": {"FY2023": 1000}},
-        ])
-        items_b = self._make_items([
-            {"label": "Revenue", "canonical": "revenue",
-             "values": {"FY2023": 1200}},
-        ])
+        items_a = self._make_items(
+            [
+                {"label": "Revenue", "canonical": "revenue", "values": {"FY2023": 1000}},
+            ]
+        )
+        items_b = self._make_items(
+            [
+                {"label": "Revenue", "canonical": "revenue", "values": {"FY2023": 1200}},
+            ]
+        )
         job_a = self._make_job(items_a)
         job_b = self._make_job(items_b)
 
         db = MagicMock()
-        with patch.object(ExtractionDiffer, "_load_all_facts", return_value=[]), \
-             patch("src.lineage.differ.crud") as mock_crud:
+        with (
+            patch.object(ExtractionDiffer, "_load_all_facts", return_value=[]),
+            patch("src.lineage.differ.crud") as mock_crud,
+        ):
             mock_crud.get_job.side_effect = [job_a, job_b]
 
             a_id, b_id = self._ids()
@@ -206,18 +231,24 @@ class TestExtractionDiffer:
 
     def test_diff_mapping_changed(self):
         """Same label with different canonical_name is mapping_changed."""
-        items_a = self._make_items([
-            {"label": "Total Revenue", "canonical": "revenue"},
-        ])
-        items_b = self._make_items([
-            {"label": "Total Revenue", "canonical": "net_revenue"},
-        ])
+        items_a = self._make_items(
+            [
+                {"label": "Total Revenue", "canonical": "revenue"},
+            ]
+        )
+        items_b = self._make_items(
+            [
+                {"label": "Total Revenue", "canonical": "net_revenue"},
+            ]
+        )
         job_a = self._make_job(items_a)
         job_b = self._make_job(items_b)
 
         db = MagicMock()
-        with patch.object(ExtractionDiffer, "_load_all_facts", return_value=[]), \
-             patch("src.lineage.differ.crud") as mock_crud:
+        with (
+            patch.object(ExtractionDiffer, "_load_all_facts", return_value=[]),
+            patch("src.lineage.differ.crud") as mock_crud,
+        ):
             mock_crud.get_job.side_effect = [job_a, job_b]
 
             a_id, b_id = self._ids()
@@ -230,18 +261,24 @@ class TestExtractionDiffer:
 
     def test_diff_confidence_changed(self):
         """Same label/canonical with different confidence is confidence_changed."""
-        items_a = self._make_items([
-            {"label": "Revenue", "canonical": "revenue", "confidence": 0.7},
-        ])
-        items_b = self._make_items([
-            {"label": "Revenue", "canonical": "revenue", "confidence": 0.95},
-        ])
+        items_a = self._make_items(
+            [
+                {"label": "Revenue", "canonical": "revenue", "confidence": 0.7},
+            ]
+        )
+        items_b = self._make_items(
+            [
+                {"label": "Revenue", "canonical": "revenue", "confidence": 0.95},
+            ]
+        )
         job_a = self._make_job(items_a)
         job_b = self._make_job(items_b)
 
         db = MagicMock()
-        with patch.object(ExtractionDiffer, "_load_all_facts", return_value=[]), \
-             patch("src.lineage.differ.crud") as mock_crud:
+        with (
+            patch.object(ExtractionDiffer, "_load_all_facts", return_value=[]),
+            patch("src.lineage.differ.crud") as mock_crud,
+        ):
             mock_crud.get_job.side_effect = [job_a, job_b]
 
             a_id, b_id = self._ids()
@@ -252,24 +289,32 @@ class TestExtractionDiffer:
 
     def test_diff_canonical_filter(self):
         """canonical_name filter limits diff to matching items only."""
-        items_a = self._make_items([
-            {"label": "Revenue", "canonical": "revenue", "values": {"FY2023": 1000}},
-            {"label": "COGS", "canonical": "cogs", "values": {"FY2023": 500}},
-        ])
-        items_b = self._make_items([
-            {"label": "Revenue", "canonical": "revenue", "values": {"FY2023": 1200}},
-            {"label": "COGS", "canonical": "cogs", "values": {"FY2023": 600}},
-        ])
+        items_a = self._make_items(
+            [
+                {"label": "Revenue", "canonical": "revenue", "values": {"FY2023": 1000}},
+                {"label": "COGS", "canonical": "cogs", "values": {"FY2023": 500}},
+            ]
+        )
+        items_b = self._make_items(
+            [
+                {"label": "Revenue", "canonical": "revenue", "values": {"FY2023": 1200}},
+                {"label": "COGS", "canonical": "cogs", "values": {"FY2023": 600}},
+            ]
+        )
         job_a = self._make_job(items_a)
         job_b = self._make_job(items_b)
 
         db = MagicMock()
-        with patch.object(ExtractionDiffer, "_load_all_facts", return_value=[]), \
-             patch("src.lineage.differ.crud") as mock_crud:
+        with (
+            patch.object(ExtractionDiffer, "_load_all_facts", return_value=[]),
+            patch("src.lineage.differ.crud") as mock_crud,
+        ):
             mock_crud.get_job.side_effect = [job_a, job_b]
 
             result = ExtractionDiffer().diff(
-                db, *self._ids(), canonical_name="revenue",
+                db,
+                *self._ids(),
+                canonical_name="revenue",
             )
 
         # Only revenue should appear — cogs filtered out
@@ -279,24 +324,34 @@ class TestExtractionDiffer:
 
     def test_diff_min_change_pct_filter(self):
         """min_change_pct suppresses small value changes."""
-        items_a = self._make_items([
-            {"label": "Revenue", "canonical": "revenue",
-             "values": {"FY2023": 1000}},
-        ])
-        items_b = self._make_items([
-            {"label": "Revenue", "canonical": "revenue",
-             "values": {"FY2023": 1005}},  # 0.5% change
-        ])
+        items_a = self._make_items(
+            [
+                {"label": "Revenue", "canonical": "revenue", "values": {"FY2023": 1000}},
+            ]
+        )
+        items_b = self._make_items(
+            [
+                {
+                    "label": "Revenue",
+                    "canonical": "revenue",
+                    "values": {"FY2023": 1005},
+                },  # 0.5% change
+            ]
+        )
         job_a = self._make_job(items_a)
         job_b = self._make_job(items_b)
 
         db = MagicMock()
-        with patch.object(ExtractionDiffer, "_load_all_facts", return_value=[]), \
-             patch("src.lineage.differ.crud") as mock_crud:
+        with (
+            patch.object(ExtractionDiffer, "_load_all_facts", return_value=[]),
+            patch("src.lineage.differ.crud") as mock_crud,
+        ):
             mock_crud.get_job.side_effect = [job_a, job_b]
 
             result = ExtractionDiffer().diff(
-                db, *self._ids(), min_change_pct=1.0,
+                db,
+                *self._ids(),
+                min_change_pct=1.0,
             )
 
         # 0.5% change should be suppressed by 1.0% threshold
@@ -320,8 +375,7 @@ class TestExtractionDiffer:
         fact_b.value = 1000.0
 
         db = MagicMock()
-        with patch.object(ExtractionDiffer, "_load_all_facts",
-                          side_effect=[[fact_a], [fact_b]]):
+        with patch.object(ExtractionDiffer, "_load_all_facts", side_effect=[[fact_a], [fact_b]]):
             a_id, b_id = self._ids()
             result = ExtractionDiffer().diff(db, a_id, b_id)
 
@@ -347,8 +401,7 @@ class TestExtractionDiffer:
         fact_b.value = 1500.0
 
         db = MagicMock()
-        with patch.object(ExtractionDiffer, "_load_all_facts",
-                          side_effect=[[fact_a], [fact_b]]):
+        with patch.object(ExtractionDiffer, "_load_all_facts", side_effect=[[fact_a], [fact_b]]):
             a_id, b_id = self._ids()
             result = ExtractionDiffer().diff(db, a_id, b_id)
 
@@ -374,8 +427,7 @@ class TestExtractionDiffer:
         fact_b.value = 500.0
 
         db = MagicMock()
-        with patch.object(ExtractionDiffer, "_load_all_facts",
-                          side_effect=[[fact_a], [fact_b]]):
+        with patch.object(ExtractionDiffer, "_load_all_facts", side_effect=[[fact_a], [fact_b]]):
             a_id, b_id = self._ids()
             result = ExtractionDiffer().diff(db, a_id, b_id)
 
@@ -415,12 +467,13 @@ class TestExtractionDiffer:
         fact_b2.value = 600.0
 
         db = MagicMock()
-        with patch.object(ExtractionDiffer, "_load_all_facts",
-                          side_effect=[[fact_a1, fact_a2], [fact_b1, fact_b2]]):
+        with patch.object(
+            ExtractionDiffer,
+            "_load_all_facts",
+            side_effect=[[fact_a1, fact_a2], [fact_b1, fact_b2]],
+        ):
             a_id, b_id = self._ids()
-            result = ExtractionDiffer().diff(
-                db, a_id, b_id, canonical_name="revenue"
-            )
+            result = ExtractionDiffer().diff(db, a_id, b_id, canonical_name="revenue")
 
         assert len(result.value_changes) == 1
         assert result.value_changes[0]["canonical_name"] == "revenue"
@@ -428,13 +481,21 @@ class TestExtractionDiffer:
     def test_to_dict_format(self):
         """ExtractionDiff.to_dict() includes summary counts."""
         diff = ExtractionDiff(
-            job_a_id="a", job_b_id="b",
+            job_a_id="a",
+            job_b_id="b",
             added_items=[DiffItem("x", "added")],
             removed_items=[DiffItem("y", "removed")],
             changed_items=[DiffItem("z", "value_changed")],
             unchanged_count=5,
-            value_changes=[{"canonical_name": "z", "period": "FY2023",
-                           "old_value": 1, "new_value": 2, "pct_change": 100.0}],
+            value_changes=[
+                {
+                    "canonical_name": "z",
+                    "period": "FY2023",
+                    "old_value": 1,
+                    "new_value": 2,
+                    "pct_change": 100.0,
+                }
+            ],
         )
         d = diff.to_dict()
         assert d["summary"] == {"added": 1, "removed": 1, "changed": 1, "unchanged": 5}
@@ -448,13 +509,14 @@ class TestExtractionDiffer:
 
 
 class TestDiffEndpoint:
-
     def test_diff_endpoint_200(self, test_client_with_db):
         """Diff endpoint returns structured response for two jobs."""
         from src.db.models import JobStatusEnum
 
-        with patch("src.api.jobs.crud") as mock_crud, \
-             patch("src.api.jobs.ExtractionDiffer") as MockDiffer:
+        with (
+            patch("src.api.jobs.crud") as mock_crud,
+            patch("src.api.jobs.ExtractionDiffer") as MockDiffer,
+        ):
             job_a = MagicMock()
             job_a.result = {"line_items": []}
             job_a.status = JobStatusEnum.COMPLETED
@@ -511,7 +573,6 @@ class TestDiffEndpoint:
 
 
 class TestItemLineageEndpoint:
-
     def test_item_lineage_200(self, test_client_with_db):
         """Item lineage endpoint returns transformation chain."""
         with patch("src.api.jobs.crud") as mock_crud:
@@ -519,17 +580,19 @@ class TestItemLineageEndpoint:
             job.result = {
                 "item_lineage": {
                     "revenue": [
-                        {"stage": "parsing", "action": "parsed",
-                         "original_label": "Revenue", "timestamp": "2026-01-01T00:00:00"},
+                        {
+                            "stage": "parsing",
+                            "action": "parsed",
+                            "original_label": "Revenue",
+                            "timestamp": "2026-01-01T00:00:00",
+                        },
                     ]
                 }
             }
             mock_crud.get_job.return_value = job
 
             job_id = str(uuid.uuid4())
-            resp = test_client_with_db.get(
-                f"/api/v1/jobs/{job_id}/item-lineage/revenue"
-            )
+            resp = test_client_with_db.get(f"/api/v1/jobs/{job_id}/item-lineage/revenue")
 
         assert resp.status_code == 200
         data = resp.json()
@@ -544,9 +607,7 @@ class TestItemLineageEndpoint:
             mock_crud.get_job.return_value = job
 
             job_id = str(uuid.uuid4())
-            resp = test_client_with_db.get(
-                f"/api/v1/jobs/{job_id}/item-lineage/nonexistent"
-            )
+            resp = test_client_with_db.get(f"/api/v1/jobs/{job_id}/item-lineage/nonexistent")
 
         assert resp.status_code == 404
 
@@ -557,7 +618,6 @@ class TestItemLineageEndpoint:
 
 
 class TestDiffCrossEntityWarning:
-
     def _make_mock_job(self, status, entity_id):
         """Helper: create a mock job with file.entity_id."""
         job = MagicMock()
@@ -570,8 +630,10 @@ class TestDiffCrossEntityWarning:
         """Diff response includes warning when jobs belong to different entities."""
         from src.db.models import JobStatusEnum
 
-        with patch("src.api.jobs.crud") as mock_crud, \
-             patch("src.api.jobs.ExtractionDiffer") as MockDiffer:
+        with (
+            patch("src.api.jobs.crud") as mock_crud,
+            patch("src.api.jobs.ExtractionDiffer") as MockDiffer,
+        ):
             job_a = self._make_mock_job(JobStatusEnum.COMPLETED, uuid.uuid4())
             job_b = self._make_mock_job(JobStatusEnum.COMPLETED, uuid.uuid4())
             mock_crud.get_job.side_effect = [job_a, job_b]
@@ -594,8 +656,10 @@ class TestDiffCrossEntityWarning:
 
         entity_id = uuid.uuid4()
 
-        with patch("src.api.jobs.crud") as mock_crud, \
-             patch("src.api.jobs.ExtractionDiffer") as MockDiffer:
+        with (
+            patch("src.api.jobs.crud") as mock_crud,
+            patch("src.api.jobs.ExtractionDiffer") as MockDiffer,
+        ):
             job_a = self._make_mock_job(JobStatusEnum.COMPLETED, entity_id)
             job_b = self._make_mock_job(JobStatusEnum.COMPLETED, entity_id)
             mock_crud.get_job.side_effect = [job_a, job_b]
@@ -615,8 +679,10 @@ class TestDiffCrossEntityWarning:
         """No warning when either entity_id is None."""
         from src.db.models import JobStatusEnum
 
-        with patch("src.api.jobs.crud") as mock_crud, \
-             patch("src.api.jobs.ExtractionDiffer") as MockDiffer:
+        with (
+            patch("src.api.jobs.crud") as mock_crud,
+            patch("src.api.jobs.ExtractionDiffer") as MockDiffer,
+        ):
             job_a = self._make_mock_job(JobStatusEnum.COMPLETED, None)
             job_b = self._make_mock_job(JobStatusEnum.COMPLETED, uuid.uuid4())
             mock_crud.get_job.side_effect = [job_a, job_b]
@@ -634,11 +700,12 @@ class TestDiffCrossEntityWarning:
 
 
 class TestDiffCorrectionMetadata:
-
     def test_to_dict_includes_warnings_and_metadata(self):
         """ExtractionDiff.to_dict() includes warnings and metadata when present."""
         diff = ExtractionDiff(
-            job_a_id="a", job_b_id="b", unchanged_count=3,
+            job_a_id="a",
+            job_b_id="b",
+            unchanged_count=3,
             warnings=["Jobs belong to different entities"],
             metadata={"job_a_corrections": 2, "job_b_corrections": 0},
         )
@@ -658,8 +725,10 @@ class TestDiffCorrectionMetadata:
         """Metadata absent when no corrections exist for either job."""
         from src.db.models import JobStatusEnum
 
-        with patch("src.api.jobs.crud") as mock_crud, \
-             patch("src.api.jobs.ExtractionDiffer") as MockDiffer:
+        with (
+            patch("src.api.jobs.crud") as mock_crud,
+            patch("src.api.jobs.ExtractionDiffer") as MockDiffer,
+        ):
             job_a = MagicMock()
             job_a.status = JobStatusEnum.COMPLETED
             job_a.file = MagicMock()

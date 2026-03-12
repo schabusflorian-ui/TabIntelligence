@@ -1,18 +1,17 @@
 """Unit tests for benchmark_extraction.py helper functions."""
+
 import json
-import pytest
+import sys
 from pathlib import Path
 from unittest.mock import patch
 
-import sys
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.benchmark_extraction import (
-    _evaluate_mapping_accuracy,
-    _evaluate_triage_accuracy,
     _compare_results,
     _discover_fixtures,
+    _evaluate_mapping_accuracy,
     _load_previous_result,
     _print_aggregate_summary,
 )

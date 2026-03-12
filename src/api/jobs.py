@@ -1,11 +1,12 @@
 """Job management API endpoints (list, status, export, retry, review, lineage, diff)."""
+
 from typing import Optional
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from uuid import UUID
 
-from src.api.middleware import log_audit_event, get_client_ip
+from src.api.middleware import get_client_ip, log_audit_event
 from src.api.rate_limit import limiter
 from src.api.schemas import (
     ExtractionDiffResponse,
@@ -83,7 +84,7 @@ async def get_job_status(
     request: Request,
     job_id: str,
     db: Session = Depends(get_db),
-    api_key: APIKey = Depends(get_current_api_key)
+    api_key: APIKey = Depends(get_current_api_key),
 ):
     """Get job status."""
     logger.debug(f"Job status requested: {job_id}")
@@ -189,7 +190,7 @@ async def export_job_result(
         raise HTTPException(
             409,
             f"Job is not completed (status: {job.status.value}). "
-            f"Export is only available for completed or needs_review jobs."
+            f"Export is only available for completed or needs_review jobs.",
         )
 
     if not job.result:
@@ -200,22 +201,13 @@ async def export_job_result(
 
     # Apply filters
     if min_confidence is not None:
-        line_items = [
-            li for li in line_items
-            if li.get("confidence", 0) >= min_confidence
-        ]
+        line_items = [li for li in line_items if li.get("confidence", 0) >= min_confidence]
 
     if canonical_name:
-        line_items = [
-            li for li in line_items
-            if li.get("canonical_name") == canonical_name
-        ]
+        line_items = [li for li in line_items if li.get("canonical_name") == canonical_name]
 
     if sheet:
-        line_items = [
-            li for li in line_items
-            if li.get("sheet") == sheet
-        ]
+        line_items = [li for li in line_items if li.get("sheet") == sheet]
 
     # Audit trail
     log_audit_event(
@@ -283,8 +275,7 @@ async def retry_job(
 
     if job.status != JobStatusEnum.FAILED:
         raise HTTPException(
-            409,
-            f"Only failed jobs can be retried (current status: {job.status.value})"
+            409, f"Only failed jobs can be retried (current status: {job.status.value})"
         )
 
     # Look up file record to get s3_key for re-extraction
@@ -326,7 +317,11 @@ async def retry_job(
     resumed_stages = list(stage_results.keys()) if resume_from_stage else []
     logger.info(
         f"Job retry: original={job_id}, new_job={new_job.job_id}, task={task.id}"
-        + (f", resuming from {resume_from_stage} (reusing {resumed_stages})" if resume_from_stage else "")
+        + (
+            f", resuming from {resume_from_stage} (reusing {resumed_stages})"
+            if resume_from_stage
+            else ""
+        )
     )
 
     # Audit trail
@@ -482,10 +477,7 @@ def get_item_provenance(
             raise HTTPException(404, "Job has no results")
 
         line_items = job.result.get("line_items", [])
-        matches = [
-            li for li in line_items
-            if li.get("canonical_name") == canonical_name
-        ]
+        matches = [li for li in line_items if li.get("canonical_name") == canonical_name]
 
         if not matches:
             raise HTTPException(
@@ -543,7 +535,9 @@ def get_extraction_diff(
 
         differ = ExtractionDiffer()
         result = differ.diff(
-            db, job_id, other_job_id,
+            db,
+            job_id,
+            other_job_id,
             canonical_name=canonical_name,
             min_change_pct=min_change_pct,
         )
@@ -557,14 +551,22 @@ def get_extraction_diff(
             )
 
         # Correction metadata
-        corr_a = db.query(CorrectionHistory).filter(
-            CorrectionHistory.job_id == job_a_uuid,
-            CorrectionHistory.reverted == False,  # noqa: E712
-        ).count()
-        corr_b = db.query(CorrectionHistory).filter(
-            CorrectionHistory.job_id == job_b_uuid,
-            CorrectionHistory.reverted == False,  # noqa: E712
-        ).count()
+        corr_a = (
+            db.query(CorrectionHistory)
+            .filter(
+                CorrectionHistory.job_id == job_a_uuid,
+                CorrectionHistory.reverted == False,  # noqa: E712
+            )
+            .count()
+        )
+        corr_b = (
+            db.query(CorrectionHistory)
+            .filter(
+                CorrectionHistory.job_id == job_b_uuid,
+                CorrectionHistory.reverted == False,  # noqa: E712
+            )
+            .count()
+        )
         if corr_a or corr_b:
             result.metadata["job_a_corrections"] = corr_a
             result.metadata["job_b_corrections"] = corr_b
@@ -600,9 +602,7 @@ def get_item_lineage(
 
         item_lineage = (job.result or {}).get("item_lineage", {})
         if canonical_name not in item_lineage:
-            raise HTTPException(
-                404, f"No item lineage for '{canonical_name}'"
-            )
+            raise HTTPException(404, f"No item lineage for '{canonical_name}'")
 
         return {
             "job_id": job_id,
@@ -618,6 +618,7 @@ def _build_csv_response(result: dict, line_items: list, job_id: str):
     """Build a CSV response from extraction line items."""
     import csv
     import io
+
     from starlette.responses import StreamingResponse
 
     output = io.StringIO()
@@ -630,19 +631,23 @@ def _build_csv_response(result: dict, line_items: list, job_id: str):
     period_columns = sorted(period_columns_set)
 
     # Write header (includes provenance columns after period data)
-    header: list[str] = [
-        "sheet",
-        "row",
-        "original_label",
-        "canonical_name",
-        "confidence",
-        "hierarchy_level",
-    ] + period_columns + [
-        "source_cell",
-        "mapping_method",
-        "taxonomy_category",
-        "validation_passed",
-    ]
+    header: list[str] = (
+        [
+            "sheet",
+            "row",
+            "original_label",
+            "canonical_name",
+            "confidence",
+            "hierarchy_level",
+        ]
+        + period_columns
+        + [
+            "source_cell",
+            "mapping_method",
+            "taxonomy_category",
+            "validation_passed",
+        ]
+    )
     writer.writerow(header)
 
     # Write data rows
@@ -658,19 +663,23 @@ def _build_csv_response(result: dict, line_items: list, job_id: str):
         val_prov = prov.get("validation")
         val_passed = str(val_prov.get("all_passed", "")).lower() if val_prov else ""
 
-        row = [
-            li.get("sheet", ""),
-            li.get("row", ""),
-            li.get("original_label", ""),
-            li.get("canonical_name", ""),
-            li.get("confidence", ""),
-            li.get("hierarchy_level", ""),
-        ] + [values.get(period, "") for period in period_columns] + [
-            source_cell,
-            mapping_method,
-            taxonomy_cat,
-            val_passed,
-        ]
+        row = (
+            [
+                li.get("sheet", ""),
+                li.get("row", ""),
+                li.get("original_label", ""),
+                li.get("canonical_name", ""),
+                li.get("confidence", ""),
+                li.get("hierarchy_level", ""),
+            ]
+            + [values.get(period, "") for period in period_columns]
+            + [
+                source_cell,
+                mapping_method,
+                taxonomy_cat,
+                val_passed,
+            ]
+        )
         writer.writerow(row)
 
     csv_content = output.getvalue()

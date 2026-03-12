@@ -6,61 +6,65 @@ Excel representations and produces normalized metadata for downstream consumers.
 Stateless, pure Python, no external dependencies. Never raises on unparseable
 input — returns None or confidence=0.0.
 """
+
 import re
 from collections import Counter
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
-
 
 # ---------------------------------------------------------------------------
 # Compiled regex patterns (matched in priority order)
 # ---------------------------------------------------------------------------
 
 # Fiscal year: "FY2024", "FY24", "FY 2024", "FY2024E", "FY'24"
-_RE_FISCAL_YEAR = re.compile(
-    r"^FY\s*'?(\d{2,4})\s*([AEFP])?$", re.IGNORECASE
-)
+_RE_FISCAL_YEAR = re.compile(r"^FY\s*'?(\d{2,4})\s*([AEFP])?$", re.IGNORECASE)
 
 # Calendar year: "CY2024", "CY24", "CY2024E"
-_RE_CALENDAR_YEAR = re.compile(
-    r"^CY\s*'?(\d{2,4})\s*([AEFP])?$", re.IGNORECASE
-)
+_RE_CALENDAR_YEAR = re.compile(r"^CY\s*'?(\d{2,4})\s*([AEFP])?$", re.IGNORECASE)
 
 # LTM / TTM / NTM (optionally followed by date/text)
-_RE_LTM_TTM_NTM = re.compile(
-    r"^(LTM|TTM|NTM)(?:\s+.*)?$", re.IGNORECASE
-)
+_RE_LTM_TTM_NTM = re.compile(r"^(LTM|TTM|NTM)(?:\s+.*)?$", re.IGNORECASE)
 
 # Year with suffix: "2024A", "2024E", "2025F", "2026P"
 # NOTE: Only 4-digit years accepted to avoid ambiguity with short codes like
 # "24A". Use "FY24A" (matched by _RE_FISCAL_YEAR) for 2-digit years.
-_RE_YEAR_SUFFIX = re.compile(
-    r"^((?:19|20)\d{2})\s*([AEFP])$", re.IGNORECASE
-)
+_RE_YEAR_SUFFIX = re.compile(r"^((?:19|20)\d{2})\s*([AEFP])$", re.IGNORECASE)
 
 # Quarterly (Q-first): "Q1 2024", "Q3'24", "Q4 '24"
-_RE_QUARTERLY_Q_FIRST = re.compile(
-    r"^Q([1-4])\s*['\s]*(\d{2,4})\s*([AEFP])?$", re.IGNORECASE
-)
+_RE_QUARTERLY_Q_FIRST = re.compile(r"^Q([1-4])\s*['\s]*(\d{2,4})\s*([AEFP])?$", re.IGNORECASE)
 
 # Quarterly (year-first): "2024 Q1", "2024Q3"
-_RE_QUARTERLY_YEAR_FIRST = re.compile(
-    r"^((?:19|20)\d{2})\s*Q([1-4])\s*([AEFP])?$", re.IGNORECASE
-)
+_RE_QUARTERLY_YEAR_FIRST = re.compile(r"^((?:19|20)\d{2})\s*Q([1-4])\s*([AEFP])?$", re.IGNORECASE)
 
 # Half-year: "H1 2024", "H2'24", "1H 2024", "2H24", "1H'24"
-_RE_HALF_YEAR = re.compile(
-    r"^(?:([12])H|H([12]))\s*['\s]*(\d{2,4})\s*([AEFP])?$", re.IGNORECASE
-)
+_RE_HALF_YEAR = re.compile(r"^(?:([12])H|H([12]))\s*['\s]*(\d{2,4})\s*([AEFP])?$", re.IGNORECASE)
 
 # Monthly (name + year): "Jan-24", "Jan 2024", "March 2024", "Dec/2024"
 _MONTH_ABBREVS = {
-    "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
-    "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
-    "january": 1, "february": 2, "march": 3, "april": 4,
-    "june": 6, "july": 7, "august": 8, "september": 9,
-    "october": 10, "november": 11, "december": 12,
+    "jan": 1,
+    "feb": 2,
+    "mar": 3,
+    "apr": 4,
+    "may": 5,
+    "jun": 6,
+    "jul": 7,
+    "aug": 8,
+    "sep": 9,
+    "oct": 10,
+    "nov": 11,
+    "dec": 12,
+    "january": 1,
+    "february": 2,
+    "march": 3,
+    "april": 4,
+    "june": 6,
+    "july": 7,
+    "august": 8,
+    "september": 9,
+    "october": 10,
+    "november": 11,
+    "december": 12,
 }
 
 _RE_MONTHLY = re.compile(
@@ -81,9 +85,7 @@ _RE_NUMERIC = re.compile(r"^(\d{1,3})(?:\.0)?$")
 # ---------------------------------------------------------------------------
 
 # Relative year: "Year 1", "Yr 5", "Year 30", "Yr. 2", "Year 1A"
-_RE_RELATIVE_YEAR = re.compile(
-    r"^(?:Year|Yr)\.?\s*(\d{1,3})\s*([AEFP])?$", re.IGNORECASE
-)
+_RE_RELATIVE_YEAR = re.compile(r"^(?:Year|Yr)\.?\s*(\d{1,3})\s*([AEFP])?$", re.IGNORECASE)
 
 # COD-relative: "COD", "COD+1", "COD-3", "Pre-COD", "Post-COD"
 _RE_COD_RELATIVE = re.compile(
@@ -111,19 +113,26 @@ _RE_FISCAL_YEAR_END = re.compile(
 )
 
 # Semi-annual S-prefix: "S1 2024", "S2'24" (mapped to half_year)
-_RE_SEMI_ANNUAL = re.compile(
-    r"^(?:([12])S|S([12]))\s*['\s]*(\d{2,4})\s*([AEFP])?$", re.IGNORECASE
-)
+_RE_SEMI_ANNUAL = re.compile(r"^(?:([12])S|S([12]))\s*['\s]*(\d{2,4})\s*([AEFP])?$", re.IGNORECASE)
 
 # ISO monthly: "2024-01", "2024/12"
-_RE_ISO_MONTHLY = re.compile(
-    r"^((?:19|20)\d{2})[/-](0[1-9]|1[0-2])$"
-)
+_RE_ISO_MONTHLY = re.compile(r"^((?:19|20)\d{2})[/-](0[1-9]|1[0-2])$")
 
 # Multi-row header keywords (row above period values)
 _HEADER_KEYWORDS = {
-    "year", "period", "date", "fy", "cy", "fiscal year", "calendar year",
-    "construction", "operations", "ops", "const", "const.", "development",
+    "year",
+    "period",
+    "date",
+    "fy",
+    "cy",
+    "fiscal year",
+    "calendar year",
+    "construction",
+    "operations",
+    "ops",
+    "const",
+    "const.",
+    "development",
 }
 
 
@@ -131,9 +140,11 @@ _HEADER_KEYWORDS = {
 # Dataclasses
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class NormalizedPeriod:
     """A single detected and normalized time period."""
+
     raw_value: str
     normalized: str
     column_letter: str
@@ -154,6 +165,7 @@ class NormalizedPeriod:
 @dataclass
 class PeriodDetectionResult:
     """Result of period detection for a single sheet."""
+
     periods: List[NormalizedPeriod]
     header_row_indices: List[int]
     dominant_type: str
@@ -173,6 +185,7 @@ class PeriodDetectionResult:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _expand_year(y_str: str) -> int:
     """Expand 2-digit year: <50 → 2000+n, >=50 → 1900+n."""
@@ -211,8 +224,13 @@ def _compute_sort_key(
     """
     type_orders = {
         "numeric": 0,
-        "fiscal_year": 1, "calendar_year": 1, "quarterly": 1,
-        "half_year": 1, "monthly": 1, "date": 1, "fiscal_year_end": 1,
+        "fiscal_year": 1,
+        "calendar_year": 1,
+        "quarterly": 1,
+        "half_year": 1,
+        "monthly": 1,
+        "date": 1,
+        "fiscal_year_end": 1,
         "relative_year": 2,
         "phase_year": 3,
         "cod_relative": 4,
@@ -245,9 +263,14 @@ def _compute_sort_key(
 
     # Granularity separates annual from sub-annual within the same year.
     _granularity = {
-        "fiscal_year": 0, "calendar_year": 0, "standalone_year": 0,
-        "year_suffix": 0, "fiscal_year_end": 0,
-        "half_year": 1, "quarterly": 2, "monthly": 3,
+        "fiscal_year": 0,
+        "calendar_year": 0,
+        "standalone_year": 0,
+        "year_suffix": 0,
+        "fiscal_year_end": 0,
+        "half_year": 1,
+        "quarterly": 2,
+        "monthly": 3,
     }
     if period_type == "date":
         granularity_order = 0 if sub_period is None else 3
@@ -275,6 +298,7 @@ def _compute_sort_key(
 # PeriodParser
 # ---------------------------------------------------------------------------
 
+
 class PeriodParser:
     """Stateless period detection from structured Excel data."""
 
@@ -285,7 +309,9 @@ class PeriodParser:
     # ------------------------------------------------------------------
 
     def parse_single_value(
-        self, raw_value: Any, column_letter: str = "",
+        self,
+        raw_value: Any,
+        column_letter: str = "",
     ) -> Optional[NormalizedPeriod]:
         """Parse a single cell value into a NormalizedPeriod.
 
@@ -336,15 +362,19 @@ class PeriodParser:
         )
 
     def detect_periods_from_sheet(
-        self, sheet: Dict[str, Any],
+        self,
+        sheet: Dict[str, Any],
     ) -> PeriodDetectionResult:
         """Detect periods from a single sheet's structured data.
 
         Never raises — returns empty result on failure.
         """
         empty = PeriodDetectionResult(
-            periods=[], header_row_indices=[], dominant_type="unknown",
-            confidence=0.0, layout="time_across_columns",
+            periods=[],
+            header_row_indices=[],
+            dominant_type="unknown",
+            confidence=0.0,
+            layout="time_across_columns",
         )
 
         try:
@@ -355,7 +385,9 @@ class PeriodParser:
             return empty
 
     def _detect_periods_impl(
-        self, sheet: Dict[str, Any], empty: PeriodDetectionResult,
+        self,
+        sheet: Dict[str, Any],
+        empty: PeriodDetectionResult,
     ) -> PeriodDetectionResult:
         """Internal implementation of detect_periods_from_sheet."""
         rows = sheet.get("rows", [])
@@ -363,7 +395,9 @@ class PeriodParser:
             return empty
 
         # Take first N rows for header scanning
-        scan_rows = [r for r in rows if r["row_index"] <= rows[0]["row_index"] + self.MAX_HEADER_SCAN_ROWS]
+        scan_rows = [
+            r for r in rows if r["row_index"] <= rows[0]["row_index"] + self.MAX_HEADER_SCAN_ROWS
+        ]
 
         # Try multi-row header first
         multi_result = self._detect_multi_row_header(scan_rows)
@@ -409,7 +443,9 @@ class PeriodParser:
     # ------------------------------------------------------------------
 
     def _try_fiscal_year(
-        self, text: str, col: str,
+        self,
+        text: str,
+        col: str,
     ) -> Optional[NormalizedPeriod]:
         m = _RE_FISCAL_YEAR.match(text)
         if not m:
@@ -420,14 +456,22 @@ class PeriodParser:
         normalized = f"FY{year}{suffix}"
         conf = 0.9 if len(m.group(1)) == 2 else 1.0
         return NormalizedPeriod(
-            raw_value=text, normalized=normalized, column_letter=col,
-            period_type="fiscal_year", year=year, sub_period=None,
-            is_actual=is_actual, is_forecast=is_forecast, confidence=conf,
+            raw_value=text,
+            normalized=normalized,
+            column_letter=col,
+            period_type="fiscal_year",
+            year=year,
+            sub_period=None,
+            is_actual=is_actual,
+            is_forecast=is_forecast,
+            confidence=conf,
             sort_key=_compute_sort_key("fiscal_year", year, None, is_actual, is_forecast, text),
         )
 
     def _try_calendar_year(
-        self, text: str, col: str,
+        self,
+        text: str,
+        col: str,
     ) -> Optional[NormalizedPeriod]:
         m = _RE_CALENDAR_YEAR.match(text)
         if not m:
@@ -438,28 +482,44 @@ class PeriodParser:
         normalized = f"CY{year}{suffix}"
         conf = 0.9 if len(m.group(1)) == 2 else 1.0
         return NormalizedPeriod(
-            raw_value=text, normalized=normalized, column_letter=col,
-            period_type="calendar_year", year=year, sub_period=None,
-            is_actual=is_actual, is_forecast=is_forecast, confidence=conf,
+            raw_value=text,
+            normalized=normalized,
+            column_letter=col,
+            period_type="calendar_year",
+            year=year,
+            sub_period=None,
+            is_actual=is_actual,
+            is_forecast=is_forecast,
+            confidence=conf,
             sort_key=_compute_sort_key("calendar_year", year, None, is_actual, is_forecast, text),
         )
 
     def _try_ltm_ttm_ntm(
-        self, text: str, col: str,
+        self,
+        text: str,
+        col: str,
     ) -> Optional[NormalizedPeriod]:
         m = _RE_LTM_TTM_NTM.match(text)
         if not m:
             return None
         label = m.group(1).upper()
         return NormalizedPeriod(
-            raw_value=text, normalized=label, column_letter=col,
-            period_type="ltm_ttm_ntm", year=None, sub_period=None,
-            is_actual=False, is_forecast=False, confidence=1.0,
+            raw_value=text,
+            normalized=label,
+            column_letter=col,
+            period_type="ltm_ttm_ntm",
+            year=None,
+            sub_period=None,
+            is_actual=False,
+            is_forecast=False,
+            confidence=1.0,
             sort_key=_compute_sort_key("ltm_ttm_ntm", None, None, False, False, text),
         )
 
     def _try_year_suffix(
-        self, text: str, col: str,
+        self,
+        text: str,
+        col: str,
     ) -> Optional[NormalizedPeriod]:
         m = _RE_YEAR_SUFFIX.match(text)
         if not m:
@@ -469,14 +529,22 @@ class PeriodParser:
         suffix = m.group(2).upper()
         normalized = f"{year}{suffix}"
         return NormalizedPeriod(
-            raw_value=text, normalized=normalized, column_letter=col,
-            period_type="calendar_year", year=year, sub_period=None,
-            is_actual=is_actual, is_forecast=is_forecast, confidence=1.0,
+            raw_value=text,
+            normalized=normalized,
+            column_letter=col,
+            period_type="calendar_year",
+            year=year,
+            sub_period=None,
+            is_actual=is_actual,
+            is_forecast=is_forecast,
+            confidence=1.0,
             sort_key=_compute_sort_key("calendar_year", year, None, is_actual, is_forecast, text),
         )
 
     def _try_quarterly_q_first(
-        self, text: str, col: str,
+        self,
+        text: str,
+        col: str,
     ) -> Optional[NormalizedPeriod]:
         m = _RE_QUARTERLY_Q_FIRST.match(text)
         if not m:
@@ -487,14 +555,22 @@ class PeriodParser:
         normalized = f"{year}-Q{quarter}"
         conf = 0.9 if len(m.group(2)) == 2 else 1.0
         return NormalizedPeriod(
-            raw_value=text, normalized=normalized, column_letter=col,
-            period_type="quarterly", year=year, sub_period=quarter,
-            is_actual=is_actual, is_forecast=is_forecast, confidence=conf,
+            raw_value=text,
+            normalized=normalized,
+            column_letter=col,
+            period_type="quarterly",
+            year=year,
+            sub_period=quarter,
+            is_actual=is_actual,
+            is_forecast=is_forecast,
+            confidence=conf,
             sort_key=_compute_sort_key("quarterly", year, quarter, is_actual, is_forecast, text),
         )
 
     def _try_quarterly_year_first(
-        self, text: str, col: str,
+        self,
+        text: str,
+        col: str,
     ) -> Optional[NormalizedPeriod]:
         m = _RE_QUARTERLY_YEAR_FIRST.match(text)
         if not m:
@@ -504,14 +580,22 @@ class PeriodParser:
         is_actual, is_forecast = _suffix_flags(m.group(3))
         normalized = f"{year}-Q{quarter}"
         return NormalizedPeriod(
-            raw_value=text, normalized=normalized, column_letter=col,
-            period_type="quarterly", year=year, sub_period=quarter,
-            is_actual=is_actual, is_forecast=is_forecast, confidence=1.0,
+            raw_value=text,
+            normalized=normalized,
+            column_letter=col,
+            period_type="quarterly",
+            year=year,
+            sub_period=quarter,
+            is_actual=is_actual,
+            is_forecast=is_forecast,
+            confidence=1.0,
             sort_key=_compute_sort_key("quarterly", year, quarter, is_actual, is_forecast, text),
         )
 
     def _try_half_year(
-        self, text: str, col: str,
+        self,
+        text: str,
+        col: str,
     ) -> Optional[NormalizedPeriod]:
         m = _RE_HALF_YEAR.match(text)
         if not m:
@@ -522,14 +606,22 @@ class PeriodParser:
         normalized = f"{year}-H{half}"
         conf = 0.9 if len(m.group(3)) == 2 else 1.0
         return NormalizedPeriod(
-            raw_value=text, normalized=normalized, column_letter=col,
-            period_type="half_year", year=year, sub_period=half,
-            is_actual=is_actual, is_forecast=is_forecast, confidence=conf,
+            raw_value=text,
+            normalized=normalized,
+            column_letter=col,
+            period_type="half_year",
+            year=year,
+            sub_period=half,
+            is_actual=is_actual,
+            is_forecast=is_forecast,
+            confidence=conf,
             sort_key=_compute_sort_key("half_year", year, half, is_actual, is_forecast, text),
         )
 
     def _try_monthly(
-        self, text: str, col: str,
+        self,
+        text: str,
+        col: str,
     ) -> Optional[NormalizedPeriod]:
         m = _RE_MONTHLY.match(text)
         if not m:
@@ -542,23 +634,37 @@ class PeriodParser:
         normalized = f"{year}-{month:02d}"
         conf = 0.9 if len(m.group(2)) == 2 else 1.0
         return NormalizedPeriod(
-            raw_value=text, normalized=normalized, column_letter=col,
-            period_type="monthly", year=year, sub_period=month,
-            is_actual=False, is_forecast=False, confidence=conf,
+            raw_value=text,
+            normalized=normalized,
+            column_letter=col,
+            period_type="monthly",
+            year=year,
+            sub_period=month,
+            is_actual=False,
+            is_forecast=False,
+            confidence=conf,
             sort_key=_compute_sort_key("monthly", year, month, False, False, text),
         )
 
     def _try_standalone_year(
-        self, text: str, col: str,
+        self,
+        text: str,
+        col: str,
     ) -> Optional[NormalizedPeriod]:
         m = _RE_STANDALONE_YEAR.match(text)
         if not m:
             return None
         year = int(m.group(1))
         return NormalizedPeriod(
-            raw_value=text, normalized=str(year), column_letter=col,
-            period_type="calendar_year", year=year, sub_period=None,
-            is_actual=False, is_forecast=False, confidence=1.0,
+            raw_value=text,
+            normalized=str(year),
+            column_letter=col,
+            period_type="calendar_year",
+            year=year,
+            sub_period=None,
+            is_actual=False,
+            is_forecast=False,
+            confidence=1.0,
             sort_key=_compute_sort_key("calendar_year", year, None, False, False, text),
         )
 
@@ -567,7 +673,9 @@ class PeriodParser:
     # ------------------------------------------------------------------
 
     def _try_fiscal_year_end(
-        self, text: str, col: str,
+        self,
+        text: str,
+        col: str,
     ) -> Optional[NormalizedPeriod]:
         """Match 'FYE Mar 2024', 'FYE Jun '24', 'FYE December 2025E'."""
         m = _RE_FISCAL_YEAR_END.match(text)
@@ -584,16 +692,29 @@ class PeriodParser:
         normalized = f"FYE-{year}-{month_num:02d}{suffix_str}"
         conf = 1.0 if len(m.group(2)) == 4 else 0.9
         return NormalizedPeriod(
-            raw_value=text, normalized=normalized, column_letter=col,
-            period_type="fiscal_year_end", year=year, sub_period=month_num,
-            is_actual=is_actual, is_forecast=is_forecast, confidence=conf,
+            raw_value=text,
+            normalized=normalized,
+            column_letter=col,
+            period_type="fiscal_year_end",
+            year=year,
+            sub_period=month_num,
+            is_actual=is_actual,
+            is_forecast=is_forecast,
+            confidence=conf,
             sort_key=_compute_sort_key(
-                "fiscal_year_end", year, month_num, is_actual, is_forecast, text,
+                "fiscal_year_end",
+                year,
+                month_num,
+                is_actual,
+                is_forecast,
+                text,
             ),
         )
 
     def _try_semi_annual(
-        self, text: str, col: str,
+        self,
+        text: str,
+        col: str,
     ) -> Optional[NormalizedPeriod]:
         """Match 'S1 2024', 'S2'24', '1S 2024' → half_year."""
         m = _RE_SEMI_ANNUAL.match(text)
@@ -606,16 +727,29 @@ class PeriodParser:
         normalized = f"{year}-H{half}"
         conf = 1.0 if len(m.group(3)) == 4 else 0.9
         return NormalizedPeriod(
-            raw_value=text, normalized=normalized, column_letter=col,
-            period_type="half_year", year=year, sub_period=half,
-            is_actual=is_actual, is_forecast=is_forecast, confidence=conf,
+            raw_value=text,
+            normalized=normalized,
+            column_letter=col,
+            period_type="half_year",
+            year=year,
+            sub_period=half,
+            is_actual=is_actual,
+            is_forecast=is_forecast,
+            confidence=conf,
             sort_key=_compute_sort_key(
-                "half_year", year, half, is_actual, is_forecast, text,
+                "half_year",
+                year,
+                half,
+                is_actual,
+                is_forecast,
+                text,
             ),
         )
 
     def _try_iso_monthly(
-        self, text: str, col: str,
+        self,
+        text: str,
+        col: str,
     ) -> Optional[NormalizedPeriod]:
         """Match '2024-01', '2024/12' → monthly."""
         m = _RE_ISO_MONTHLY.match(text)
@@ -625,16 +759,29 @@ class PeriodParser:
         month = int(m.group(2))
         normalized = f"{year}-{month:02d}"
         return NormalizedPeriod(
-            raw_value=text, normalized=normalized, column_letter=col,
-            period_type="monthly", year=year, sub_period=month,
-            is_actual=False, is_forecast=False, confidence=1.0,
+            raw_value=text,
+            normalized=normalized,
+            column_letter=col,
+            period_type="monthly",
+            year=year,
+            sub_period=month,
+            is_actual=False,
+            is_forecast=False,
+            confidence=1.0,
             sort_key=_compute_sort_key(
-                "monthly", year, month, False, False, text,
+                "monthly",
+                year,
+                month,
+                False,
+                False,
+                text,
             ),
         )
 
     def _try_relative_year(
-        self, text: str, col: str,
+        self,
+        text: str,
+        col: str,
     ) -> Optional[NormalizedPeriod]:
         """Match 'Year 1', 'Yr 5', 'Year 30', 'Yr. 2', 'Year 1A'."""
         m = _RE_RELATIVE_YEAR.match(text)
@@ -646,16 +793,29 @@ class PeriodParser:
         suffix_str = suffix.upper() if suffix else ""
         normalized = f"Year{num}{suffix_str}"
         return NormalizedPeriod(
-            raw_value=text, normalized=normalized, column_letter=col,
-            period_type="relative_year", year=None, sub_period=num,
-            is_actual=is_actual, is_forecast=is_forecast, confidence=0.9,
+            raw_value=text,
+            normalized=normalized,
+            column_letter=col,
+            period_type="relative_year",
+            year=None,
+            sub_period=num,
+            is_actual=is_actual,
+            is_forecast=is_forecast,
+            confidence=0.9,
             sort_key=_compute_sort_key(
-                "relative_year", None, num, is_actual, is_forecast, text,
+                "relative_year",
+                None,
+                num,
+                is_actual,
+                is_forecast,
+                text,
             ),
         )
 
     def _try_cod_relative(
-        self, text: str, col: str,
+        self,
+        text: str,
+        col: str,
     ) -> Optional[NormalizedPeriod]:
         """Match 'COD', 'COD+1', 'COD-3', 'Pre-COD', 'Post-COD'."""
         m = _RE_COD_RELATIVE.match(text)
@@ -680,16 +840,29 @@ class PeriodParser:
             offset = 0
 
         return NormalizedPeriod(
-            raw_value=text, normalized=normalized, column_letter=col,
-            period_type="cod_relative", year=None, sub_period=offset,
-            is_actual=False, is_forecast=False, confidence=0.95,
+            raw_value=text,
+            normalized=normalized,
+            column_letter=col,
+            period_type="cod_relative",
+            year=None,
+            sub_period=offset,
+            is_actual=False,
+            is_forecast=False,
+            confidence=0.95,
             sort_key=_compute_sort_key(
-                "cod_relative", None, offset, False, False, text,
+                "cod_relative",
+                None,
+                offset,
+                False,
+                False,
+                text,
             ),
         )
 
     def _try_phase_year(
-        self, text: str, col: str,
+        self,
+        text: str,
+        col: str,
     ) -> Optional[NormalizedPeriod]:
         """Match 'Construction Year 1', 'Const. Year 2', 'Ops Yr 3'."""
         m = _RE_PHASE_YEAR.match(text)
@@ -707,16 +880,29 @@ class PeriodParser:
 
         normalized = f"{phase_prefix}-Year{num}"
         return NormalizedPeriod(
-            raw_value=text, normalized=normalized, column_letter=col,
-            period_type="phase_year", year=phase_order, sub_period=num,
-            is_actual=False, is_forecast=False, confidence=0.9,
+            raw_value=text,
+            normalized=normalized,
+            column_letter=col,
+            period_type="phase_year",
+            year=phase_order,
+            sub_period=num,
+            is_actual=False,
+            is_forecast=False,
+            confidence=0.9,
             sort_key=_compute_sort_key(
-                "phase_year", phase_order, num, False, False, text,
+                "phase_year",
+                phase_order,
+                num,
+                False,
+                False,
+                text,
             ),
         )
 
     def _try_stub(
-        self, text: str, col: str,
+        self,
+        text: str,
+        col: str,
     ) -> Optional[NormalizedPeriod]:
         """Match 'Stub', '6-month stub', '3 mo stub', 'Short Period'."""
         m = _RE_STUB.match(text)
@@ -726,16 +912,29 @@ class PeriodParser:
         months = int(months_str) if months_str else 0
         normalized = f"Stub-{months}M" if months else "Stub"
         return NormalizedPeriod(
-            raw_value=text, normalized=normalized, column_letter=col,
-            period_type="stub", year=None, sub_period=months,
-            is_actual=False, is_forecast=False, confidence=0.8,
+            raw_value=text,
+            normalized=normalized,
+            column_letter=col,
+            period_type="stub",
+            year=None,
+            sub_period=months,
+            is_actual=False,
+            is_forecast=False,
+            confidence=0.8,
             sort_key=_compute_sort_key(
-                "stub", None, months, False, False, text,
+                "stub",
+                None,
+                months,
+                False,
+                False,
+                text,
             ),
         )
 
     def _parse_datetime(
-        self, dt: datetime, col: str,
+        self,
+        dt: datetime,
+        col: str,
     ) -> NormalizedPeriod:
         """Convert a datetime object to a NormalizedPeriod."""
         year = dt.year
@@ -749,9 +948,15 @@ class PeriodParser:
             sub_period = dt.month
             period_type = "date"
         return NormalizedPeriod(
-            raw_value=str(dt), normalized=normalized, column_letter=col,
-            period_type=period_type, year=year, sub_period=sub_period,
-            is_actual=False, is_forecast=False, confidence=1.0,
+            raw_value=str(dt),
+            normalized=normalized,
+            column_letter=col,
+            period_type=period_type,
+            year=year,
+            sub_period=sub_period,
+            is_actual=False,
+            is_forecast=False,
+            confidence=1.0,
             sort_key=_compute_sort_key("date", year, sub_period, False, False, str(dt)),
         )
 
@@ -760,7 +965,8 @@ class PeriodParser:
     # ------------------------------------------------------------------
 
     def _evaluate_header_row(
-        self, row: Dict[str, Any],
+        self,
+        row: Dict[str, Any],
     ) -> Optional[PeriodDetectionResult]:
         """Try to parse all cells in a row as periods."""
         cells = row.get("cells", [])
@@ -807,7 +1013,8 @@ class PeriodParser:
         )
 
     def _try_numeric_sequential_row(
-        self, row: Dict[str, Any],
+        self,
+        row: Dict[str, Any],
     ) -> Optional[PeriodDetectionResult]:
         """Detect numeric sequential periods (1, 2, 3...) in a row."""
         cells = row.get("cells", [])
@@ -856,8 +1063,7 @@ class PeriodParser:
         values = [c[1] for c in candidates]
         sorted_vals = sorted(values)
         is_sequential = all(
-            sorted_vals[i + 1] - sorted_vals[i] == 1
-            for i in range(len(sorted_vals) - 1)
+            sorted_vals[i + 1] - sorted_vals[i] == 1 for i in range(len(sorted_vals) - 1)
         )
         if not is_sequential:
             return None
@@ -869,12 +1075,22 @@ class PeriodParser:
         periods = []
         for col_letter, n in candidates:
             raw = str(n)
-            periods.append(NormalizedPeriod(
-                raw_value=raw, normalized=f"P{n}", column_letter=col_letter,
-                period_type="numeric", year=None, sub_period=None,
-                is_actual=False, is_forecast=False, confidence=0.7,
-                sort_key=_compute_sort_key("numeric", None, None, False, False, raw, sequence_number=n),
-            ))
+            periods.append(
+                NormalizedPeriod(
+                    raw_value=raw,
+                    normalized=f"P{n}",
+                    column_letter=col_letter,
+                    period_type="numeric",
+                    year=None,
+                    sub_period=None,
+                    is_actual=False,
+                    is_forecast=False,
+                    confidence=0.7,
+                    sort_key=_compute_sort_key(
+                        "numeric", None, None, False, False, raw, sequence_number=n
+                    ),
+                )
+            )
 
         sorted_periods = self.sort_periods(periods)
         confidence = round(0.7 * ratio, 4)
@@ -888,7 +1104,8 @@ class PeriodParser:
         )
 
     def _detect_multi_row_header(
-        self, scan_rows: List[Dict[str, Any]],
+        self,
+        scan_rows: List[Dict[str, Any]],
     ) -> Optional[PeriodDetectionResult]:
         """Detect compound headers where row N has a keyword and row N+1 has values.
 
@@ -949,7 +1166,8 @@ class PeriodParser:
                 combined = None
                 if keyword_prefix and isinstance(val, str):
                     combined = self.parse_single_value(
-                        f"{keyword_prefix}{val.strip()}", col_letter,
+                        f"{keyword_prefix}{val.strip()}",
+                        col_letter,
                     )
                 if combined:
                     # Reduce confidence slightly for combined match
@@ -1007,7 +1225,8 @@ class PeriodParser:
         return None
 
     def _detect_time_down_rows(
-        self, rows: List[Dict[str, Any]],
+        self,
+        rows: List[Dict[str, Any]],
     ) -> Optional[PeriodDetectionResult]:
         """Detect periods running down column A (time_down_rows layout)."""
         periods: List[NormalizedPeriod] = []
@@ -1084,6 +1303,7 @@ _DEFAULT_PARSER = PeriodParser()
 # Smart period key sorting
 # ---------------------------------------------------------------------------
 
+
 def sort_period_keys(keys: List[str]) -> List[str]:
     """Sort plain string period keys using PeriodParser's deterministic sort logic.
 
@@ -1096,6 +1316,7 @@ def sort_period_keys(keys: List[str]) -> List[str]:
     - Float fallback: (0, 0, 0, float_val, 0, 0, raw)
     - Lexicographic:  (1, 0, 0, 0.0, 0, 0, raw)
     """
+
     def _sort_key_for_string(p: str) -> tuple:
         parsed = _DEFAULT_PARSER.parse_single_value(p, "")
         if parsed is not None:
@@ -1114,6 +1335,7 @@ def sort_period_keys(keys: List[str]) -> List[str]:
 # ---------------------------------------------------------------------------
 # Cross-sheet period consistency
 # ---------------------------------------------------------------------------
+
 
 def check_period_consistency(
     all_detected_periods: Dict[str, Dict],
@@ -1136,29 +1358,30 @@ def check_period_consistency(
     # --- Check 1: Mismatched dominant_type across sheets ---
     # Project-finance types are compatible with each other (a model may have
     # relative_year on one sheet and phase_year on another).
-    _PF_TYPES = {"relative_year", "phase_year", "cod_relative", "stub"}
+    pf_types = {"relative_year", "phase_year", "cod_relative", "stub"}
 
     type_by_sheet = {
-        sheet: info.get("dominant_type", "unknown")
-        for sheet, info in all_detected_periods.items()
+        sheet: info.get("dominant_type", "unknown") for sheet, info in all_detected_periods.items()
     }
     unique_types = set(type_by_sheet.values()) - {"unknown"}
 
     # Collapse all PF types into a single representative for comparison
     normalised = set()
     for t in unique_types:
-        normalised.add("_pf" if t in _PF_TYPES else t)
+        normalised.add("_pf" if t in pf_types else t)
 
     if len(normalised) > 1:
-        warnings.append({
-            "type": "mismatched_period_type",
-            "severity": "warning",
-            "message": (
-                f"Sheets use different period types: "
-                f"{', '.join(f'{s}={t}' for s, t in type_by_sheet.items())}"
-            ),
-            "details": {"types_by_sheet": type_by_sheet},
-        })
+        warnings.append(
+            {
+                "type": "mismatched_period_type",
+                "severity": "warning",
+                "message": (
+                    f"Sheets use different period types: "
+                    f"{', '.join(f'{s}={t}' for s, t in type_by_sheet.items())}"
+                ),
+                "details": {"types_by_sheet": type_by_sheet},
+            }
+        )
 
     # --- Check 2: Period coverage gaps ---
     year_sets: Dict[str, set] = {}
@@ -1180,37 +1403,38 @@ def check_period_consistency(
         for sheet, years in year_sets.items():
             missing = all_years - years
             if missing:
-                warnings.append({
-                    "type": "period_coverage_gap",
-                    "severity": "info",
-                    "message": (
-                        f"Sheet '{sheet}' is missing years present in other sheets: "
-                        f"{sorted(missing)}"
-                    ),
-                    "details": {
-                        "sheet": sheet,
-                        "missing_years": sorted(missing),
-                        "sheet_years": sorted(years),
-                        "all_years": sorted(all_years),
-                    },
-                })
+                warnings.append(
+                    {
+                        "type": "period_coverage_gap",
+                        "severity": "info",
+                        "message": (
+                            f"Sheet '{sheet}' is missing years present in other sheets: "
+                            f"{sorted(missing)}"
+                        ),
+                        "details": {
+                            "sheet": sheet,
+                            "missing_years": sorted(missing),
+                            "sheet_years": sorted(years),
+                            "all_years": sorted(all_years),
+                        },
+                    }
+                )
 
     # --- Check 3: Layout inconsistencies ---
-    layouts = {
-        sheet: info.get("layout", "unknown")
-        for sheet, info in all_detected_periods.items()
-    }
+    layouts = {sheet: info.get("layout", "unknown") for sheet, info in all_detected_periods.items()}
     unique_layouts = set(layouts.values())
 
     if len(unique_layouts) > 1:
-        warnings.append({
-            "type": "layout_inconsistency",
-            "severity": "info",
-            "message": (
-                f"Sheets use different period layouts: "
-                f"{', '.join(f'{s}={l}' for s, l in layouts.items())}"
-            ),
-            "details": {"layouts_by_sheet": layouts},
-        })
+        warnings.append(
+            {
+                "type": "layout_inconsistency",
+                "severity": "info",
+                "message": (
+                    f"Sheets use different period layouts: "
+                    f"{', '.join(f'{s}={l}' for s, l in layouts.items())}"
+                ),
+                "details": {"layouts_by_sheet": layouts},
+            }
+        )
 
     return warnings

@@ -7,6 +7,7 @@ Exercises: upload → extraction pipeline → job completion → result validati
 Run:
     pytest tests/e2e/test_local_e2e.py -v
 """
+
 import asyncio
 import concurrent.futures
 from contextlib import contextmanager
@@ -15,7 +16,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
-
 
 FIXTURE_PATH = Path(__file__).parent.parent / "fixtures" / "sample_model.xlsx"
 
@@ -30,8 +30,8 @@ def e2e_client(test_db, mock_anthropic, mock_api_key):
     - Auth bypassed with mock API key
     """
     from src.api.main import app
-    from src.db.session import get_db
     from src.auth.dependencies import get_current_api_key
+    from src.db.session import get_db
 
     # --- DB override for FastAPI dependency injection ---
     def override_get_db():
@@ -59,16 +59,20 @@ def e2e_client(test_db, mock_anthropic, mock_api_key):
     _s3_store: dict[str, bytes] = {}
 
     mock_s3 = MagicMock()
-    mock_s3.generate_s3_key.side_effect = lambda file_id, filename, prefix="uploads": f"uploads/{file_id}_{filename}"
+    mock_s3.generate_s3_key.side_effect = lambda file_id, filename, prefix="uploads": (
+        f"uploads/{file_id}_{filename}"
+    )
     mock_s3.ensure_bucket_exists.return_value = None
 
     def _mock_upload(file_bytes, s3_key, **kwargs):
         _s3_store[s3_key] = file_bytes
         return s3_key
+
     mock_s3.upload_file.side_effect = _mock_upload
 
     def _mock_download(s3_key):
         return _s3_store.get(s3_key, b"fallback-bytes")
+
     mock_s3.download_file.side_effect = _mock_download
 
     # --- Synchronous Celery task execution ---
@@ -88,10 +92,12 @@ def e2e_client(test_db, mock_anthropic, mock_api_key):
         result.id = "mock-task-id"
         return result
 
-    with patch("src.api.main.run_extraction_task") as mock_task, \
-         patch("src.api.main.get_s3_client", return_value=mock_s3), \
-         patch("src.storage.s3.get_s3_client", return_value=mock_s3), \
-         patch("src.jobs.tasks.get_db_context", test_db_context):
+    with (
+        patch("src.api.main.run_extraction_task") as mock_task,
+        patch("src.api.main.get_s3_client", return_value=mock_s3),
+        patch("src.storage.s3.get_s3_client", return_value=mock_s3),
+        patch("src.jobs.tasks.get_db_context", test_db_context),
+    ):
         mock_task.delay = mock_delay
 
         client = TestClient(app, raise_server_exceptions=False)

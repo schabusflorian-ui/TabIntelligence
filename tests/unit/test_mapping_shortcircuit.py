@@ -1,9 +1,11 @@
 """Tests for Stage 3 mapping pattern-based shortcircuit."""
+
 import json
-import pytest
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch, PropertyMock
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestPatternShortcircuit:
@@ -19,9 +21,24 @@ class TestPatternShortcircuit:
                     {
                         "sheet_name": "Income Statement",
                         "rows": [
-                            {"label": "Revenue", "hierarchy_level": 1, "is_formula": False, "is_subtotal": False},
-                            {"label": "Cost of Goods Sold", "hierarchy_level": 1, "is_formula": False, "is_subtotal": False},
-                            {"label": "Gross Profit", "hierarchy_level": 1, "is_formula": True, "is_subtotal": True},
+                            {
+                                "label": "Revenue",
+                                "hierarchy_level": 1,
+                                "is_formula": False,
+                                "is_subtotal": False,
+                            },
+                            {
+                                "label": "Cost of Goods Sold",
+                                "hierarchy_level": 1,
+                                "is_formula": False,
+                                "is_subtotal": False,
+                            },
+                            {
+                                "label": "Gross Profit",
+                                "hierarchy_level": 1,
+                                "is_formula": True,
+                                "is_subtotal": True,
+                            },
                         ],
                     }
                 ]
@@ -48,7 +65,7 @@ class TestPatternShortcircuit:
         stage = MappingStage()
         context = self._make_context(entity_id="00000000-0000-0000-0000-000000000001")
 
-        patterns = [
+        [
             self._make_pattern("Revenue", "revenue", 0.98, 5),
             self._make_pattern("Cost of Goods Sold", "cogs", 0.97, 3),
             self._make_pattern("Gross Profit", "gross_profit", 0.99, 4),
@@ -56,10 +73,11 @@ class TestPatternShortcircuit:
 
         mock_claude = MagicMock()
 
-        with patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude), \
-             patch.object(stage, "_lookup_patterns") as mock_lookup, \
-             patch.object(stage, "_build_entity_hints", return_value=""):
-
+        with (
+            patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude),
+            patch.object(stage, "_lookup_patterns") as mock_lookup,
+            patch.object(stage, "_build_entity_hints", return_value=""),
+        ):
             # All labels pre-mapped, no remaining
             pre_mapped = {
                 "Revenue": {
@@ -113,23 +131,30 @@ class TestPatternShortcircuit:
 
         # Mock Claude response for the remaining label
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(text=json.dumps([
-            {
-                "original_label": "Gross Profit",
-                "canonical_name": "gross_profit",
-                "confidence": 0.90,
-                "reasoning": "Standard gross profit",
-            }
-        ]))]
+        mock_response.content = [
+            MagicMock(
+                text=json.dumps(
+                    [
+                        {
+                            "original_label": "Gross Profit",
+                            "canonical_name": "gross_profit",
+                            "confidence": 0.90,
+                            "reasoning": "Standard gross profit",
+                        }
+                    ]
+                )
+            )
+        ]
         mock_response.usage = MagicMock(input_tokens=200, output_tokens=100)
 
         mock_claude = MagicMock()
         mock_claude.messages.create.return_value = mock_response
 
-        with patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude), \
-             patch.object(stage, "_lookup_patterns") as mock_lookup, \
-             patch.object(stage, "_build_entity_hints", return_value=""):
-
+        with (
+            patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude),
+            patch.object(stage, "_lookup_patterns") as mock_lookup,
+            patch.object(stage, "_build_entity_hints", return_value=""),
+        ):
             # 2 of 3 labels pre-mapped
             pre_mapped = {
                 "Revenue": {
@@ -156,7 +181,11 @@ class TestPatternShortcircuit:
 
         # Verify Claude only received the unmatched label
         call_args = mock_claude.messages.create.call_args
-        prompt_content = call_args[1]["messages"][0]["content"] if "messages" in call_args[1] else call_args[0][0]["messages"][0]["content"]
+        prompt_content = (
+            call_args[1]["messages"][0]["content"]
+            if "messages" in call_args[1]
+            else call_args[0][0]["messages"][0]["content"]
+        )
         assert "Gross Profit" in prompt_content
         # Revenue and COGS should NOT be in the Claude prompt's line_items
         # (they may appear in taxonomy hints though, so we check the rendered line items)
@@ -182,19 +211,41 @@ class TestPatternShortcircuit:
         context = self._make_context(entity_id=None)
 
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(text=json.dumps([
-            {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95, "reasoning": "Direct match"},
-            {"original_label": "Cost of Goods Sold", "canonical_name": "cogs", "confidence": 0.95, "reasoning": "Standard"},
-            {"original_label": "Gross Profit", "canonical_name": "gross_profit", "confidence": 0.95, "reasoning": "Standard"},
-        ]))]
+        mock_response.content = [
+            MagicMock(
+                text=json.dumps(
+                    [
+                        {
+                            "original_label": "Revenue",
+                            "canonical_name": "revenue",
+                            "confidence": 0.95,
+                            "reasoning": "Direct match",
+                        },
+                        {
+                            "original_label": "Cost of Goods Sold",
+                            "canonical_name": "cogs",
+                            "confidence": 0.95,
+                            "reasoning": "Standard",
+                        },
+                        {
+                            "original_label": "Gross Profit",
+                            "canonical_name": "gross_profit",
+                            "confidence": 0.95,
+                            "reasoning": "Standard",
+                        },
+                    ]
+                )
+            )
+        ]
         mock_response.usage = MagicMock(input_tokens=500, output_tokens=300)
 
         mock_claude = MagicMock()
         mock_claude.messages.create.return_value = mock_response
 
-        with patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude), \
-             patch.object(stage, "_build_entity_hints", return_value=""):
-
+        with (
+            patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude),
+            patch.object(stage, "_build_entity_hints", return_value=""),
+        ):
             result = await stage.execute(context)
 
         # Claude SHOULD be called with all 3 labels
@@ -215,20 +266,42 @@ class TestPatternShortcircuit:
         context = self._make_context(entity_id="00000000-0000-0000-0000-000000000001")
 
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(text=json.dumps([
-            {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95, "reasoning": "Direct match"},
-            {"original_label": "Cost of Goods Sold", "canonical_name": "cogs", "confidence": 0.95, "reasoning": "Standard"},
-            {"original_label": "Gross Profit", "canonical_name": "gross_profit", "confidence": 0.95, "reasoning": "Standard"},
-        ]))]
+        mock_response.content = [
+            MagicMock(
+                text=json.dumps(
+                    [
+                        {
+                            "original_label": "Revenue",
+                            "canonical_name": "revenue",
+                            "confidence": 0.95,
+                            "reasoning": "Direct match",
+                        },
+                        {
+                            "original_label": "Cost of Goods Sold",
+                            "canonical_name": "cogs",
+                            "confidence": 0.95,
+                            "reasoning": "Standard",
+                        },
+                        {
+                            "original_label": "Gross Profit",
+                            "canonical_name": "gross_profit",
+                            "confidence": 0.95,
+                            "reasoning": "Standard",
+                        },
+                    ]
+                )
+            )
+        ]
         mock_response.usage = MagicMock(input_tokens=500, output_tokens=300)
 
         mock_claude = MagicMock()
         mock_claude.messages.create.return_value = mock_response
 
-        with patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude), \
-             patch.object(stage, "_lookup_patterns") as mock_lookup, \
-             patch.object(stage, "_build_entity_hints", return_value=""):
-
+        with (
+            patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude),
+            patch.object(stage, "_lookup_patterns") as mock_lookup,
+            patch.object(stage, "_build_entity_hints", return_value=""),
+        ):
             # Simulate pattern lookup returning empty (as if exception was caught)
             mock_lookup.return_value = ({}, {"Revenue", "Cost of Goods Sold", "Gross Profit"})
 
@@ -279,7 +352,7 @@ class TestLookupPatterns:
             self._make_pattern("Revenue", "revenue", 0.98, 5),
         ]
 
-        with patch("src.extraction.stages.mapping.MappingStage._lookup_patterns") as original:
+        with patch("src.extraction.stages.mapping.MappingStage._lookup_patterns"):
             # Call the real method but mock the DB
             pass
 
@@ -318,7 +391,8 @@ class TestSheetCategoryDisambiguation:
     """Tests for deterministic sheet-category disambiguation override."""
 
     def test_overrides_wrong_category(self):
-        """D&A on Income Statement should override depreciation_cf -> depreciation_and_amortization."""
+        """D&A on Income Statement should override
+        depreciation_cf -> depreciation_and_amortization."""
         from src.extraction.stages.mapping import _disambiguate_by_sheet_category
         from src.extraction.taxonomy_loader import get_alias_to_canonicals
 
@@ -481,3 +555,59 @@ class TestSheetCategoryDisambiguation:
 
         assert count == 0
         assert mappings[0]["canonical_name"] == "alpha_metric"
+
+    def test_duplicate_label_across_sheets_overrides_correctly(self):
+        """When same label appears on multiple sheets, override uses correct sheet context."""
+        from src.extraction.stages.mapping import _disambiguate_by_sheet_category
+
+        # "Revenue" appears on both "Monthly P&L" (income_statement) and "Cash" (no match)
+        # Claude mapped it to cash_from_operations — wrong for the P&L sheet
+        alias_lookup = {
+            "revenue": [("revenue", "income_statement")],
+        }
+        mappings = [
+            {
+                "original_label": "Revenue",
+                "canonical_name": "cash_from_operations",
+                "confidence": 0.9,
+            },
+        ]
+        grouped_items = [
+            {"label": "Revenue", "sheet": "Monthly P&L"},
+            {"label": "Revenue", "sheet": "Cash"},
+        ]
+
+        count = _disambiguate_by_sheet_category(mappings, grouped_items, alias_lookup)
+
+        assert count == 1
+        assert mappings[0]["canonical_name"] == "revenue"
+        assert mappings[0]["disambiguation_override"]["original"] == "cash_from_operations"
+
+    def test_duplicate_label_skips_when_current_matches_one_sheet(self):
+        """When current canonical matches at least one sheet's category, no override."""
+        from src.extraction.stages.mapping import _disambiguate_by_sheet_category
+
+        # "Net Income" appears on both "Income Statement" and "Cash Flow Statement"
+        # Claude mapped to net_income (income_statement) — valid for Income Statement sheet
+        alias_lookup = {
+            "net income": [
+                ("net_income", "income_statement"),
+                ("net_income_cf", "cash_flow"),
+            ],
+        }
+        mappings = [
+            {
+                "original_label": "Net Income",
+                "canonical_name": "net_income",
+                "confidence": 0.95,
+            },
+        ]
+        grouped_items = [
+            {"label": "Net Income", "sheet": "Income Statement"},
+            {"label": "Net Income", "sheet": "Cash Flow Statement"},
+        ]
+
+        count = _disambiguate_by_sheet_category(mappings, grouped_items, alias_lookup)
+
+        assert count == 0
+        assert mappings[0]["canonical_name"] == "net_income"  # Unchanged

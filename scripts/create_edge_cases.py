@@ -14,10 +14,11 @@ Usage:
 
 Creates: tests/fixtures/edge_cases.xlsx
 """
+
 from pathlib import Path
 
 import openpyxl
-from openpyxl.styles import Font, Alignment
+from openpyxl.styles import Font
 
 OUTPUT = Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "edge_cases.xlsx"
 
@@ -115,7 +116,9 @@ def _build_sheet1_financials(wb: openpyxl.Workbook) -> None:
 
     fixed_assets = [25000, 26000, 27000]
     intangibles = [5000, 4500, 4000]
-    total_assets = [total_ca[i] + fixed_assets[i] + intangibles[i] for i in range(3)]  # 48650, 54134, 61688
+    total_assets = [
+        total_ca[i] + fixed_assets[i] + intangibles[i] for i in range(3)
+    ]  # 48650, 54134, 61688
 
     ap = [4500, 4950, 5445]
     accrued = [2500, 2750, 3025]

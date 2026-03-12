@@ -3,14 +3,11 @@ Unit tests for setup_logging and CustomJsonFormatter.
 
 Tests the logging configuration, JSON formatting, and the core retry decorator.
 """
+
 import logging
-import json
-import pytest
-from unittest.mock import patch, MagicMock
-from io import StringIO
+from unittest.mock import patch
 
-from src.core.logging import setup_logging, CustomJsonFormatter, request_id_ctx
-
+from src.core.logging import CustomJsonFormatter, request_id_ctx, setup_logging
 
 # ============================================================================
 # SETUP LOGGING
@@ -18,7 +15,6 @@ from src.core.logging import setup_logging, CustomJsonFormatter, request_id_ctx
 
 
 class TestSetupLogging:
-
     def test_returns_root_logger(self, tmp_path):
         """Should return the root logger."""
         log_file = str(tmp_path / "test.log")
@@ -67,19 +63,14 @@ class TestSetupLogging:
         log_file = str(tmp_path / "test.log")
         logger = setup_logging(level="INFO", log_file=log_file, use_json=True)
 
-        json_handlers = [
-            h for h in logger.handlers
-            if isinstance(h.formatter, CustomJsonFormatter)
-        ]
+        json_handlers = [h for h in logger.handlers if isinstance(h.formatter, CustomJsonFormatter)]
         assert len(json_handlers) >= 1
 
     def test_custom_format_string(self, tmp_path):
         """Should accept custom format string."""
         log_file = str(tmp_path / "test.log")
         custom_format = "%(levelname)s: %(message)s"
-        logger = setup_logging(
-            level="INFO", log_file=log_file, log_format=custom_format
-        )
+        logger = setup_logging(level="INFO", log_file=log_file, log_format=custom_format)
         # Should not error
         assert logger is not None
 
@@ -112,14 +103,17 @@ class TestSetupLogging:
 
 
 class TestCustomJsonFormatter:
-
     def test_adds_standard_fields(self):
         """Should add timestamp, level, logger, service fields."""
         formatter = CustomJsonFormatter()
         record = logging.LogRecord(
-            name="test.logger", level=logging.INFO,
-            pathname="", lineno=0, msg="test message",
-            args=None, exc_info=None,
+            name="test.logger",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="test message",
+            args=None,
+            exc_info=None,
         )
 
         log_record = {}
@@ -134,9 +128,13 @@ class TestCustomJsonFormatter:
         """Should include request_id from context variable."""
         formatter = CustomJsonFormatter()
         record = logging.LogRecord(
-            name="test", level=logging.INFO,
-            pathname="", lineno=0, msg="test",
-            args=None, exc_info=None,
+            name="test",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="test",
+            args=None,
+            exc_info=None,
         )
 
         token = request_id_ctx.set("req-xyz-123")
@@ -151,9 +149,13 @@ class TestCustomJsonFormatter:
         """Should set trace_id to 'no-trace' when tracing unavailable."""
         formatter = CustomJsonFormatter()
         record = logging.LogRecord(
-            name="test", level=logging.INFO,
-            pathname="", lineno=0, msg="test",
-            args=None, exc_info=None,
+            name="test",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="test",
+            args=None,
+            exc_info=None,
         )
 
         with patch("src.core.logging.CustomJsonFormatter.add_fields.__module__", "test"):
@@ -166,9 +168,13 @@ class TestCustomJsonFormatter:
         """Should set environment to 'unknown' when config unavailable."""
         formatter = CustomJsonFormatter()
         record = logging.LogRecord(
-            name="test", level=logging.INFO,
-            pathname="", lineno=0, msg="test",
-            args=None, exc_info=None,
+            name="test",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="test",
+            args=None,
+            exc_info=None,
         )
 
         log_record = {}

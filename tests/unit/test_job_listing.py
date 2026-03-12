@@ -1,6 +1,4 @@
 """Tests for job listing endpoint (GET /api/v1/jobs)."""
-import pytest
-from uuid import uuid4
 
 
 class TestJobListing:
@@ -40,12 +38,11 @@ class TestJobListing:
     def test_list_jobs_filter_by_status(self, test_client_with_db, test_db):
         """Filters jobs by status."""
         from src.db import crud
-        from src.db.models import JobStatusEnum
 
         session = test_db()
         try:
             file = crud.create_file(session, filename="test.xlsx", file_size=1024)
-            job1 = crud.create_extraction_job(session, file_id=file.file_id)
+            crud.create_extraction_job(session, file_id=file.file_id)
             job2 = crud.create_extraction_job(session, file_id=file.file_id)
             crud.fail_job(session, job2.job_id, "test error")
         finally:

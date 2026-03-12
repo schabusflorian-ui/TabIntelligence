@@ -3,17 +3,19 @@ Unit tests for database CRUD operations.
 
 Tests all CRUD operations for File, ExtractionJob, and LineageEvent models.
 """
-import pytest
+
 from uuid import uuid4
 
+import pytest
+
+from src.core.exceptions import DatabaseError
 from src.db import crud
 from src.db.models import JobStatusEnum
-from src.core.exceptions import DatabaseError
-
 
 # ============================================================================
 # FILE OPERATIONS TESTS
 # ============================================================================
+
 
 def test_create_file(db_session):
     """Test creating a file record."""
@@ -65,6 +67,7 @@ def test_get_file_not_found(db_session):
 # ============================================================================
 # EXTRACTION JOB OPERATIONS TESTS
 # ============================================================================
+
 
 def test_create_extraction_job(db_session, sample_file):
     """Test creating an extraction job."""
@@ -227,9 +230,9 @@ def test_fail_job_not_found(db_session):
 def test_list_jobs(db_session, sample_file):
     """Test listing jobs with filtering."""
     # Create multiple jobs
-    job1 = crud.create_extraction_job(db_session, sample_file.file_id)
+    crud.create_extraction_job(db_session, sample_file.file_id)
     job2 = crud.create_extraction_job(db_session, sample_file.file_id)
-    job3 = crud.create_extraction_job(db_session, sample_file.file_id)
+    crud.create_extraction_job(db_session, sample_file.file_id)
 
     # Update job2 to completed status
     crud.update_job_status(db_session, job2.job_id, JobStatusEnum.COMPLETED)
@@ -283,6 +286,7 @@ def test_list_jobs_ordered_by_created_at(db_session, sample_file):
 # LINEAGE EVENT OPERATIONS TESTS
 # ============================================================================
 
+
 def test_create_lineage_event(db_session, sample_job):
     """Test creating a lineage event."""
     event = crud.create_lineage_event(
@@ -315,9 +319,9 @@ def test_create_lineage_event_without_data(db_session, sample_job):
 def test_get_job_lineage(db_session, sample_job):
     """Test retrieving job lineage."""
     # Create multiple events
-    event1 = crud.create_lineage_event(db_session, sample_job.job_id, "parsing", {"step": 1})
-    event2 = crud.create_lineage_event(db_session, sample_job.job_id, "triage", {"step": 2})
-    event3 = crud.create_lineage_event(db_session, sample_job.job_id, "mapping", {"step": 3})
+    crud.create_lineage_event(db_session, sample_job.job_id, "parsing", {"step": 1})
+    crud.create_lineage_event(db_session, sample_job.job_id, "triage", {"step": 2})
+    crud.create_lineage_event(db_session, sample_job.job_id, "mapping", {"step": 3})
 
     events = crud.get_job_lineage(db_session, sample_job.job_id)
 
@@ -338,11 +342,12 @@ def test_get_job_lineage_empty(db_session, sample_job):
 # CASCADE DELETE TESTS
 # ============================================================================
 
+
 def test_cascade_delete_file(db_session, sample_file):
     """Test that deleting a file cascades to jobs and lineage."""
     # Create job and lineage
     job = crud.create_extraction_job(db_session, sample_file.file_id)
-    event = crud.create_lineage_event(db_session, job.job_id, "parsing")
+    crud.create_lineage_event(db_session, job.job_id, "parsing")
 
     # Verify they exist
     assert crud.get_job(db_session, job.job_id) is not None
@@ -360,8 +365,8 @@ def test_cascade_delete_file(db_session, sample_file):
 def test_cascade_delete_job(db_session, sample_job):
     """Test that deleting a job cascades to lineage events."""
     # Create lineage events
-    event1 = crud.create_lineage_event(db_session, sample_job.job_id, "parsing")
-    event2 = crud.create_lineage_event(db_session, sample_job.job_id, "triage")
+    crud.create_lineage_event(db_session, sample_job.job_id, "parsing")
+    crud.create_lineage_event(db_session, sample_job.job_id, "triage")
 
     # Verify they exist
     assert len(crud.get_job_lineage(db_session, sample_job.job_id)) == 2

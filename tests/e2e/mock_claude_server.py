@@ -7,6 +7,7 @@ Stage detection uses the same keyword matching as tests/conftest.py.
 Usage:
     uvicorn mock_claude_server:app --host 0.0.0.0 --port 8080
 """
+
 import json
 import uuid
 
@@ -28,19 +29,28 @@ PARSING_RESPONSE = {
             "periods": ["FY2022", "FY2023", "FY2024E"],
             "rows": [
                 {
-                    "row_index": 2, "label": "Revenue", "hierarchy_level": 1,
+                    "row_index": 2,
+                    "label": "Revenue",
+                    "hierarchy_level": 1,
                     "values": {"FY2022": 100000, "FY2023": 115000, "FY2024E": 132000},
-                    "is_formula": False, "is_subtotal": False,
+                    "is_formula": False,
+                    "is_subtotal": False,
                 },
                 {
-                    "row_index": 4, "label": "Cost of Goods Sold", "hierarchy_level": 1,
+                    "row_index": 4,
+                    "label": "Cost of Goods Sold",
+                    "hierarchy_level": 1,
                     "values": {"FY2022": 40000, "FY2023": 46000, "FY2024E": 53000},
-                    "is_formula": False, "is_subtotal": False,
+                    "is_formula": False,
+                    "is_subtotal": False,
                 },
                 {
-                    "row_index": 5, "label": "Gross Profit", "hierarchy_level": 1,
+                    "row_index": 5,
+                    "label": "Gross Profit",
+                    "hierarchy_level": 1,
                     "values": {"FY2022": 60000, "FY2023": 69000, "FY2024E": 79000},
-                    "is_formula": True, "is_subtotal": True,
+                    "is_formula": True,
+                    "is_subtotal": True,
                 },
             ],
         },
@@ -56,40 +66,64 @@ PARSING_RESPONSE = {
 
 TRIAGE_RESPONSE = [
     {
-        "sheet_name": "Income Statement", "tier": 1,
-        "decision": "PROCESS_HIGH", "confidence": 0.95,
+        "sheet_name": "Income Statement",
+        "tier": 1,
+        "decision": "PROCESS_HIGH",
+        "confidence": 0.95,
         "reasoning": "Standard income statement with revenue, costs, and profitability",
     },
     {
-        "sheet_name": "Balance Sheet", "tier": 1,
-        "decision": "PROCESS_HIGH", "confidence": 0.95,
+        "sheet_name": "Balance Sheet",
+        "tier": 1,
+        "decision": "PROCESS_HIGH",
+        "confidence": 0.95,
         "reasoning": "Standard balance sheet with assets, liabilities, and equity",
     },
     {
-        "sheet_name": "Scratch - Working", "tier": 4,
-        "decision": "SKIP", "confidence": 0.99,
+        "sheet_name": "Scratch - Working",
+        "tier": 4,
+        "decision": "SKIP",
+        "confidence": 0.99,
         "reasoning": "Scratch sheet with notes, should be skipped",
     },
 ]
 
 MAPPING_RESPONSE = [
-    {"original_label": "Revenue", "canonical_name": "revenue",
-     "confidence": 0.95, "reasoning": "Direct match for revenue"},
-    {"original_label": "Cost of Goods Sold", "canonical_name": "cogs",
-     "confidence": 0.95, "reasoning": "Standard abbreviation for Cost of Goods Sold"},
-    {"original_label": "Gross Profit", "canonical_name": "gross_profit",
-     "confidence": 0.95, "reasoning": "Standard gross profit calculation"},
+    {
+        "original_label": "Revenue",
+        "canonical_name": "revenue",
+        "confidence": 0.95,
+        "reasoning": "Direct match for revenue",
+    },
+    {
+        "original_label": "Cost of Goods Sold",
+        "canonical_name": "cogs",
+        "confidence": 0.95,
+        "reasoning": "Standard abbreviation for Cost of Goods Sold",
+    },
+    {
+        "original_label": "Gross Profit",
+        "canonical_name": "gross_profit",
+        "confidence": 0.95,
+        "reasoning": "Standard gross profit calculation",
+    },
 ]
 
 VALIDATION_RESPONSE = [
-    {"flag_index": 0, "assessment": "acceptable", "confidence": 0.8,
-     "reasoning": "Variation within tolerance", "suggested_fix": None},
+    {
+        "flag_index": 0,
+        "assessment": "acceptable",
+        "confidence": 0.8,
+        "reasoning": "Variation within tolerance",
+        "suggested_fix": None,
+    },
 ]
 
 
 # ---------------------------------------------------------------------------
 # Stage detection
 # ---------------------------------------------------------------------------
+
 
 def _detect_stage(messages: list) -> str:
     """Detect which pipeline stage is calling based on prompt content."""
@@ -131,6 +165,7 @@ _STAGE_RESPONSES = {
 # Endpoints
 # ---------------------------------------------------------------------------
 
+
 @app.post("/v1/messages")
 async def create_message(request: Request):
     body = await request.json()
@@ -141,16 +176,18 @@ async def create_message(request: Request):
 
     print(f"[mock-claude] Stage: {stage} | Response: {len(response_text)} chars")
 
-    return JSONResponse({
-        "id": f"msg_{uuid.uuid4().hex[:24]}",
-        "type": "message",
-        "role": "assistant",
-        "content": [{"type": "text", "text": response_text}],
-        "model": body.get("model", "claude-sonnet-4-20250514"),
-        "stop_reason": "end_turn",
-        "stop_sequence": None,
-        "usage": {"input_tokens": 500, "output_tokens": 300},
-    })
+    return JSONResponse(
+        {
+            "id": f"msg_{uuid.uuid4().hex[:24]}",
+            "type": "message",
+            "role": "assistant",
+            "content": [{"type": "text", "text": response_text}],
+            "model": body.get("model", "claude-sonnet-4-20250514"),
+            "stop_reason": "end_turn",
+            "stop_sequence": None,
+            "usage": {"input_tokens": 500, "output_tokens": 300},
+        }
+    )
 
 
 @app.get("/health")

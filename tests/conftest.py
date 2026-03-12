@@ -1,6 +1,7 @@
 """
 Pytest configuration and shared fixtures.
 """
+
 # Mock boto3 and celery BEFORE any imports that might use them
 import sys
 from unittest.mock import MagicMock
@@ -13,29 +14,40 @@ mock_s3_client.get_object.return_value = {"Body": MagicMock(read=lambda: b"mock 
 mock_s3_client.head_bucket.return_value = {}
 mock_s3_client.create_bucket.return_value = {}
 mock_boto3_module.client.return_value = mock_s3_client
-sys.modules['boto3'] = mock_boto3_module
-sys.modules['botocore'] = MagicMock()
-sys.modules['botocore.config'] = MagicMock()
+sys.modules["boto3"] = mock_boto3_module
+sys.modules["botocore"] = MagicMock()
+sys.modules["botocore.config"] = MagicMock()
 # botocore exception classes must be real exceptions (not MagicMock) so that
 # `except ClientError:` works in S3 client code.
 _mock_botocore_exceptions = MagicMock()
 
+
 class _MockClientError(Exception):
     """Mock botocore ClientError with response attribute."""
+
     def __init__(self, error_response=None, operation_name=""):
         self.response = error_response or {"Error": {"Code": "Unknown", "Message": ""}}
         self.operation_name = operation_name
         super().__init__(str(error_response))
 
-class _MockNoCredentialsError(Exception): pass
-class _MockPartialCredentialsError(Exception): pass
-class _MockEndpointConnectionError(Exception): pass
+
+class _MockNoCredentialsError(Exception):
+    pass
+
+
+class _MockPartialCredentialsError(Exception):
+    pass
+
+
+class _MockEndpointConnectionError(Exception):
+    pass
+
 
 _mock_botocore_exceptions.ClientError = _MockClientError
 _mock_botocore_exceptions.NoCredentialsError = _MockNoCredentialsError
 _mock_botocore_exceptions.PartialCredentialsError = _MockPartialCredentialsError
 _mock_botocore_exceptions.EndpointConnectionError = _MockEndpointConnectionError
-sys.modules['botocore.exceptions'] = _mock_botocore_exceptions
+sys.modules["botocore.exceptions"] = _mock_botocore_exceptions
 
 # Create a mock celery module
 mock_celery_module = MagicMock()
@@ -45,24 +57,25 @@ mock_celery_module.Celery.return_value = mock_celery_app
 mock_celery_app.task.return_value.return_value.delay.return_value.id = "mock-task-id-12345"
 # celery.Task must be a real class (not MagicMock) so DLQTask can inherit
 # methods properly. MagicMock base classes swallow subclass method definitions.
-mock_celery_module.Task = type('Task', (), {})
-sys.modules['celery'] = mock_celery_module
-sys.modules['celery.result'] = MagicMock()
-sys.modules['celery.exceptions'] = MagicMock()
-sys.modules['redis'] = MagicMock()
-sys.modules['kombu'] = MagicMock()
-sys.modules['kombu.serialization'] = MagicMock()
+mock_celery_module.Task = type("Task", (), {})
+sys.modules["celery"] = mock_celery_module
+sys.modules["celery.result"] = MagicMock()
+sys.modules["celery.exceptions"] = MagicMock()
+sys.modules["redis"] = MagicMock()
+sys.modules["kombu"] = MagicMock()
+sys.modules["kombu.serialization"] = MagicMock()
 
 # Now safe to import other modules
-import pytest
-import uuid
-from pathlib import Path
-from fastapi.testclient import TestClient
-from unittest.mock import Mock, patch
 import json
+from pathlib import Path
+from unittest.mock import Mock, patch
+
+import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
+
 from src.db.base import Base
 
 
@@ -80,8 +93,10 @@ def mock_celery_task():
         return original_func(job_id, s3_key, entity_id)
 
     # Patch where it's imported (in router files), not where it's defined
-    with patch("src.api.files.run_extraction_task") as mock_files_task, \
-         patch("src.api.jobs.run_extraction_task") as mock_jobs_task:
+    with (
+        patch("src.api.files.run_extraction_task") as mock_files_task,
+        patch("src.api.jobs.run_extraction_task") as mock_jobs_task,
+    ):
         # Mock the delay method to execute synchronously
         mock_result = MagicMock()
         mock_result.id = "mock-task-id-12345"
@@ -101,6 +116,7 @@ def mock_celery_task():
 def mock_api_key():
     """Mock API key for authenticated test requests."""
     from src.auth.models import APIKey
+
     key = Mock(spec=APIKey)
     key.id = None  # None avoids FK violations on audit_logs.api_key_id
     key.name = "test-key"
@@ -180,7 +196,7 @@ def mock_claude_parsing_response():
                         "hierarchy_level": 1,
                         "values": {"FY2022": 100000, "FY2023": 115000, "FY2024E": 132000},
                         "is_formula": False,
-                        "is_subtotal": False
+                        "is_subtotal": False,
                     },
                     {
                         "row_index": 4,
@@ -188,7 +204,7 @@ def mock_claude_parsing_response():
                         "hierarchy_level": 1,
                         "values": {"FY2022": 40000, "FY2023": 46000, "FY2024E": 53000},
                         "is_formula": False,
-                        "is_subtotal": False
+                        "is_subtotal": False,
                     },
                     {
                         "row_index": 5,
@@ -196,17 +212,17 @@ def mock_claude_parsing_response():
                         "hierarchy_level": 1,
                         "values": {"FY2022": 60000, "FY2023": 69000, "FY2024E": 79000},
                         "is_formula": True,
-                        "is_subtotal": True
-                    }
-                ]
+                        "is_subtotal": True,
+                    },
+                ],
             },
             {
                 "sheet_name": "Balance Sheet",
                 "sheet_type": "balance_sheet",
                 "layout": "time_across_columns",
                 "periods": ["FY2022", "FY2023", "FY2024E"],
-                "rows": []
-            }
+                "rows": [],
+            },
         ]
     }
 
@@ -220,22 +236,22 @@ def mock_claude_triage_response():
             "tier": 1,
             "decision": "PROCESS_HIGH",
             "confidence": 0.95,
-            "reasoning": "Standard income statement with revenue, costs, and profitability"
+            "reasoning": "Standard income statement with revenue, costs, and profitability",
         },
         {
             "sheet_name": "Balance Sheet",
             "tier": 1,
             "decision": "PROCESS_HIGH",
             "confidence": 0.95,
-            "reasoning": "Standard balance sheet with assets, liabilities, and equity"
+            "reasoning": "Standard balance sheet with assets, liabilities, and equity",
         },
         {
             "sheet_name": "Scratch - Working",
             "tier": 4,
             "decision": "SKIP",
             "confidence": 0.99,
-            "reasoning": "Scratch sheet with notes, should be skipped"
-        }
+            "reasoning": "Scratch sheet with notes, should be skipped",
+        },
     ]
 
 
@@ -247,25 +263,27 @@ def mock_claude_mapping_response():
             "original_label": "Revenue",
             "canonical_name": "revenue",
             "confidence": 0.95,
-            "reasoning": "Direct match for revenue"
+            "reasoning": "Direct match for revenue",
         },
         {
             "original_label": "Cost of Goods Sold",
             "canonical_name": "cogs",
             "confidence": 0.95,
-            "reasoning": "Standard abbreviation for Cost of Goods Sold"
+            "reasoning": "Standard abbreviation for Cost of Goods Sold",
         },
         {
             "original_label": "Gross Profit",
             "canonical_name": "gross_profit",
             "confidence": 0.95,
-            "reasoning": "Standard gross profit calculation"
-        }
+            "reasoning": "Standard gross profit calculation",
+        },
     ]
 
 
 @pytest.fixture
-def mock_claude_client(mock_claude_parsing_response, mock_claude_triage_response, mock_claude_mapping_response):
+def mock_claude_client(
+    mock_claude_parsing_response, mock_claude_triage_response, mock_claude_mapping_response
+):
     """
     Mock Anthropic Claude client for testing without API calls.
 
@@ -294,8 +312,13 @@ def mock_claude_client(mock_claude_parsing_response, mock_claude_triage_response
         elif "validation flags" in prompt_text.lower():
             # Stage 4: Validation reasoning
             response_data = [
-                {"flag_index": 0, "assessment": "acceptable", "confidence": 0.8,
-                 "reasoning": "Variation within tolerance", "suggested_fix": None}
+                {
+                    "flag_index": 0,
+                    "assessment": "acceptable",
+                    "confidence": 0.8,
+                    "reasoning": "Variation within tolerance",
+                    "suggested_fix": None,
+                }
             ]
         elif "hierarchy context" in prompt_text.lower() or "items to map" in prompt_text.lower():
             # Stage 5: Enhanced mapping
@@ -339,6 +362,7 @@ def mock_anthropic(monkeypatch, mock_claude_client):
 
     Use this fixture in tests to avoid making real API calls.
     """
+
     def mock_get_claude_client():
         return mock_claude_client
 
@@ -359,14 +383,38 @@ def mock_anthropic(monkeypatch, mock_claude_client):
                         {
                             "row_index": 1,
                             "cells": [
-                                {"ref": "A1", "value": "Revenue", "formula": None,
-                                 "is_bold": True, "indent_level": 0, "number_format": "General"},
-                                {"ref": "B1", "value": 100, "formula": None,
-                                 "is_bold": False, "indent_level": 0, "number_format": "#,##0"},
-                                {"ref": "C1", "value": 200, "formula": None,
-                                 "is_bold": False, "indent_level": 0, "number_format": "#,##0"},
-                                {"ref": "D1", "value": 300, "formula": None,
-                                 "is_bold": False, "indent_level": 0, "number_format": "#,##0"},
+                                {
+                                    "ref": "A1",
+                                    "value": "Revenue",
+                                    "formula": None,
+                                    "is_bold": True,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                },
+                                {
+                                    "ref": "B1",
+                                    "value": 100,
+                                    "formula": None,
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "#,##0",
+                                },
+                                {
+                                    "ref": "C1",
+                                    "value": 200,
+                                    "formula": None,
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "#,##0",
+                                },
+                                {
+                                    "ref": "D1",
+                                    "value": 300,
+                                    "formula": None,
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "#,##0",
+                                },
                             ],
                         }
                     ],
@@ -378,50 +426,41 @@ def mock_anthropic(monkeypatch, mock_claude_client):
         }
 
     def mock_structured_to_markdown(structured):
-        return "## Sheet: Income Statement\n| Row | C1 | C2 | C3 | C4 | Bold | Indent | Formula |\n|---|---|---|---|---|---|---|---|\n| 1 | Revenue | 100 | 200 | 300 | Y | 0 |  |\n"
+        return (
+            "## Sheet: Income Statement\n"
+            "| Row | C1 | C2 | C3 | C4 "
+            "| Bold | Indent | Formula |\n"
+            "|---|---|---|---|---|---|---|---|\n"
+            "| 1 | Revenue | 100 | 200 "
+            "| 300 | Y | 0 |  |\n"
+        )
 
     monkeypatch.setattr(
         "src.extraction.stages.parsing.ParsingStage._excel_to_structured_repr",
-        staticmethod(mock_excel_to_structured_repr)
+        staticmethod(mock_excel_to_structured_repr),
     )
     monkeypatch.setattr(
         "src.extraction.stages.parsing.ParsingStage._structured_to_markdown",
-        staticmethod(mock_structured_to_markdown)
+        staticmethod(mock_structured_to_markdown),
+    )
+    monkeypatch.setattr("src.extraction.claude_client.get_claude_client", mock_get_claude_client)
+    monkeypatch.setattr("src.extraction.stages.parsing.get_claude_client", mock_get_claude_client)
+    monkeypatch.setattr("src.extraction.stages.triage.get_claude_client", mock_get_claude_client)
+    monkeypatch.setattr("src.extraction.stages.mapping.get_claude_client", mock_get_claude_client)
+    monkeypatch.setattr(
+        "src.extraction.stages.validation.get_claude_client", mock_get_claude_client
     )
     monkeypatch.setattr(
-        "src.extraction.claude_client.get_claude_client",
-        mock_get_claude_client
+        "src.extraction.stages.enhanced_mapping.get_claude_client", mock_get_claude_client
     )
-    monkeypatch.setattr(
-        "src.extraction.stages.parsing.get_claude_client",
-        mock_get_claude_client
-    )
-    monkeypatch.setattr(
-        "src.extraction.stages.triage.get_claude_client",
-        mock_get_claude_client
-    )
-    monkeypatch.setattr(
-        "src.extraction.stages.mapping.get_claude_client",
-        mock_get_claude_client
-    )
-    monkeypatch.setattr(
-        "src.extraction.stages.validation.get_claude_client",
-        mock_get_claude_client
-    )
-    monkeypatch.setattr(
-        "src.extraction.stages.enhanced_mapping.get_claude_client",
-        mock_get_claude_client
-    )
-    monkeypatch.setattr(
-        "src.lineage.tracker.LineageTracker.save_to_db",
-        mock_save_to_db
-    )
+    monkeypatch.setattr("src.lineage.tracker.LineageTracker.save_to_db", mock_save_to_db)
     return mock_claude_client
 
 
 # ============================================================================
 # Database Test Fixtures
 # ============================================================================
+
 
 @pytest.fixture(scope="function")
 def test_db():
@@ -474,8 +513,8 @@ def test_client_with_db(test_db, mock_api_key):
     for tests that interact with the database.
     """
     from src.api.main import app
-    from src.db.session import get_db
     from src.auth.dependencies import get_current_api_key
+    from src.db.session import get_db
 
     def override_get_db():
         db = test_db()

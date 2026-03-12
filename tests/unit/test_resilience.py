@@ -3,26 +3,23 @@ Unit tests for database resilience patterns.
 
 Tests retry logic, circuit breaker, and error classification.
 """
-import pytest
-import asyncio
-from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
 
+from unittest.mock import AsyncMock
+
+import pytest
 from sqlalchemy.exc import OperationalError
 
+from src.core.exceptions import DatabaseError
 from src.db.resilience import (
+    CircuitBreaker,
+    CircuitBreakerStats,
+    CircuitState,
     RetryConfig,
     calculate_wait_time,
-    is_retryable_error,
     execute_with_retry,
+    is_retryable_error,
     with_retry,
-    CircuitBreaker,
-    CircuitState,
-    CircuitBreakerStats,
-    db_circuit_breaker,
 )
-from src.core.exceptions import DatabaseError
-
 
 # ============================================================================
 # RETRY CONFIG
@@ -30,7 +27,6 @@ from src.core.exceptions import DatabaseError
 
 
 class TestRetryConfig:
-
     def test_default_config(self):
         """Should have sensible defaults."""
         config = RetryConfig()
@@ -54,7 +50,6 @@ class TestRetryConfig:
 
 
 class TestCalculateWaitTime:
-
     def test_exponential_backoff_no_jitter(self):
         """Wait time should increase exponentially without jitter."""
         config = RetryConfig(min_wait=1.0, exponential_base=2.0, jitter=False)
@@ -97,7 +92,6 @@ class TestCalculateWaitTime:
 
 
 class TestIsRetryableError:
-
     def test_connection_errors_are_retryable(self):
         """Connection-related errors should be retryable."""
         assert is_retryable_error(Exception("could not connect to server"))
@@ -133,15 +127,12 @@ class TestIsRetryableError:
 
 
 class TestExecuteWithRetry:
-
     @pytest.mark.asyncio
     async def test_success_on_first_attempt(self):
         """Should return result on first successful attempt."""
         operation = AsyncMock(return_value="success")
 
-        result = await execute_with_retry(
-            operation, config=RetryConfig(max_attempts=3)
-        )
+        result = await execute_with_retry(operation, config=RetryConfig(max_attempts=3))
         assert result == "success"
         assert operation.call_count == 1
 
@@ -202,10 +193,10 @@ class TestExecuteWithRetry:
 
 
 class TestWithRetryDecorator:
-
     @pytest.mark.asyncio
     async def test_decorator_wraps_function(self):
         """Decorated function should work normally on success."""
+
         @with_retry(max_attempts=3, min_wait=0.01)
         async def my_operation():
             return 42
@@ -237,7 +228,6 @@ class TestWithRetryDecorator:
 
 
 class TestCircuitBreaker:
-
     def test_initial_state_is_closed(self):
         """Circuit should start in CLOSED state."""
         breaker = CircuitBreaker()
@@ -306,9 +296,7 @@ class TestCircuitBreaker:
     @pytest.mark.asyncio
     async def test_closes_after_success_threshold(self):
         """Circuit should close after enough successes in HALF_OPEN."""
-        breaker = CircuitBreaker(
-            failure_threshold=2, recovery_timeout=0, success_threshold=2
-        )
+        breaker = CircuitBreaker(failure_threshold=2, recovery_timeout=0, success_threshold=2)
 
         # Open the circuit
         operation = AsyncMock(side_effect=Exception("db down"))
@@ -348,7 +336,6 @@ class TestCircuitBreaker:
 
 
 class TestCircuitBreakerStats:
-
     def test_record_success(self):
         """Should track successful requests."""
         stats = CircuitBreakerStats()

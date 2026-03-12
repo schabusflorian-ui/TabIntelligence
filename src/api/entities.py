@@ -1,18 +1,23 @@
 """Entity CRUD API endpoints."""
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from sqlalchemy.orm import Session
+
 from uuid import UUID
 
-from src.api.schemas import (
-    EntityCreateRequest, EntityDetailResponse, EntityListResponse,
-    EntityResponse, UpdateEntityRequest,
-)
-from src.db.session import get_db
-from src.db import crud
-from src.auth.dependencies import get_current_api_key, require_entity_scope
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from sqlalchemy.orm import Session
+
 from src.api.rate_limit import limiter
+from src.api.schemas import (
+    EntityCreateRequest,
+    EntityDetailResponse,
+    EntityListResponse,
+    EntityResponse,
+    UpdateEntityRequest,
+)
+from src.auth.dependencies import get_current_api_key, require_entity_scope
 from src.core.exceptions import DatabaseError
 from src.core.logging import api_logger as logger
+from src.db import crud
+from src.db.session import get_db
 
 router = APIRouter(prefix="/api/v1/entities", tags=["entities"])
 
@@ -89,6 +94,7 @@ def get_entity(
 
         # Count files linked to this entity
         from src.db.models import File
+
         files_count = db.query(File).filter(File.entity_id == entity_uuid).count()
 
         return {

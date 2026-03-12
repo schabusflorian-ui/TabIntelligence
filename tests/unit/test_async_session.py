@@ -11,23 +11,22 @@ Tests the current canonical API:
 - get_db_sync(): Sync context manager
 - get_db() / get_db_context(): Backward-compat sync wrappers
 """
-import pytest
-from unittest.mock import patch, MagicMock
-from sqlalchemy import text
-from sqlalchemy.exc import OperationalError
 
-from src.db.session import (
-    async_engine,
-    AsyncSessionLocal,
-    get_db_async,
-    get_db_dependency,
-    get_sync_engine,
-    SyncSessionLocal,
-    get_db_sync,
-    get_db,
-    get_db_context,
-)
+import pytest
+from sqlalchemy import text
+
 from src.core.exceptions import DatabaseError
+from src.db.session import (
+    AsyncSessionLocal,
+    SyncSessionLocal,
+    async_engine,
+    get_db,
+    get_db_async,
+    get_db_context,
+    get_db_dependency,
+    get_db_sync,
+    get_sync_engine,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -118,7 +117,7 @@ class TestAsyncSession:
     async def test_get_db_async_rolls_back_on_error(self):
         """get_db_async should rollback and raise DatabaseError on exception."""
         with pytest.raises(DatabaseError, match="Async database operation failed"):
-            async with get_db_async() as session:
+            async with get_db_async():
                 raise ValueError("Test error")
 
     async def test_get_db_async_wraps_db_errors(self):
@@ -180,7 +179,7 @@ class TestSyncSession:
     def test_get_db_sync_rolls_back_on_error(self):
         """get_db_sync should rollback and raise DatabaseError on exception."""
         with pytest.raises(DatabaseError, match="Sync database operation failed"):
-            with get_db_sync() as session:
+            with get_db_sync():
                 raise ValueError("Test error")
 
 

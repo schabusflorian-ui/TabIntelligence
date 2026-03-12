@@ -6,26 +6,25 @@ Tests for cross-agent integration work:
 - Stage 5 entity pattern persistence
 - Taxonomy API endpoints
 """
-import json
-import pytest
+
 from decimal import Decimal
 from uuid import uuid4
-from unittest.mock import patch, MagicMock
+
+import pytest
 
 from src.extraction.taxonomy_loader import (
-    load_taxonomy_json,
+    format_taxonomy_detailed,
+    format_taxonomy_for_prompt,
     get_all_taxonomy_items,
     get_validation_rules,
-    format_taxonomy_for_prompt,
-    format_taxonomy_detailed,
-    TAXONOMY_PATH,
+    load_taxonomy_json,
 )
 from src.validation.accounting_validator import AccountingValidator
-
 
 # ============================================================
 # Shared Taxonomy Loader Tests
 # ============================================================
+
 
 class TestTaxonomyLoader:
     """Test the shared taxonomy JSON loader."""
@@ -93,17 +92,20 @@ class TestTaxonomyLoader:
 # Stage 4: Dynamic Rule Loading Tests
 # ============================================================
 
+
 class TestStage4DynamicRules:
     """Test that Stage 4 loads rules from taxonomy.json instead of hardcoded."""
 
     def test_derivation_rules_loaded_from_json(self):
         """DERIVATION_RULES should come from taxonomy.json, not hardcoded."""
         from src.extraction.stages.validation import DERIVATION_RULES
+
         # Should have more rules than the old 7 hardcoded ones
         assert len(DERIVATION_RULES) >= 10
 
     def test_derivation_rules_have_correct_structure(self):
         from src.extraction.stages.validation import DERIVATION_RULES
+
         for rule in DERIVATION_RULES:
             assert "canonical_name" in rule
             assert "validation_rules" in rule
@@ -115,6 +117,7 @@ class TestStage4DynamicRules:
 
     def test_gross_profit_rule_present(self):
         from src.extraction.stages.validation import DERIVATION_RULES
+
         gp_rules = [r for r in DERIVATION_RULES if r["canonical_name"] == "gross_profit"]
         assert len(gp_rules) == 1
         relationships = gp_rules[0]["validation_rules"]["cross_item_validation"]["relationships"]
@@ -123,6 +126,7 @@ class TestStage4DynamicRules:
 
     def test_balance_sheet_rule_present(self):
         from src.extraction.stages.validation import DERIVATION_RULES
+
         ta_rules = [r for r in DERIVATION_RULES if r["canonical_name"] == "total_assets"]
         assert len(ta_rules) == 1
         relationships = ta_rules[0]["validation_rules"]["cross_item_validation"]["relationships"]
@@ -147,6 +151,7 @@ class TestStage4DynamicRules:
 # EntityPattern CRUD Tests
 # ============================================================
 
+
 class TestEntityPatternCRUD:
     """Test EntityPattern CRUD operations."""
 
@@ -154,6 +159,7 @@ class TestEntityPatternCRUD:
     def entity(self, db_session):
         """Create a test entity."""
         from src.db.models import Entity
+
         entity = Entity(
             id=uuid4(),
             name="Test Company Inc.",
@@ -165,6 +171,7 @@ class TestEntityPatternCRUD:
 
     def test_upsert_creates_new_pattern(self, db_session, entity):
         from src.db import crud
+
         pattern = crud.upsert_entity_pattern(
             db=db_session,
             entity_id=entity.id,
@@ -180,16 +187,21 @@ class TestEntityPatternCRUD:
 
     def test_upsert_updates_existing_pattern(self, db_session, entity):
         from src.db import crud
+
         # Create initial
         crud.upsert_entity_pattern(
-            db=db_session, entity_id=entity.id,
-            original_label="Revenue", canonical_name="revenue",
+            db=db_session,
+            entity_id=entity.id,
+            original_label="Revenue",
+            canonical_name="revenue",
             confidence=0.85,
         )
         # Upsert with higher confidence
         pattern = crud.upsert_entity_pattern(
-            db=db_session, entity_id=entity.id,
-            original_label="Revenue", canonical_name="revenue",
+            db=db_session,
+            entity_id=entity.id,
+            original_label="Revenue",
+            canonical_name="revenue",
             confidence=0.95,
         )
         assert float(pattern.confidence) == 0.95
@@ -197,14 +209,19 @@ class TestEntityPatternCRUD:
 
     def test_upsert_doesnt_downgrade_confidence(self, db_session, entity):
         from src.db import crud
+
         crud.upsert_entity_pattern(
-            db=db_session, entity_id=entity.id,
-            original_label="Revenue", canonical_name="revenue",
+            db=db_session,
+            entity_id=entity.id,
+            original_label="Revenue",
+            canonical_name="revenue",
             confidence=0.95,
         )
         pattern = crud.upsert_entity_pattern(
-            db=db_session, entity_id=entity.id,
-            original_label="Revenue", canonical_name="revenue",
+            db=db_session,
+            entity_id=entity.id,
+            original_label="Revenue",
+            canonical_name="revenue",
             confidence=0.80,
         )
         # Confidence should stay at 0.95
@@ -213,17 +230,27 @@ class TestEntityPatternCRUD:
 
     def test_get_entity_patterns(self, db_session, entity):
         from src.db import crud
+
         crud.upsert_entity_pattern(
-            db=db_session, entity_id=entity.id,
-            original_label="Revenue", canonical_name="revenue", confidence=0.95,
+            db=db_session,
+            entity_id=entity.id,
+            original_label="Revenue",
+            canonical_name="revenue",
+            confidence=0.95,
         )
         crud.upsert_entity_pattern(
-            db=db_session, entity_id=entity.id,
-            original_label="COGS", canonical_name="cogs", confidence=0.90,
+            db=db_session,
+            entity_id=entity.id,
+            original_label="COGS",
+            canonical_name="cogs",
+            confidence=0.90,
         )
         crud.upsert_entity_pattern(
-            db=db_session, entity_id=entity.id,
-            original_label="Misc", canonical_name="unmapped", confidence=0.30,
+            db=db_session,
+            entity_id=entity.id,
+            original_label="Misc",
+            canonical_name="unmapped",
+            confidence=0.30,
         )
 
         patterns = crud.get_entity_patterns(db_session, entity.id, min_confidence=0.5)
@@ -234,6 +261,7 @@ class TestEntityPatternCRUD:
 
     def test_bulk_upsert_filters_low_confidence(self, db_session, entity):
         from src.db import crud
+
         mappings = [
             {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95},
             {"original_label": "COGS", "canonical_name": "cogs", "confidence": 0.85},
@@ -241,13 +269,17 @@ class TestEntityPatternCRUD:
             {"original_label": "Weak", "canonical_name": "opex", "confidence": 0.50},
         ]
         count = crud.bulk_upsert_entity_patterns(
-            db=db_session, entity_id=entity.id, mappings=mappings, min_confidence=0.8,
+            db=db_session,
+            entity_id=entity.id,
+            mappings=mappings,
+            min_confidence=0.8,
         )
         # Only revenue and cogs should be persisted (unmapped excluded, weak below threshold)
         assert count == 2
 
     def test_get_patterns_empty_entity(self, db_session, entity):
         from src.db import crud
+
         patterns = crud.get_entity_patterns(db_session, entity.id)
         assert patterns == []
 
@@ -255,6 +287,7 @@ class TestEntityPatternCRUD:
 # ============================================================
 # Taxonomy API Endpoint Tests
 # ============================================================
+
 
 class TestTaxonomyAPI:
     """Test taxonomy REST API endpoints."""
@@ -268,11 +301,18 @@ class TestTaxonomyAPI:
         """GET /api/v1/taxonomy/ returns taxonomy items."""
         # Seed some taxonomy data
         from src.db.models import Taxonomy
-        db_session.add(Taxonomy(
-            id=uuid4(), canonical_name="revenue", category="income_statement",
-            display_name="Revenue", aliases=["Sales"], definition="Total revenue",
-            typical_sign="positive",
-        ))
+
+        db_session.add(
+            Taxonomy(
+                id=uuid4(),
+                canonical_name="revenue",
+                category="income_statement",
+                display_name="Revenue",
+                aliases=["Sales"],
+                definition="Total revenue",
+                typical_sign="positive",
+            )
+        )
         db_session.commit()
 
         response = api_client.get("/api/v1/taxonomy/")
@@ -284,16 +324,29 @@ class TestTaxonomyAPI:
     def test_list_taxonomy_filter_category(self, api_client, db_session):
         """GET /api/v1/taxonomy/?category=income_statement filters correctly."""
         from src.db.models import Taxonomy
-        db_session.add(Taxonomy(
-            id=uuid4(), canonical_name="revenue", category="income_statement",
-            display_name="Revenue", aliases=["Sales"], definition="Total revenue",
-            typical_sign="positive",
-        ))
-        db_session.add(Taxonomy(
-            id=uuid4(), canonical_name="cash", category="balance_sheet",
-            display_name="Cash", aliases=["Cash"], definition="Cash on hand",
-            typical_sign="positive",
-        ))
+
+        db_session.add(
+            Taxonomy(
+                id=uuid4(),
+                canonical_name="revenue",
+                category="income_statement",
+                display_name="Revenue",
+                aliases=["Sales"],
+                definition="Total revenue",
+                typical_sign="positive",
+            )
+        )
+        db_session.add(
+            Taxonomy(
+                id=uuid4(),
+                canonical_name="cash",
+                category="balance_sheet",
+                display_name="Cash",
+                aliases=["Cash"],
+                definition="Cash on hand",
+                typical_sign="positive",
+            )
+        )
         db_session.commit()
 
         response = api_client.get("/api/v1/taxonomy/?category=income_statement")
@@ -304,11 +357,18 @@ class TestTaxonomyAPI:
     def test_get_taxonomy_item(self, api_client, db_session):
         """GET /api/v1/taxonomy/{canonical_name} returns single item."""
         from src.db.models import Taxonomy
-        db_session.add(Taxonomy(
-            id=uuid4(), canonical_name="revenue", category="income_statement",
-            display_name="Revenue", aliases=["Sales", "Turnover"],
-            definition="Total revenue", typical_sign="positive",
-        ))
+
+        db_session.add(
+            Taxonomy(
+                id=uuid4(),
+                canonical_name="revenue",
+                category="income_statement",
+                display_name="Revenue",
+                aliases=["Sales", "Turnover"],
+                definition="Total revenue",
+                typical_sign="positive",
+            )
+        )
         db_session.commit()
 
         response = api_client.get("/api/v1/taxonomy/revenue")
@@ -325,12 +385,19 @@ class TestTaxonomyAPI:
     def test_taxonomy_stats(self, api_client, db_session):
         """GET /api/v1/taxonomy/stats returns statistics."""
         from src.db.models import Taxonomy
+
         for i in range(3):
-            db_session.add(Taxonomy(
-                id=uuid4(), canonical_name=f"item_{i}", category="income_statement",
-                display_name=f"Item {i}", aliases=[f"Alias {i}"],
-                definition=f"Definition {i}", typical_sign="positive",
-            ))
+            db_session.add(
+                Taxonomy(
+                    id=uuid4(),
+                    canonical_name=f"item_{i}",
+                    category="income_statement",
+                    display_name=f"Item {i}",
+                    aliases=[f"Alias {i}"],
+                    definition=f"Definition {i}",
+                    typical_sign="positive",
+                )
+            )
         db_session.commit()
 
         response = api_client.get("/api/v1/taxonomy/stats")
@@ -342,17 +409,30 @@ class TestTaxonomyAPI:
     def test_taxonomy_hierarchy(self, api_client, db_session):
         """GET /api/v1/taxonomy/hierarchy returns parent-child structure."""
         from src.db.models import Taxonomy
-        db_session.add(Taxonomy(
-            id=uuid4(), canonical_name="revenue", category="income_statement",
-            display_name="Revenue", aliases=["Sales"],
-            definition="Total revenue", typical_sign="positive",
-        ))
-        db_session.add(Taxonomy(
-            id=uuid4(), canonical_name="product_revenue", category="income_statement",
-            display_name="Product Revenue", aliases=["Product Sales"],
-            definition="Product revenue", typical_sign="positive",
-            parent_canonical="revenue",
-        ))
+
+        db_session.add(
+            Taxonomy(
+                id=uuid4(),
+                canonical_name="revenue",
+                category="income_statement",
+                display_name="Revenue",
+                aliases=["Sales"],
+                definition="Total revenue",
+                typical_sign="positive",
+            )
+        )
+        db_session.add(
+            Taxonomy(
+                id=uuid4(),
+                canonical_name="product_revenue",
+                category="income_statement",
+                display_name="Product Revenue",
+                aliases=["Product Sales"],
+                definition="Product revenue",
+                typical_sign="positive",
+                parent_canonical="revenue",
+            )
+        )
         db_session.commit()
 
         response = api_client.get("/api/v1/taxonomy/hierarchy")
@@ -367,25 +447,32 @@ class TestTaxonomyAPI:
 # Stage 3/5 Backward Compatibility Tests
 # ============================================================
 
+
 class TestBackwardCompatibility:
     """Test that the refactored stages maintain backward compatibility."""
 
     def test_mapping_load_taxonomy_for_prompt_still_works(self):
         """_load_taxonomy_for_prompt is still importable from mapping module."""
-        from src.extraction.stages.mapping import _load_taxonomy_for_prompt, TAXONOMY_PATH
+        from src.extraction.stages.mapping import _load_taxonomy_for_prompt
+
         result = _load_taxonomy_for_prompt()
         assert "Income Statement" in result
         assert "revenue" in result
 
     def test_enhanced_mapping_load_taxonomy_still_works(self):
         """_load_taxonomy is still importable from enhanced_mapping module."""
-        from src.extraction.stages.enhanced_mapping import _load_taxonomy, _format_taxonomy_for_prompt
+        from src.extraction.stages.enhanced_mapping import (
+            _format_taxonomy_for_prompt,
+            _load_taxonomy,
+        )
+
         data = _load_taxonomy()
         assert "categories" in data
         prompt = _format_taxonomy_for_prompt(data)
         assert "revenue" in prompt
 
-    def test_mapping_taxonomy_path_still_exported(self):
-        """TAXONOMY_PATH is still importable from mapping module."""
-        from src.extraction.stages.mapping import TAXONOMY_PATH
+    def test_mapping_taxonomy_path_importable(self):
+        """TAXONOMY_PATH is importable from taxonomy_loader module."""
+        from src.extraction.taxonomy_loader import TAXONOMY_PATH
+
         assert TAXONOMY_PATH.name == "taxonomy.json"

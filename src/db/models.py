@@ -12,6 +12,7 @@ Models:
 - ExtractionJob: Job tracking and results
 - LineageEvent: Stage-by-stage lineage tracking
 """
+
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum as PyEnum
@@ -19,6 +20,7 @@ from typing import List, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     CheckConstraint,
     DateTime,
@@ -27,7 +29,6 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
-    JSON,
     Numeric,
     String,
     Text,
@@ -40,6 +41,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 class Base(DeclarativeBase):
     """Base class for all SQLAlchemy models."""
+
     pass
 
 
@@ -50,6 +52,7 @@ class Base(DeclarativeBase):
 
 class JobStatusEnum(str, PyEnum):
     """Job status enumeration."""
+
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
@@ -69,28 +72,20 @@ class Entity(Base):
     Represents a tracked entity (company, fund, asset, etc.) in the system.
     Each entity can have multiple files and entity-specific learned patterns.
     """
+
     __tablename__ = "entities"
 
-    id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     name: Mapped[str] = mapped_column(String(255), index=True)
     industry: Mapped[Optional[str]] = mapped_column(String(100))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
     entity_patterns: Mapped[List["EntityPattern"]] = relationship(
-        back_populates="entity",
-        cascade="all, delete-orphan"
+        back_populates="entity", cascade="all, delete-orphan"
     )
     api_keys: Mapped[List["APIKey"]] = relationship(
-        back_populates="entity",
-        cascade="all, delete-orphan"
+        back_populates="entity", cascade="all, delete-orphan"
     )
 
     def __repr__(self):
@@ -109,31 +104,24 @@ class Taxonomy(Base):
     Represents the master list of standardized financial line items.
     Used for mapping extracted labels to canonical names.
     """
+
     __tablename__ = "taxonomy"
 
     __table_args__ = (
         CheckConstraint(
             "typical_sign IN ('positive', 'negative', 'varies') OR typical_sign IS NULL",
-            name='ck_taxonomy_typical_sign'
+            name="ck_taxonomy_typical_sign",
         ),
         CheckConstraint(
             "category IN ('income_statement', 'balance_sheet', 'cash_flow', "
             "'debt_schedule', 'depreciation_amortization', 'working_capital', "
             "'assumptions', 'metrics')",
-            name='ck_taxonomy_category'
+            name="ck_taxonomy_category",
         ),
     )
 
-    id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid4
-    )
-    canonical_name: Mapped[str] = mapped_column(
-        String(100),
-        unique=True,
-        index=True
-    )
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    canonical_name: Mapped[str] = mapped_column(String(100), unique=True, index=True)
     category: Mapped[str] = mapped_column(String(50), index=True)
     display_name: Mapped[Optional[str]] = mapped_column(String(255))
     aliases: Mapped[Optional[list]] = mapped_column(JSON)  # List of alias strings
@@ -141,10 +129,7 @@ class Taxonomy(Base):
     typical_sign: Mapped[Optional[str]] = mapped_column(String(10))
     parent_canonical: Mapped[Optional[str]] = mapped_column(String(100))
     validation_rules: Mapped[Optional[dict]] = mapped_column(JSON)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     def __repr__(self):
         return f"<Taxonomy(canonical_name='{self.canonical_name}', category='{self.category}')>"
@@ -157,28 +142,21 @@ class EntityPattern(Base):
     Stores patterns learned from user corrections and successful mappings.
     Used to improve accuracy for entity-specific naming conventions.
     """
+
     __tablename__ = "entity_patterns"
 
     __table_args__ = (
         CheckConstraint(
-            'confidence >= 0.0 AND confidence <= 1.0',
-            name='ck_entity_patterns_confidence'
+            "confidence >= 0.0 AND confidence <= 1.0", name="ck_entity_patterns_confidence"
         ),
         CheckConstraint(
-            "created_by IN ('claude', 'user_correction')",
-            name='ck_entity_patterns_created_by'
+            "created_by IN ('claude', 'user_correction')", name="ck_entity_patterns_created_by"
         ),
     )
 
-    id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     entity_id: Mapped[Optional[UUID]] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("entities.id", ondelete="CASCADE"),
-        index=True
+        PG_UUID(as_uuid=True), ForeignKey("entities.id", ondelete="CASCADE"), index=True
     )
     original_label: Mapped[str] = mapped_column(String(500), index=True)
     canonical_name: Mapped[str] = mapped_column(String(100), index=True)
@@ -187,16 +165,17 @@ class EntityPattern(Base):
     last_seen: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     created_by: Mapped[str] = mapped_column(String(50))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
     entity: Mapped[Optional["Entity"]] = relationship(back_populates="entity_patterns")
 
     def __repr__(self):
-        return f"<EntityPattern(original='{self.original_label}', canonical='{self.canonical_name}', confidence={self.confidence})>"
+        return (
+            f"<EntityPattern(original='{self.original_label}',"
+            f" canonical='{self.canonical_name}',"
+            f" confidence={self.confidence})>"
+        )
 
 
 class LearnedAlias(Base):
@@ -208,29 +187,20 @@ class LearnedAlias(Base):
     sufficient occurrences across different entities, aliases can be
     promoted to the canonical taxonomy.
     """
+
     __tablename__ = "learned_aliases"
 
     __table_args__ = (
-        UniqueConstraint(
-            'canonical_name', 'alias_text',
-            name='uq_learned_aliases_canonical_alias'
-        ),
+        UniqueConstraint("canonical_name", "alias_text", name="uq_learned_aliases_canonical_alias"),
     )
 
-    id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     canonical_name: Mapped[str] = mapped_column(String(100), index=True)
     alias_text: Mapped[str] = mapped_column(String(500), index=True)
     occurrence_count: Mapped[int] = mapped_column(Integer, server_default="1")
     source_entities: Mapped[list] = mapped_column(JSON, default=list, server_default="[]")
     promoted: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     def __repr__(self):
         return (
@@ -251,13 +221,10 @@ class File(Base):
     Tracks files uploaded by users for financial model extraction.
     Each file can have multiple extraction jobs.
     """
+
     __tablename__ = "files"
 
-    file_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid4
-    )
+    file_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     filename: Mapped[str] = mapped_column(String(255))
     file_size: Mapped[int] = mapped_column(Integer)  # Size in bytes
     s3_key: Mapped[Optional[str]] = mapped_column(String(512))  # S3/MinIO object key
@@ -268,19 +235,15 @@ class File(Base):
         nullable=True,
     )
     entity_id: Mapped[Optional[UUID]] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("entities.id", ondelete="CASCADE"),
-        index=True
+        PG_UUID(as_uuid=True), ForeignKey("entities.id", ondelete="CASCADE"), index=True
     )
     uploaded_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
     # Relationships
     extraction_jobs: Mapped[List["ExtractionJob"]] = relationship(
-        back_populates="file",
-        cascade="all, delete-orphan"
+        back_populates="file", cascade="all, delete-orphan"
     )
 
     def __repr__(self):
@@ -294,25 +257,21 @@ class ExtractionJob(Base):
     Replaces the in-memory jobs dictionary with persistent storage.
     Tracks job status, progress, results, and costs.
     """
+
     __tablename__ = "extraction_jobs"
 
-    job_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid4
-    )
+    job_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     file_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("files.file_id", ondelete="CASCADE")
+        PG_UUID(as_uuid=True), ForeignKey("files.file_id", ondelete="CASCADE")
     )
 
     # Job status tracking
     status: Mapped[JobStatusEnum] = mapped_column(
-        Enum(JobStatusEnum),
-        default=JobStatusEnum.PENDING,
-        index=True
+        Enum(JobStatusEnum), default=JobStatusEnum.PENDING, index=True
     )
-    current_stage: Mapped[Optional[str]] = mapped_column(String(50))  # "parsing", "triage", "mapping"
+    current_stage: Mapped[Optional[str]] = mapped_column(
+        String(50)
+    )  # "parsing", "triage", "mapping"
     progress_percent: Mapped[int] = mapped_column(Integer, default=0)
 
     # Extraction results
@@ -328,25 +287,21 @@ class ExtractionJob(Base):
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        index=True
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc)
+        onupdate=lambda: datetime.now(timezone.utc),
     )
 
     # Relationships
     file: Mapped["File"] = relationship(back_populates="extraction_jobs")
     lineage_events: Mapped[List["LineageEvent"]] = relationship(
-        back_populates="job",
-        cascade="all, delete-orphan"
+        back_populates="job", cascade="all, delete-orphan"
     )
     correction_history: Mapped[List["CorrectionHistory"]] = relationship(
-        back_populates="job",
-        cascade="all, delete-orphan"
+        back_populates="job", cascade="all, delete-orphan"
     )
 
     def __repr__(self):
@@ -365,23 +320,17 @@ class LineageEvent(Base):
     Records each stage of the extraction pipeline with metadata.
     Enables full audit trail and debugging.
     """
+
     __tablename__ = "lineage_events"
 
-    event_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid4
-    )
+    event_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     job_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("extraction_jobs.job_id", ondelete="CASCADE"),
-        index=True
+        PG_UUID(as_uuid=True), ForeignKey("extraction_jobs.job_id", ondelete="CASCADE"), index=True
     )
 
     stage_name: Mapped[str] = mapped_column(String(50))  # "parsing", "triage", "mapping"
     timestamp: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
     data: Mapped[Optional[dict]] = mapped_column(JSON)  # Stage-specific metadata
 
@@ -404,29 +353,24 @@ class AuditLog(Base):
     Records all significant actions performed through the API.
     Provides complete audit trail for regulatory compliance.
     """
+
     __tablename__ = "audit_logs"
 
-    id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     timestamp: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        index=True
+        DateTime(timezone=True), server_default=func.now(), index=True
     )
-    action: Mapped[str] = mapped_column(String(50), index=True)  # "upload", "extract", "view", "revoke_key"
-    resource_type: Mapped[str] = mapped_column(String(50), index=True)  # "file", "job", "api_key", "entity"
+    action: Mapped[str] = mapped_column(
+        String(50), index=True
+    )  # "upload", "extract", "view", "revoke_key"
+    resource_type: Mapped[str] = mapped_column(
+        String(50), index=True
+    )  # "file", "job", "api_key", "entity"
     resource_id: Mapped[Optional[UUID]] = mapped_column(
-        PG_UUID(as_uuid=True),
-        nullable=True,
-        index=True
+        PG_UUID(as_uuid=True), nullable=True, index=True
     )
     api_key_id: Mapped[Optional[UUID]] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("api_keys.id", ondelete="SET NULL"),
-        nullable=True
+        PG_UUID(as_uuid=True), ForeignKey("api_keys.id", ondelete="SET NULL"), nullable=True
     )
     ip_address: Mapped[Optional[str]] = mapped_column(String(45))  # IPv6 max length
     user_agent: Mapped[Optional[str]] = mapped_column(String(500))
@@ -444,6 +388,7 @@ class AuditLog(Base):
 # DLQ (Dead Letter Queue)
 # ============================================================================
 
+
 class DLQEntry(Base):
     """
     Dead Letter Queue entry for failed Celery tasks.
@@ -451,13 +396,10 @@ class DLQEntry(Base):
     Records task failures for inspection and replay.
     Prevents data loss when tasks fail after all retries.
     """
+
     __tablename__ = "dlq_entries"
 
-    dlq_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid4
-    )
+    dlq_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     task_id: Mapped[str] = mapped_column(String(255), index=True)  # Celery task ID
     task_name: Mapped[str] = mapped_column(String(255))
     task_args: Mapped[Optional[dict]] = mapped_column(JSON)
@@ -465,19 +407,16 @@ class DLQEntry(Base):
     error: Mapped[str] = mapped_column(Text)
     traceback: Mapped[Optional[str]] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        index=True
+        DateTime(timezone=True), server_default=func.now(), index=True
     )
     replayed: Mapped[int] = mapped_column(Integer, default=0)
-    replayed_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True
-    )
+    replayed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     replayed_task_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     def __repr__(self):
-        return f"<DLQEntry(dlq_id={self.dlq_id}, task_id='{self.task_id}', replayed={self.replayed})>"
+        return (
+            f"<DLQEntry(dlq_id={self.dlq_id}, task_id='{self.task_id}', replayed={self.replayed})>"
+        )
 
 
 # ============================================================================
@@ -493,6 +432,7 @@ class ExtractionFact(Base):
     entities, periods, and canonical names. Populated from line_items after
     extraction completes.
     """
+
     __tablename__ = "extraction_facts"
 
     __table_args__ = (
@@ -500,21 +440,15 @@ class ExtractionFact(Base):
         Index("ix_fact_job_canonical", "job_id", "canonical_name"),
     )
 
-    id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     job_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("extraction_jobs.job_id", ondelete="CASCADE"),
-        index=True
+        PG_UUID(as_uuid=True), ForeignKey("extraction_jobs.job_id", ondelete="CASCADE"), index=True
     )
     entity_id: Mapped[Optional[UUID]] = mapped_column(
         PG_UUID(as_uuid=True),
         ForeignKey("entities.id", ondelete="SET NULL"),
         nullable=True,
-        index=True
+        index=True,
     )
     canonical_name: Mapped[str] = mapped_column(String(100), index=True)
     original_label: Mapped[Optional[str]] = mapped_column(String(500))
@@ -528,10 +462,7 @@ class ExtractionFact(Base):
     mapping_method: Mapped[Optional[str]] = mapped_column(String(50))
     taxonomy_category: Mapped[Optional[str]] = mapped_column(String(50))
     validation_passed: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     def __repr__(self):
         return (
@@ -552,22 +483,15 @@ class CorrectionHistory(Base):
     Each row records one line_item correction (old canonical -> new canonical)
     applied to a specific job. Stores a snapshot of the old line_item for undo.
     """
+
     __tablename__ = "correction_history"
 
-    id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     job_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("extraction_jobs.job_id", ondelete="CASCADE"),
-        index=True
+        PG_UUID(as_uuid=True), ForeignKey("extraction_jobs.job_id", ondelete="CASCADE"), index=True
     )
     entity_id: Mapped[Optional[UUID]] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("entities.id", ondelete="SET NULL"),
-        nullable=True
+        PG_UUID(as_uuid=True), ForeignKey("entities.id", ondelete="SET NULL"), nullable=True
     )
     original_label: Mapped[str] = mapped_column(String(500))
     sheet: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
@@ -577,13 +501,8 @@ class CorrectionHistory(Base):
     new_confidence: Mapped[float] = mapped_column(Float, default=1.0)
     old_line_item_snapshot: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     reverted: Mapped[bool] = mapped_column(Boolean, default=False)
-    reverted_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now()
-    )
+    reverted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
     job: Mapped["ExtractionJob"] = relationship(back_populates="correction_history")

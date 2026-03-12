@@ -1,10 +1,9 @@
 """
 Tests for the taxonomy JSON loader used by extraction pipeline stages.
 """
+
 import json
-import pytest
-from unittest.mock import patch, mock_open
-from pathlib import Path
+from unittest.mock import patch
 
 
 class TestLoadTaxonomyJson:
@@ -13,21 +12,26 @@ class TestLoadTaxonomyJson:
     def setup_method(self):
         """Reset module-level cache before each test."""
         import src.extraction.taxonomy_loader as mod
+
         mod._taxonomy_cache = {}
 
     def teardown_method(self):
         """Reset cache after each test."""
         import src.extraction.taxonomy_loader as mod
+
         mod._taxonomy_cache = {}
 
     def test_loads_taxonomy_from_file(self, tmp_path):
         """Test loading taxonomy from a real JSON file."""
-        from src.extraction.taxonomy_loader import load_taxonomy_json
         import src.extraction.taxonomy_loader as mod
+        from src.extraction.taxonomy_loader import load_taxonomy_json
 
-        data = {"version": "1.0", "categories": {"income_statement": [
-            {"canonical_name": "revenue", "aliases": ["sales"]}
-        ]}}
+        data = {
+            "version": "1.0",
+            "categories": {
+                "income_statement": [{"canonical_name": "revenue", "aliases": ["sales"]}]
+            },
+        }
         tax_file = tmp_path / "taxonomy.json"
         tax_file.write_text(json.dumps(data))
 
@@ -39,8 +43,8 @@ class TestLoadTaxonomyJson:
 
     def test_returns_cached_on_second_call(self, tmp_path):
         """Test that second call returns cached data."""
-        from src.extraction.taxonomy_loader import load_taxonomy_json
         import src.extraction.taxonomy_loader as mod
+        from src.extraction.taxonomy_loader import load_taxonomy_json
 
         data = {"version": "2.0", "categories": {}}
         tax_file = tmp_path / "taxonomy.json"
@@ -57,8 +61,8 @@ class TestLoadTaxonomyJson:
 
     def test_returns_empty_when_file_missing(self, tmp_path):
         """Test graceful handling of missing taxonomy file."""
-        from src.extraction.taxonomy_loader import load_taxonomy_json
         import src.extraction.taxonomy_loader as mod
+        from src.extraction.taxonomy_loader import load_taxonomy_json
 
         with patch.object(mod, "TAXONOMY_PATH", tmp_path / "nonexistent.json"):
             result = load_taxonomy_json()
@@ -71,10 +75,12 @@ class TestGetAllTaxonomyItems:
 
     def setup_method(self):
         import src.extraction.taxonomy_loader as mod
+
         mod._taxonomy_cache = {}
 
     def teardown_method(self):
         import src.extraction.taxonomy_loader as mod
+
         mod._taxonomy_cache = {}
 
     def test_flattens_all_categories(self):
@@ -114,10 +120,12 @@ class TestGetValidationRules:
 
     def setup_method(self):
         import src.extraction.taxonomy_loader as mod
+
         mod._taxonomy_cache = {}
 
     def teardown_method(self):
         import src.extraction.taxonomy_loader as mod
+
         mod._taxonomy_cache = {}
 
     def test_returns_items_with_validation_rules(self):
@@ -131,9 +139,7 @@ class TestGetValidationRules:
                     {
                         "canonical_name": "gross_profit",
                         "validation_rules": {
-                            "cross_item_validation": {
-                                "formula": "revenue - cogs"
-                            }
+                            "cross_item_validation": {"formula": "revenue - cogs"}
                         },
                     },
                     {
@@ -158,10 +164,12 @@ class TestFormatTaxonomyForPrompt:
 
     def setup_method(self):
         import src.extraction.taxonomy_loader as mod
+
         mod._taxonomy_cache = {}
 
     def teardown_method(self):
         import src.extraction.taxonomy_loader as mod
+
         mod._taxonomy_cache = {}
 
     def test_formats_with_aliases(self):
@@ -172,7 +180,10 @@ class TestFormatTaxonomyForPrompt:
         mod._taxonomy_cache = {
             "categories": {
                 "income_statement": [
-                    {"canonical_name": "revenue", "aliases": ["sales", "net_sales", "top_line", "extra"]},
+                    {
+                        "canonical_name": "revenue",
+                        "aliases": ["sales", "net_sales", "top_line", "extra"],
+                    },
                     {"canonical_name": "cogs", "aliases": []},
                 ]
             }
@@ -218,21 +229,24 @@ class TestFormatTaxonomyWithLearnedAliases:
 
     def setup_method(self):
         import src.extraction.taxonomy_loader as mod
+
         mod._taxonomy_cache = {}
         mod._promoted_cache = {}
         mod._promoted_cache_time = 0.0
 
     def teardown_method(self):
         import src.extraction.taxonomy_loader as mod
+
         mod._taxonomy_cache = {}
         mod._promoted_cache = {}
         mod._promoted_cache_time = 0.0
 
     def test_learned_aliases_appear_in_prompt(self):
         """Promoted learned aliases should appear tagged [learned]."""
+        import time
+
         import src.extraction.taxonomy_loader as mod
         from src.extraction.taxonomy_loader import format_taxonomy_for_prompt
-        import time
 
         mod._taxonomy_cache = {
             "categories": {
@@ -250,9 +264,10 @@ class TestFormatTaxonomyWithLearnedAliases:
 
     def test_learned_aliases_excluded_when_false(self):
         """include_learned=False should not show learned aliases."""
+        import time
+
         import src.extraction.taxonomy_loader as mod
         from src.extraction.taxonomy_loader import format_taxonomy_for_prompt
-        import time
 
         mod._taxonomy_cache = {
             "categories": {
@@ -270,9 +285,10 @@ class TestFormatTaxonomyWithLearnedAliases:
 
     def test_learned_alias_not_duplicated_if_already_in_taxonomy(self):
         """If a promoted alias matches an existing taxonomy alias, don't duplicate."""
+        import time
+
         import src.extraction.taxonomy_loader as mod
         from src.extraction.taxonomy_loader import format_taxonomy_for_prompt
-        import time
 
         mod._taxonomy_cache = {
             "categories": {
@@ -314,17 +330,20 @@ class TestStartupItemsInLoader:
 
     def setup_method(self):
         import src.extraction.taxonomy_loader as mod
+
         mod._taxonomy_cache = {}
         mod._canonical_names_cache = frozenset()
 
     def teardown_method(self):
         import src.extraction.taxonomy_loader as mod
+
         mod._taxonomy_cache = {}
         mod._canonical_names_cache = frozenset()
 
     def test_new_startup_items_in_canonical_names(self):
         """New startup items should appear in get_all_canonical_names()."""
         from src.extraction.taxonomy_loader import get_all_canonical_names
+
         names = get_all_canonical_names()
         assert "adjusted_ebitda" in names
         assert "burn_rate" in names
@@ -336,6 +355,7 @@ class TestStartupItemsInLoader:
     def test_arr_alias_resolves_to_metrics(self):
         """'arr' alias should resolve to arr in metrics."""
         from src.extraction.taxonomy_loader import get_alias_to_canonicals
+
         lookup = get_alias_to_canonicals()
         arr_entries = lookup.get("arr", [])
         categories = [cat for _, cat in arr_entries]
@@ -347,10 +367,12 @@ class TestFormatTaxonomyDetailed:
 
     def setup_method(self):
         import src.extraction.taxonomy_loader as mod
+
         mod._taxonomy_cache = {}
 
     def teardown_method(self):
         import src.extraction.taxonomy_loader as mod
+
         mod._taxonomy_cache = {}
 
     def test_detailed_format_includes_display_names(self):

@@ -1,5 +1,5 @@
 """Stage 1: Guided Parsing - Extract structured data from Excel files."""
-import asyncio
+
 import io
 import re
 import time
@@ -15,17 +15,16 @@ from src.core.exceptions import (
     InvalidFileError,
     RateLimitError,
 )
-from src.core.logging import extraction_logger as logger, log_performance, log_exception
+from src.core.logging import extraction_logger as logger
+from src.core.logging import log_exception, log_performance
 from src.extraction.base import ExtractionStage, PipelineContext
 from src.extraction.claude_client import get_claude_client
-from src.extraction.prompts import get_prompt
 from src.extraction.period_parser import _DEFAULT_PARSER, check_period_consistency
+from src.extraction.prompts import get_prompt
 from src.extraction.utils import extract_json
 
 # Pattern to detect subtotal/total rows from their label text
-_SUBTOTAL_PATTERN = re.compile(
-    r"\b(total|subtotal|net|gross)\b", re.IGNORECASE
-)
+_SUBTOTAL_PATTERN = re.compile(r"\b(total|subtotal|net|gross)\b", re.IGNORECASE)
 
 # Pattern to extract cell references from Excel formulas.
 # Matches: A1, $A$1, Sheet2!B5, 'Sheet Name'!A1, A1:A10
@@ -33,7 +32,7 @@ _CELL_REF_PATTERN = re.compile(
     r"(?:"
     r"(?:'([^']+)'|([A-Za-z_]\w*))!"  # Optional sheet prefix
     r")?"
-    r"\$?([A-Z]{1,3})\$?(\d+)"        # Cell reference (e.g. A1, $B$12)
+    r"\$?([A-Z]{1,3})\$?(\d+)"  # Cell reference (e.g. A1, $B$12)
     r"(?::(\$?[A-Z]{1,3})\$?(\d+))?"  # Optional range end (e.g. :A10)
 )
 
@@ -45,9 +44,7 @@ _SUM_PATTERN = re.compile(r"^=SUM\(([A-Z]+)(\d+):([A-Z]+)(\d+)\)$", re.IGNORECAS
 # ------------------------------------------------------------------
 
 # Period-like header values: FY2022, CY2023, 2024E, Q1 2025, etc.
-_YEAR_PATTERN = re.compile(
-    r"^(?:FY|CY)?'?\s*(?:19|20)\d{2}\s*[EFPBA]?$", re.IGNORECASE
-)
+_YEAR_PATTERN = re.compile(r"^(?:FY|CY)?'?\s*(?:19|20)\d{2}\s*[EFPBA]?$", re.IGNORECASE)
 _QUARTERLY_PATTERN = re.compile(r"^[QH][1-4]\s", re.IGNORECASE)
 
 # Non-financial annotation rows
@@ -356,7 +353,9 @@ class ParsingStage(ExtractionStage):
         sheets_count = len(parsed.get("sheets", []) if isinstance(parsed, dict) else [])  # type: ignore[union-attr]
 
         log_performance(
-            logger, "stage_1_parsing", duration,
+            logger,
+            "stage_1_parsing",
+            duration,
             {"tokens": tokens, "sheets": sheets_count},
         )
         logger.info(f"Stage 1: Parsing completed - {sheets_count} sheets found")
@@ -412,7 +411,7 @@ class ParsingStage(ExtractionStage):
 
             content, inp_tok, out_tok = self._call_claude(full_prompt)
             parsed_sheet = extract_json(content)
-            sheet_results.append(parsed_sheet)
+            sheet_results.append(parsed_sheet)  # type: ignore[arg-type]
             total_input_tokens += inp_tok
             total_output_tokens += out_tok
 
@@ -426,7 +425,9 @@ class ParsingStage(ExtractionStage):
         sheets_count = len(parsed.get("sheets", []))
 
         log_performance(
-            logger, "stage_1_parsing_chunked", duration,
+            logger,
+            "stage_1_parsing_chunked",
+            duration,
             {"tokens": tokens, "sheets": sheets_count, "chunks": len(sheet_results)},
         )
         logger.info(
@@ -493,7 +494,8 @@ class ParsingStage(ExtractionStage):
             retry_after = getattr(e.response, "headers", {}).get("retry-after")
             logger.warning(f"Stage 1: Rate limit hit (retry-after={retry_after})")
             raise RateLimitError(
-                "Rate limit exceeded", stage="parsing",
+                "Rate limit exceeded",
+                stage="parsing",
                 retry_after=int(retry_after) if retry_after else None,
             )
 
@@ -528,14 +530,16 @@ class ParsingStage(ExtractionStage):
 
     @staticmethod
     def _should_chunk(
-        structured: Dict[str, Any], threshold: int = 50_000,
+        structured: Dict[str, Any],
+        threshold: int = 50_000,
     ) -> bool:
         """Return True if estimated token count exceeds threshold."""
         return ParsingStage._estimate_token_count(structured) > threshold
 
     @staticmethod
     def _make_single_sheet_structured(
-        structured: Dict[str, Any], sheet: Dict[str, Any],
+        structured: Dict[str, Any],
+        sheet: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Create a structured repr containing only one sheet."""
         return {
@@ -564,7 +568,8 @@ class ParsingStage(ExtractionStage):
 
     @staticmethod
     def _enrich_with_source_cells(
-        parsed: Dict[str, Any], structured: Dict[str, Any],
+        parsed: Dict[str, Any],
+        structured: Dict[str, Any],
     ) -> None:
         """Enrich parsed rows with source cell provenance from structured repr.
 
@@ -598,11 +603,13 @@ class ParsingStage(ExtractionStage):
                     # Label cell
                     for cell in struct_cells:
                         if cell.get("ref") == cell_ref:
-                            source_cells.append({
-                                "sheet": sheet_name,
-                                "cell_ref": cell["ref"],
-                                "raw_value": cell.get("value"),
-                            })
+                            source_cells.append(
+                                {
+                                    "sheet": sheet_name,
+                                    "cell_ref": cell["ref"],
+                                    "raw_value": cell.get("value"),
+                                }
+                            )
                             label_is_bold = cell.get("is_bold", False)
                             break
 
@@ -612,7 +619,8 @@ class ParsingStage(ExtractionStage):
                         consumed: set = set()
                         # Get numeric cells excluding the label cell
                         numeric_cells = [
-                            c for c in struct_cells
+                            c
+                            for c in struct_cells
                             if c.get("ref") != cell_ref
                             and c.get("value") is not None
                             and isinstance(c.get("value"), (int, float))
@@ -625,7 +633,7 @@ class ParsingStage(ExtractionStage):
                                     continue
                                 nc_val = nc.get("value")
                                 try:
-                                    if abs(float(nc_val) - float(val)) < 0.01:
+                                    if abs(float(nc_val) - float(val)) < 0.01:  # type: ignore[arg-type]
                                         entry: Dict[str, Any] = {
                                             "sheet": sheet_name,
                                             "cell_ref": nc["ref"],
@@ -707,9 +715,7 @@ class ParsingStage(ExtractionStage):
                             value_lookup[(cell.row, cell.column)] = cell.value
 
                 # Detect merged cell regions
-                merged_regions = [
-                    str(m) for m in ws_fmt.merged_cells.ranges
-                ]
+                merged_regions = [str(m) for m in ws_fmt.merged_cells.ranges]
 
                 sheet_visibility = ws_fmt.sheet_state  # 'visible', 'hidden', or 'veryHidden'
                 is_hidden = sheet_visibility != "visible"
@@ -721,9 +727,7 @@ class ParsingStage(ExtractionStage):
 
                     for cell in row_cells:
                         raw = cell.value
-                        computed = value_lookup.get(
-                            (cell.row, cell.column), raw
-                        )
+                        computed = value_lookup.get((cell.row, cell.column), raw)
 
                         # Determine formula
                         formula: Optional[str] = None
@@ -799,9 +803,7 @@ class ParsingStage(ExtractionStage):
                                 cell_dict["references"] = references
 
                         # Derive semantic cell type
-                        cell_dict["cell_type"] = _derive_cell_type(
-                            cell_dict, cell.column - 1
-                        )
+                        cell_dict["cell_type"] = _derive_cell_type(cell_dict, cell.column - 1)
 
                         cells_out.append(cell_dict)
 
@@ -821,38 +823,34 @@ class ParsingStage(ExtractionStage):
                     row_dicts.append(row_dict)
 
                 # Propagate merged cell values to all cells in merged regions
-                row_dicts = ParsingStage._propagate_merged_cells(
-                    row_dicts, ws_fmt, value_lookup
-                )
+                row_dicts = ParsingStage._propagate_merged_cells(row_dicts, ws_fmt, value_lookup)
 
                 # Detect section boundaries and build formula graph summary
-                section_boundaries = ParsingStage._detect_section_boundaries(
-                    row_dicts
-                )
+                section_boundaries = ParsingStage._detect_section_boundaries(row_dicts)
                 formula_graph_summary = ParsingStage._build_formula_graph_summary(
                     row_dicts, sheet_name
                 )
 
                 total_rows += len(row_dicts)
 
-                sheets.append({
-                    "sheet_name": sheet_name,
-                    "is_hidden": is_hidden,
-                    "visibility": sheet_visibility,
-                    "merged_regions": merged_regions,
-                    "section_boundaries": section_boundaries,
-                    "formula_graph_summary": formula_graph_summary,
-                    "rows": row_dicts,
-                    "max_row": ws_fmt.max_row or 0,
-                })
+                sheets.append(
+                    {
+                        "sheet_name": sheet_name,
+                        "is_hidden": is_hidden,
+                        "visibility": sheet_visibility,
+                        "merged_regions": merged_regions,
+                        "section_boundaries": section_boundaries,
+                        "formula_graph_summary": formula_graph_summary,
+                        "rows": row_dicts,
+                        "max_row": ws_fmt.max_row or 0,
+                    }
+                )
 
             # Collect named ranges (openpyxl 3.1+ uses a dict-like API)
             named_ranges: Dict[str, str] = {}
             dn = wb_formulas.defined_names
             # Support both openpyxl < 3.1 (.definedName) and >= 3.1 (.values())
-            defn_iter = (
-                getattr(dn, "definedName", None) or dn.values()
-            )
+            defn_iter = getattr(dn, "definedName", None) or dn.values()
             for defn in defn_iter:
                 try:
                     destinations = list(defn.destinations)
@@ -943,9 +941,7 @@ class ParsingStage(ExtractionStage):
         if not ws_fmt.merged_cells.ranges:
             return row_dicts
 
-        row_lookup: Dict[int, Dict[str, Any]] = {
-            r["row_index"]: r for r in row_dicts
-        }
+        row_lookup: Dict[int, Dict[str, Any]] = {r["row_index"]: r for r in row_dicts}
 
         for merged_range in ws_fmt.merged_cells.ranges:
             min_row = merged_range.min_row
@@ -967,9 +963,7 @@ class ParsingStage(ExtractionStage):
             tl_alignment = tl_cell.alignment
             tl_is_bold = bool(tl_font and tl_font.bold)
             tl_is_underline = bool(tl_font and tl_font.underline)
-            tl_indent = int(
-                tl_alignment.indent if tl_alignment and tl_alignment.indent else 0
-            )
+            tl_indent = int(tl_alignment.indent if tl_alignment and tl_alignment.indent else 0)
             tl_number_format = tl_cell.number_format or "General"
 
             # Rich formatting from top-left cell
@@ -978,12 +972,10 @@ class ParsingStage(ExtractionStage):
             tl_fill_color = _extract_fill_color(tl_cell.fill)
             tl_border = tl_cell.border
             tl_has_border_bottom = bool(
-                tl_border and tl_border.bottom
-                and tl_border.bottom.style is not None
+                tl_border and tl_border.bottom and tl_border.bottom.style is not None
             )
             tl_has_border_right = bool(
-                tl_border and tl_border.right
-                and tl_border.right.style is not None
+                tl_border and tl_border.right and tl_border.right.style is not None
             )
 
             for r in range(min_row, max_row + 1):
@@ -1008,9 +1000,7 @@ class ParsingStage(ExtractionStage):
                     }
 
                     # Derive cell type for propagated cell
-                    cell_dict["cell_type"] = _derive_cell_type(
-                        cell_dict, c - 1
-                    )
+                    cell_dict["cell_type"] = _derive_cell_type(cell_dict, c - 1)
 
                     if isinstance(tl_value, str) and _SUBTOTAL_PATTERN.search(tl_value):
                         cell_dict["is_subtotal"] = True
@@ -1026,8 +1016,7 @@ class ParsingStage(ExtractionStage):
                         row_lookup[r] = new_row
                     else:
                         existing = next(
-                            (cell for cell in row_lookup[r]["cells"]
-                             if cell["ref"] == ref),
+                            (cell for cell in row_lookup[r]["cells"] if cell["ref"] == ref),
                             None,
                         )
                         if existing:
@@ -1077,9 +1066,7 @@ class ParsingStage(ExtractionStage):
                 continue
 
             first_cell = cells[0]
-            is_header_style = (
-                first_cell.get("is_bold") or first_cell.get("is_underline")
-            )
+            is_header_style = first_cell.get("is_bold") or first_cell.get("is_underline")
             if not is_header_style:
                 prev_row_index = row["row_index"]
                 continue
@@ -1094,16 +1081,18 @@ class ParsingStage(ExtractionStage):
             has_border = first_cell.get("has_border_bottom", False)
 
             if is_first_row or preceded_by_gap or has_border:
-                boundaries.append({
-                    "row_index": row["row_index"],
-                    "label": value.strip(),
-                })
+                boundaries.append(
+                    {
+                        "row_index": row["row_index"],
+                        "label": value.strip(),
+                    }
+                )
 
             prev_row_index = row["row_index"]
 
         # Cap at max to avoid cluttering markdown output
         if len(boundaries) > ParsingStage._MAX_SECTION_BOUNDARIES:
-            boundaries = boundaries[:ParsingStage._MAX_SECTION_BOUNDARIES]
+            boundaries = boundaries[: ParsingStage._MAX_SECTION_BOUNDARIES]
             if boundaries:
                 boundaries[-1]["truncated"] = True
 
@@ -1136,9 +1125,7 @@ class ParsingStage(ExtractionStage):
                 if not col_match:
                     continue
                 col_idx = _col_letter_to_index(col_match.group(1))
-                cell["cell_type"] = _derive_cell_type(
-                    cell, col_idx, label_col_index
-                )
+                cell["cell_type"] = _derive_cell_type(cell, col_idx, label_col_index)
 
     # ------------------------------------------------------------------
     # Messy-sheet metadata detection heuristics (WS-3)
@@ -1252,17 +1239,21 @@ class ParsingStage(ExtractionStage):
         for i in range(1, len(indices)):
             gap = indices[i] - indices[i - 1]
             if gap >= 3:  # 2+ blank rows between data rows
-                regions.append({
-                    "start_row": region_start,
-                    "end_row": indices[i - 1],
-                })
+                regions.append(
+                    {
+                        "start_row": region_start,
+                        "end_row": indices[i - 1],
+                    }
+                )
                 region_start = indices[i]
 
         # Close the last region
-        regions.append({
-            "start_row": region_start,
-            "end_row": indices[-1],
-        })
+        regions.append(
+            {
+                "start_row": region_start,
+                "end_row": indices[-1],
+            }
+        )
 
         return regions
 
@@ -1338,11 +1329,7 @@ class ParsingStage(ExtractionStage):
                 non_financial.add(row["row_index"])
             elif _SEPARATOR_PATTERN.match(first_text):
                 non_financial.add(row["row_index"])
-            elif (
-                len(cells) == 1
-                and len(first_text) < 5
-                and not first_text.isalnum()
-            ):
+            elif len(cells) == 1 and len(first_text) < 5 and not first_text.isalnum():
                 non_financial.add(row["row_index"])
 
         return non_financial
@@ -1389,7 +1376,8 @@ class ParsingStage(ExtractionStage):
         is_transposed = ParsingStage._detect_transposed(rows, label_column)
         non_financial_rows = ParsingStage._detect_non_financial_rows(rows)
         unit_hint, unit_multiplier = ParsingStage._detect_unit_hint(
-            rows, sheet_name,
+            rows,
+            sheet_name,
         )
 
         return {
@@ -1437,18 +1425,22 @@ class ParsingStage(ExtractionStage):
                 if ref_col_m:
                     m = _SUM_PATTERN.match(formula)
                     if m and m.group(1).upper() == m.group(3).upper() == ref_col_m.group(1):
-                        subtotal_formulas.append({
-                            "cell": cell["ref"],
-                            "range": f"{m.group(1)}{m.group(2)}:{m.group(3)}{m.group(4)}",
-                        })
+                        subtotal_formulas.append(
+                            {
+                                "cell": cell["ref"],
+                                "range": f"{m.group(1)}{m.group(2)}:{m.group(3)}{m.group(4)}",
+                            }
+                        )
 
                 # Detect cross-sheet references
                 for r in cell.get("references", []):
                     if "!" in r:
-                        cross_sheet_refs.append({
-                            "from_cell": cell["ref"],
-                            "to_ref": r,
-                        })
+                        cross_sheet_refs.append(
+                            {
+                                "from_cell": cell["ref"],
+                                "to_ref": r,
+                            }
+                        )
 
         return {
             "formula_count": formula_count,
@@ -1494,9 +1486,7 @@ class ParsingStage(ExtractionStage):
             parts.append(header)
 
             if sheet.get("merged_regions"):
-                parts.append(
-                    "Merged: " + ", ".join(sheet["merged_regions"])
-                )
+                parts.append("Merged: " + ", ".join(sheet["merged_regions"]))
 
             # Emit messy-sheet metadata annotations (WS-3)
             label_col = sheet.get("label_column")
@@ -1508,22 +1498,17 @@ class ParsingStage(ExtractionStage):
             if sheet.get("unit_hint"):
                 parts.append(f"Units: {sheet['unit_hint']}")
             if sheet.get("is_transposed"):
-                parts.append(
-                    "Layout: TRANSPOSED (periods in rows, labels in columns)"
-                )
+                parts.append("Layout: TRANSPOSED (periods in rows, labels in columns)")
             table_regions = sheet.get("table_regions", [])
             if len(table_regions) > 1:
-                regions_str = ", ".join(
-                    f"{r['start_row']}-{r['end_row']}" for r in table_regions
-                )
+                regions_str = ", ".join(f"{r['start_row']}-{r['end_row']}" for r in table_regions)
                 parts.append(f"Table regions: {regions_str}")
 
             # Period detection annotation
             detected = sheet.get("detected_periods")
             if detected and detected.get("periods"):
                 period_parts = [
-                    f"{p['column_letter']}->{p['normalized']}"
-                    for p in detected["periods"]
+                    f"{p['column_letter']}->{p['normalized']}" for p in detected["periods"]
                 ]
                 parts.append(
                     f"Periods: {', '.join(period_parts)} "
@@ -1555,7 +1540,10 @@ class ParsingStage(ExtractionStage):
             format_hints: Dict[str, str] = {}
             for col in sorted_columns:
                 fmt_counts: Dict[str, int] = {
-                    "$": 0, "%": 0, "x": 0, "total": 0,
+                    "$": 0,
+                    "%": 0,
+                    "x": 0,
+                    "total": 0,
                 }
                 for row in rows:
                     for cell in row["cells"]:
@@ -1593,9 +1581,7 @@ class ParsingStage(ExtractionStage):
                 parts.append("| " + " | ".join(fmt_values) + " |")
 
             # Build set of section boundary row indices for separator insertion
-            section_rows = {
-                b["row_index"] for b in sheet.get("section_boundaries", [])
-            }
+            section_rows = {b["row_index"] for b in sheet.get("section_boundaries", [])}
 
             for row in rows:
                 cells = row["cells"]
@@ -1629,6 +1615,7 @@ class ParsingStage(ExtractionStage):
                         cell_values[idx] = ""
                     elif isinstance(val, float):
                         import math
+
                         if not math.isfinite(val):
                             cell_values[idx] = str(val)
                         else:
@@ -1668,8 +1655,7 @@ class ParsingStage(ExtractionStage):
                     type_str = "V"
 
                 row_parts = (
-                    [row_idx] + cell_values
-                    + [type_str, bold_str, str(max_indent), first_formula]
+                    [row_idx] + cell_values + [type_str, bold_str, str(max_indent), first_formula]
                 )
                 parts.append("| " + " | ".join(row_parts) + " |")
 
@@ -1680,8 +1666,7 @@ class ParsingStage(ExtractionStage):
                     comment = cell.get("comment")
                     if comment:
                         footnotes.append(
-                            f"[{cell.get('ref', '?')}]: "
-                            f"{comment.replace(chr(10), ' ')}"
+                            f"[{cell.get('ref', '?')}]: {comment.replace(chr(10), ' ')}"
                         )
             if footnotes:
                 parts.append("")
@@ -1704,4 +1689,5 @@ class ParsingStage(ExtractionStage):
 
 # Self-register at import time
 from src.extraction.registry import registry  # noqa: E402
+
 registry.register(ParsingStage())

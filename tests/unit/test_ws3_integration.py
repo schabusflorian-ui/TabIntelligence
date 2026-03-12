@@ -9,6 +9,7 @@ Uses the messy_startup.xlsx fixture which has:
   Sheet 3 (Metrics & Notes): SaaS metrics mixed with annotations
   Sheet 4 (Notes): Pure text notes
 """
+
 from pathlib import Path
 
 import pytest
@@ -17,7 +18,6 @@ from src.extraction.section_detector import SectionDetector
 from src.extraction.stages.mapping import MappingStage
 from src.extraction.stages.parsing import ParsingStage
 from src.extraction.stages.triage import TriageStage
-
 
 FIXTURE = Path(__file__).resolve().parent.parent / "fixtures" / "messy_startup.xlsx"
 
@@ -52,51 +52,35 @@ class TestMessyFixtureMetadata:
 
     def test_saas_model_label_column_B(self, messy_structured):
         """SaaS Model has labels in column B (col A has row numbers)."""
-        saas = next(
-            s for s in messy_structured["sheets"]
-            if s["sheet_name"] == "SaaS Model"
-        )
+        saas = next(s for s in messy_structured["sheets"] if s["sheet_name"] == "SaaS Model")
         assert saas["label_column"] == "B"
 
     def test_saas_model_header_row_3(self, messy_structured):
         """SaaS Model has period headers in row 3 (FY2022, FY2023, etc.)."""
-        saas = next(
-            s for s in messy_structured["sheets"]
-            if s["sheet_name"] == "SaaS Model"
-        )
+        saas = next(s for s in messy_structured["sheets"] if s["sheet_name"] == "SaaS Model")
         assert saas["header_row_index"] == 3
 
     def test_saas_model_units(self, messy_structured):
         """SaaS Model has '(in thousands)' unit annotation."""
-        saas = next(
-            s for s in messy_structured["sheets"]
-            if s["sheet_name"] == "SaaS Model"
-        )
+        saas = next(s for s in messy_structured["sheets"] if s["sheet_name"] == "SaaS Model")
         assert saas["unit_hint"] == "thousands"
         assert saas["unit_multiplier"] == 1_000.0
 
     def test_saas_model_non_financial(self, messy_structured):
         """SaaS Model has 'Source: Management projections' as non-financial."""
-        saas = next(
-            s for s in messy_structured["sheets"]
-            if s["sheet_name"] == "SaaS Model"
-        )
+        saas = next(s for s in messy_structured["sheets"] if s["sheet_name"] == "SaaS Model")
         assert 17 in saas["non_financial_rows"]
 
     def test_combined_fs_table_regions(self, messy_structured):
         """Combined FS should detect 2 table regions (P&L + BS)."""
-        combined = next(
-            s for s in messy_structured["sheets"]
-            if s["sheet_name"] == "Combined FS"
-        )
+        combined = next(s for s in messy_structured["sheets"] if s["sheet_name"] == "Combined FS")
         regions = combined["table_regions"]
         assert len(regions) >= 2, f"Expected 2+ regions, got {regions}"
 
     def test_metrics_non_financial(self, messy_structured):
         """Metrics & Notes should detect annotation rows."""
         metrics = next(
-            s for s in messy_structured["sheets"]
-            if s["sheet_name"] == "Metrics & Notes"
+            s for s in messy_structured["sheets"] if s["sheet_name"] == "Metrics & Notes"
         )
         nf = metrics["non_financial_rows"]
         # "Note: ARR..." at row 9 and "Note: NRR..." at row 10
@@ -105,10 +89,7 @@ class TestMessyFixtureMetadata:
 
     def test_notes_not_transposed(self, messy_structured):
         """Notes sheet should not be detected as transposed."""
-        notes = next(
-            s for s in messy_structured["sheets"]
-            if s["sheet_name"] == "Notes"
-        )
+        notes = next(s for s in messy_structured["sheets"] if s["sheet_name"] == "Notes")
         assert notes["is_transposed"] is False
 
 
@@ -144,34 +125,24 @@ class TestCombinedFSSections:
 
     def test_detects_two_sections(self, messy_structured):
         """Combined FS should have 2 sections: P&L and BS."""
-        combined = next(
-            s for s in messy_structured["sheets"]
-            if s["sheet_name"] == "Combined FS"
-        )
+        combined = next(s for s in messy_structured["sheets"] if s["sheet_name"] == "Combined FS")
         detector = SectionDetector()
         sections = detector.detect_sections(combined)
         assert len(sections) >= 2, f"Expected 2+ sections, got {len(sections)}"
 
     def test_first_section_is_pl(self, messy_structured):
         """First section should be Income Statement / P&L."""
-        combined = next(
-            s for s in messy_structured["sheets"]
-            if s["sheet_name"] == "Combined FS"
-        )
+        combined = next(s for s in messy_structured["sheets"] if s["sheet_name"] == "Combined FS")
         detector = SectionDetector()
         sections = detector.detect_sections(combined)
         first = sections[0]
         assert first.category_hint == "income_statement", (
-            f"Expected income_statement, got {first.category_hint} "
-            f"(label='{first.label}')"
+            f"Expected income_statement, got {first.category_hint} (label='{first.label}')"
         )
 
     def test_second_section_is_bs(self, messy_structured):
         """Second section should be Balance Sheet."""
-        combined = next(
-            s for s in messy_structured["sheets"]
-            if s["sheet_name"] == "Combined FS"
-        )
+        combined = next(s for s in messy_structured["sheets"] if s["sheet_name"] == "Combined FS")
         detector = SectionDetector()
         sections = detector.detect_sections(combined)
         bs_sections = [s for s in sections if s.category_hint == "balance_sheet"]
@@ -182,30 +153,22 @@ class TestCombinedFSSections:
 
     def test_section_row_ranges_dont_overlap(self, messy_structured):
         """Section row ranges should not overlap."""
-        combined = next(
-            s for s in messy_structured["sheets"]
-            if s["sheet_name"] == "Combined FS"
-        )
+        combined = next(s for s in messy_structured["sheets"] if s["sheet_name"] == "Combined FS")
         detector = SectionDetector()
         sections = detector.detect_sections(combined)
         for i in range(len(sections) - 1):
             assert sections[i].end_row < sections[i + 1].start_row, (
                 f"Section {i} ends at {sections[i].end_row} but "
-                f"section {i+1} starts at {sections[i+1].start_row}"
+                f"section {i + 1} starts at {sections[i + 1].start_row}"
             )
 
     def test_single_sheet_no_split(self, messy_structured):
         """Sheets without gaps should NOT be split (SaaS Model, Notes)."""
         for sheet_name in ["Notes"]:
-            sheet = next(
-                s for s in messy_structured["sheets"]
-                if s["sheet_name"] == sheet_name
-            )
+            sheet = next(s for s in messy_structured["sheets"] if s["sheet_name"] == sheet_name)
             detector = SectionDetector()
             sections = detector.detect_sections(sheet)
-            assert len(sections) == 1, (
-                f"{sheet_name} should have 1 section, got {len(sections)}"
-            )
+            assert len(sections) == 1, f"{sheet_name} should have 1 section, got {len(sections)}"
 
 
 # ---------------------------------------------------------------------------
@@ -223,23 +186,17 @@ class TestTriageSummaryWithSections:
             "sheets": [
                 {
                     "sheet_name": s["sheet_name"],
-                    "rows": [
-                        {"label": f"row_{r['row_index']}"}
-                        for r in s["rows"][:5]
-                    ],
+                    "rows": [{"label": f"row_{r['row_index']}"} for r in s["rows"][:5]],
                 }
                 for s in messy_structured["sheets"]
             ],
         }
         summaries = TriageStage._build_sheet_summary(
-            parsed_result, messy_structured,
+            parsed_result,
+            messy_structured,
         )
-        combined_summary = next(
-            s for s in summaries if s["name"] == "Combined FS"
-        )
-        assert "sections" in combined_summary, (
-            "Combined FS should have sections in triage summary"
-        )
+        combined_summary = next(s for s in summaries if s["name"] == "Combined FS")
+        assert "sections" in combined_summary, "Combined FS should have sections in triage summary"
         sections = combined_summary["sections"]
         assert len(sections) >= 2
 
@@ -262,7 +219,8 @@ class TestTriageSummaryWithSections:
             ],
         }
         summaries = TriageStage._build_sheet_summary(
-            parsed_result, messy_structured,
+            parsed_result,
+            messy_structured,
         )
         notes_summary = next(s for s in summaries if s["name"] == "Notes")
         assert "sections" not in notes_summary
@@ -313,14 +271,16 @@ class TestMappingSectionContext:
     def test_grouped_items_get_section_category(self):
         """Rows in Combined FS get correct section_category based on row_index."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "Combined FS",
-                "rows": [
-                    {"label": "Revenue", "row_index": 3, "hierarchy_level": 1},
-                    {"label": "Net Income", "row_index": 20, "hierarchy_level": 1},
-                    {"label": "Total Assets", "row_index": 42, "hierarchy_level": 0},
-                ],
-            }],
+            "sheets": [
+                {
+                    "sheet_name": "Combined FS",
+                    "rows": [
+                        {"label": "Revenue", "row_index": 3, "hierarchy_level": 1},
+                        {"label": "Net Income", "row_index": 20, "hierarchy_level": 1},
+                        {"label": "Total Assets", "row_index": 42, "hierarchy_level": 0},
+                    ],
+                }
+            ],
         }
         section_lookup = {
             "Combined FS": [
@@ -351,16 +311,22 @@ class TestMappingSectionContext:
     def test_row_in_gap_has_no_section(self):
         """A row in the blank gap (26-28) should have no section_category."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "Combined FS",
-                "rows": [
-                    {"label": "Orphan Row", "row_index": 27, "hierarchy_level": 1},
-                ],
-            }],
+            "sheets": [
+                {
+                    "sheet_name": "Combined FS",
+                    "rows": [
+                        {"label": "Orphan Row", "row_index": 27, "hierarchy_level": 1},
+                    ],
+                }
+            ],
         }
         section_lookup = {
             "Combined FS": [
-                {"section_start_row": 1, "section_end_row": 25, "category_hint": "income_statement"},
+                {
+                    "section_start_row": 1,
+                    "section_end_row": 25,
+                    "category_hint": "income_statement",
+                },
                 {"section_start_row": 29, "section_end_row": 50, "category_hint": "balance_sheet"},
             ],
         }
@@ -382,10 +348,7 @@ class TestEndToEndNoClaude:
         assert messy_structured["sheet_count"] == 4
 
         # Step 2: Section detection on Combined FS
-        combined = next(
-            s for s in messy_structured["sheets"]
-            if s["sheet_name"] == "Combined FS"
-        )
+        combined = next(s for s in messy_structured["sheets"] if s["sheet_name"] == "Combined FS")
         detector = SectionDetector()
         sections = detector.detect_sections(combined)
         assert len(sections) >= 2
@@ -395,16 +358,14 @@ class TestEndToEndNoClaude:
             "sheets": [
                 {
                     "sheet_name": s["sheet_name"],
-                    "rows": [
-                        {"label": f"row_{r['row_index']}"}
-                        for r in s["rows"][:5]
-                    ],
+                    "rows": [{"label": f"row_{r['row_index']}"} for r in s["rows"][:5]],
                 }
                 for s in messy_structured["sheets"]
             ],
         }
         summaries = TriageStage._build_sheet_summary(
-            parsed_result, messy_structured,
+            parsed_result,
+            messy_structured,
         )
         combined_summary = next(s for s in summaries if s["name"] == "Combined FS")
         assert "sections" in combined_summary
@@ -412,15 +373,17 @@ class TestEndToEndNoClaude:
         # Step 4: Build a simulated triage result
         triage_list = []
         for sec in combined_summary["sections"]:
-            triage_list.append({
-                "sheet_name": "Combined FS",
-                "tier": 1,
-                "decision": "PROCESS_HIGH",
-                "section": sec["label"],
-                "section_start_row": sec["start_row"],
-                "section_end_row": sec["end_row"],
-                "category_hint": sec.get("category_hint"),
-            })
+            triage_list.append(
+                {
+                    "sheet_name": "Combined FS",
+                    "tier": 1,
+                    "decision": "PROCESS_HIGH",
+                    "section": sec["label"],
+                    "section_start_row": sec["start_row"],
+                    "section_end_row": sec["end_row"],
+                    "category_hint": sec.get("category_hint"),
+                }
+            )
 
         # Normalize (as triage execute() would)
         for entry in triage_list:
@@ -434,13 +397,15 @@ class TestEndToEndNoClaude:
 
         # Step 6: Grouped items get section_category
         mock_parsed = {
-            "sheets": [{
-                "sheet_name": "Combined FS",
-                "rows": [
-                    {"label": "Revenue", "row_index": 3},
-                    {"label": "Total Assets", "row_index": 42},
-                ],
-            }],
+            "sheets": [
+                {
+                    "sheet_name": "Combined FS",
+                    "rows": [
+                        {"label": "Revenue", "row_index": 3},
+                        {"label": "Total Assets", "row_index": 42},
+                    ],
+                }
+            ],
         }
         items = MappingStage._build_grouped_line_items(mock_parsed, section_lookup)
 

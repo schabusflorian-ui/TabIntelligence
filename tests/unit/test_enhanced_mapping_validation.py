@@ -1,4 +1,5 @@
 """Unit tests for validation-aware remapping in Stage 5 (enhanced mapping)."""
+
 from src.extraction.stages.enhanced_mapping import EnhancedMappingStage
 
 
@@ -29,7 +30,9 @@ class TestValidationAwareRemapping:
         assert len(candidates) == 1
         assert candidates[0]["original_label"] == "Gross"
         assert candidates[0]["validation_context"]["validation_failed"] is True
-        assert candidates[0]["validation_context"]["failed_rule"] == "gross_profit == revenue - cogs"
+        assert (
+            candidates[0]["validation_context"]["failed_rule"] == "gross_profit == revenue - cogs"
+        )
 
     def test_warning_flags_dont_trigger_remapping(self):
         """Warning-severity flags should NOT trigger remapping."""
@@ -134,17 +137,19 @@ class TestHierarchyContextWindow:
     def test_hierarchy_context_captures_section_header(self):
         """Section headers (hierarchy_level=0, not subtotal) should be captured."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "IS",
-                "rows": [
-                    {"label": "Income Statement", "hierarchy_level": 0, "is_subtotal": False},
-                    {"label": "Revenue Breakdown", "hierarchy_level": 1},
-                    {"label": "Product Sales", "hierarchy_level": 2},
-                    {"label": "UnknownItem", "hierarchy_level": 2},
-                    {"label": "Service Revenue", "hierarchy_level": 2},
-                    {"label": "Total Revenue", "hierarchy_level": 1, "is_subtotal": True},
-                ],
-            }],
+            "sheets": [
+                {
+                    "sheet_name": "IS",
+                    "rows": [
+                        {"label": "Income Statement", "hierarchy_level": 0, "is_subtotal": False},
+                        {"label": "Revenue Breakdown", "hierarchy_level": 1},
+                        {"label": "Product Sales", "hierarchy_level": 2},
+                        {"label": "UnknownItem", "hierarchy_level": 2},
+                        {"label": "Service Revenue", "hierarchy_level": 2},
+                        {"label": "Total Revenue", "hierarchy_level": 1, "is_subtotal": True},
+                    ],
+                }
+            ],
         }
         candidates = [{"original_label": "UnknownItem", "confidence": 0.4}]
 
@@ -158,15 +163,17 @@ class TestHierarchyContextWindow:
     def test_hierarchy_context_subtotal_not_section_header(self):
         """Subtotal rows with hierarchy_level=0 should NOT be treated as headers."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "IS",
-                "rows": [
-                    {"label": "Grand Total", "hierarchy_level": 0, "is_subtotal": True},
-                    {"label": "Filler1", "hierarchy_level": 1},
-                    {"label": "Filler2", "hierarchy_level": 1},
-                    {"label": "UnknownItem", "hierarchy_level": 2},
-                ],
-            }],
+            "sheets": [
+                {
+                    "sheet_name": "IS",
+                    "rows": [
+                        {"label": "Grand Total", "hierarchy_level": 0, "is_subtotal": True},
+                        {"label": "Filler1", "hierarchy_level": 1},
+                        {"label": "Filler2", "hierarchy_level": 1},
+                        {"label": "UnknownItem", "hierarchy_level": 2},
+                    ],
+                }
+            ],
         }
         candidates = [{"original_label": "UnknownItem", "confidence": 0.4}]
 

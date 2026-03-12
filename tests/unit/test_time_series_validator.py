@@ -1,29 +1,51 @@
 """Unit tests for time-series validator."""
+
 from decimal import Decimal
+
 from src.validation.time_series_validator import (
-    TimeSeriesValidator,
     TimeSeriesConfig,
+    TimeSeriesValidator,
 )
 from src.validation.utils import sort_periods
-
 
 # ============================================================================
 # HELPERS
 # ============================================================================
 
+
 def _make_taxonomy(items=None):
     """Create minimal taxonomy entries."""
     default = [
-        {"canonical_name": "revenue", "category": "income_statement",
-         "typical_sign": "positive", "industry_tags": ["all"]},
-        {"canonical_name": "net_income", "category": "income_statement",
-         "typical_sign": "positive", "industry_tags": ["all"]},
-        {"canonical_name": "capex", "category": "cash_flow",
-         "typical_sign": "negative", "industry_tags": ["all"]},
-        {"canonical_name": "cfads", "category": "project_finance",
-         "typical_sign": "positive", "industry_tags": ["project_finance"]},
-        {"canonical_name": "accumulated_depreciation", "category": "balance_sheet",
-         "typical_sign": "negative", "industry_tags": ["all"]},
+        {
+            "canonical_name": "revenue",
+            "category": "income_statement",
+            "typical_sign": "positive",
+            "industry_tags": ["all"],
+        },
+        {
+            "canonical_name": "net_income",
+            "category": "income_statement",
+            "typical_sign": "positive",
+            "industry_tags": ["all"],
+        },
+        {
+            "canonical_name": "capex",
+            "category": "cash_flow",
+            "typical_sign": "negative",
+            "industry_tags": ["all"],
+        },
+        {
+            "canonical_name": "cfads",
+            "category": "project_finance",
+            "typical_sign": "positive",
+            "industry_tags": ["project_finance"],
+        },
+        {
+            "canonical_name": "accumulated_depreciation",
+            "category": "balance_sheet",
+            "typical_sign": "negative",
+            "industry_tags": ["all"],
+        },
     ]
     return items or default
 
@@ -104,7 +126,12 @@ class TestLifecycleAwareness:
         validator = TimeSeriesValidator(_make_taxonomy())
         phases = {"3.0": "construction", "4.0": "operations"}
         assert validator._is_transition_period("4.0", "3.0", phases) is True
-        assert validator._is_transition_period("5.0", "4.0", {"4.0": "operations", "5.0": "operations"}) is False
+        assert (
+            validator._is_transition_period(
+                "5.0", "4.0", {"4.0": "operations", "5.0": "operations"}
+            )
+            is False
+        )
 
     def test_yoy_suppressed_at_transition(self):
         """Large changes at construction→operations boundary should not flag."""
@@ -116,8 +143,7 @@ class TestLifecycleAwareness:
         }
         result = validator.validate(data)
         # Should not flag the 3→4 transition; net_income flip from -5M to +3M is lifecycle
-        yoy_flags = [f for f in result.flags if f.check_type == "yoy_change"
-                     and f.period == "4.0"]
+        yoy_flags = [f for f in result.flags if f.check_type == "yoy_change" and f.period == "4.0"]
         assert len(yoy_flags) == 0
 
     def test_sign_flip_suppressed_at_transition(self):
@@ -129,8 +155,7 @@ class TestLifecycleAwareness:
             "5.0": {"revenue": Decimal("22000000"), "net_income": Decimal("3200000")},
         }
         result = validator.validate(data)
-        flip_flags = [f for f in result.flags if f.check_type == "sign_flip"
-                      and f.period == "4.0"]
+        flip_flags = [f for f in result.flags if f.check_type == "sign_flip" and f.period == "4.0"]
         assert len(flip_flags) == 0
 
 
@@ -186,8 +211,11 @@ class TestYoYChecks:
             "2.0": {"revenue": Decimal("100000")},
         }
         result = self.validator.validate(data)
-        yoy_flags = [f for f in result.flags if f.check_type == "yoy_change"
-                     and f.canonical_name == "revenue"]
+        yoy_flags = [
+            f
+            for f in result.flags
+            if f.check_type == "yoy_change" and f.canonical_name == "revenue"
+        ]
         assert len(yoy_flags) == 0
 
     def test_revenue_uses_item_override(self):
@@ -197,8 +225,11 @@ class TestYoYChecks:
             "2.0": {"revenue": Decimal("350000")},  # 250% growth — under 300%
         }
         result = self.validator.validate(data)
-        yoy_flags = [f for f in result.flags if f.check_type == "yoy_change"
-                     and f.canonical_name == "revenue"]
+        yoy_flags = [
+            f
+            for f in result.flags
+            if f.check_type == "yoy_change" and f.canonical_name == "revenue"
+        ]
         assert len(yoy_flags) == 0  # Under item-specific threshold
 
 
@@ -222,8 +253,9 @@ class TestSignFlipChecks:
             "4.0": {"revenue": Decimal("130000")},  # Back to positive → 3.0 is within ops window
         }
         result = self.validator.validate(data)
-        flip_flags = [f for f in result.flags if f.check_type == "sign_flip"
-                      and f.canonical_name == "revenue"]
+        flip_flags = [
+            f for f in result.flags if f.check_type == "sign_flip" and f.canonical_name == "revenue"
+        ]
         assert len(flip_flags) > 0
         assert flip_flags[0].severity == "error"
 
@@ -234,8 +266,11 @@ class TestSignFlipChecks:
             "3.0": {"net_income": Decimal("-60000")},
         }
         result = self.validator.validate(data)
-        flip_flags = [f for f in result.flags if f.check_type == "sign_flip"
-                      and f.canonical_name == "net_income"]
+        flip_flags = [
+            f
+            for f in result.flags
+            if f.check_type == "sign_flip" and f.canonical_name == "net_income"
+        ]
         assert len(flip_flags) == 0
 
     def test_zero_to_positive_not_a_flip(self):
@@ -245,8 +280,9 @@ class TestSignFlipChecks:
             "2.0": {"revenue": Decimal("100000")},
         }
         result = self.validator.validate(data)
-        flip_flags = [f for f in result.flags if f.check_type == "sign_flip"
-                      and f.canonical_name == "revenue"]
+        flip_flags = [
+            f for f in result.flags if f.check_type == "sign_flip" and f.canonical_name == "revenue"
+        ]
         assert len(flip_flags) == 0
 
 
@@ -266,14 +302,19 @@ class TestOutlierChecks:
         With n points, max z-score approaches √(n-1), so need n≥20.
         """
         base = {
-            f"{float(i)}": {"net_income": Decimal(str(100000 + i * 500)),
-                            "revenue": Decimal("500000")}
+            f"{float(i)}": {
+                "net_income": Decimal(str(100000 + i * 500)),
+                "revenue": Decimal("500000"),
+            }
             for i in range(1, 20)
         }
         base["20.0"] = {"net_income": Decimal("5000000"), "revenue": Decimal("520000")}
         result = self.validator.validate(base)
-        outlier_flags = [f for f in result.flags if f.check_type == "outlier"
-                         and f.canonical_name == "net_income"]
+        outlier_flags = [
+            f
+            for f in result.flags
+            if f.check_type == "outlier" and f.canonical_name == "net_income"
+        ]
         assert len(outlier_flags) > 0
 
     def test_no_outlier_with_few_periods(self):
@@ -289,10 +330,7 @@ class TestOutlierChecks:
 
     def test_all_identical_no_outlier(self):
         """If all values identical, stdev=0, no outliers possible."""
-        data = {
-            str(float(i)): {"revenue": Decimal("100000")}
-            for i in range(1, 6)
-        }
+        data = {str(float(i)): {"revenue": Decimal("100000")} for i in range(1, 6)}
         result = self.validator.validate(data)
         outlier_flags = [f for f in result.flags if f.check_type == "outlier"]
         assert len(outlier_flags) == 0
@@ -332,8 +370,9 @@ class TestGapChecks:
             "4.0": {"revenue": Decimal("130000")},
         }
         result = self.validator.validate(data)
-        gap_flags = [f for f in result.flags if f.check_type == "gap"
-                     and f.canonical_name == "revenue"]
+        gap_flags = [
+            f for f in result.flags if f.check_type == "gap" and f.canonical_name == "revenue"
+        ]
         assert len(gap_flags) == 1
         assert gap_flags[0].period == "3.0"
         assert gap_flags[0].severity == "info"
@@ -357,8 +396,9 @@ class TestGapChecks:
             "4.0": {"revenue": Decimal("110000")},
         }
         result = self.validator.validate(data)
-        gap_flags = [f for f in result.flags if f.check_type == "gap"
-                     and f.canonical_name == "revenue"]
+        gap_flags = [
+            f for f in result.flags if f.check_type == "gap" and f.canonical_name == "revenue"
+        ]
         assert len(gap_flags) == 0
 
 
@@ -403,8 +443,11 @@ class TestMonotonicity:
             "2.0": {"revenue": Decimal("100000")},  # Decrease is normal for revenue
         }
         result = validator.validate(data)
-        mono_flags = [f for f in result.flags if f.check_type == "monotonicity"
-                      and f.canonical_name == "revenue"]
+        mono_flags = [
+            f
+            for f in result.flags
+            if f.check_type == "monotonicity" and f.canonical_name == "revenue"
+        ]
         assert len(mono_flags) == 0
 
 
@@ -503,10 +546,7 @@ class TestEdgeCases:
         assert result.total_checks == 0  # Need ≥2 periods for checks
 
     def test_all_zero_values(self):
-        data = {
-            str(float(i)): {"revenue": Decimal("0")}
-            for i in range(1, 5)
-        }
+        data = {str(float(i)): {"revenue": Decimal("0")} for i in range(1, 5)}
         result = self.validator.validate(data)
         # Zeros shouldn't crash or generate false positives
         assert result.periods_analyzed == 4

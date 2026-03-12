@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-03-12T09:25:20.180327+00:00",
+  "timestamp": "2026-03-12T12:52:03.893404+00:00",
   "file": "seed_burn.xlsx",
-  "duration_seconds": 82.59,
+  "duration_seconds": 92.64,
   "sheets": [
     "Monthly P&L",
     "Cash",
@@ -15,8 +15,8 @@
       "section_end_row": 5,
       "tier": 1,
       "decision": "PROCESS_HIGH",
-      "confidence": 0.9,
-      "reasoning": "Income statement section with core P&L components (Revenue, Cost of Revenue). Part of core financial statements despite low formula count."
+      "confidence": 0.95,
+      "reasoning": "Core P&L section with standard income statement structure including revenue and cost of revenue"
     },
     {
       "sheet_name": "Monthly P&L",
@@ -25,8 +25,8 @@
       "section_end_row": 11,
       "tier": 1,
       "decision": "PROCESS_HIGH",
-      "confidence": 0.9,
-      "reasoning": "Continuation of P&L structure showing gross profit calculation and operating expenses, essential part of income statement."
+      "confidence": 0.95,
+      "reasoning": "Continuation of P&L with gross profit calculation and operating expenses breakdown"
     },
     {
       "sheet_name": "Monthly P&L",
@@ -35,8 +35,8 @@
       "section_end_row": 12,
       "tier": 1,
       "decision": "PROCESS_HIGH",
-      "confidence": 0.9,
-      "reasoning": "Expense subtotal section of the P&L, critical for income statement integrity."
+      "confidence": 0.95,
+      "reasoning": "Essential P&L subtotal section for total expenses calculation"
     },
     {
       "sheet_name": "Monthly P&L",
@@ -45,8 +45,8 @@
       "section_end_row": 14,
       "tier": 1,
       "decision": "PROCESS_HIGH",
-      "confidence": 0.9,
-      "reasoning": "Bottom line of P&L showing net income, essential component of core financial statements."
+      "confidence": 0.95,
+      "reasoning": "Critical P&L bottom line showing net income, core to financial statement"
     },
     {
       "sheet_name": "Cash",
@@ -55,8 +55,8 @@
       "section_end_row": 6,
       "tier": 1,
       "decision": "PROCESS_HIGH",
-      "confidence": 0.85,
-      "reasoning": "Cash flow tracking with beginning cash, revenue, expenses, and net burn - core cash flow statement components."
+      "confidence": 0.9,
+      "reasoning": "Cash flow tracking with beginning cash, revenue, expenses, and net burn - core financial statement equivalent"
     },
     {
       "sheet_name": "Cash",
@@ -65,119 +65,101 @@
       "section_end_row": 8,
       "tier": 1,
       "decision": "PROCESS_HIGH",
-      "confidence": 0.85,
-      "reasoning": "Final cash position and runway calculation, critical cash flow statement metrics."
+      "confidence": 0.9,
+      "reasoning": "Critical cash position metrics including ending cash and runway calculation, essential for financial analysis"
     },
     {
       "sheet_name": "Notes",
       "tier": 4,
       "decision": "SKIP",
-      "confidence": 0.95,
-      "reasoning": "Empty sheet with no data (0 rows, no labels). Likely used for documentation or unused.",
+      "confidence": 0.99,
+      "reasoning": "Empty sheet with no data, labels, or formulas to process",
       "section": null,
       "section_start_row": null,
       "section_end_row": null
     }
   ],
   "line_items_count": 15,
-  "tokens_used": 35876,
-  "cost_usd": 0.19716,
+  "tokens_used": 38080,
+  "cost_usd": 0.20579999999999998,
   "validation": {
     "period_results": {
-      "Jan-25": {
-        "total_checks": 19,
-        "passed": 16,
+      "2025-01": {
+        "total_checks": 23,
+        "passed": 20,
         "failed": 3,
-        "success_rate": 0.842
+        "success_rate": 0.87
       },
-      "Feb-25": {
-        "total_checks": 19,
-        "passed": 16,
+      "2025-02": {
+        "total_checks": 23,
+        "passed": 20,
         "failed": 3,
-        "success_rate": 0.842
+        "success_rate": 0.87
       },
-      "Mar-25": {
-        "total_checks": 19,
-        "passed": 16,
+      "2025-03": {
+        "total_checks": 23,
+        "passed": 20,
         "failed": 3,
-        "success_rate": 0.842
+        "success_rate": 0.87
       },
-      "Apr-25": {
-        "total_checks": 19,
-        "passed": 16,
+      "2025-04": {
+        "total_checks": 23,
+        "passed": 20,
         "failed": 3,
-        "success_rate": 0.842
+        "success_rate": 0.87
       },
-      "May-25": {
-        "total_checks": 22,
-        "passed": 19,
-        "failed": 3,
-        "success_rate": 0.864
+      "2025-05": {
+        "total_checks": 26,
+        "passed": 22,
+        "failed": 4,
+        "success_rate": 0.846
       },
-      "Jun-25": {
-        "total_checks": 22,
-        "passed": 19,
-        "failed": 3,
-        "success_rate": 0.864
+      "2025-06": {
+        "total_checks": 26,
+        "passed": 22,
+        "failed": 4,
+        "success_rate": 0.846
       },
-      "Jul-25": {
-        "total_checks": 22,
-        "passed": 19,
-        "failed": 3,
-        "success_rate": 0.864
+      "2025-07": {
+        "total_checks": 26,
+        "passed": 22,
+        "failed": 4,
+        "success_rate": 0.846
       },
-      "Aug-25": {
-        "total_checks": 22,
-        "passed": 19,
-        "failed": 3,
-        "success_rate": 0.864
+      "2025-08": {
+        "total_checks": 26,
+        "passed": 22,
+        "failed": 4,
+        "success_rate": 0.846
       },
-      "Sep-25": {
-        "total_checks": 22,
-        "passed": 19,
-        "failed": 3,
-        "success_rate": 0.864
+      "2025-09": {
+        "total_checks": 26,
+        "passed": 22,
+        "failed": 4,
+        "success_rate": 0.846
       },
-      "Oct-25": {
-        "total_checks": 22,
-        "passed": 19,
-        "failed": 3,
-        "success_rate": 0.864
+      "2025-10": {
+        "total_checks": 26,
+        "passed": 22,
+        "failed": 4,
+        "success_rate": 0.846
       },
-      "Nov-25": {
-        "total_checks": 22,
-        "passed": 19,
-        "failed": 3,
-        "success_rate": 0.864
+      "2025-11": {
+        "total_checks": 26,
+        "passed": 22,
+        "failed": 4,
+        "success_rate": 0.846
       },
-      "Dec-25": {
-        "total_checks": 22,
-        "passed": 19,
-        "failed": 3,
-        "success_rate": 0.864
+      "2025-12": {
+        "total_checks": 26,
+        "passed": 22,
+        "failed": 4,
+        "success_rate": 0.846
       }
     },
     "flags": [
       {
-        "period": "Jan-25",
-        "severity": "error",
-        "item": "cogs",
-        "rule": "must_be_positive",
-        "message": "cogs must be positive, got 0.0",
-        "actual": null,
-        "expected": "positive"
-      },
-      {
-        "period": "Jan-25",
-        "severity": "warning",
-        "item": "operating_cash_flow",
-        "rule": "sign_convention",
-        "message": "operating_cash_flow is negative (-110000.0) but typically positive",
-        "actual": "-110000.0",
-        "expected": "positive"
-      },
-      {
-        "period": "Jan-25",
+        "period": "2025-01",
         "severity": "warning",
         "item": "net_income",
         "rule": "sign_convention",
@@ -186,25 +168,7 @@
         "expected": "positive"
       },
       {
-        "period": "Feb-25",
-        "severity": "error",
-        "item": "cogs",
-        "rule": "must_be_positive",
-        "message": "cogs must be positive, got 0.0",
-        "actual": null,
-        "expected": "positive"
-      },
-      {
-        "period": "Feb-25",
-        "severity": "warning",
-        "item": "operating_cash_flow",
-        "rule": "sign_convention",
-        "message": "operating_cash_flow is negative (-101000.0) but typically positive",
-        "actual": "-101000.0",
-        "expected": "positive"
-      },
-      {
-        "period": "Feb-25",
+        "period": "2025-02",
         "severity": "warning",
         "item": "net_income",
         "rule": "sign_convention",
@@ -213,25 +177,7 @@
         "expected": "positive"
       },
       {
-        "period": "Mar-25",
-        "severity": "error",
-        "item": "cogs",
-        "rule": "must_be_positive",
-        "message": "cogs must be positive, got 0.0",
-        "actual": null,
-        "expected": "positive"
-      },
-      {
-        "period": "Mar-25",
-        "severity": "warning",
-        "item": "operating_cash_flow",
-        "rule": "sign_convention",
-        "message": "operating_cash_flow is negative (-111000.0) but typically positive",
-        "actual": "-111000.0",
-        "expected": "positive"
-      },
-      {
-        "period": "Mar-25",
+        "period": "2025-03",
         "severity": "warning",
         "item": "net_income",
         "rule": "sign_convention",
@@ -240,25 +186,7 @@
         "expected": "positive"
       },
       {
-        "period": "Apr-25",
-        "severity": "error",
-        "item": "cogs",
-        "rule": "must_be_positive",
-        "message": "cogs must be positive, got 0.0",
-        "actual": null,
-        "expected": "positive"
-      },
-      {
-        "period": "Apr-25",
-        "severity": "warning",
-        "item": "operating_cash_flow",
-        "rule": "sign_convention",
-        "message": "operating_cash_flow is negative (-123000.0) but typically positive",
-        "actual": "-123000.0",
-        "expected": "positive"
-      },
-      {
-        "period": "Apr-25",
+        "period": "2025-04",
         "severity": "warning",
         "item": "net_income",
         "rule": "sign_convention",
@@ -267,7 +195,7 @@
         "expected": "positive"
       },
       {
-        "period": "May-25",
+        "period": "2025-05",
         "severity": "error",
         "item": "cogs",
         "rule": "must_be_positive",
@@ -276,16 +204,25 @@
         "expected": "positive"
       },
       {
-        "period": "May-25",
-        "severity": "warning",
-        "item": "operating_cash_flow",
-        "rule": "sign_convention",
-        "message": "operating_cash_flow is negative (-111000.0) but typically positive",
-        "actual": "-111000.0",
-        "expected": "positive"
+        "period": "2025-05",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "gross_profit == revenue - cogs",
+        "message": "Gross profit should equal revenue minus COGS",
+        "actual": "1000.0",
+        "expected": "3000.0"
       },
       {
-        "period": "May-25",
+        "period": "2025-05",
+        "severity": "error",
+        "item": "gross_profit",
+        "rule": "gross_profit == revenue - cogs",
+        "message": "Gross profit must equal revenue minus COGS",
+        "actual": "1000.0",
+        "expected": "3000.0"
+      },
+      {
+        "period": "2025-05",
         "severity": "warning",
         "item": "net_income",
         "rule": "sign_convention",
@@ -294,7 +231,7 @@
         "expected": "positive"
       },
       {
-        "period": "Jun-25",
+        "period": "2025-06",
         "severity": "error",
         "item": "cogs",
         "rule": "must_be_positive",
@@ -303,16 +240,25 @@
         "expected": "positive"
       },
       {
-        "period": "Jun-25",
-        "severity": "warning",
-        "item": "operating_cash_flow",
-        "rule": "sign_convention",
-        "message": "operating_cash_flow is negative (-117000.0) but typically positive",
-        "actual": "-117000.0",
-        "expected": "positive"
+        "period": "2025-06",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "gross_profit == revenue - cogs",
+        "message": "Gross profit should equal revenue minus COGS",
+        "actual": "3000.0",
+        "expected": "7000.0"
       },
       {
-        "period": "Jun-25",
+        "period": "2025-06",
+        "severity": "error",
+        "item": "gross_profit",
+        "rule": "gross_profit == revenue - cogs",
+        "message": "Gross profit must equal revenue minus COGS",
+        "actual": "3000.0",
+        "expected": "7000.0"
+      },
+      {
+        "period": "2025-06",
         "severity": "warning",
         "item": "net_income",
         "rule": "sign_convention",
@@ -321,7 +267,7 @@
         "expected": "positive"
       },
       {
-        "period": "Jul-25",
+        "period": "2025-07",
         "severity": "error",
         "item": "cogs",
         "rule": "must_be_positive",
@@ -330,16 +276,25 @@
         "expected": "positive"
       },
       {
-        "period": "Jul-25",
-        "severity": "warning",
-        "item": "operating_cash_flow",
-        "rule": "sign_convention",
-        "message": "operating_cash_flow is negative (-117000.0) but typically positive",
-        "actual": "-117000.0",
-        "expected": "positive"
+        "period": "2025-07",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "gross_profit == revenue - cogs",
+        "message": "Gross profit should equal revenue minus COGS",
+        "actual": "5000.0",
+        "expected": "11000.0"
       },
       {
-        "period": "Jul-25",
+        "period": "2025-07",
+        "severity": "error",
+        "item": "gross_profit",
+        "rule": "gross_profit == revenue - cogs",
+        "message": "Gross profit must equal revenue minus COGS",
+        "actual": "5000.0",
+        "expected": "11000.0"
+      },
+      {
+        "period": "2025-07",
         "severity": "warning",
         "item": "net_income",
         "rule": "sign_convention",
@@ -348,7 +303,7 @@
         "expected": "positive"
       },
       {
-        "period": "Aug-25",
+        "period": "2025-08",
         "severity": "error",
         "item": "cogs",
         "rule": "must_be_positive",
@@ -357,16 +312,25 @@
         "expected": "positive"
       },
       {
-        "period": "Aug-25",
-        "severity": "warning",
-        "item": "operating_cash_flow",
-        "rule": "sign_convention",
-        "message": "operating_cash_flow is negative (-117000.0) but typically positive",
-        "actual": "-117000.0",
-        "expected": "positive"
+        "period": "2025-08",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "gross_profit == revenue - cogs",
+        "message": "Gross profit should equal revenue minus COGS",
+        "actual": "8000.0",
+        "expected": "16000.0"
       },
       {
-        "period": "Aug-25",
+        "period": "2025-08",
+        "severity": "error",
+        "item": "gross_profit",
+        "rule": "gross_profit == revenue - cogs",
+        "message": "Gross profit must equal revenue minus COGS",
+        "actual": "8000.0",
+        "expected": "16000.0"
+      },
+      {
+        "period": "2025-08",
         "severity": "warning",
         "item": "net_income",
         "rule": "sign_convention",
@@ -375,7 +339,7 @@
         "expected": "positive"
       },
       {
-        "period": "Sep-25",
+        "period": "2025-09",
         "severity": "error",
         "item": "cogs",
         "rule": "must_be_positive",
@@ -384,16 +348,25 @@
         "expected": "positive"
       },
       {
-        "period": "Sep-25",
-        "severity": "warning",
-        "item": "operating_cash_flow",
-        "rule": "sign_convention",
-        "message": "operating_cash_flow is negative (-127000.0) but typically positive",
-        "actual": "-127000.0",
-        "expected": "positive"
+        "period": "2025-09",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "gross_profit == revenue - cogs",
+        "message": "Gross profit should equal revenue minus COGS",
+        "actual": "12000.0",
+        "expected": "24000.0"
       },
       {
-        "period": "Sep-25",
+        "period": "2025-09",
+        "severity": "error",
+        "item": "gross_profit",
+        "rule": "gross_profit == revenue - cogs",
+        "message": "Gross profit must equal revenue minus COGS",
+        "actual": "12000.0",
+        "expected": "24000.0"
+      },
+      {
+        "period": "2025-09",
         "severity": "warning",
         "item": "net_income",
         "rule": "sign_convention",
@@ -402,7 +375,7 @@
         "expected": "positive"
       },
       {
-        "period": "Oct-25",
+        "period": "2025-10",
         "severity": "error",
         "item": "cogs",
         "rule": "must_be_positive",
@@ -411,16 +384,25 @@
         "expected": "positive"
       },
       {
-        "period": "Oct-25",
-        "severity": "warning",
-        "item": "operating_cash_flow",
-        "rule": "sign_convention",
-        "message": "operating_cash_flow is negative (-127000.0) but typically positive",
-        "actual": "-127000.0",
-        "expected": "positive"
+        "period": "2025-10",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "gross_profit == revenue - cogs",
+        "message": "Gross profit should equal revenue minus COGS",
+        "actual": "17000.0",
+        "expected": "33000.0"
       },
       {
-        "period": "Oct-25",
+        "period": "2025-10",
+        "severity": "error",
+        "item": "gross_profit",
+        "rule": "gross_profit == revenue - cogs",
+        "message": "Gross profit must equal revenue minus COGS",
+        "actual": "17000.0",
+        "expected": "33000.0"
+      },
+      {
+        "period": "2025-10",
         "severity": "warning",
         "item": "net_income",
         "rule": "sign_convention",
@@ -429,7 +411,7 @@
         "expected": "positive"
       },
       {
-        "period": "Nov-25",
+        "period": "2025-11",
         "severity": "error",
         "item": "cogs",
         "rule": "must_be_positive",
@@ -438,16 +420,25 @@
         "expected": "positive"
       },
       {
-        "period": "Nov-25",
-        "severity": "warning",
-        "item": "operating_cash_flow",
-        "rule": "sign_convention",
-        "message": "operating_cash_flow is negative (-128000.0) but typically positive",
-        "actual": "-128000.0",
-        "expected": "positive"
+        "period": "2025-11",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "gross_profit == revenue - cogs",
+        "message": "Gross profit should equal revenue minus COGS",
+        "actual": "24000.0",
+        "expected": "46000.0"
       },
       {
-        "period": "Nov-25",
+        "period": "2025-11",
+        "severity": "error",
+        "item": "gross_profit",
+        "rule": "gross_profit == revenue - cogs",
+        "message": "Gross profit must equal revenue minus COGS",
+        "actual": "24000.0",
+        "expected": "46000.0"
+      },
+      {
+        "period": "2025-11",
         "severity": "warning",
         "item": "net_income",
         "rule": "sign_convention",
@@ -456,7 +447,7 @@
         "expected": "positive"
       },
       {
-        "period": "Dec-25",
+        "period": "2025-12",
         "severity": "error",
         "item": "cogs",
         "rule": "must_be_positive",
@@ -465,16 +456,25 @@
         "expected": "positive"
       },
       {
-        "period": "Dec-25",
-        "severity": "warning",
-        "item": "operating_cash_flow",
-        "rule": "sign_convention",
-        "message": "operating_cash_flow is negative (-138000.0) but typically positive",
-        "actual": "-138000.0",
-        "expected": "positive"
+        "period": "2025-12",
+        "severity": "error",
+        "item": "cogs",
+        "rule": "gross_profit == revenue - cogs",
+        "message": "Gross profit should equal revenue minus COGS",
+        "actual": "34000.0",
+        "expected": "62000.0"
       },
       {
-        "period": "Dec-25",
+        "period": "2025-12",
+        "severity": "error",
+        "item": "gross_profit",
+        "rule": "gross_profit == revenue - cogs",
+        "message": "Gross profit must equal revenue minus COGS",
+        "actual": "34000.0",
+        "expected": "62000.0"
+      },
+      {
+        "period": "2025-12",
         "severity": "warning",
         "item": "net_income",
         "rule": "sign_convention",
@@ -488,265 +488,265 @@
         "flag_index": 0,
         "assessment": "acceptable",
         "confidence": 0.9,
-        "reasoning": "Zero COGS in Jan-25 is acceptable as the company has zero revenue and is in pre-revenue phase",
+        "reasoning": "Company appears to be in pre-revenue/startup phase with zero revenue but significant operating expenses. Negative net income is expected and legitimate during this phase.",
         "suggested_fix": null
       },
       {
         "flag_index": 1,
         "assessment": "acceptable",
-        "confidence": 0.95,
-        "reasoning": "Negative operating cash flow is normal for early-stage companies burning cash before profitability",
+        "confidence": 0.9,
+        "reasoning": "Continuation of pre-revenue phase with consistent burn rate. Negative net income is legitimate for early-stage company.",
         "suggested_fix": null
       },
       {
         "flag_index": 2,
         "assessment": "acceptable",
-        "confidence": 0.95,
-        "reasoning": "Negative net income is normal for early-stage companies in loss-making phase",
+        "confidence": 0.9,
+        "reasoning": "Still in pre-revenue phase with increased labor costs. Negative net income remains legitimate.",
         "suggested_fix": null
       },
       {
         "flag_index": 3,
         "assessment": "acceptable",
         "confidence": 0.9,
-        "reasoning": "Zero COGS in Feb-25 is acceptable as the company has zero revenue and is in pre-revenue phase",
+        "reasoning": "Pre-revenue phase continuing with increased general admin expenses. Negative net income is expected.",
         "suggested_fix": null
       },
       {
         "flag_index": 4,
-        "assessment": "acceptable",
+        "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Negative operating cash flow continues to be normal for early-stage companies",
-        "suggested_fix": null
+        "reasoning": "COGS should never be negative. With revenue of $2,000, COGS should be positive $1,000 to achieve the stated gross profit of $1,000.",
+        "suggested_fix": "1000.0"
       },
       {
         "flag_index": 5,
-        "assessment": "acceptable",
+        "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Negative net income continues to be normal for loss-making early-stage companies",
+        "reasoning": "Mathematical validation error caused by negative COGS. With revenue $2,000 and correct COGS $1,000, gross profit should be $1,000, which matches actual.",
         "suggested_fix": null
       },
       {
         "flag_index": 6,
-        "assessment": "acceptable",
-        "confidence": 0.9,
-        "reasoning": "Zero COGS in Mar-25 is acceptable as the company has zero revenue and is in pre-revenue phase",
+        "assessment": "error",
+        "confidence": 0.95,
+        "reasoning": "This flag is caused by the negative COGS issue. Once COGS is corrected to positive, the gross profit calculation will be valid.",
         "suggested_fix": null
       },
       {
         "flag_index": 7,
         "assessment": "acceptable",
-        "confidence": 0.95,
-        "reasoning": "Negative operating cash flow continues to be normal for early-stage companies",
+        "confidence": 0.9,
+        "reasoning": "Despite revenue starting, operating expenses still far exceed gross profit. Negative net income remains legitimate.",
         "suggested_fix": null
       },
       {
         "flag_index": 8,
-        "assessment": "acceptable",
+        "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Negative net income continues to be normal for loss-making early-stage companies",
-        "suggested_fix": null
+        "reasoning": "COGS should be positive $2,000. Negative COGS violates basic accounting principles.",
+        "suggested_fix": "2000.0"
       },
       {
         "flag_index": 9,
-        "assessment": "acceptable",
-        "confidence": 0.9,
-        "reasoning": "Zero COGS in Apr-25 is acceptable as the company has zero revenue and is in pre-revenue phase",
+        "assessment": "error",
+        "confidence": 0.95,
+        "reasoning": "Mathematical validation error caused by negative COGS. Actual gross profit $3,000 is correct for revenue $5,000 minus COGS $2,000.",
         "suggested_fix": null
       },
       {
         "flag_index": 10,
-        "assessment": "acceptable",
+        "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Negative operating cash flow continues to be normal for early-stage companies",
+        "reasoning": "Flag caused by negative COGS extraction error. Gross profit calculation will be valid once COGS is corrected.",
         "suggested_fix": null
       },
       {
         "flag_index": 11,
         "assessment": "acceptable",
-        "confidence": 0.95,
-        "reasoning": "Negative net income continues to be normal for loss-making early-stage companies",
+        "confidence": 0.9,
+        "reasoning": "Company still has high operating expenses relative to gross profit. Negative net income is legitimate.",
         "suggested_fix": null
       },
       {
         "flag_index": 12,
         "assessment": "error",
-        "confidence": 0.85,
-        "reasoning": "Negative COGS (-1000) with positive revenue (2000) suggests extraction error. COGS should be positive expense",
-        "suggested_fix": "1000.0"
+        "confidence": 0.95,
+        "reasoning": "COGS should be positive $3,000. Systematic pattern of negative COGS extraction continues.",
+        "suggested_fix": "3000.0"
       },
       {
         "flag_index": 13,
-        "assessment": "acceptable",
+        "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Negative operating cash flow is still normal as company is early in revenue generation and not yet profitable",
+        "reasoning": "Mathematical validation error from negative COGS. Actual gross profit appears correct.",
         "suggested_fix": null
       },
       {
         "flag_index": 14,
-        "assessment": "acceptable",
+        "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Negative net income is still normal as company is early in revenue generation and not yet profitable",
+        "reasoning": "Secondary effect of COGS extraction error.",
         "suggested_fix": null
       },
       {
         "flag_index": 15,
-        "assessment": "error",
-        "confidence": 0.85,
-        "reasoning": "Negative COGS (-2000) with positive revenue (5000) suggests extraction error. COGS should be positive expense",
-        "suggested_fix": "2000.0"
-      },
-      {
-        "flag_index": 16,
         "assessment": "acceptable",
-        "confidence": 0.95,
-        "reasoning": "Negative operating cash flow continues as company scales up operations",
+        "confidence": 0.9,
+        "reasoning": "Operating expenses still exceed gross profit. Negative net income remains legitimate.",
         "suggested_fix": null
       },
       {
-        "flag_index": 17,
-        "assessment": "acceptable",
+        "flag_index": 16,
+        "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Negative net income continues as company scales up operations",
+        "reasoning": "COGS should be positive $4,000. Pattern of systematic extraction error continues.",
+        "suggested_fix": "4000.0"
+      },
+      {
+        "flag_index": 17,
+        "assessment": "error",
+        "confidence": 0.95,
+        "reasoning": "Mathematical validation error from negative COGS extraction.",
         "suggested_fix": null
       },
       {
         "flag_index": 18,
         "assessment": "error",
-        "confidence": 0.85,
-        "reasoning": "Negative COGS (-3000) with positive revenue (8000) suggests extraction error. COGS should be positive expense",
-        "suggested_fix": "3000.0"
+        "confidence": 0.95,
+        "reasoning": "Secondary effect of COGS extraction error.",
+        "suggested_fix": null
       },
       {
         "flag_index": 19,
         "assessment": "acceptable",
-        "confidence": 0.95,
-        "reasoning": "Negative operating cash flow continues as company scales up operations",
+        "confidence": 0.9,
+        "reasoning": "Company still showing losses despite growing revenue. This is common for scaling businesses.",
         "suggested_fix": null
       },
       {
         "flag_index": 20,
-        "assessment": "acceptable",
+        "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Negative net income continues as company scales up operations",
-        "suggested_fix": null
+        "reasoning": "COGS should be positive $6,000. Systematic negative COGS extraction error continues.",
+        "suggested_fix": "6000.0"
       },
       {
         "flag_index": 21,
         "assessment": "error",
-        "confidence": 0.85,
-        "reasoning": "Negative COGS (-4000) with positive revenue (12000) suggests extraction error. COGS should be positive expense",
-        "suggested_fix": "4000.0"
+        "confidence": 0.95,
+        "reasoning": "Mathematical validation error caused by negative COGS.",
+        "suggested_fix": null
       },
       {
         "flag_index": 22,
-        "assessment": "acceptable",
+        "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Negative operating cash flow continues as company scales up operations",
+        "reasoning": "Secondary effect of COGS extraction error.",
         "suggested_fix": null
       },
       {
         "flag_index": 23,
         "assessment": "acceptable",
-        "confidence": 0.95,
-        "reasoning": "Negative net income continues as company scales up operations",
+        "confidence": 0.9,
+        "reasoning": "Despite revenue growth, operating expenses increased significantly. Negative net income is still legitimate.",
         "suggested_fix": null
       },
       {
         "flag_index": 24,
         "assessment": "error",
-        "confidence": 0.85,
-        "reasoning": "Negative COGS (-6000) with positive revenue (18000) suggests extraction error. COGS should be positive expense",
-        "suggested_fix": "6000.0"
+        "confidence": 0.95,
+        "reasoning": "COGS should be positive $8,000. Pattern continues systematically.",
+        "suggested_fix": "8000.0"
       },
       {
         "flag_index": 25,
-        "assessment": "acceptable",
+        "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Negative operating cash flow continues as company scales up operations",
+        "reasoning": "Mathematical validation error from negative COGS.",
         "suggested_fix": null
       },
       {
         "flag_index": 26,
-        "assessment": "acceptable",
+        "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Negative net income continues as company scales up operations",
+        "reasoning": "Secondary effect of COGS extraction error.",
         "suggested_fix": null
       },
       {
         "flag_index": 27,
-        "assessment": "error",
-        "confidence": 0.85,
-        "reasoning": "Negative COGS (-8000) with positive revenue (25000) suggests extraction error. COGS should be positive expense",
-        "suggested_fix": "8000.0"
-      },
-      {
-        "flag_index": 28,
         "assessment": "acceptable",
-        "confidence": 0.95,
-        "reasoning": "Negative operating cash flow continues as company scales up operations",
+        "confidence": 0.9,
+        "reasoning": "Net losses continue to be legitimate given the operating expense structure.",
         "suggested_fix": null
       },
       {
-        "flag_index": 29,
-        "assessment": "acceptable",
+        "flag_index": 28,
+        "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Negative net income continues as company scales up operations",
+        "reasoning": "COGS should be positive $11,000. Systematic extraction error persists.",
+        "suggested_fix": "11000.0"
+      },
+      {
+        "flag_index": 29,
+        "assessment": "error",
+        "confidence": 0.95,
+        "reasoning": "Mathematical validation error caused by negative COGS extraction.",
         "suggested_fix": null
       },
       {
         "flag_index": 30,
         "assessment": "error",
-        "confidence": 0.85,
-        "reasoning": "Negative COGS (-11000) with positive revenue (35000) suggests extraction error. COGS should be positive expense",
-        "suggested_fix": "11000.0"
+        "confidence": 0.95,
+        "reasoning": "Secondary effect of COGS extraction error.",
+        "suggested_fix": null
       },
       {
         "flag_index": 31,
         "assessment": "acceptable",
-        "confidence": 0.95,
-        "reasoning": "Negative operating cash flow continues as company scales up operations",
+        "confidence": 0.9,
+        "reasoning": "Company showing improvement in net income despite continued losses. This trajectory is reasonable.",
         "suggested_fix": null
       },
       {
         "flag_index": 32,
-        "assessment": "acceptable",
+        "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Negative net income continues as company scales up operations",
-        "suggested_fix": null
+        "reasoning": "COGS should be positive $14,000. Final instance of systematic negative COGS extraction error.",
+        "suggested_fix": "14000.0"
       },
       {
         "flag_index": 33,
         "assessment": "error",
-        "confidence": 0.85,
-        "reasoning": "Negative COGS (-14000) with positive revenue (48000) suggests extraction error. COGS should be positive expense",
-        "suggested_fix": "14000.0"
+        "confidence": 0.95,
+        "reasoning": "Mathematical validation error from negative COGS extraction.",
+        "suggested_fix": null
       },
       {
         "flag_index": 34,
-        "assessment": "acceptable",
+        "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Negative operating cash flow continues as company scales up operations",
+        "reasoning": "Secondary effect of COGS extraction error.",
         "suggested_fix": null
       },
       {
         "flag_index": 35,
         "assessment": "acceptable",
-        "confidence": 0.95,
-        "reasoning": "Negative net income continues as company scales up operations",
+        "confidence": 0.9,
+        "reasoning": "Final period shows continued losses but stable net income. Pattern is consistent with growth-stage company.",
         "suggested_fix": null
       }
     ],
-    "overall_confidence": 0.857,
+    "overall_confidence": 0.853,
     "time_series": {
       "total_checks": 552,
       "flags": [
         {
           "check_type": "yoy_change",
           "canonical_name": "cogs",
-          "period": "Jun-25",
+          "period": "2025-06",
           "severity": "warning",
-          "message": "cogs declined -100% from May-25 to Jun-25 (threshold: -80%)",
+          "message": "cogs declined -100% from 2025-05 to 2025-06 (threshold: -80%)",
           "details": {
             "pct_change": -1.0,
             "threshold": -0.8
@@ -755,9 +755,9 @@
         {
           "check_type": "yoy_change",
           "canonical_name": "general_admin",
-          "period": "Apr-25",
+          "period": "2025-04",
           "severity": "warning",
-          "message": "general_admin declined -400% from Mar-25 to Apr-25 (threshold: -80%)",
+          "message": "general_admin declined -400% from 2025-03 to 2025-04 (threshold: -80%)",
           "details": {
             "pct_change": -4.0,
             "threshold": -0.8
@@ -770,20 +770,14 @@
     },
     "completeness": {
       "model_type": "corporate",
-      "overall_score": 0.402,
+      "overall_score": 0.517,
       "detected_statements": [
         "income_statement"
       ],
       "total_expected": 11,
-      "total_found": 4,
-      "total_missing": 7,
+      "total_found": 5,
+      "total_missing": 6,
       "missing_items": [
-        {
-          "canonical_name": "revenue",
-          "category": "income_statement",
-          "weight": 1.0,
-          "is_core": true
-        },
         {
           "canonical_name": "ebitda",
           "category": "income_statement",
@@ -823,17 +817,17 @@
       ],
       "per_statement": {
         "income_statement": {
-          "raw_score": 0.364,
-          "weighted_score": 0.402,
-          "core_score": 0.514,
+          "raw_score": 0.455,
+          "weighted_score": 0.517,
+          "core_score": 0.697,
           "found": [
+            "revenue",
             "cogs",
             "gross_profit",
             "net_income",
             "opex"
           ],
           "missing": [
-            "revenue",
             "ebitda",
             "ebit",
             "depreciation",
@@ -845,25 +839,25 @@
       }
     },
     "quality": {
-      "numeric_score": 0.772,
+      "numeric_score": 0.814,
       "letter_grade": "B",
-      "label": "needs_review",
+      "label": "trustworthy",
       "dimensions": [
         {
           "name": "mapping_confidence",
-          "score": 0.86,
+          "score": 0.905,
           "weight": 0.3,
           "details": null
         },
         {
           "name": "validation_success",
-          "score": 0.857,
+          "score": 0.853,
           "weight": 0.25,
           "details": null
         },
         {
           "name": "completeness",
-          "score": 0.402,
+          "score": 0.517,
           "weight": 0.25,
           "details": null
         },
@@ -878,9 +872,24 @@
     },
     "lifecycle": {
       "is_project_finance": false,
-      "confidence": 0.0,
-      "signals_used": [],
-      "phases": {}
+      "confidence": 0.2,
+      "signals_used": [
+        "revenue"
+      ],
+      "phases": {
+        "2025-01": "construction",
+        "2025-02": "construction",
+        "2025-03": "construction",
+        "2025-04": "construction",
+        "2025-05": "operations",
+        "2025-06": "operations",
+        "2025-07": "operations",
+        "2025-08": "operations",
+        "2025-09": "operations",
+        "2025-10": "operations",
+        "2025-11": "operations",
+        "2025-12": "operations"
+      }
     },
     "unit_normalization": {
       "Monthly P&L": "1000.0"
@@ -896,11 +905,11 @@
       5
     ],
     "event_types": [
-      "enhanced_mapping",
       "mapping",
+      "parsing",
+      "enhanced_mapping",
       "triage",
-      "validation",
-      "parsing"
+      "validation"
     ]
   },
   "triage_accuracy": {
@@ -929,33 +938,18 @@
     ]
   },
   "mapping_accuracy": {
-    "correct": 11,
+    "correct": 12,
     "total": 12,
-    "accuracy": 0.9167,
+    "accuracy": 1.0,
     "unmapped_count": 0,
     "unmapped_labels": [],
-    "mismatches": [
-      {
-        "label": "Revenue",
-        "expected": "revenue",
-        "actual": "cash_from_operations",
-        "acceptable": [
-          "revenue"
-        ]
-      }
-    ],
+    "mismatches": [],
     "per_statement": {
       "Monthly P&L": {
-        "correct": 7,
+        "correct": 8,
         "total": 8,
-        "mismatches": [
-          {
-            "label": "Revenue",
-            "expected": "revenue",
-            "actual": "cash_from_operations"
-          }
-        ],
-        "accuracy": 0.875
+        "mismatches": [],
+        "accuracy": 1.0
       },
       "Cash": {
         "correct": 4,
@@ -967,20 +961,14 @@
   },
   "completeness": {
     "model_type": "corporate",
-    "overall_score": 0.402,
+    "overall_score": 0.517,
     "detected_statements": [
       "income_statement"
     ],
     "total_expected": 11,
-    "total_found": 4,
-    "total_missing": 7,
+    "total_found": 5,
+    "total_missing": 6,
     "missing_items": [
-      {
-        "canonical_name": "revenue",
-        "category": "income_statement",
-        "weight": 1.0,
-        "is_core": true
-      },
       {
         "canonical_name": "ebitda",
         "category": "income_statement",
@@ -1020,17 +1008,17 @@
     ],
     "per_statement": {
       "income_statement": {
-        "raw_score": 0.364,
-        "weighted_score": 0.402,
-        "core_score": 0.514,
+        "raw_score": 0.455,
+        "weighted_score": 0.517,
+        "core_score": 0.697,
         "found": [
+          "revenue",
           "cogs",
           "gross_profit",
           "net_income",
           "opex"
         ],
         "missing": [
-          "revenue",
           "ebitda",
           "ebit",
           "depreciation",
@@ -1042,25 +1030,25 @@
     }
   },
   "quality": {
-    "numeric_score": 0.772,
+    "numeric_score": 0.814,
     "letter_grade": "B",
-    "label": "needs_review",
+    "label": "trustworthy",
     "dimensions": [
       {
         "name": "mapping_confidence",
-        "score": 0.86,
+        "score": 0.905,
         "weight": 0.3,
         "details": null
       },
       {
         "name": "validation_success",
-        "score": 0.857,
+        "score": 0.853,
         "weight": 0.25,
         "details": null
       },
       {
         "name": "completeness",
-        "score": 0.402,
+        "score": 0.517,
         "weight": 0.25,
         "details": null
       },
@@ -1078,22 +1066,22 @@
       "sheet": "Monthly P&L",
       "row": 4,
       "original_label": "Revenue",
-      "canonical_name": "cash_from_operations",
+      "canonical_name": "revenue",
       "values": {
-        "Jan-25": 0,
-        "Feb-25": 0,
-        "Mar-25": 0,
-        "Apr-25": 0,
-        "May-25": 2,
-        "Jun-25": 5,
-        "Jul-25": 8,
-        "Aug-25": 12,
-        "Sep-25": 18,
-        "Oct-25": 25,
-        "Nov-25": 35,
-        "Dec-25": 48
+        "2025-01": 0,
+        "2025-02": 0,
+        "2025-03": 0,
+        "2025-04": 0,
+        "2025-05": 2,
+        "2025-06": 5,
+        "2025-07": 8,
+        "2025-08": 12,
+        "2025-09": 18,
+        "2025-10": 25,
+        "2025-11": 35,
+        "2025-12": 48
       },
-      "confidence": 0.7,
+      "confidence": 0.9,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -1172,8 +1160,8 @@
         "mapping": {
           "method": "claude",
           "stage": 3,
-          "taxonomy_category": "cash_flow",
-          "reasoning": "Revenue on Cash sheet likely represents cash inflow from operations, though context suggests this might be operating cash flow component"
+          "taxonomy_category": "income_statement",
+          "reasoning": "Revenue on Cash sheet represents cash inflows from revenue, but still maps to the fundamental 'revenue' concept"
         },
         "validation": {
           "rules_applied": [],
@@ -1189,20 +1177,20 @@
       "original_label": "Cost of Revenue",
       "canonical_name": "cogs",
       "values": {
-        "Jan-25": 0,
-        "Feb-25": 0,
-        "Mar-25": 0,
-        "Apr-25": 0,
-        "May-25": -1,
-        "Jun-25": -2,
-        "Jul-25": -3,
-        "Aug-25": -4,
-        "Sep-25": -6,
-        "Oct-25": -8,
-        "Nov-25": -11,
-        "Dec-25": -14
+        "2025-01": 0,
+        "2025-02": 0,
+        "2025-03": 0,
+        "2025-04": 0,
+        "2025-05": -1,
+        "2025-06": -2,
+        "2025-07": -3,
+        "2025-08": -4,
+        "2025-09": -6,
+        "2025-10": -8,
+        "2025-11": -11,
+        "2025-12": -14
       },
-      "confidence": 0.9,
+      "confidence": 0.95,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -1282,52 +1270,17 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Cost of Revenue is equivalent to Cost of Goods Sold (COGS) on income statement"
+          "reasoning": "Cost of Revenue is equivalent to Cost of Goods Sold (COGS) on an income statement"
         },
         "validation": {
           "rules_applied": [
-            "must_be_positive"
+            "must_be_positive",
+            "gross_profit == revenue - cogs"
           ],
           "all_passed": false,
           "flags": [
             {
-              "period": "Jan-25",
-              "severity": "error",
-              "item": "cogs",
-              "rule": "must_be_positive",
-              "message": "cogs must be positive, got 0.0",
-              "actual": null,
-              "expected": "positive"
-            },
-            {
-              "period": "Feb-25",
-              "severity": "error",
-              "item": "cogs",
-              "rule": "must_be_positive",
-              "message": "cogs must be positive, got 0.0",
-              "actual": null,
-              "expected": "positive"
-            },
-            {
-              "period": "Mar-25",
-              "severity": "error",
-              "item": "cogs",
-              "rule": "must_be_positive",
-              "message": "cogs must be positive, got 0.0",
-              "actual": null,
-              "expected": "positive"
-            },
-            {
-              "period": "Apr-25",
-              "severity": "error",
-              "item": "cogs",
-              "rule": "must_be_positive",
-              "message": "cogs must be positive, got 0.0",
-              "actual": null,
-              "expected": "positive"
-            },
-            {
-              "period": "May-25",
+              "period": "2025-05",
               "severity": "error",
               "item": "cogs",
               "rule": "must_be_positive",
@@ -1336,7 +1289,16 @@
               "expected": "positive"
             },
             {
-              "period": "Jun-25",
+              "period": "2025-05",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "gross_profit == revenue - cogs",
+              "message": "Gross profit should equal revenue minus COGS",
+              "actual": "1000.0",
+              "expected": "3000.0"
+            },
+            {
+              "period": "2025-06",
               "severity": "error",
               "item": "cogs",
               "rule": "must_be_positive",
@@ -1345,7 +1307,16 @@
               "expected": "positive"
             },
             {
-              "period": "Jul-25",
+              "period": "2025-06",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "gross_profit == revenue - cogs",
+              "message": "Gross profit should equal revenue minus COGS",
+              "actual": "3000.0",
+              "expected": "7000.0"
+            },
+            {
+              "period": "2025-07",
               "severity": "error",
               "item": "cogs",
               "rule": "must_be_positive",
@@ -1354,7 +1325,16 @@
               "expected": "positive"
             },
             {
-              "period": "Aug-25",
+              "period": "2025-07",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "gross_profit == revenue - cogs",
+              "message": "Gross profit should equal revenue minus COGS",
+              "actual": "5000.0",
+              "expected": "11000.0"
+            },
+            {
+              "period": "2025-08",
               "severity": "error",
               "item": "cogs",
               "rule": "must_be_positive",
@@ -1363,7 +1343,16 @@
               "expected": "positive"
             },
             {
-              "period": "Sep-25",
+              "period": "2025-08",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "gross_profit == revenue - cogs",
+              "message": "Gross profit should equal revenue minus COGS",
+              "actual": "8000.0",
+              "expected": "16000.0"
+            },
+            {
+              "period": "2025-09",
               "severity": "error",
               "item": "cogs",
               "rule": "must_be_positive",
@@ -1372,7 +1361,16 @@
               "expected": "positive"
             },
             {
-              "period": "Oct-25",
+              "period": "2025-09",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "gross_profit == revenue - cogs",
+              "message": "Gross profit should equal revenue minus COGS",
+              "actual": "12000.0",
+              "expected": "24000.0"
+            },
+            {
+              "period": "2025-10",
               "severity": "error",
               "item": "cogs",
               "rule": "must_be_positive",
@@ -1381,7 +1379,16 @@
               "expected": "positive"
             },
             {
-              "period": "Nov-25",
+              "period": "2025-10",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "gross_profit == revenue - cogs",
+              "message": "Gross profit should equal revenue minus COGS",
+              "actual": "17000.0",
+              "expected": "33000.0"
+            },
+            {
+              "period": "2025-11",
               "severity": "error",
               "item": "cogs",
               "rule": "must_be_positive",
@@ -1390,13 +1397,31 @@
               "expected": "positive"
             },
             {
-              "period": "Dec-25",
+              "period": "2025-11",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "gross_profit == revenue - cogs",
+              "message": "Gross profit should equal revenue minus COGS",
+              "actual": "24000.0",
+              "expected": "46000.0"
+            },
+            {
+              "period": "2025-12",
               "severity": "error",
               "item": "cogs",
               "rule": "must_be_positive",
               "message": "cogs must be positive, got -14000.0",
               "actual": "-14000.0",
               "expected": "positive"
+            },
+            {
+              "period": "2025-12",
+              "severity": "error",
+              "item": "cogs",
+              "rule": "gross_profit == revenue - cogs",
+              "message": "Gross profit should equal revenue minus COGS",
+              "actual": "34000.0",
+              "expected": "62000.0"
             }
           ]
         },
@@ -1409,21 +1434,21 @@
       "original_label": "Gross Profit",
       "canonical_name": "gross_profit",
       "values": {
-        "Jan-25": 0,
-        "Feb-25": 0,
-        "Mar-25": 0,
-        "Apr-25": 0,
-        "May-25": 1,
-        "Jun-25": 3,
-        "Jul-25": 5,
-        "Aug-25": 8,
-        "Sep-25": 12,
-        "Oct-25": 17,
-        "Nov-25": 24,
-        "Dec-25": 34
+        "2025-01": 0,
+        "2025-02": 0,
+        "2025-03": 0,
+        "2025-04": 0,
+        "2025-05": 1,
+        "2025-06": 3,
+        "2025-07": 5,
+        "2025-08": 8,
+        "2025-09": 12,
+        "2025-10": 17,
+        "2025-11": 24,
+        "2025-12": 34
       },
-      "confidence": 0.95,
-      "hierarchy_level": 0,
+      "confidence": 0.98,
+      "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
           {
@@ -1493,7 +1518,7 @@
           }
         ],
         "parsing": {
-          "hierarchy_level": 0,
+          "hierarchy_level": 1,
           "is_bold": true,
           "is_formula": false,
           "is_subtotal": true
@@ -1502,12 +1527,87 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Gross Profit is a standard income statement line item, maps directly to gross_profit canonical"
+          "reasoning": "Gross Profit on P&L sheet maps directly to the income statement canonical name 'gross_profit'"
         },
         "validation": {
-          "rules_applied": [],
-          "all_passed": true,
-          "flags": []
+          "rules_applied": [
+            "gross_profit == revenue - cogs"
+          ],
+          "all_passed": false,
+          "flags": [
+            {
+              "period": "2025-05",
+              "severity": "error",
+              "item": "gross_profit",
+              "rule": "gross_profit == revenue - cogs",
+              "message": "Gross profit must equal revenue minus COGS",
+              "actual": "1000.0",
+              "expected": "3000.0"
+            },
+            {
+              "period": "2025-06",
+              "severity": "error",
+              "item": "gross_profit",
+              "rule": "gross_profit == revenue - cogs",
+              "message": "Gross profit must equal revenue minus COGS",
+              "actual": "3000.0",
+              "expected": "7000.0"
+            },
+            {
+              "period": "2025-07",
+              "severity": "error",
+              "item": "gross_profit",
+              "rule": "gross_profit == revenue - cogs",
+              "message": "Gross profit must equal revenue minus COGS",
+              "actual": "5000.0",
+              "expected": "11000.0"
+            },
+            {
+              "period": "2025-08",
+              "severity": "error",
+              "item": "gross_profit",
+              "rule": "gross_profit == revenue - cogs",
+              "message": "Gross profit must equal revenue minus COGS",
+              "actual": "8000.0",
+              "expected": "16000.0"
+            },
+            {
+              "period": "2025-09",
+              "severity": "error",
+              "item": "gross_profit",
+              "rule": "gross_profit == revenue - cogs",
+              "message": "Gross profit must equal revenue minus COGS",
+              "actual": "12000.0",
+              "expected": "24000.0"
+            },
+            {
+              "period": "2025-10",
+              "severity": "error",
+              "item": "gross_profit",
+              "rule": "gross_profit == revenue - cogs",
+              "message": "Gross profit must equal revenue minus COGS",
+              "actual": "17000.0",
+              "expected": "33000.0"
+            },
+            {
+              "period": "2025-11",
+              "severity": "error",
+              "item": "gross_profit",
+              "rule": "gross_profit == revenue - cogs",
+              "message": "Gross profit must equal revenue minus COGS",
+              "actual": "24000.0",
+              "expected": "46000.0"
+            },
+            {
+              "period": "2025-12",
+              "severity": "error",
+              "item": "gross_profit",
+              "rule": "gross_profit == revenue - cogs",
+              "message": "Gross profit must equal revenue minus COGS",
+              "actual": "34000.0",
+              "expected": "62000.0"
+            }
+          ]
         },
         "enhanced_mapping": null
       }
@@ -1518,18 +1618,18 @@
       "original_label": "Payroll",
       "canonical_name": "labor_costs",
       "values": {
-        "Jan-25": -85,
-        "Feb-25": -85,
-        "Mar-25": -95,
-        "Apr-25": -95,
-        "May-25": -95,
-        "Jun-25": -100,
-        "Jul-25": -100,
-        "Aug-25": -100,
-        "Sep-25": -110,
-        "Oct-25": -110,
-        "Nov-25": -110,
-        "Dec-25": -120
+        "2025-01": -85,
+        "2025-02": -85,
+        "2025-03": -95,
+        "2025-04": -95,
+        "2025-05": -95,
+        "2025-06": -100,
+        "2025-07": -100,
+        "2025-08": -100,
+        "2025-09": -110,
+        "2025-10": -110,
+        "2025-11": -110,
+        "2025-12": -120
       },
       "confidence": 0.85,
       "hierarchy_level": 1,
@@ -1611,7 +1711,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Payroll represents employee compensation costs, maps to labor_costs canonical name"
+          "reasoning": "Payroll represents employee compensation costs, which maps to labor_costs in the income statement taxonomy"
         },
         "validation": {
           "rules_applied": [],
@@ -1627,18 +1727,18 @@
       "original_label": "Rent",
       "canonical_name": "opex",
       "values": {
-        "Jan-25": -8,
-        "Feb-25": -8,
-        "Mar-25": -8,
-        "Apr-25": -8,
-        "May-25": -8,
-        "Jun-25": -8,
-        "Jul-25": -8,
-        "Aug-25": -8,
-        "Sep-25": -8,
-        "Oct-25": -8,
-        "Nov-25": -8,
-        "Dec-25": -8
+        "2025-01": -8,
+        "2025-02": -8,
+        "2025-03": -8,
+        "2025-04": -8,
+        "2025-05": -8,
+        "2025-06": -8,
+        "2025-07": -8,
+        "2025-08": -8,
+        "2025-09": -8,
+        "2025-10": -8,
+        "2025-11": -8,
+        "2025-12": -8
       },
       "confidence": 0.75,
       "hierarchy_level": 1,
@@ -1720,7 +1820,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Rent is an operating expense component, maps to general operating expenses (opex)"
+          "reasoning": "Rent is a general operating expense that falls under the broader opex category"
         },
         "validation": {
           "rules_applied": [],
@@ -1736,18 +1836,18 @@
       "original_label": "Software",
       "canonical_name": "opex",
       "values": {
-        "Jan-25": -5,
-        "Feb-25": -5,
-        "Mar-25": -5,
-        "Apr-25": -5,
-        "May-25": -5,
-        "Jun-25": -6,
-        "Jul-25": -6,
-        "Aug-25": -6,
-        "Sep-25": -6,
-        "Oct-25": -6,
-        "Nov-25": -7,
-        "Dec-25": -7
+        "2025-01": -5,
+        "2025-02": -5,
+        "2025-03": -5,
+        "2025-04": -5,
+        "2025-05": -5,
+        "2025-06": -6,
+        "2025-07": -6,
+        "2025-08": -6,
+        "2025-09": -6,
+        "2025-10": -6,
+        "2025-11": -7,
+        "2025-12": -7
       },
       "confidence": 0.75,
       "hierarchy_level": 1,
@@ -1829,7 +1929,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Software expenses are operating expenses, maps to general operating expenses (opex)"
+          "reasoning": "Software expenses are general operating expenses that fall under the broader opex category"
         },
         "validation": {
           "rules_applied": [],
@@ -1845,18 +1945,18 @@
       "original_label": "Legal & Professional",
       "canonical_name": "general_admin",
       "values": {
-        "Jan-25": -12,
-        "Feb-25": -3,
-        "Mar-25": -3,
-        "Apr-25": -15,
-        "May-25": -3,
-        "Jun-25": -3,
-        "Jul-25": -3,
-        "Aug-25": -3,
-        "Sep-25": -3,
-        "Oct-25": -3,
-        "Nov-25": -3,
-        "Dec-25": -3
+        "2025-01": -12,
+        "2025-02": -3,
+        "2025-03": -3,
+        "2025-04": -15,
+        "2025-05": -3,
+        "2025-06": -3,
+        "2025-07": -3,
+        "2025-08": -3,
+        "2025-09": -3,
+        "2025-10": -3,
+        "2025-11": -3,
+        "2025-12": -3
       },
       "confidence": 0.8,
       "hierarchy_level": 1,
@@ -1938,7 +2038,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Legal & Professional services are typically classified as General & Administrative expenses"
+          "reasoning": "Legal & Professional fees are administrative expenses that map to general_admin (G&A)"
         },
         "validation": {
           "rules_applied": [],
@@ -1954,21 +2054,21 @@
       "original_label": "Total Expenses",
       "canonical_name": "operating_expenses",
       "values": {
-        "Jan-25": -110,
-        "Feb-25": -101,
-        "Mar-25": -111,
-        "Apr-25": -123,
-        "May-25": -111,
-        "Jun-25": -117,
-        "Jul-25": -117,
-        "Aug-25": -117,
-        "Sep-25": -127,
-        "Oct-25": -127,
-        "Nov-25": -128,
-        "Dec-25": -138
+        "2025-01": -110,
+        "2025-02": -101,
+        "2025-03": -111,
+        "2025-04": -123,
+        "2025-05": -111,
+        "2025-06": -117,
+        "2025-07": -117,
+        "2025-08": -117,
+        "2025-09": -127,
+        "2025-10": -127,
+        "2025-11": -128,
+        "2025-12": -138
       },
       "confidence": 0.85,
-      "hierarchy_level": 0,
+      "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
           {
@@ -2038,26 +2138,23 @@
           }
         ],
         "parsing": {
-          "hierarchy_level": 0,
+          "hierarchy_level": 1,
           "is_bold": true,
           "is_formula": false,
           "is_subtotal": true
         },
         "mapping": {
-          "method": "hierarchical",
+          "method": "claude",
           "stage": 3,
-          "taxonomy_category": "unknown",
-          "reasoning": "Given the hierarchy context showing this appears on both P&L and Cash sheets, and nearby labels include 'Rent', 'Software', 'Legal & Professional', this represents total operating expenses. The entity pattern shows 'Total Expenses' -> operating_expenses (90%). While it appears on cash sheet, it's still fundamentally an expense total, not a cash flow line item."
+          "taxonomy_category": "income_statement",
+          "reasoning": "Total Expenses on Cash sheet represents cash outflows for operating expenses"
         },
-        "validation": null,
-        "enhanced_mapping": {
-          "was_remapped": true,
-          "old_canonical": "operating_cash_flow",
-          "old_confidence": 0.6,
-          "new_canonical": "operating_expenses",
-          "new_confidence": 0.85,
-          "stage": 5
-        }
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
       }
     },
     {
@@ -2066,21 +2163,21 @@
       "original_label": "Net Income",
       "canonical_name": "net_income",
       "values": {
-        "Jan-25": -110,
-        "Feb-25": -101,
-        "Mar-25": -111,
-        "Apr-25": -123,
-        "May-25": -110,
-        "Jun-25": -114,
-        "Jul-25": -112,
-        "Aug-25": -109,
-        "Sep-25": -115,
-        "Oct-25": -110,
-        "Nov-25": -104,
-        "Dec-25": -104
+        "2025-01": -110,
+        "2025-02": -101,
+        "2025-03": -111,
+        "2025-04": -123,
+        "2025-05": -110,
+        "2025-06": -114,
+        "2025-07": -112,
+        "2025-08": -109,
+        "2025-09": -115,
+        "2025-10": -110,
+        "2025-11": -104,
+        "2025-12": -104
       },
-      "confidence": 0.95,
-      "hierarchy_level": 0,
+      "confidence": 0.98,
+      "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
           {
@@ -2150,7 +2247,7 @@
           }
         ],
         "parsing": {
-          "hierarchy_level": 0,
+          "hierarchy_level": 1,
           "is_bold": true,
           "is_formula": false,
           "is_subtotal": true
@@ -2159,7 +2256,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Net Income on P&L sheet maps to income statement net_income canonical (not cash flow net_income_cf)"
+          "reasoning": "Net Income on Monthly P&L sheet maps to income statement canonical name 'net_income' (not cash flow net_income_cf)"
         },
         "validation": {
           "rules_applied": [
@@ -2168,7 +2265,7 @@
           "all_passed": true,
           "flags": [
             {
-              "period": "Jan-25",
+              "period": "2025-01",
               "severity": "warning",
               "item": "net_income",
               "rule": "sign_convention",
@@ -2177,7 +2274,7 @@
               "expected": "positive"
             },
             {
-              "period": "Feb-25",
+              "period": "2025-02",
               "severity": "warning",
               "item": "net_income",
               "rule": "sign_convention",
@@ -2186,7 +2283,7 @@
               "expected": "positive"
             },
             {
-              "period": "Mar-25",
+              "period": "2025-03",
               "severity": "warning",
               "item": "net_income",
               "rule": "sign_convention",
@@ -2195,7 +2292,7 @@
               "expected": "positive"
             },
             {
-              "period": "Apr-25",
+              "period": "2025-04",
               "severity": "warning",
               "item": "net_income",
               "rule": "sign_convention",
@@ -2204,7 +2301,7 @@
               "expected": "positive"
             },
             {
-              "period": "May-25",
+              "period": "2025-05",
               "severity": "warning",
               "item": "net_income",
               "rule": "sign_convention",
@@ -2213,7 +2310,7 @@
               "expected": "positive"
             },
             {
-              "period": "Jun-25",
+              "period": "2025-06",
               "severity": "warning",
               "item": "net_income",
               "rule": "sign_convention",
@@ -2222,7 +2319,7 @@
               "expected": "positive"
             },
             {
-              "period": "Jul-25",
+              "period": "2025-07",
               "severity": "warning",
               "item": "net_income",
               "rule": "sign_convention",
@@ -2231,7 +2328,7 @@
               "expected": "positive"
             },
             {
-              "period": "Aug-25",
+              "period": "2025-08",
               "severity": "warning",
               "item": "net_income",
               "rule": "sign_convention",
@@ -2240,7 +2337,7 @@
               "expected": "positive"
             },
             {
-              "period": "Sep-25",
+              "period": "2025-09",
               "severity": "warning",
               "item": "net_income",
               "rule": "sign_convention",
@@ -2249,7 +2346,7 @@
               "expected": "positive"
             },
             {
-              "period": "Oct-25",
+              "period": "2025-10",
               "severity": "warning",
               "item": "net_income",
               "rule": "sign_convention",
@@ -2258,7 +2355,7 @@
               "expected": "positive"
             },
             {
-              "period": "Nov-25",
+              "period": "2025-11",
               "severity": "warning",
               "item": "net_income",
               "rule": "sign_convention",
@@ -2267,7 +2364,7 @@
               "expected": "positive"
             },
             {
-              "period": "Dec-25",
+              "period": "2025-12",
               "severity": "warning",
               "item": "net_income",
               "rule": "sign_convention",
@@ -2286,20 +2383,20 @@
       "original_label": "Beginning Cash",
       "canonical_name": "beginning_cash",
       "values": {
-        "Jan-25": 2000,
-        "Feb-25": 1890,
-        "Mar-25": 1789,
-        "Apr-25": 1678,
-        "May-25": 1555,
-        "Jun-25": 1445,
-        "Jul-25": 1331,
-        "Aug-25": 1219,
-        "Sep-25": 1110,
-        "Oct-25": 995,
-        "Nov-25": 885,
-        "Dec-25": 781
+        "2025-01": 2000,
+        "2025-02": 1890,
+        "2025-03": 1789,
+        "2025-04": 1678,
+        "2025-05": 1555,
+        "2025-06": 1445,
+        "2025-07": 1331,
+        "2025-08": 1219,
+        "2025-09": 1110,
+        "2025-10": 995,
+        "2025-11": 885,
+        "2025-12": 781
       },
-      "confidence": 0.95,
+      "confidence": 0.98,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -2379,7 +2476,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "cash_flow",
-          "reasoning": "Beginning Cash on cash flow analysis maps directly to beginning_cash canonical"
+          "reasoning": "Beginning Cash on Cash sheet maps directly to the cash flow canonical name 'beginning_cash'"
         },
         "validation": {
           "rules_applied": [],
@@ -2393,22 +2490,22 @@
       "sheet": "Cash",
       "row": 4,
       "original_label": "Revenue",
-      "canonical_name": "cash_from_operations",
+      "canonical_name": "revenue",
       "values": {
-        "Jan-25": 0,
-        "Feb-25": 0,
-        "Mar-25": 0,
-        "Apr-25": 0,
-        "May-25": 2,
-        "Jun-25": 5,
-        "Jul-25": 8,
-        "Aug-25": 12,
-        "Sep-25": 18,
-        "Oct-25": 25,
-        "Nov-25": 35,
-        "Dec-25": 48
+        "2025-01": 0,
+        "2025-02": 0,
+        "2025-03": 0,
+        "2025-04": 0,
+        "2025-05": 2,
+        "2025-06": 5,
+        "2025-07": 8,
+        "2025-08": 12,
+        "2025-09": 18,
+        "2025-10": 25,
+        "2025-11": 35,
+        "2025-12": 48
       },
-      "confidence": 0.7,
+      "confidence": 0.9,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -2487,8 +2584,8 @@
         "mapping": {
           "method": "claude",
           "stage": 3,
-          "taxonomy_category": "cash_flow",
-          "reasoning": "Revenue on Cash sheet likely represents cash inflow from operations, though context suggests this might be operating cash flow component"
+          "taxonomy_category": "income_statement",
+          "reasoning": "Revenue on Cash sheet represents cash inflows from revenue, but still maps to the fundamental 'revenue' concept"
         },
         "validation": {
           "rules_applied": [],
@@ -2504,18 +2601,18 @@
       "original_label": "Total Expenses",
       "canonical_name": "operating_expenses",
       "values": {
-        "Jan-25": -110,
-        "Feb-25": -101,
-        "Mar-25": -111,
-        "Apr-25": -123,
-        "May-25": -111,
-        "Jun-25": -117,
-        "Jul-25": -117,
-        "Aug-25": -117,
-        "Sep-25": -127,
-        "Oct-25": -127,
-        "Nov-25": -128,
-        "Dec-25": -138
+        "2025-01": -110,
+        "2025-02": -101,
+        "2025-03": -111,
+        "2025-04": -123,
+        "2025-05": -111,
+        "2025-06": -117,
+        "2025-07": -117,
+        "2025-08": -117,
+        "2025-09": -127,
+        "2025-10": -127,
+        "2025-11": -128,
+        "2025-12": -138
       },
       "confidence": 0.85,
       "hierarchy_level": 1,
@@ -2594,20 +2691,17 @@
           "is_subtotal": true
         },
         "mapping": {
-          "method": "hierarchical",
+          "method": "claude",
           "stage": 3,
-          "taxonomy_category": "unknown",
-          "reasoning": "Given the hierarchy context showing this appears on both P&L and Cash sheets, and nearby labels include 'Rent', 'Software', 'Legal & Professional', this represents total operating expenses. The entity pattern shows 'Total Expenses' -> operating_expenses (90%). While it appears on cash sheet, it's still fundamentally an expense total, not a cash flow line item."
+          "taxonomy_category": "income_statement",
+          "reasoning": "Total Expenses on Cash sheet represents cash outflows for operating expenses"
         },
-        "validation": null,
-        "enhanced_mapping": {
-          "was_remapped": true,
-          "old_canonical": "operating_cash_flow",
-          "old_confidence": 0.6,
-          "new_canonical": "operating_expenses",
-          "new_confidence": 0.85,
-          "stage": 5
-        }
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
       }
     },
     {
@@ -2616,18 +2710,18 @@
       "original_label": "Net Burn",
       "canonical_name": "burn_rate",
       "values": {
-        "Jan-25": -110,
-        "Feb-25": -101,
-        "Mar-25": -111,
-        "Apr-25": -123,
-        "May-25": -110,
-        "Jun-25": -114,
-        "Jul-25": -112,
-        "Aug-25": -109,
-        "Sep-25": -115,
-        "Oct-25": -110,
-        "Nov-25": -104,
-        "Dec-25": -104
+        "2025-01": -110,
+        "2025-02": -101,
+        "2025-03": -111,
+        "2025-04": -123,
+        "2025-05": -110,
+        "2025-06": -114,
+        "2025-07": -112,
+        "2025-08": -109,
+        "2025-09": -115,
+        "2025-10": -110,
+        "2025-11": -104,
+        "2025-12": -104
       },
       "confidence": 0.95,
       "hierarchy_level": 1,
@@ -2709,7 +2803,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "metrics",
-          "reasoning": "Net Burn is a startup/growth company metric that maps directly to burn_rate canonical"
+          "reasoning": "Net Burn maps to the metrics canonical name 'burn_rate' which represents cash burn rate"
         },
         "validation": {
           "rules_applied": [],
@@ -2725,21 +2819,21 @@
       "original_label": "Ending Cash",
       "canonical_name": "ending_cash",
       "values": {
-        "Jan-25": 1890,
-        "Feb-25": 1789,
-        "Mar-25": 1678,
-        "Apr-25": 1555,
-        "May-25": 1445,
-        "Jun-25": 1331,
-        "Jul-25": 1219,
-        "Aug-25": 1110,
-        "Sep-25": 995,
-        "Oct-25": 885,
-        "Nov-25": 781,
-        "Dec-25": 677
+        "2025-01": 1890,
+        "2025-02": 1789,
+        "2025-03": 1678,
+        "2025-04": 1555,
+        "2025-05": 1445,
+        "2025-06": 1331,
+        "2025-07": 1219,
+        "2025-08": 1110,
+        "2025-09": 995,
+        "2025-10": 885,
+        "2025-11": 781,
+        "2025-12": 677
       },
-      "confidence": 0.95,
-      "hierarchy_level": 0,
+      "confidence": 0.98,
+      "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
           {
@@ -2809,7 +2903,7 @@
           }
         ],
         "parsing": {
-          "hierarchy_level": 0,
+          "hierarchy_level": 1,
           "is_bold": true,
           "is_formula": false,
           "is_subtotal": false
@@ -2818,7 +2912,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "cash_flow",
-          "reasoning": "Ending Cash maps directly to ending_cash canonical name"
+          "reasoning": "Ending Cash on Cash sheet maps directly to the cash flow canonical name 'ending_cash'"
         },
         "validation": {
           "rules_applied": [],
@@ -2834,20 +2928,20 @@
       "original_label": "Runway (months)",
       "canonical_name": "cash_runway_months",
       "values": {
-        "Jan-25": 17.2,
-        "Feb-25": 17.7,
-        "Mar-25": 15.1,
-        "Apr-25": 12.6,
-        "May-25": 13.1,
-        "Jun-25": 11.7,
-        "Jul-25": 10.9,
-        "Aug-25": 10.2,
-        "Sep-25": 8.7,
-        "Oct-25": 8,
-        "Nov-25": 7.5,
-        "Dec-25": 6.5
+        "2025-01": 17.2,
+        "2025-02": 17.7,
+        "2025-03": 15.1,
+        "2025-04": 12.6,
+        "2025-05": 13.1,
+        "2025-06": 11.7,
+        "2025-07": 10.9,
+        "2025-08": 10.2,
+        "2025-09": 8.7,
+        "2025-10": 8,
+        "2025-11": 7.5,
+        "2025-12": 6.5
       },
-      "confidence": 0.95,
+      "confidence": 0.98,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -2927,7 +3021,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "metrics",
-          "reasoning": "Runway (months) is a standard startup metric that maps directly to cash_runway_months"
+          "reasoning": "Runway (months) maps directly to the metrics canonical name 'cash_runway_months'"
         },
         "validation": {
           "rules_applied": [],

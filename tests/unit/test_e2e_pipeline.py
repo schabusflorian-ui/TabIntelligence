@@ -4,6 +4,7 @@ End-to-end tests for the full 5-stage extraction pipeline.
 Validates that all stages execute correctly, produce expected results,
 and that lineage, metrics, and data flow work across the entire pipeline.
 """
+
 import pytest
 
 from src.extraction.orchestrator import extract
@@ -20,9 +21,7 @@ class TestFullPipelineExecution:
         stage_names = [s.name for s in pipeline]
 
         assert len(pipeline) == 5
-        assert stage_names == [
-            "parsing", "triage", "mapping", "validation", "enhanced_mapping"
-        ]
+        assert stage_names == ["parsing", "triage", "mapping", "validation", "enhanced_mapping"]
 
     @pytest.mark.asyncio
     async def test_stage_numbers_sequential(self):
@@ -36,9 +35,16 @@ class TestFullPipelineExecution:
         result = await extract(sample_xlsx, file_id="e2e-test-1")
 
         required_keys = {
-            "file_id", "sheets", "triage", "line_items",
-            "tokens_used", "cost_usd", "job_id",
-            "validation", "lineage_summary", "final_lineage_id",
+            "file_id",
+            "sheets",
+            "triage",
+            "line_items",
+            "tokens_used",
+            "cost_usd",
+            "job_id",
+            "validation",
+            "lineage_summary",
+            "final_lineage_id",
         }
         assert required_keys.issubset(result.keys())
 
@@ -60,9 +66,7 @@ class TestFullPipelineExecution:
     @pytest.mark.asyncio
     async def test_pipeline_uses_provided_job_id(self, mock_anthropic, sample_xlsx):
         """Pipeline must use the job_id when explicitly provided."""
-        result = await extract(
-            sample_xlsx, file_id="e2e-test-3", job_id="custom-job-123"
-        )
+        result = await extract(sample_xlsx, file_id="e2e-test-3", job_id="custom-job-123")
         assert result["job_id"] == "custom-job-123"
 
 
@@ -165,11 +169,7 @@ class TestTriageBehavior:
         """Tier 4 (SKIP) sheets must not produce line items."""
         result = await extract(sample_xlsx, file_id="triage-test-3")
 
-        tier4_sheets = {
-            t["sheet_name"]
-            for t in result["triage"]
-            if t.get("tier") == 4
-        }
+        tier4_sheets = {t["sheet_name"] for t in result["triage"] if t.get("tier") == 4}
         assert "Scratch - Working" in tier4_sheets
 
         line_item_sheets = {li["sheet"] for li in result["line_items"]}
@@ -181,10 +181,7 @@ class TestTriageBehavior:
         result = await extract(sample_xlsx, file_id="triage-test-4")
 
         # Income Statement is tier 1 and has 3 rows in mock data
-        income_items = [
-            li for li in result["line_items"]
-            if li["sheet"] == "Income Statement"
-        ]
+        income_items = [li for li in result["line_items"] if li["sheet"] == "Income Statement"]
         assert len(income_items) == 3
 
 
@@ -197,8 +194,13 @@ class TestLineItemStructure:
         result = await extract(sample_xlsx, file_id="item-test-1")
 
         required_fields = {
-            "sheet", "row", "original_label", "canonical_name",
-            "values", "confidence", "hierarchy_level",
+            "sheet",
+            "row",
+            "original_label",
+            "canonical_name",
+            "values",
+            "confidence",
+            "hierarchy_level",
         }
         for item in result["line_items"]:
             assert required_fields.issubset(item.keys()), (
@@ -229,13 +231,8 @@ class TestLineItemStructure:
         """Line item values must come from the parsing stage."""
         result = await extract(sample_xlsx, file_id="item-test-4")
 
-        revenue_item = next(
-            li for li in result["line_items"]
-            if li["canonical_name"] == "revenue"
-        )
-        assert revenue_item["values"] == {
-            "FY2022": 100000, "FY2023": 115000, "FY2024E": 132000
-        }
+        revenue_item = next(li for li in result["line_items"] if li["canonical_name"] == "revenue")
+        assert revenue_item["values"] == {"FY2022": 100000, "FY2023": 115000, "FY2024E": 132000}
 
     @pytest.mark.asyncio
     async def test_confidence_from_mapping(self, mock_anthropic, sample_xlsx):
@@ -293,14 +290,12 @@ class TestValidationStageIntegration:
         assert len(period_results) >= 1
 
         # With correct data, checks should pass (no error flags)
-        error_flags = [
-            f for f in validation["flags"] if f["severity"] == "error"
-        ]
+        error_flags = [f for f in validation["flags"] if f["severity"] == "error"]
         # gross_profit derivation check should pass (60000 == 100000 - 40000)
         gp_errors = [
-            f for f in error_flags
-            if "gross profit" in f.get("message", "").lower()
-            or f.get("item") == "gross_profit"
+            f
+            for f in error_flags
+            if "gross profit" in f.get("message", "").lower() or f.get("item") == "gross_profit"
         ]
         assert len(gp_errors) == 0, "Gross profit validation should pass with mock data"
 
@@ -360,10 +355,7 @@ class TestSheetHandling:
         """Balance Sheet (empty rows in mock) should produce no line items."""
         result = await extract(sample_xlsx, file_id="sheet-test-2")
 
-        balance_items = [
-            li for li in result["line_items"]
-            if li["sheet"] == "Balance Sheet"
-        ]
+        balance_items = [li for li in result["line_items"] if li["sheet"] == "Balance Sheet"]
         assert len(balance_items) == 0
 
 

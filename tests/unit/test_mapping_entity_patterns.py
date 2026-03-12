@@ -1,11 +1,11 @@
 """Tests for Stage 3 entity pattern hints integration."""
-import pytest
+
 from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from src.extraction.stages.mapping import MappingStage
 from src.extraction.base import PipelineContext
+from src.extraction.stages.mapping import MappingStage
 
 
 class TestBuildEntityHints:
@@ -38,8 +38,10 @@ class TestBuildEntityHints:
         mock_pattern.last_seen = datetime.now(timezone.utc)
         mock_pattern.created_by = "claude"
 
-        with patch("src.db.session.get_db_sync") as mock_db, \
-             patch("src.db.crud.get_entity_patterns") as mock_get:
+        with (
+            patch("src.db.session.get_db_sync") as mock_db,
+            patch("src.db.crud.get_entity_patterns") as mock_get,
+        ):
             mock_session = MagicMock()
             mock_db.return_value.__enter__ = MagicMock(return_value=mock_session)
             mock_db.return_value.__exit__ = MagicMock(return_value=False)
@@ -66,8 +68,10 @@ class TestBuildEntityHints:
         ctx = MagicMock(spec=PipelineContext)
         ctx.entity_id = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
-        with patch("src.db.session.get_db_sync") as mock_db, \
-             patch("src.db.crud.get_entity_patterns") as mock_get:
+        with (
+            patch("src.db.session.get_db_sync") as mock_db,
+            patch("src.db.crud.get_entity_patterns") as mock_get,
+        ):
             mock_session = MagicMock()
             mock_db.return_value.__enter__ = MagicMock(return_value=mock_session)
             mock_db.return_value.__exit__ = MagicMock(return_value=False)
@@ -97,8 +101,10 @@ class TestBuildEntityHints:
             p.created_by = "claude"
             patterns.append(p)
 
-        with patch("src.db.session.get_db_sync") as mock_db, \
-             patch("src.db.crud.get_entity_patterns") as mock_get:
+        with (
+            patch("src.db.session.get_db_sync") as mock_db,
+            patch("src.db.crud.get_entity_patterns") as mock_get,
+        ):
             mock_session = MagicMock()
             mock_db.return_value.__enter__ = MagicMock(return_value=mock_session)
             mock_db.return_value.__exit__ = MagicMock(return_value=False)

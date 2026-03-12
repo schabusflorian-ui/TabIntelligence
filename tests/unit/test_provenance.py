@@ -1,12 +1,12 @@
 """Tests for item-level provenance tracking across extraction stages."""
-import pytest
+
 from decimal import Decimal
 from uuid import uuid4
-
 
 # ---------------------------------------------------------------------------
 # Step 1: Parsing — _enrich_with_source_cells
 # ---------------------------------------------------------------------------
+
 
 class TestEnrichWithSourceCells:
     """Test ParsingStage._enrich_with_source_cells()."""
@@ -16,30 +16,44 @@ class TestEnrichWithSourceCells:
         from src.extraction.stages.parsing import ParsingStage
 
         parsed = {
-            "sheets": [{
-                "sheet_name": "Income Statement",
-                "rows": [{
-                    "row_index": 5,
-                    "label": "Revenue",
-                    "cell_ref": "A5",
-                    "values": {},
-                    "hierarchy_level": 1,
-                    "is_formula": False,
-                    "is_subtotal": False,
-                }],
-            }],
+            "sheets": [
+                {
+                    "sheet_name": "Income Statement",
+                    "rows": [
+                        {
+                            "row_index": 5,
+                            "label": "Revenue",
+                            "cell_ref": "A5",
+                            "values": {},
+                            "hierarchy_level": 1,
+                            "is_formula": False,
+                            "is_subtotal": False,
+                        }
+                    ],
+                }
+            ],
         }
         structured = {
-            "sheets": [{
-                "sheet_name": "Income Statement",
-                "rows": [{
-                    "row_index": 5,
-                    "cells": [
-                        {"ref": "A5", "value": "Revenue", "formula": None,
-                         "is_bold": True, "indent_level": 0, "number_format": "General"},
+            "sheets": [
+                {
+                    "sheet_name": "Income Statement",
+                    "rows": [
+                        {
+                            "row_index": 5,
+                            "cells": [
+                                {
+                                    "ref": "A5",
+                                    "value": "Revenue",
+                                    "formula": None,
+                                    "is_bold": True,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                },
+                            ],
+                        }
                     ],
-                }],
-            }],
+                }
+            ],
         }
 
         ParsingStage._enrich_with_source_cells(parsed, structured)
@@ -58,34 +72,60 @@ class TestEnrichWithSourceCells:
         from src.extraction.stages.parsing import ParsingStage
 
         parsed = {
-            "sheets": [{
-                "sheet_name": "Income Statement",
-                "rows": [{
-                    "row_index": 5,
-                    "label": "Revenue",
-                    "cell_ref": "A5",
-                    "values": {"FY2022": 232000, "FY2023": 250000},
-                    "hierarchy_level": 1,
-                    "is_formula": True,
-                    "is_subtotal": False,
-                }],
-            }],
+            "sheets": [
+                {
+                    "sheet_name": "Income Statement",
+                    "rows": [
+                        {
+                            "row_index": 5,
+                            "label": "Revenue",
+                            "cell_ref": "A5",
+                            "values": {"FY2022": 232000, "FY2023": 250000},
+                            "hierarchy_level": 1,
+                            "is_formula": True,
+                            "is_subtotal": False,
+                        }
+                    ],
+                }
+            ],
         }
         structured = {
-            "sheets": [{
-                "sheet_name": "Income Statement",
-                "rows": [{
-                    "row_index": 5,
-                    "cells": [
-                        {"ref": "A5", "value": "Revenue", "formula": None,
-                         "is_bold": True, "indent_level": 0, "number_format": "General"},
-                        {"ref": "B5", "value": 232000, "formula": "=SUM(B3:B4)",
-                         "is_bold": False, "indent_level": 0, "number_format": "#,##0"},
-                        {"ref": "C5", "value": 250000, "formula": "=B5*1.08",
-                         "is_bold": False, "indent_level": 0, "number_format": "#,##0"},
+            "sheets": [
+                {
+                    "sheet_name": "Income Statement",
+                    "rows": [
+                        {
+                            "row_index": 5,
+                            "cells": [
+                                {
+                                    "ref": "A5",
+                                    "value": "Revenue",
+                                    "formula": None,
+                                    "is_bold": True,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                },
+                                {
+                                    "ref": "B5",
+                                    "value": 232000,
+                                    "formula": "=SUM(B3:B4)",
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "#,##0",
+                                },
+                                {
+                                    "ref": "C5",
+                                    "value": 250000,
+                                    "formula": "=B5*1.08",
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "#,##0",
+                                },
+                            ],
+                        }
                     ],
-                }],
-            }],
+                }
+            ],
         }
 
         ParsingStage._enrich_with_source_cells(parsed, structured)
@@ -106,18 +146,22 @@ class TestEnrichWithSourceCells:
         from src.extraction.stages.parsing import ParsingStage
 
         parsed = {
-            "sheets": [{
-                "sheet_name": "Income Statement",
-                "rows": [{
-                    "row_index": 99,
-                    "label": "Mystery",
-                    "cell_ref": "A99",
-                    "values": {},
-                    "hierarchy_level": 1,
-                    "is_formula": False,
-                    "is_subtotal": False,
-                }],
-            }],
+            "sheets": [
+                {
+                    "sheet_name": "Income Statement",
+                    "rows": [
+                        {
+                            "row_index": 99,
+                            "label": "Mystery",
+                            "cell_ref": "A99",
+                            "values": {},
+                            "hierarchy_level": 1,
+                            "is_formula": False,
+                            "is_subtotal": False,
+                        }
+                    ],
+                }
+            ],
         }
         structured = {"sheets": [{"sheet_name": "Income Statement", "rows": []}]}
 
@@ -132,30 +176,44 @@ class TestEnrichWithSourceCells:
         from src.extraction.stages.parsing import ParsingStage
 
         parsed = {
-            "sheets": [{
-                "sheet_name": "S",
-                "rows": [{
-                    "row_index": 1,
-                    "label": "Total Revenue",
-                    "cell_ref": "A1",
-                    "values": {},
-                    "hierarchy_level": 0,
-                    "is_formula": True,
-                    "is_subtotal": True,
-                }],
-            }],
+            "sheets": [
+                {
+                    "sheet_name": "S",
+                    "rows": [
+                        {
+                            "row_index": 1,
+                            "label": "Total Revenue",
+                            "cell_ref": "A1",
+                            "values": {},
+                            "hierarchy_level": 0,
+                            "is_formula": True,
+                            "is_subtotal": True,
+                        }
+                    ],
+                }
+            ],
         }
         structured = {
-            "sheets": [{
-                "sheet_name": "S",
-                "rows": [{
-                    "row_index": 1,
-                    "cells": [
-                        {"ref": "A1", "value": "Total Revenue", "formula": None,
-                         "is_bold": True, "indent_level": 0, "number_format": "General"},
+            "sheets": [
+                {
+                    "sheet_name": "S",
+                    "rows": [
+                        {
+                            "row_index": 1,
+                            "cells": [
+                                {
+                                    "ref": "A1",
+                                    "value": "Total Revenue",
+                                    "formula": None,
+                                    "is_bold": True,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                },
+                            ],
+                        }
                     ],
-                }],
-            }],
+                }
+            ],
         }
 
         ParsingStage._enrich_with_source_cells(parsed, structured)
@@ -170,6 +228,7 @@ class TestEnrichWithSourceCells:
 # ---------------------------------------------------------------------------
 # Step 2: Mapping — taxonomy_category
 # ---------------------------------------------------------------------------
+
 
 class TestMappingTaxonomyCategory:
     """Test that taxonomy_category is added to mapping results."""
@@ -191,6 +250,7 @@ class TestMappingTaxonomyCategory:
 # Step 3: Validation — per-item validation provenance
 # ---------------------------------------------------------------------------
 
+
 class TestItemValidation:
     """Test ValidationStage._build_item_validation()."""
 
@@ -199,12 +259,33 @@ class TestItemValidation:
         from src.extraction.stages.validation import ValidationStage
 
         flags = [
-            {"item": "revenue", "severity": "warning", "rule": "must_be_positive",
-             "period": "FY2022", "message": "ok", "actual": "100", "expected": None},
-            {"item": "revenue", "severity": "error", "rule": "revenue >= gross_profit",
-             "period": "FY2022", "message": "fail", "actual": "100", "expected": "200"},
-            {"item": "ebitda", "severity": "warning", "rule": "must_be_positive",
-             "period": "FY2022", "message": "ok", "actual": "50", "expected": None},
+            {
+                "item": "revenue",
+                "severity": "warning",
+                "rule": "must_be_positive",
+                "period": "FY2022",
+                "message": "ok",
+                "actual": "100",
+                "expected": None,
+            },
+            {
+                "item": "revenue",
+                "severity": "error",
+                "rule": "revenue >= gross_profit",
+                "period": "FY2022",
+                "message": "fail",
+                "actual": "100",
+                "expected": "200",
+            },
+            {
+                "item": "ebitda",
+                "severity": "warning",
+                "rule": "must_be_positive",
+                "period": "FY2022",
+                "message": "ok",
+                "actual": "50",
+                "expected": None,
+            },
         ]
         extracted_values = {
             "FY2022": {"revenue": Decimal("100"), "ebitda": Decimal("50")},
@@ -250,6 +331,7 @@ class TestItemValidation:
 # ---------------------------------------------------------------------------
 # Step 4: Enhanced mapping — remapping provenance
 # ---------------------------------------------------------------------------
+
 
 class TestEnhancedMappingProvenance:
     """Test that enhanced mapping tracks old vs new mapping changes."""
@@ -304,12 +386,14 @@ class TestEnhancedMappingProvenance:
 # Step 5: Orchestrator — provenance in line items
 # ---------------------------------------------------------------------------
 
+
 class TestLineItemProvenance:
     """Test that _build_result() includes provenance in line items."""
 
     def test_provenance_structure(self):
         """Line items from _build_result include provenance dict."""
         from unittest.mock import MagicMock
+
         from src.extraction.base import PipelineContext
 
         context = MagicMock(spec=PipelineContext)
@@ -324,28 +408,41 @@ class TestLineItemProvenance:
         context.results = {
             "parsing": {
                 "parsed": {
-                    "sheets": [{
-                        "sheet_name": "Income Statement",
-                        "rows": [{
-                            "row_index": 5,
-                            "label": "Revenue",
-                            "cell_ref": "A5",
-                            "values": {"FY2022": 232000},
-                            "hierarchy_level": 1,
-                            "is_formula": False,
-                            "is_subtotal": False,
-                            "source_cells": [
-                                {"sheet": "Income Statement", "cell_ref": "A5", "raw_value": "Revenue"},
-                                {"sheet": "Income Statement", "cell_ref": "B5", "raw_value": 232000, "formula": "=SUM(B3:B4)"},
+                    "sheets": [
+                        {
+                            "sheet_name": "Income Statement",
+                            "rows": [
+                                {
+                                    "row_index": 5,
+                                    "label": "Revenue",
+                                    "cell_ref": "A5",
+                                    "values": {"FY2022": 232000},
+                                    "hierarchy_level": 1,
+                                    "is_formula": False,
+                                    "is_subtotal": False,
+                                    "source_cells": [
+                                        {
+                                            "sheet": "Income Statement",
+                                            "cell_ref": "A5",
+                                            "raw_value": "Revenue",
+                                        },
+                                        {
+                                            "sheet": "Income Statement",
+                                            "cell_ref": "B5",
+                                            "raw_value": 232000,
+                                            "formula": "=SUM(B3:B4)",
+                                        },
+                                    ],
+                                    "parsing_metadata": {
+                                        "hierarchy_level": 1,
+                                        "is_bold": True,
+                                        "is_formula": False,
+                                        "is_subtotal": False,
+                                    },
+                                }
                             ],
-                            "parsing_metadata": {
-                                "hierarchy_level": 1,
-                                "is_bold": True,
-                                "is_formula": False,
-                                "is_subtotal": False,
-                            },
-                        }],
-                    }],
+                        }
+                    ],
                 },
             },
             "triage": {
@@ -354,36 +451,50 @@ class TestLineItemProvenance:
                 ],
             },
             "mapping": {
-                "mappings": [{
-                    "original_label": "Revenue",
-                    "canonical_name": "revenue",
-                    "confidence": 0.95,
-                    "method": "claude",
-                    "reasoning": "Direct match",
-                    "taxonomy_category": "income_statement",
-                }],
+                "mappings": [
+                    {
+                        "original_label": "Revenue",
+                        "canonical_name": "revenue",
+                        "confidence": 0.95,
+                        "method": "claude",
+                        "reasoning": "Direct match",
+                        "taxonomy_category": "income_statement",
+                    }
+                ],
             },
             "validation": {
-                "validation": {"overall_confidence": 1.0, "flags": [], "period_results": {}, "claude_reasoning": {}},
+                "validation": {
+                    "overall_confidence": 1.0,
+                    "flags": [],
+                    "period_results": {},
+                    "claude_reasoning": {},
+                },
                 "item_validation": {
-                    "revenue": {"rules_applied": ["must_be_positive"], "all_passed": True, "flags": []},
+                    "revenue": {
+                        "rules_applied": ["must_be_positive"],
+                        "all_passed": True,
+                        "flags": [],
+                    },
                 },
             },
             "enhanced_mapping": {
-                "enhanced_mappings": [{
-                    "original_label": "Revenue",
-                    "canonical_name": "revenue",
-                    "confidence": 0.95,
-                    "method": "claude",
-                    "reasoning": "Direct match",
-                    "taxonomy_category": "income_statement",
-                    "enhanced_mapping_provenance": None,
-                }],
+                "enhanced_mappings": [
+                    {
+                        "original_label": "Revenue",
+                        "canonical_name": "revenue",
+                        "confidence": 0.95,
+                        "method": "claude",
+                        "reasoning": "Direct match",
+                        "taxonomy_category": "income_statement",
+                        "enhanced_mapping_provenance": None,
+                    }
+                ],
             },
         }
 
-        from src.extraction.orchestrator import _build_result
         import time
+
+        from src.extraction.orchestrator import _build_result
 
         result = _build_result(context, "lineage-id-final", time.time())
 
@@ -418,6 +529,7 @@ class TestLineItemProvenance:
 # Step 6: CSV export — provenance columns
 # ---------------------------------------------------------------------------
 
+
 class TestCSVExportProvenance:
     """Test that CSV export includes provenance columns."""
 
@@ -439,29 +551,40 @@ class TestCSVExportProvenance:
         from src.api.jobs import _build_csv_response
 
         result = {"sheets": ["IS"]}
-        line_items = [{
-            "sheet": "Income Statement",
-            "row": 5,
-            "original_label": "Revenue",
-            "canonical_name": "revenue",
-            "confidence": 0.95,
-            "hierarchy_level": 1,
-            "values": {"FY2022": 232000},
-            "provenance": {
-                "source_cells": [
-                    {"sheet": "Income Statement", "cell_ref": "A5", "raw_value": "Revenue"},
-                ],
-                "mapping": {
-                    "method": "claude",
-                    "stage": 3,
-                    "taxonomy_category": "income_statement",
-                    "reasoning": "Direct match",
+        line_items = [
+            {
+                "sheet": "Income Statement",
+                "row": 5,
+                "original_label": "Revenue",
+                "canonical_name": "revenue",
+                "confidence": 0.95,
+                "hierarchy_level": 1,
+                "values": {"FY2022": 232000},
+                "provenance": {
+                    "source_cells": [
+                        {"sheet": "Income Statement", "cell_ref": "A5", "raw_value": "Revenue"},
+                    ],
+                    "mapping": {
+                        "method": "claude",
+                        "stage": 3,
+                        "taxonomy_category": "income_statement",
+                        "reasoning": "Direct match",
+                    },
+                    "validation": {
+                        "rules_applied": ["must_be_positive"],
+                        "all_passed": True,
+                        "flags": [],
+                    },
+                    "enhanced_mapping": None,
+                    "parsing": {
+                        "hierarchy_level": 1,
+                        "is_bold": True,
+                        "is_formula": False,
+                        "is_subtotal": False,
+                    },
                 },
-                "validation": {"rules_applied": ["must_be_positive"], "all_passed": True, "flags": []},
-                "enhanced_mapping": None,
-                "parsing": {"hierarchy_level": 1, "is_bold": True, "is_formula": False, "is_subtotal": False},
-            },
-        }]
+            }
+        ]
 
         response = _build_csv_response(result, line_items, "job-123")
         csv_content = self._get_csv_content(response)
@@ -483,15 +606,17 @@ class TestCSVExportProvenance:
         """CSV works when line items have no provenance (backward compat)."""
         from src.api.jobs import _build_csv_response
 
-        line_items = [{
-            "sheet": "IS",
-            "row": 1,
-            "original_label": "Rev",
-            "canonical_name": "revenue",
-            "confidence": 0.9,
-            "hierarchy_level": 1,
-            "values": {"FY2022": 100},
-        }]
+        line_items = [
+            {
+                "sheet": "IS",
+                "row": 1,
+                "original_label": "Rev",
+                "canonical_name": "revenue",
+                "confidence": 0.9,
+                "hierarchy_level": 1,
+                "values": {"FY2022": 100},
+            }
+        ]
 
         response = _build_csv_response({}, line_items, "job-456")
         csv_content = self._get_csv_content(response)
@@ -503,6 +628,7 @@ class TestCSVExportProvenance:
 # ---------------------------------------------------------------------------
 # Step 7: API endpoint — item provenance
 # ---------------------------------------------------------------------------
+
 
 class TestItemProvenanceEndpoint:
     """Test GET /api/v1/jobs/{job_id}/lineage/{canonical_name}."""
@@ -522,10 +648,18 @@ class TestItemProvenanceEndpoint:
             job.status = JobStatusEnum.COMPLETED
             job.result = {
                 "line_items": [
-                    {"canonical_name": "revenue", "original_label": "Revenue",
-                     "values": {"FY2022": 100}, "provenance": {"mapping": {"method": "claude"}}},
-                    {"canonical_name": "ebitda", "original_label": "EBITDA",
-                     "values": {"FY2022": 50}, "provenance": {"mapping": {"method": "claude"}}},
+                    {
+                        "canonical_name": "revenue",
+                        "original_label": "Revenue",
+                        "values": {"FY2022": 100},
+                        "provenance": {"mapping": {"method": "claude"}},
+                    },
+                    {
+                        "canonical_name": "ebitda",
+                        "original_label": "EBITDA",
+                        "values": {"FY2022": 50},
+                        "provenance": {"mapping": {"method": "claude"}},
+                    },
                 ],
             }
             session.commit()

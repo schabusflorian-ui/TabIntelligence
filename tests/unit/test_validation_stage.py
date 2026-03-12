@@ -3,15 +3,16 @@ Unit tests for Stage 4: Validation.
 
 Tests the deterministic accounting checks and the stage's helper methods.
 """
-import pytest
+
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from src.extraction.stages.validation import ValidationStage, DERIVATION_RULES
-from src.extraction.base import PipelineContext
-from src.validation.accounting_validator import AccountingValidator
-from src.validation.lifecycle_detector import LifecycleDetector, LifecycleResult
+import pytest
 
+from src.extraction.base import PipelineContext
+from src.extraction.stages.validation import DERIVATION_RULES, ValidationStage
+from src.validation.accounting_validator import AccountingValidator
+from src.validation.lifecycle_detector import LifecycleDetector
 
 # ============================================================================
 # DERIVATION RULES TESTS
@@ -76,7 +77,11 @@ class TestAccountingValidatorIntegration:
         }
         result = self.validator.validate(data)
         # Should have at least one error about gross profit
-        gp_errors = [e for e in result.errors if "gross_profit" in e.rule.lower() or "gross" in e.message.lower()]
+        gp_errors = [
+            e
+            for e in result.errors
+            if "gross_profit" in e.rule.lower() or "gross" in e.message.lower()
+        ]
         assert len(gp_errors) > 0
 
     def test_balance_sheet_balances(self):
@@ -87,7 +92,9 @@ class TestAccountingValidatorIntegration:
             "total_equity": Decimal("2000000"),
         }
         result = self.validator.validate(data)
-        bs_errors = [e for e in result.errors if "balance" in e.message.lower() or "total_assets" in e.rule]
+        bs_errors = [
+            e for e in result.errors if "balance" in e.message.lower() or "total_assets" in e.rule
+        ]
         assert len(bs_errors) == 0
 
     def test_balance_sheet_imbalance(self):
@@ -251,13 +258,18 @@ class TestValidationStageHelpers:
     def test_build_extracted_values_basic(self):
         """Test building per-period value dicts from parsed data."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "Income Statement",
-                "rows": [
-                    {"label": "Revenue", "values": {"FY2022": 100000, "FY2023": 115000}},
-                    {"label": "Cost of Goods Sold", "values": {"FY2022": 40000, "FY2023": 46000}},
-                ],
-            }]
+            "sheets": [
+                {
+                    "sheet_name": "Income Statement",
+                    "rows": [
+                        {"label": "Revenue", "values": {"FY2022": 100000, "FY2023": 115000}},
+                        {
+                            "label": "Cost of Goods Sold",
+                            "values": {"FY2022": 40000, "FY2023": 46000},
+                        },
+                    ],
+                }
+            ]
         }
         mappings = [
             {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95},
@@ -300,13 +312,15 @@ class TestValidationStageHelpers:
     def test_build_extracted_values_skips_unmapped(self):
         """Unmapped items should be excluded."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "Income Statement",
-                "rows": [
-                    {"label": "Revenue", "values": {"FY2022": 100000}},
-                    {"label": "Mystery Row", "values": {"FY2022": 50000}},
-                ],
-            }]
+            "sheets": [
+                {
+                    "sheet_name": "Income Statement",
+                    "rows": [
+                        {"label": "Revenue", "values": {"FY2022": 100000}},
+                        {"label": "Mystery Row", "values": {"FY2022": 50000}},
+                    ],
+                }
+            ]
         }
         mappings = [
             {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95},
@@ -322,12 +336,14 @@ class TestValidationStageHelpers:
     def test_build_extracted_values_handles_none(self):
         """None values should be skipped without crashing."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "Income Statement",
-                "rows": [
-                    {"label": "Revenue", "values": {"FY2022": 100000, "FY2023": None}},
-                ],
-            }]
+            "sheets": [
+                {
+                    "sheet_name": "Income Statement",
+                    "rows": [
+                        {"label": "Revenue", "values": {"FY2022": 100000, "FY2023": None}},
+                    ],
+                }
+            ]
         }
         mappings = [{"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95}]
         triage = [{"sheet_name": "Income Statement", "tier": 1}]
@@ -412,7 +428,12 @@ class TestLifecycleFiltering:
     def test_construction_suppresses_all_must_be_positive(self):
         """Construction phase suppresses must_be_positive for ALL items, not just revenue."""
         flags = [
-            {"period": "1.0", "severity": "error", "item": "gross_profit", "rule": "must_be_positive"},
+            {
+                "period": "1.0",
+                "severity": "error",
+                "item": "gross_profit",
+                "rule": "must_be_positive",
+            },
             {"period": "1.0", "severity": "error", "item": "revenue", "rule": "must_be_positive"},
         ]
         extracted = {
@@ -426,7 +447,12 @@ class TestLifecycleFiltering:
     def test_keeps_non_must_be_positive_flags_in_construction(self):
         """Non-must_be_positive flags in construction should be kept."""
         flags = [
-            {"period": "1.0", "severity": "error", "item": "gross_profit", "rule": "gross_profit == revenue - cogs"},
+            {
+                "period": "1.0",
+                "severity": "error",
+                "item": "gross_profit",
+                "rule": "gross_profit == revenue - cogs",
+            },
         ]
         extracted = {
             "1.0": {"revenue": Decimal("0"), "gross_profit": Decimal("0")},
@@ -450,20 +476,41 @@ class TestLifecycleFiltering:
     def test_ramp_up_downgrades_errors_to_warnings(self):
         """Ramp-up phase should downgrade error severity to warning."""
         flags = [
-            {"period": "2.0", "severity": "error", "item": "revenue", "rule": "must_be_positive",
-             "message": "revenue must be positive"},
+            {
+                "period": "2.0",
+                "severity": "error",
+                "item": "revenue",
+                "rule": "must_be_positive",
+                "message": "revenue must be positive",
+            },
         ]
         extracted = {
-            "1.0": {"revenue": Decimal("0"), "capex": Decimal("-10000000"),
-                     "cfads": Decimal("0"), "dscr": Decimal("0")},
-            "2.0": {"revenue": Decimal("3000000"),
-                     "cfads": Decimal("2000000"), "dscr": Decimal("1.1")},
-            "3.0": {"revenue": Decimal("20000000"),
-                     "cfads": Decimal("15000000"), "dscr": Decimal("1.5")},
-            "4.0": {"revenue": Decimal("20000000"),
-                     "cfads": Decimal("15000000"), "dscr": Decimal("1.5")},
-            "5.0": {"revenue": Decimal("20000000"),
-                     "cfads": Decimal("15000000"), "dscr": Decimal("1.5")},
+            "1.0": {
+                "revenue": Decimal("0"),
+                "capex": Decimal("-10000000"),
+                "cfads": Decimal("0"),
+                "dscr": Decimal("0"),
+            },
+            "2.0": {
+                "revenue": Decimal("3000000"),
+                "cfads": Decimal("2000000"),
+                "dscr": Decimal("1.1"),
+            },
+            "3.0": {
+                "revenue": Decimal("20000000"),
+                "cfads": Decimal("15000000"),
+                "dscr": Decimal("1.5"),
+            },
+            "4.0": {
+                "revenue": Decimal("20000000"),
+                "cfads": Decimal("15000000"),
+                "dscr": Decimal("1.5"),
+            },
+            "5.0": {
+                "revenue": Decimal("20000000"),
+                "cfads": Decimal("15000000"),
+                "dscr": Decimal("1.5"),
+            },
         }
         lifecycle = self._detect(extracted)
         assert lifecycle.phases["2.0"] == "ramp_up"
@@ -476,19 +523,35 @@ class TestLifecycleFiltering:
         """Maintenance shutdown should suppress must_be_positive for revenue only."""
         flags = [
             {"period": "3.0", "severity": "error", "item": "revenue", "rule": "must_be_positive"},
-            {"period": "3.0", "severity": "error", "item": "gross_profit", "rule": "must_be_positive"},
+            {
+                "period": "3.0",
+                "severity": "error",
+                "item": "gross_profit",
+                "rule": "must_be_positive",
+            },
         ]
         extracted = {
-            "1.0": {"revenue": Decimal("20000000"),
-                     "cfads": Decimal("15000000"), "dscr": Decimal("1.5")},
-            "2.0": {"revenue": Decimal("20000000"),
-                     "cfads": Decimal("15000000"), "dscr": Decimal("1.5")},
-            "3.0": {"revenue": Decimal("0"),
-                     "cfads": Decimal("0"), "dscr": Decimal("0")},
-            "4.0": {"revenue": Decimal("20000000"),
-                     "cfads": Decimal("15000000"), "dscr": Decimal("1.5")},
-            "5.0": {"revenue": Decimal("20000000"),
-                     "cfads": Decimal("15000000"), "dscr": Decimal("1.5")},
+            "1.0": {
+                "revenue": Decimal("20000000"),
+                "cfads": Decimal("15000000"),
+                "dscr": Decimal("1.5"),
+            },
+            "2.0": {
+                "revenue": Decimal("20000000"),
+                "cfads": Decimal("15000000"),
+                "dscr": Decimal("1.5"),
+            },
+            "3.0": {"revenue": Decimal("0"), "cfads": Decimal("0"), "dscr": Decimal("0")},
+            "4.0": {
+                "revenue": Decimal("20000000"),
+                "cfads": Decimal("15000000"),
+                "dscr": Decimal("1.5"),
+            },
+            "5.0": {
+                "revenue": Decimal("20000000"),
+                "cfads": Decimal("15000000"),
+                "dscr": Decimal("1.5"),
+            },
         }
         lifecycle = self._detect(extracted)
         assert lifecycle.phases["3.0"] == "maintenance_shutdown"
@@ -520,7 +583,9 @@ class TestCrossItemValidation:
         ebt_errors = [e for e in result.errors if e.item_name == "ebt"]
         ebt_warnings = [w for w in result.warnings_list if w.item_name == "ebt"]
         assert len(ebt_errors) == 0, f"Unexpected EBT errors: {[e.message for e in ebt_errors]}"
-        assert len(ebt_warnings) == 0, f"Unexpected EBT warnings: {[w.message for w in ebt_warnings]}"
+        assert len(ebt_warnings) == 0, (
+            f"Unexpected EBT warnings: {[w.message for w in ebt_warnings]}"
+        )
 
     def test_ebt_exceeds_ebit_warns(self):
         """EBT > EBIT should generate a warning (interest expense is positive)."""
@@ -567,7 +632,9 @@ class TestCrossItemValidation:
         cfae_errors = [e for e in result.errors if e.item_name == "cfae"]
         cfae_warnings = [w for w in result.warnings_list if w.item_name == "cfae"]
         assert len(cfae_errors) == 0, f"Unexpected CFAE errors: {[e.message for e in cfae_errors]}"
-        assert len(cfae_warnings) == 0, f"Unexpected CFAE warnings: {[w.message for w in cfae_warnings]}"
+        assert len(cfae_warnings) == 0, (
+            f"Unexpected CFAE warnings: {[w.message for w in cfae_warnings]}"
+        )
 
     def test_cfae_exceeds_cfads_warns(self):
         """CFAE should not exceed CFADS."""
@@ -576,7 +643,9 @@ class TestCrossItemValidation:
             "cfae": Decimal("8000000"),  # CFAE > CFADS is suspicious
         }
         result = self.validator.validate(data)
-        cfads_warnings = [w for w in result.warnings_list if w.item_name == "cfads" and "cfae" in w.rule]
+        cfads_warnings = [
+            w for w in result.warnings_list if w.item_name == "cfads" and "cfae" in w.rule
+        ]
         assert len(cfads_warnings) > 0, "Should warn when CFAE > CFADS"
 
     def test_cfads_within_revenue(self):
@@ -586,7 +655,9 @@ class TestCrossItemValidation:
             "revenue": Decimal("21919251"),
         }
         result = self.validator.validate(data)
-        cfads_warnings = [w for w in result.warnings_list if w.item_name == "cfads" and "revenue" in w.rule]
+        cfads_warnings = [
+            w for w in result.warnings_list if w.item_name == "cfads" and "revenue" in w.rule
+        ]
         assert len(cfads_warnings) == 0
 
     def test_cfads_exceeds_revenue_warns(self):
@@ -596,7 +667,9 @@ class TestCrossItemValidation:
             "revenue": Decimal("21000000"),
         }
         result = self.validator.validate(data)
-        cfads_warnings = [w for w in result.warnings_list if w.item_name == "cfads" and "revenue" in w.rule]
+        cfads_warnings = [
+            w for w in result.warnings_list if w.item_name == "cfads" and "revenue" in w.rule
+        ]
         assert len(cfads_warnings) > 0, "Should warn when CFADS > revenue"
 
     def test_debt_service_negative_passes(self):
@@ -719,20 +792,24 @@ class TestUnitMultiplier:
     def test_unit_multiplier_applied(self):
         """Sheet 'in millions' with revenue=500 → Decimal(500_000_000)."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "Income Statement",
-                "rows": [
-                    {"label": "Revenue", "values": {"FY2022": 500}},
-                ],
-            }]
+            "sheets": [
+                {
+                    "sheet_name": "Income Statement",
+                    "rows": [
+                        {"label": "Revenue", "values": {"FY2022": 500}},
+                    ],
+                }
+            ]
         }
         mappings = [{"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95}]
         triage = [{"sheet_name": "Income Statement", "tier": 1}]
         structured = {
-            "sheets": [{
-                "sheet_name": "Income Statement",
-                "unit_multiplier": 1_000_000,
-            }]
+            "sheets": [
+                {
+                    "sheet_name": "Income Statement",
+                    "unit_multiplier": 1_000_000,
+                }
+            ]
         }
 
         result = self.stage._build_extracted_values(parsed, mappings, triage, structured)
@@ -742,20 +819,24 @@ class TestUnitMultiplier:
     def test_no_multiplier_passthrough(self):
         """unit_multiplier=None → values unchanged."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "Income Statement",
-                "rows": [
-                    {"label": "Revenue", "values": {"FY2022": 500}},
-                ],
-            }]
+            "sheets": [
+                {
+                    "sheet_name": "Income Statement",
+                    "rows": [
+                        {"label": "Revenue", "values": {"FY2022": 500}},
+                    ],
+                }
+            ]
         }
         mappings = [{"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95}]
         triage = [{"sheet_name": "Income Statement", "tier": 1}]
         structured = {
-            "sheets": [{
-                "sheet_name": "Income Statement",
-                "unit_multiplier": None,
-            }]
+            "sheets": [
+                {
+                    "sheet_name": "Income Statement",
+                    "unit_multiplier": None,
+                }
+            ]
         }
 
         result = self.stage._build_extracted_values(parsed, mappings, triage, structured)
@@ -765,20 +846,24 @@ class TestUnitMultiplier:
     def test_multiplier_of_1_passthrough(self):
         """unit_multiplier=1 → values unchanged (no scaling)."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "Income Statement",
-                "rows": [
-                    {"label": "Revenue", "values": {"FY2022": 500}},
-                ],
-            }]
+            "sheets": [
+                {
+                    "sheet_name": "Income Statement",
+                    "rows": [
+                        {"label": "Revenue", "values": {"FY2022": 500}},
+                    ],
+                }
+            ]
         }
         mappings = [{"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95}]
         triage = [{"sheet_name": "Income Statement", "tier": 1}]
         structured = {
-            "sheets": [{
-                "sheet_name": "Income Statement",
-                "unit_multiplier": 1.0,
-            }]
+            "sheets": [
+                {
+                    "sheet_name": "Income Statement",
+                    "unit_multiplier": 1.0,
+                }
+            ]
         }
 
         result = self.stage._build_extracted_values(parsed, mappings, triage, structured)
@@ -824,12 +909,14 @@ class TestUnitMultiplier:
     def test_backward_compat_no_structured(self):
         """structured=None → no crash, values unchanged."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "Income Statement",
-                "rows": [
-                    {"label": "Revenue", "values": {"FY2022": 500}},
-                ],
-            }]
+            "sheets": [
+                {
+                    "sheet_name": "Income Statement",
+                    "rows": [
+                        {"label": "Revenue", "values": {"FY2022": 500}},
+                    ],
+                }
+            ]
         }
         mappings = [{"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95}]
         triage = [{"sheet_name": "Income Statement", "tier": 1}]
@@ -841,18 +928,18 @@ class TestUnitMultiplier:
     def test_thousands_multiplier(self):
         """Sheet 'in thousands' with revenue=500 → Decimal(500_000)."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "IS",
-                "rows": [
-                    {"label": "Revenue", "values": {"FY2022": 500}},
-                ],
-            }]
+            "sheets": [
+                {
+                    "sheet_name": "IS",
+                    "rows": [
+                        {"label": "Revenue", "values": {"FY2022": 500}},
+                    ],
+                }
+            ]
         }
         mappings = [{"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95}]
         triage = [{"sheet_name": "IS", "tier": 1}]
-        structured = {
-            "sheets": [{"sheet_name": "IS", "unit_multiplier": 1000}]
-        }
+        structured = {"sheets": [{"sheet_name": "IS", "unit_multiplier": 1000}]}
 
         result = self.stage._build_extracted_values(parsed, mappings, triage, structured)
 
@@ -861,18 +948,18 @@ class TestUnitMultiplier:
     def test_unit_normalization_provenance(self):
         """_unit_normalization dict tracks which sheets had multipliers."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "IS",
-                "rows": [
-                    {"label": "Revenue", "values": {"FY2022": 500}},
-                ],
-            }]
+            "sheets": [
+                {
+                    "sheet_name": "IS",
+                    "rows": [
+                        {"label": "Revenue", "values": {"FY2022": 500}},
+                    ],
+                }
+            ]
         }
         mappings = [{"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95}]
         triage = [{"sheet_name": "IS", "tier": 1}]
-        structured = {
-            "sheets": [{"sheet_name": "IS", "unit_multiplier": 1000}]
-        }
+        structured = {"sheets": [{"sheet_name": "IS", "unit_multiplier": 1000}]}
 
         self.stage._build_extracted_values(parsed, mappings, triage, structured)
 
@@ -900,10 +987,7 @@ class TestModelTypeDetection:
     def _make_extracted_values(self, canonical_names, periods=None):
         """Build a minimal extracted_values dict from canonical names."""
         periods = periods or ["FY2022"]
-        return {
-            period: {name: Decimal("100") for name in canonical_names}
-            for period in periods
-        }
+        return {period: {name: Decimal("100") for name in canonical_names} for period in periods}
 
     @pytest.mark.asyncio
     async def test_corporate_model_type_detected(self):
@@ -911,22 +995,28 @@ class TestModelTypeDetection:
         corporate_items = {"revenue", "cogs", "gross_profit", "net_income", "total_assets"}
         extracted = self._make_extracted_values(corporate_items)
 
-        ctx = self._make_context({
-            "stage_1": {"structured": None},
-            "stage_2": {"triage": [{"sheet_name": "IS", "tier": 1}]},
-            "stage_3": {"mappings": [
-                {"original_label": n, "canonical_name": n, "confidence": 0.9}
-                for n in corporate_items
-            ]},
-        })
+        ctx = self._make_context(
+            {
+                "stage_1": {"structured": None},
+                "stage_2": {"triage": [{"sheet_name": "IS", "tier": 1}]},
+                "stage_3": {
+                    "mappings": [
+                        {"original_label": n, "canonical_name": n, "confidence": 0.9}
+                        for n in corporate_items
+                    ]
+                },
+            }
+        )
 
-        with patch.object(self.stage, '_build_extracted_values', return_value=extracted), \
-             patch.object(self.stage, '_get_claude_reasoning', return_value=({}, 0, 0, 0)), \
-             patch('src.extraction.stages.validation.QualityScorer') as MockQS:
+        with (
+            patch.object(self.stage, "_build_extracted_values", return_value=extracted),
+            patch.object(self.stage, "_get_claude_reasoning", return_value=({}, 0, 0, 0)),
+            patch("src.extraction.stages.validation.QualityScorer") as MockQS,
+        ):
             MockQS.return_value.score.return_value = MagicMock(
                 numeric_score=0.85, to_dict=lambda: {"numeric_score": 0.85}
             )
-            result = await self.stage.execute(ctx)
+            await self.stage.execute(ctx)
 
             MockQS.assert_called_with(model_type="corporate")
 
@@ -936,22 +1026,28 @@ class TestModelTypeDetection:
         pf_items = {"cfads", "dscr", "debt_service", "revenue", "total_assets"}
         extracted = self._make_extracted_values(pf_items)
 
-        ctx = self._make_context({
-            "stage_1": {"structured": None},
-            "stage_2": {"triage": [{"sheet_name": "PF", "tier": 1}]},
-            "stage_3": {"mappings": [
-                {"original_label": n, "canonical_name": n, "confidence": 0.9}
-                for n in pf_items
-            ]},
-        })
+        ctx = self._make_context(
+            {
+                "stage_1": {"structured": None},
+                "stage_2": {"triage": [{"sheet_name": "PF", "tier": 1}]},
+                "stage_3": {
+                    "mappings": [
+                        {"original_label": n, "canonical_name": n, "confidence": 0.9}
+                        for n in pf_items
+                    ]
+                },
+            }
+        )
 
-        with patch.object(self.stage, '_build_extracted_values', return_value=extracted), \
-             patch.object(self.stage, '_get_claude_reasoning', return_value=({}, 0, 0, 0)), \
-             patch('src.extraction.stages.validation.QualityScorer') as MockQS:
+        with (
+            patch.object(self.stage, "_build_extracted_values", return_value=extracted),
+            patch.object(self.stage, "_get_claude_reasoning", return_value=({}, 0, 0, 0)),
+            patch("src.extraction.stages.validation.QualityScorer") as MockQS,
+        ):
             MockQS.return_value.score.return_value = MagicMock(
                 numeric_score=0.85, to_dict=lambda: {"numeric_score": 0.85}
             )
-            result = await self.stage.execute(ctx)
+            await self.stage.execute(ctx)
 
             MockQS.assert_called_with(model_type="project_finance")
 
@@ -961,17 +1057,22 @@ class TestModelTypeDetection:
         items = {"revenue", "cogs", "gross_profit"}
         extracted = self._make_extracted_values(items)
 
-        ctx = self._make_context({
-            "stage_1": {"structured": None},
-            "stage_2": {"triage": [{"sheet_name": "IS", "tier": 1}]},
-            "stage_3": {"mappings": [
-                {"original_label": n, "canonical_name": n, "confidence": 0.9}
-                for n in items
-            ]},
-        })
+        ctx = self._make_context(
+            {
+                "stage_1": {"structured": None},
+                "stage_2": {"triage": [{"sheet_name": "IS", "tier": 1}]},
+                "stage_3": {
+                    "mappings": [
+                        {"original_label": n, "canonical_name": n, "confidence": 0.9} for n in items
+                    ]
+                },
+            }
+        )
 
-        with patch.object(self.stage, '_build_extracted_values', return_value=extracted), \
-             patch.object(self.stage, '_get_claude_reasoning', return_value=({}, 0, 0, 0)):
+        with (
+            patch.object(self.stage, "_build_extracted_values", return_value=extracted),
+            patch.object(self.stage, "_get_claude_reasoning", return_value=({}, 0, 0, 0)),
+        ):
             result = await self.stage.execute(ctx)
 
             completeness = result["validation"]["completeness"]
@@ -983,22 +1084,34 @@ class TestModelTypeDetection:
         """When completeness scoring fails, model_type=None and QualityScorer still works."""
         extracted = self._make_extracted_values({"revenue"})
 
-        ctx = self._make_context({
-            "stage_1": {"structured": None},
-            "stage_2": {"triage": [{"sheet_name": "IS", "tier": 1}]},
-            "stage_3": {"mappings": [
-                {"original_label": "revenue", "canonical_name": "revenue", "confidence": 0.9}
-            ]},
-        })
+        ctx = self._make_context(
+            {
+                "stage_1": {"structured": None},
+                "stage_2": {"triage": [{"sheet_name": "IS", "tier": 1}]},
+                "stage_3": {
+                    "mappings": [
+                        {
+                            "original_label": "revenue",
+                            "canonical_name": "revenue",
+                            "confidence": 0.9,
+                        }
+                    ]
+                },
+            }
+        )
 
-        with patch.object(self.stage, '_build_extracted_values', return_value=extracted), \
-             patch.object(self.stage, '_get_claude_reasoning', return_value=({}, 0, 0, 0)), \
-             patch('src.extraction.stages.validation.CompletenessScorer', side_effect=Exception("boom")), \
-             patch('src.extraction.stages.validation.QualityScorer') as MockQS:
+        with (
+            patch.object(self.stage, "_build_extracted_values", return_value=extracted),
+            patch.object(self.stage, "_get_claude_reasoning", return_value=({}, 0, 0, 0)),
+            patch(
+                "src.extraction.stages.validation.CompletenessScorer", side_effect=Exception("boom")
+            ),
+            patch("src.extraction.stages.validation.QualityScorer") as MockQS,
+        ):
             MockQS.return_value.score.return_value = MagicMock(
                 numeric_score=0.0, to_dict=lambda: {"numeric_score": 0.0}
             )
-            result = await self.stage.execute(ctx)
+            await self.stage.execute(ctx)
 
             # model_type should be None since completeness failed
             MockQS.assert_called_with(model_type=None)
@@ -1045,4 +1158,5 @@ class TestFirstWriteWins:
         result = self.stage._build_extracted_values(parsed, mappings, triage)
         # First value (1000 from IS) should be kept, not 9999 from Summary
         from decimal import Decimal
+
         assert result["FY2023"]["revenue"] == Decimal("1000")

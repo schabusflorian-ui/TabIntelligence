@@ -1,4 +1,5 @@
 """Stage execution engine with retry, timeout, caching, and skip logic."""
+
 import asyncio
 import random
 import time
@@ -43,9 +44,7 @@ class StageExecutor:
                     "lineage_metadata": {"skipped": True},
                 }
         except Exception as skip_err:
-            logger.warning(
-                f"should_skip() raised for {stage.name}, proceeding: {skip_err}"
-            )
+            logger.warning(f"should_skip() raised for {stage.name}, proceeding: {skip_err}")
 
         # 3. Execute with retry
         max_retries = stage.max_retries
@@ -80,10 +79,7 @@ class StageExecutor:
                     f"Stage {stage.name} timed out after {timeout}s",
                     stage=stage.name,
                 )
-                logger.warning(
-                    f"{stage.description} timed out "
-                    f"(attempt {attempt}/{max_retries})"
-                )
+                logger.warning(f"{stage.description} timed out (attempt {attempt}/{max_retries})")
                 if attempt < max_retries:
                     backoff = 2 ** (attempt - 1) + random.uniform(0, 1)
                     await asyncio.sleep(backoff)
@@ -93,8 +89,7 @@ class StageExecutor:
                 if attempt < max_retries:
                     # Prefer server-provided retry-after for rate limits
                     server_delay = (
-                        e.details.get("retry_after")
-                        if isinstance(e, RateLimitError) else None
+                        e.details.get("retry_after") if isinstance(e, RateLimitError) else None
                     )
                     backoff = (
                         float(server_delay) + random.uniform(0, 1)
@@ -108,10 +103,7 @@ class StageExecutor:
                     )
                     await asyncio.sleep(backoff)
                 else:
-                    logger.error(
-                        f"{stage.description} failed after "
-                        f"{max_retries} attempts: {e}"
-                    )
+                    logger.error(f"{stage.description} failed after {max_retries} attempts: {e}")
 
         raise last_exception  # type: ignore[misc]
 
@@ -136,10 +128,7 @@ class ResilientProgressCallback:
             return
 
         # Flush queue first if connection seems healthy
-        if (
-            self._queue
-            and self._consecutive_failures < self._max_consecutive_failures
-        ):
+        if self._queue and self._consecutive_failures < self._max_consecutive_failures:
             self._flush_queue()
 
         # Send current update
@@ -150,10 +139,7 @@ class ResilientProgressCallback:
         except Exception as e:
             self._consecutive_failures += 1
             self._queue.append((stage_name, progress_percent))
-            logger.warning(
-                f"Progress callback failed "
-                f"({self._consecutive_failures}x): {e}"
-            )
+            logger.warning(f"Progress callback failed ({self._consecutive_failures}x): {e}")
 
     def _flush_queue(self):
         """Try to send queued updates."""

@@ -1,9 +1,10 @@
 """Tests for deterministic period detection and normalization."""
-import pytest
+
 from datetime import datetime
 
+import pytest
+
 from src.extraction.period_parser import (
-    NormalizedPeriod,
     PeriodDetectionResult,
     PeriodParser,
     _expand_year,
@@ -11,10 +12,10 @@ from src.extraction.period_parser import (
     sort_period_keys,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_cell(col: str, row: int, value):
     """Build a minimal cell dict."""
@@ -47,12 +48,11 @@ def _make_sheet(
         if header_columns is None:
             header_columns = [chr(65 + i) for i in range(len(header_values))]
         cells = [
-            _make_cell(col, header_row, val)
-            for col, val in zip(header_columns, header_values)
+            _make_cell(col, header_row, val) for col, val in zip(header_columns, header_values)
         ]
         rows.append({"row_index": header_row, "cells": cells})
 
-    for row_data in (extra_rows or []):
+    for row_data in extra_rows or []:
         rows.append(row_data)
 
     return {
@@ -71,6 +71,7 @@ def parser():
 # ---------------------------------------------------------------------------
 # _expand_year helper
 # ---------------------------------------------------------------------------
+
 
 class TestExpandYear:
     def test_two_digit_low(self):
@@ -92,6 +93,7 @@ class TestExpandYear:
 # ---------------------------------------------------------------------------
 # parse_single_value — Fiscal Year
 # ---------------------------------------------------------------------------
+
 
 class TestFiscalYear:
     def test_fy_4digit(self, parser):
@@ -150,6 +152,7 @@ class TestFiscalYear:
 # parse_single_value — Calendar Year
 # ---------------------------------------------------------------------------
 
+
 class TestCalendarYear:
     def test_cy_4digit(self, parser):
         p = parser.parse_single_value("CY2024", "C")
@@ -171,6 +174,7 @@ class TestCalendarYear:
 # ---------------------------------------------------------------------------
 # parse_single_value — Year with Suffix
 # ---------------------------------------------------------------------------
+
 
 class TestYearSuffix:
     def test_year_actual(self, parser):
@@ -213,6 +217,7 @@ class TestYearSuffix:
 # parse_single_value — Standalone Year
 # ---------------------------------------------------------------------------
 
+
 class TestStandaloneYear:
     def test_4digit_year(self, parser):
         p = parser.parse_single_value("2024", "C")
@@ -231,6 +236,7 @@ class TestStandaloneYear:
 # ---------------------------------------------------------------------------
 # parse_single_value — Quarterly
 # ---------------------------------------------------------------------------
+
 
 class TestQuarterly:
     def test_q_first_with_space(self, parser):
@@ -261,6 +267,7 @@ class TestQuarterly:
 # parse_single_value — Half-Year
 # ---------------------------------------------------------------------------
 
+
 class TestHalfYear:
     def test_h_first(self, parser):
         p = parser.parse_single_value("H1 2024", "C")
@@ -283,6 +290,7 @@ class TestHalfYear:
 # ---------------------------------------------------------------------------
 # parse_single_value — Monthly
 # ---------------------------------------------------------------------------
+
 
 class TestMonthly:
     def test_abbrev_dash(self, parser):
@@ -312,6 +320,7 @@ class TestMonthly:
 # parse_single_value — LTM / TTM / NTM
 # ---------------------------------------------------------------------------
 
+
 class TestLtmTtmNtm:
     def test_ltm(self, parser):
         p = parser.parse_single_value("LTM", "C")
@@ -340,6 +349,7 @@ class TestLtmTtmNtm:
 # parse_single_value — Datetime objects
 # ---------------------------------------------------------------------------
 
+
 class TestDatetime:
     def test_dec_31_annual(self, parser):
         p = parser.parse_single_value(datetime(2024, 12, 31), "C")
@@ -362,6 +372,7 @@ class TestDatetime:
 # ---------------------------------------------------------------------------
 # parse_single_value — Edge Cases
 # ---------------------------------------------------------------------------
+
 
 class TestEdgeCases:
     def test_none_returns_none(self, parser):
@@ -416,6 +427,7 @@ class TestEdgeCases:
 # Sort key ordering
 # ---------------------------------------------------------------------------
 
+
 class TestSortKey:
     def test_fiscal_years_chronological(self, parser):
         periods = [
@@ -453,7 +465,10 @@ class TestSortKey:
         ]
         sorted_p = PeriodParser.sort_periods(periods)
         assert [p.normalized for p in sorted_p] == [
-            "FY2022A", "FY2023A", "FY2024E", "FY2025E",
+            "FY2022A",
+            "FY2023A",
+            "FY2024E",
+            "FY2025E",
         ]
 
     def test_annual_before_quarterly_same_year(self, parser):
@@ -476,6 +491,7 @@ class TestSortKey:
 # NormalizedPeriod serialization
 # ---------------------------------------------------------------------------
 
+
 class TestSerialization:
     def test_to_dict(self, parser):
         p = parser.parse_single_value("FY2024E", "C")
@@ -492,6 +508,7 @@ class TestSerialization:
 # ---------------------------------------------------------------------------
 # Sheet-level detection — time_across_columns
 # ---------------------------------------------------------------------------
+
 
 class TestDetectPeriodsFromSheet:
     def test_fiscal_year_header_row(self, parser):
@@ -637,6 +654,7 @@ class TestDetectPeriodsFromSheet:
 # Numeric sequential detection
 # ---------------------------------------------------------------------------
 
+
 class TestNumericSequential:
     def test_integer_sequence(self, parser):
         sheet = _make_sheet(
@@ -690,6 +708,7 @@ class TestNumericSequential:
 # ---------------------------------------------------------------------------
 # Multi-row header detection
 # ---------------------------------------------------------------------------
+
 
 class TestMultiRowHeader:
     def test_year_keyword_plus_values(self, parser):
@@ -755,14 +774,18 @@ class TestMultiRowHeader:
 # Layout detection — time_down_rows
 # ---------------------------------------------------------------------------
 
+
 class TestLayoutDetection:
     def test_time_down_rows(self, parser):
         """Periods in column A running down rows."""
         rows = [
-            {"row_index": i, "cells": [
-                _make_cell("A", i, f"FY{2020 + i}"),
-                _make_cell("B", i, 100 * i),
-            ]}
+            {
+                "row_index": i,
+                "cells": [
+                    _make_cell("A", i, f"FY{2020 + i}"),
+                    _make_cell("B", i, 100 * i),
+                ],
+            }
             for i in range(1, 6)
         ]
         sheet = _make_sheet(extra_rows=rows)
@@ -782,6 +805,7 @@ class TestLayoutDetection:
 # ---------------------------------------------------------------------------
 # Confidence scoring
 # ---------------------------------------------------------------------------
+
 
 class TestConfidence:
     def test_all_match_high_confidence(self, parser):
@@ -814,11 +838,15 @@ class TestConfidence:
 # PeriodDetectionResult.to_dict
 # ---------------------------------------------------------------------------
 
+
 class TestPeriodDetectionResultDict:
     def test_empty_result(self):
         result = PeriodDetectionResult(
-            periods=[], header_row_indices=[], dominant_type="unknown",
-            confidence=0.0, layout="time_across_columns",
+            periods=[],
+            header_row_indices=[],
+            dominant_type="unknown",
+            confidence=0.0,
+            layout="time_across_columns",
         )
         d = result.to_dict()
         assert d["periods"] == []
@@ -829,6 +857,7 @@ class TestPeriodDetectionResultDict:
 # ---------------------------------------------------------------------------
 # Robustness / edge cases (post-review additions)
 # ---------------------------------------------------------------------------
+
 
 class TestRobustness:
     """Tests for defensive behaviour and untested edge cases."""
@@ -1286,13 +1315,17 @@ class TestPFSortOrder:
     def test_phase_year_sort(self):
         """Const-Year1 < Const-Year2 < Ops-Year1 < Ops-Year2."""
         keys = [
-            "Operations Year 2", "Construction Year 2",
-            "Operations Year 1", "Construction Year 1",
+            "Operations Year 2",
+            "Construction Year 2",
+            "Operations Year 1",
+            "Construction Year 1",
         ]
         result = sort_period_keys(keys)
         assert result == [
-            "Construction Year 1", "Construction Year 2",
-            "Operations Year 1", "Operations Year 2",
+            "Construction Year 1",
+            "Construction Year 2",
+            "Operations Year 1",
+            "Operations Year 2",
         ]
 
     def test_stub_sorts_after_cod(self):
@@ -1388,8 +1421,16 @@ class TestPFPeriodConsistency:
     def test_pf_types_compatible(self):
         """relative_year + phase_year on different sheets should NOT warn."""
         all_periods = {
-            "Sheet1": {"dominant_type": "relative_year", "periods": [], "layout": "time_across_columns"},
-            "Sheet2": {"dominant_type": "phase_year", "periods": [], "layout": "time_across_columns"},
+            "Sheet1": {
+                "dominant_type": "relative_year",
+                "periods": [],
+                "layout": "time_across_columns",
+            },
+            "Sheet2": {
+                "dominant_type": "phase_year",
+                "periods": [],
+                "layout": "time_across_columns",
+            },
         }
         warnings = check_period_consistency(all_periods)
         type_warnings = [w for w in warnings if w["type"] == "mismatched_period_type"]
@@ -1398,8 +1439,16 @@ class TestPFPeriodConsistency:
     def test_pf_vs_fiscal_warns(self):
         """relative_year vs fiscal_year SHOULD warn (different families)."""
         all_periods = {
-            "Sheet1": {"dominant_type": "relative_year", "periods": [], "layout": "time_across_columns"},
-            "Sheet2": {"dominant_type": "fiscal_year", "periods": [], "layout": "time_across_columns"},
+            "Sheet1": {
+                "dominant_type": "relative_year",
+                "periods": [],
+                "layout": "time_across_columns",
+            },
+            "Sheet2": {
+                "dominant_type": "fiscal_year",
+                "periods": [],
+                "layout": "time_across_columns",
+            },
         }
         warnings = check_period_consistency(all_periods)
         type_warnings = [w for w in warnings if w["type"] == "mismatched_period_type"]

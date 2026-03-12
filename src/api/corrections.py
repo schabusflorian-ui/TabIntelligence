@@ -1,22 +1,32 @@
 """User correction and entity pattern management endpoints."""
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+
 from uuid import UUID
 
-from src.db.session import get_db
-from src.db import crud
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
+
+from src.api.schemas import (
+    ApplyCorrectionRequest,
+    ApplyCorrectionResponse,
+    CorrectionDiff,
+    CorrectionHistoryItem,
+    CorrectionHistoryResponse,
+    CorrectionRequest,
+    CorrectionResponse,
+    LearnedAliasListResponse,
+    LearnedAliasPromoteResponse,
+    LearnedAliasResponse,
+    PatternListResponse,
+    PatternResponse,
+    PatternStatsResponse,
+    PreviewCorrectionResponse,
+    UndoCorrectionResponse,
+)
 from src.auth.dependencies import get_current_api_key, require_entity_scope
 from src.core.exceptions import DatabaseError
 from src.core.logging import api_logger as logger
-from src.api.schemas import (
-    CorrectionRequest, CorrectionResponse, PatternListResponse, PatternResponse,
-    PatternStatsResponse, LearnedAliasResponse, LearnedAliasListResponse,
-    LearnedAliasPromoteResponse,
-    ApplyCorrectionRequest, ApplyCorrectionResponse,
-    PreviewCorrectionResponse, CorrectionDiff,
-    CorrectionHistoryResponse, CorrectionHistoryItem,
-    UndoCorrectionResponse,
-)
+from src.db import crud
+from src.db.session import get_db
 
 router = APIRouter(prefix="/api/v1", tags=["corrections"])
 
@@ -39,10 +49,7 @@ def submit_corrections(
     from src.extraction.taxonomy_loader import get_all_canonical_names
 
     valid_names = get_all_canonical_names()
-    invalid = [
-        c.canonical_name for c in body.corrections
-        if c.canonical_name not in valid_names
-    ]
+    invalid = [c.canonical_name for c in body.corrections if c.canonical_name not in valid_names]
     if invalid:
         raise HTTPException(
             422,
@@ -75,6 +82,7 @@ def submit_corrections(
         for correction in body.corrections:
             # Check if pattern already exists to track created vs updated
             from src.db.models import EntityPattern
+
             existing = (
                 db.query(EntityPattern)
                 .filter(
@@ -102,10 +110,7 @@ def submit_corrections(
         logger.error(f"Database error submitting corrections: {str(e)}")
         raise HTTPException(500, "Database error submitting corrections")
 
-    logger.info(
-        f"Corrections submitted for job {job_id}: "
-        f"{created} created, {updated} updated"
-    )
+    logger.info(f"Corrections submitted for job {job_id}: {created} created, {updated} updated")
 
     return CorrectionResponse(
         patterns_created=created,
@@ -210,7 +215,8 @@ def get_pattern_stats(
         # Stats
         avg_conf = (
             sum(float(p.confidence) for p in active_patterns) / len(active_patterns)
-            if active_patterns else 0.0
+            if active_patterns
+            else 0.0
         )
 
         by_method: dict[str, int] = {}
@@ -362,7 +368,9 @@ def _validate_job_for_correction(db: Session, job_id: str):
     if job.status not in (JobStatusEnum.COMPLETED, JobStatusEnum.NEEDS_REVIEW):
         raise HTTPException(
             409,
-            f"Corrections can only be applied to completed or needs_review jobs (current: {job.status.value})",
+            "Corrections can only be applied to completed"
+            " or needs_review jobs"
+            f" (current: {job.status.value})",
         )
 
     return job_uuid, job
@@ -373,11 +381,7 @@ def _validate_canonical_names(corrections):
     from src.extraction.taxonomy_loader import get_all_canonical_names
 
     valid_names = get_all_canonical_names()
-    invalid = [
-        c.new_canonical_name
-        for c in corrections
-        if c.new_canonical_name not in valid_names
-    ]
+    invalid = [c.new_canonical_name for c in corrections if c.new_canonical_name not in valid_names]
     if invalid:
         raise HTTPException(
             422,
@@ -385,7 +389,9 @@ def _validate_canonical_names(corrections):
         )
 
 
-def _apply_and_respond(db: Session, job_id: str, job_uuid, corrections, log_prefix: str = "Applied"):
+def _apply_and_respond(
+    db: Session, job_id: str, job_uuid, corrections, log_prefix: str = "Applied"
+):
     """Shared apply logic for apply/bulk endpoints."""
     try:
         result = crud.apply_correction_to_result(
@@ -415,7 +421,11 @@ def _apply_and_respond(db: Session, job_id: str, job_uuid, corrections, log_pref
         patterns_updated=result["patterns_updated"],
         facts_updated=result["facts_updated"],
         diffs=diffs,
-        message=f"{log_prefix} {applied} corrections ({result['patterns_created']} new patterns, {result['patterns_updated']} updated)",
+        message=(
+            f"{log_prefix} {applied} corrections"
+            f" ({result['patterns_created']} new patterns,"
+            f" {result['patterns_updated']} updated)"
+        ),
     )
 
 
@@ -563,7 +573,11 @@ def undo_correction_endpoint(
         job_id=str(correction.job_id),
         original_label=correction.original_label,
         restored_canonical_name=correction.old_canonical_name,
-        message=f"Reverted '{correction.original_label}' from '{correction.new_canonical_name}' back to '{correction.old_canonical_name}'",
+        message=(
+            f"Reverted '{correction.original_label}'"
+            f" from '{correction.new_canonical_name}'"
+            f" back to '{correction.old_canonical_name}'"
+        ),
     )
 
 
@@ -596,8 +610,11 @@ def get_correction_history(
 
     try:
         corrections, total = crud.get_correction_history(
-            db, job_uuid, include_reverted=include_reverted,
-            offset=offset, limit=limit,
+            db,
+            job_uuid,
+            include_reverted=include_reverted,
+            offset=offset,
+            limit=limit,
         )
     except DatabaseError as e:
         raise HTTPException(500, f"Database error: {e}")

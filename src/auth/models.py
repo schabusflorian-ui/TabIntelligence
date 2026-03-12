@@ -29,9 +29,7 @@ class APIKey(Base):
     __tablename__ = "api_keys"
 
     # Primary key
-    id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Security fields
     key_hash: Mapped[str] = mapped_column(

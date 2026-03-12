@@ -4,29 +4,29 @@ Extraction Orchestrator - coordinates the extraction pipeline using registered s
 Uses a Stage Registry pattern so new stages can be added by simply creating
 a new ExtractionStage subclass and registering it - no orchestrator changes needed.
 """
+
 import time
 import uuid
-from typing import Optional, Callable
-from dataclasses import dataclass, asdict
-
-from src.core.logging import extraction_logger as logger, log_performance, log_exception
-from src.core.exceptions import ExtractionError, ClaudeAPIError, LineageIncompleteError
-from src.extraction.base import PipelineContext
-from src.extraction.registry import registry
-from src.extraction.stage_executor import StageExecutor, ResilientProgressCallback
-from src.api.metrics import (
-    extraction_stage_duration_seconds,
-    extraction_stage_tokens_total,
-    extraction_cost_usd_total,
-    extraction_duration_seconds,
-    extraction_jobs_total,
-    extraction_quality_score,
-    extraction_quality_by_model_type,
-)
+from dataclasses import asdict, dataclass
+from typing import Callable, Optional
 
 # Import stages to trigger self-registration
 import src.extraction.stages  # noqa: F401
-
+from src.api.metrics import (
+    extraction_cost_usd_total,
+    extraction_duration_seconds,
+    extraction_jobs_total,
+    extraction_quality_by_model_type,
+    extraction_quality_score,
+    extraction_stage_duration_seconds,
+    extraction_stage_tokens_total,
+)
+from src.core.exceptions import ClaudeAPIError, ExtractionError, LineageIncompleteError
+from src.core.logging import extraction_logger as logger
+from src.core.logging import log_exception, log_performance
+from src.extraction.base import PipelineContext
+from src.extraction.registry import registry
+from src.extraction.stage_executor import ResilientProgressCallback, StageExecutor
 
 # Progress weights per stage (cumulative percentage after stage completes)
 STAGE_WEIGHTS = {
@@ -43,6 +43,7 @@ _GRADE_RANKS = {"A": 5, "B": 4, "C": 3, "D": 2, "F": 1, "?": 0}
 @dataclass
 class ExtractionResult:
     """Result of a complete extraction pipeline run."""
+
     file_id: str
     sheets: list
     triage: list
@@ -92,8 +93,7 @@ async def extract(
         job_id = str(uuid.uuid4())
 
     logger.info(
-        f"Extraction started - file_id: {file_id}, "
-        f"entity_id: {entity_id}, job_id: {job_id}"
+        f"Extraction started - file_id: {file_id}, entity_id: {entity_id}, job_id: {job_id}"
     )
     pipeline_start = time.time()
 
@@ -122,9 +122,7 @@ async def extract(
         for stage in pipeline:
             # Skip stages loaded from checkpoint
             if stage.name in context.completed_stages:
-                logger.info(
-                    f"Skipping {stage.description} (loaded from checkpoint)"
-                )
+                logger.info(f"Skipping {stage.description} (loaded from checkpoint)")
                 cached = context.get_cached_result(stage.name)
                 lineage_metadata = dict(cached.get("lineage_metadata", {})) if cached else {}
                 lineage_metadata["resumed_from_checkpoint"] = True
@@ -139,9 +137,7 @@ async def extract(
                 lineage_ids[stage.stage_number] = lineage_id
                 last_lineage_id = lineage_id
 
-                resilient_callback(
-                    stage.name, STAGE_WEIGHTS.get(stage.name, 50)
-                )
+                resilient_callback(stage.name, STAGE_WEIGHTS.get(stage.name, 50))
                 continue
 
             logger.info(f"Running {stage.description}...")
@@ -156,12 +152,8 @@ async def extract(
 
             # Record per-stage metrics
             stage_tokens = result.get("tokens", 0)
-            extraction_stage_duration_seconds.labels(
-                stage=stage.name
-            ).observe(stage_duration)
-            extraction_stage_tokens_total.labels(
-                stage=stage.name
-            ).inc(stage_tokens)
+            extraction_stage_duration_seconds.labels(stage=stage.name).observe(stage_duration)
+            extraction_stage_tokens_total.labels(stage=stage.name).inc(stage_tokens)
 
             # Emit lineage event
             parent_id = lineage_ids.get(stage.stage_number - 1)
@@ -178,9 +170,7 @@ async def extract(
             last_lineage_id = lineage_id
 
             # Notify progress
-            resilient_callback(
-                stage.name, STAGE_WEIGHTS.get(stage.name, 50)
-            )
+            resilient_callback(stage.name, STAGE_WEIGHTS.get(stage.name, 50))
 
             # Best-effort checkpoint save
             _save_checkpoint(job_id, stage.name, result)
@@ -188,9 +178,7 @@ async def extract(
             # Early abort: if triage shows ALL sheets as tier 4, stop pipeline
             if stage.name == "triage":
                 triage_list = result.get("triage", [])
-                if triage_list and all(
-                    t.get("tier", 4) == 4 for t in triage_list
-                ):
+                if triage_list and all(t.get("tier", 4) == 4 for t in triage_list):
                     logger.warning(
                         f"All {len(triage_list)} sheets classified as tier 4 "
                         f"(skip). Aborting pipeline early."
@@ -218,9 +206,7 @@ async def extract(
                     f"for failed job {job_id}"
                 )
             except Exception as save_err:
-                logger.warning(
-                    f"Could not save partial lineage for job {job_id}: {save_err}"
-                )
+                logger.warning(f"Could not save partial lineage for job {job_id}: {save_err}")
 
         # Re-raise with appropriate wrapping
         if isinstance(e, LineageIncompleteError):
@@ -242,9 +228,7 @@ async def extract(
         validation_delta = _post_stage5_revalidation(context)
 
     # Build final result from stage outputs
-    extraction_result = _build_result(
-        context, last_lineage_id, pipeline_start, validation_delta
-    )
+    extraction_result = _build_result(context, last_lineage_id, pipeline_start, validation_delta)
 
     return extraction_result.to_dict()
 
@@ -284,9 +268,7 @@ def _apply_validation_feedback(context: PipelineContext):
 
         # Find canonical names that were pattern-mapped
         pattern_mapped_canonicals = {
-            m["canonical_name"]
-            for m in mappings
-            if m.get("method") == "entity_pattern"
+            m["canonical_name"] for m in mappings if m.get("method") == "entity_pattern"
         }
 
         if not pattern_mapped_canonicals:
@@ -294,7 +276,8 @@ def _apply_validation_feedback(context: PipelineContext):
 
         # Identify failed and passed pattern-mapped canonicals
         failed_canonicals = {
-            f["item"] for f in flags
+            f["item"]
+            for f in flags
             if f.get("severity") == "error" and f["item"] in pattern_mapped_canonicals
         }
 
@@ -307,13 +290,14 @@ def _apply_validation_feedback(context: PipelineContext):
 
         with get_db_sync() as db:
             result = crud.update_pattern_confidence_from_validation(
-                db, UUID(context.entity_id),
-                failed_canonicals, passed_canonicals,
+                db,
+                UUID(context.entity_id),
+                failed_canonicals,
+                passed_canonicals,
             )
 
         logger.info(
-            f"Validation feedback applied: {result['reduced']} reduced, "
-            f"{result['boosted']} boosted"
+            f"Validation feedback applied: {result['reduced']} reduced, {result['boosted']} boosted"
         )
 
     except Exception as e:
@@ -331,9 +315,7 @@ def _preload_checkpoint(context, job_id, pipeline, resume_from_stage):
         with get_db_sync() as db:
             job = crud.get_job(db, UUID(job_id))
             if not job or not job.result:
-                logger.warning(
-                    f"No checkpoint data for job {job_id}, starting fresh"
-                )
+                logger.warning(f"No checkpoint data for job {job_id}, starting fresh")
                 return
 
             partial = job.result
@@ -402,15 +384,11 @@ def _post_stage5_revalidation(context: PipelineContext) -> Optional[dict]:
         enhanced_result = context.results.get("enhanced_mapping", {})
 
         # Get pre-Stage-5 success rate from Stage 4
-        pre_rate = (
-            validation_result.get("validation", {}).get("overall_confidence", 0.0)
-            or 0.0
-        )
+        pre_rate = validation_result.get("validation", {}).get("overall_confidence", 0.0) or 0.0
 
         # Use post-Stage-5 mappings
-        mappings = (
-            enhanced_result.get("enhanced_mappings")
-            or context.get_result("mapping").get("mappings", [])
+        mappings = enhanced_result.get("enhanced_mappings") or context.get_result("mapping").get(
+            "mappings", []
         )
 
         # Build per-sheet unit multiplier lookup from structured parsing data
@@ -428,9 +406,7 @@ def _post_stage5_revalidation(context: PipelineContext) -> Optional[dict]:
         # Build per-period values using post-Stage-5 mappings
         mapping_lookup = {m["original_label"]: m["canonical_name"] for m in mappings}
         # Match Stage 4's tier 1-2 filter for comparable validation delta
-        processable = {
-            t["sheet_name"] for t in triage_result if t.get("tier", 4) <= 2
-        }
+        processable = {t["sheet_name"] for t in triage_result if t.get("tier", 4) <= 2}
 
         period_values: dict[str, dict[str, Decimal]] = {}
         for sheet in parse_result.get("sheets", []):
@@ -513,8 +489,7 @@ def _compute_quality(
     mapped = [li for li in line_items if li.get("canonical_name") != "unmapped"]
 
     mapping_confidence = (
-        sum(li.get("confidence", 0) for li in mapped) / len(mapped)
-        if mapped else 0.0
+        sum(li.get("confidence", 0) for li in mapped) / len(mapped) if mapped else 0.0
     )
 
     validation_data = validation_result.get("validation", {})
@@ -525,8 +500,10 @@ def _compute_quality(
     ts_consistency = _compute_ts_consistency(line_items)
 
     quality = QualityScorer(model_type=model_type).score(
-        mapping_confidence, validation_success_rate,
-        completeness, ts_consistency,
+        mapping_confidence,
+        validation_success_rate,
+        completeness,
+        ts_consistency,
     )
     return quality.to_dict()
 
@@ -542,15 +519,19 @@ def _log_quality_diagnostics(quality_dict: dict, line_items: list, file_id: str)
 
     # Sample low-confidence and unmapped items
     unmapped = [li for li in line_items if li.get("canonical_name") == "unmapped"]
-    low_conf = [li for li in line_items
-                if li.get("canonical_name") != "unmapped" and li.get("confidence", 1) < 0.6]
+    low_conf = [
+        li
+        for li in line_items
+        if li.get("canonical_name") != "unmapped" and li.get("confidence", 1) < 0.6
+    ]
 
     if unmapped:
         sample = [li.get("original_label", "?") for li in unmapped[:5]]
         parts.append(f"  Unmapped items ({len(unmapped)} total): {sample}")
     if low_conf:
-        sample = [(li.get("original_label", "?"), f"{li.get('confidence', 0):.0%}")
-                   for li in low_conf[:5]]
+        sample = [
+            (li.get("original_label", "?"), f"{li.get('confidence', 0):.0%}") for li in low_conf[:5]
+        ]
         parts.append(f"  Low confidence ({len(low_conf)} total): {sample}")
 
     logger.warning("\n".join(parts))
@@ -605,12 +586,15 @@ def _build_result(
                 mapping_method = mapping.get("method", "unknown")
                 provenance = {
                     "source_cells": row.get("source_cells", []),
-                    "parsing": row.get("parsing_metadata", {
-                        "hierarchy_level": row.get("hierarchy_level", 1),
-                        "is_bold": False,
-                        "is_formula": row.get("is_formula", False),
-                        "is_subtotal": row.get("is_subtotal", False),
-                    }),
+                    "parsing": row.get(
+                        "parsing_metadata",
+                        {
+                            "hierarchy_level": row.get("hierarchy_level", 1),
+                            "is_bold": False,
+                            "is_formula": row.get("is_formula", False),
+                            "is_subtotal": row.get("is_subtotal", False),
+                        },
+                    ),
                     "mapping": {
                         "method": mapping_method,
                         "stage": 5 if mapping_method == "enhanced" else 3,
@@ -621,54 +605,72 @@ def _build_result(
                     "enhanced_mapping": mapping.get("enhanced_mapping_provenance"),
                 }
 
-                line_items.append({
-                    "sheet": sheet["sheet_name"],
-                    "row": row.get("row_index"),
-                    "original_label": row.get("label"),
-                    "canonical_name": canonical,
-                    "values": row.get("values", {}),
-                    "confidence": mapping.get("confidence", 0.5),
-                    "hierarchy_level": row.get("hierarchy_level", 1),
-                    "provenance": provenance,
-                })
+                line_items.append(
+                    {
+                        "sheet": sheet["sheet_name"],
+                        "row": row.get("row_index"),
+                        "original_label": row.get("label"),
+                        "canonical_name": canonical,
+                        "values": row.get("values", {}),
+                        "confidence": mapping.get("confidence", 0.5),
+                        "hierarchy_level": row.get("hierarchy_level", 1),
+                        "provenance": provenance,
+                    }
+                )
 
                 # Emit item-level lineage transformations
                 orig_label = row.get("label", "")
                 context.tracker.emit_item_transformation(
-                    canonical, orig_label, "parsing", "parsed",
-                    {"sheet": sheet["sheet_name"], "row": row.get("row_index"),
-                     "hierarchy_level": row.get("hierarchy_level", 1),
-                     "source_cells_count": len(provenance.get("source_cells", []))},
+                    canonical,
+                    orig_label,
+                    "parsing",
+                    "parsed",
+                    {
+                        "sheet": sheet["sheet_name"],
+                        "row": row.get("row_index"),
+                        "hierarchy_level": row.get("hierarchy_level", 1),
+                        "source_cells_count": len(provenance.get("source_cells", [])),
+                    },
                 )
                 context.tracker.emit_item_transformation(
-                    canonical, orig_label, "mapping", "mapped",
-                    {"method": provenance["mapping"]["method"],
-                     "taxonomy_category": provenance["mapping"]["taxonomy_category"],
-                     "confidence": mapping.get("confidence", 0.5)},
+                    canonical,
+                    orig_label,
+                    "mapping",
+                    "mapped",
+                    {
+                        "method": provenance["mapping"]["method"],
+                        "taxonomy_category": provenance["mapping"]["taxonomy_category"],
+                        "confidence": mapping.get("confidence", 0.5),
+                    },
                 )
                 if provenance.get("validation"):
                     context.tracker.emit_item_transformation(
-                        canonical, orig_label, "validation", "validated",
-                        {"all_passed": provenance["validation"].get("all_passed"),
-                         "rules_applied": provenance["validation"].get("rules_applied", [])},
+                        canonical,
+                        orig_label,
+                        "validation",
+                        "validated",
+                        {
+                            "all_passed": provenance["validation"].get("all_passed"),
+                            "rules_applied": provenance["validation"].get("rules_applied", []),
+                        },
                     )
                 if provenance.get("enhanced_mapping"):
                     context.tracker.emit_item_transformation(
-                        canonical, orig_label, "enhanced_mapping", "remapped",
+                        canonical,
+                        orig_label,
+                        "enhanced_mapping",
+                        "remapped",
                         provenance["enhanced_mapping"],
                     )
 
     # --- Model type detection ---
     from src.validation.completeness_scorer import CompletenessScorer
+
     extracted_canonical_names = {
-        li["canonical_name"] for li in line_items
-        if li.get("canonical_name") != "unmapped"
+        li["canonical_name"] for li in line_items if li.get("canonical_name") != "unmapped"
     }
     is_pf_hint = (
-        validation_result
-        .get("validation", {})
-        .get("lifecycle", {})
-        .get("is_project_finance")
+        validation_result.get("validation", {}).get("lifecycle", {}).get("is_project_finance")
     )
     model_type = CompletenessScorer().detect_model_type(
         extracted_canonical_names,
@@ -682,6 +684,7 @@ def _build_result(
     if quality_dict:
         grade = quality_dict.get("letter_grade", "?")
         from src.core.config import get_settings
+
         min_grade = get_settings().quality_gate_min_grade
         grade_rank = _GRADE_RANKS.get(grade, 0)
         min_grade_rank = _GRADE_RANKS.get(min_grade, 1)
@@ -704,13 +707,14 @@ def _build_result(
 
     # --- Best-effort fact table persistence ---
     try:
-        from src.db.session import get_db_sync
         from src.db.crud import persist_extraction_facts
+        from src.db.session import get_db_sync
+
         with get_db_sync() as db:
             fact_count = persist_extraction_facts(
                 db,
-                job_id=context.job_id,
-                entity_id=getattr(context, 'entity_id', None),
+                job_id=uuid.UUID(context.job_id) if context.job_id else uuid.uuid4(),
+                entity_id=getattr(context, "entity_id", None),
                 line_items=line_items,
                 validation_lookup=item_validation_lookup,
             )

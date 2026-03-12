@@ -3,6 +3,7 @@ Custom exception hierarchy for DebtFund.
 
 All DebtFund exceptions inherit from DebtFundError for easy catching.
 """
+
 from typing import Optional
 
 
@@ -79,7 +80,9 @@ class ClaudeAPIError(ExtractionError):
 class ValidationError(ExtractionError):
     """Validation failures (Stage 4)."""
 
-    def __init__(self, message: str, validation_type: Optional[str] = None, file_id: Optional[str] = None):
+    def __init__(
+        self, message: str, validation_type: Optional[str] = None, file_id: Optional[str] = None
+    ):
         details = {}
         if validation_type:
             details["validation_type"] = validation_type
@@ -110,7 +113,9 @@ class LineageIncompleteError(LineageError):
 
     def __init__(self, missing_events: list, job_id: Optional[str] = None):
         self.missing_events = missing_events
-        message = f"Lineage incomplete: {len(missing_events)} missing events (stages: {missing_events})"
+        message = (
+            f"Lineage incomplete: {len(missing_events)} missing events (stages: {missing_events})"
+        )
         super().__init__(message, job_id=job_id)
         self.details["missing_events"] = missing_events
 
@@ -165,7 +170,9 @@ class RateLimitError(ClaudeAPIError):
 class InvalidFileError(DebtFundError):
     """Invalid or corrupted file uploaded."""
 
-    def __init__(self, message: str, filename: Optional[str] = None, file_type: Optional[str] = None):
+    def __init__(
+        self, message: str, filename: Optional[str] = None, file_type: Optional[str] = None
+    ):
         details = {}
         if filename:
             details["filename"] = filename
@@ -177,7 +184,12 @@ class InvalidFileError(DebtFundError):
 class DuplicateFileError(DebtFundError):
     """File with identical content already uploaded."""
 
-    def __init__(self, message: str, content_hash: Optional[str] = None, existing_file_id: Optional[str] = None):
+    def __init__(
+        self,
+        message: str,
+        content_hash: Optional[str] = None,
+        existing_file_id: Optional[str] = None,
+    ):
         details = {}
         if content_hash:
             details["content_hash"] = content_hash

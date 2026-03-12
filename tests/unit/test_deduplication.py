@@ -3,9 +3,8 @@ Unit tests for file deduplication (idempotent uploads).
 
 Tests content hash storage, lookup, and duplicate detection.
 """
+
 import hashlib
-import pytest
-from uuid import uuid4
 
 from src.db import crud
 from src.db.models import File

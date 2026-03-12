@@ -8,37 +8,41 @@ project finance).
 Statement type is auto-detected from the set of extracted canonical names,
 so a corporate P&L extraction is not penalized for missing project finance items.
 """
+
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set
 
 
 @dataclass
 class MissingItem:
     """A single item that was expected but not extracted."""
+
     canonical_name: str
     category: str
-    weight: float          # importance weight (0.0 to 1.0)
+    weight: float  # importance weight (0.0 to 1.0)
     is_core: bool
 
 
 @dataclass
 class StatementCompleteness:
     """Completeness result for a single statement type."""
+
     statement_type: str
     expected_items: List[str]
     found_items: List[str]
     missing_items: List[MissingItem]
-    raw_score: float        # found / expected (unweighted)
-    weighted_score: float   # weighted by importance
-    core_score: float       # core items only
+    raw_score: float  # found / expected (unweighted)
+    weighted_score: float  # weighted by importance
+    core_score: float  # core items only
 
 
 @dataclass
 class CompletenessResult:
     """Overall completeness scoring result."""
-    overall_score: float             # 0.0 to 1.0 (weighted average)
-    overall_raw_score: float         # unweighted ratio
-    detected_statements: List[str]   # which statement types were detected
+
+    overall_score: float  # 0.0 to 1.0 (weighted average)
+    overall_raw_score: float  # unweighted ratio
+    detected_statements: List[str]  # which statement types were detected
     per_statement: Dict[str, StatementCompleteness] = field(default_factory=dict)
     total_expected: int = 0
     total_found: int = 0
@@ -58,118 +62,128 @@ STATEMENT_TEMPLATES: Dict[str, Dict] = {
         "detection_items": {"revenue", "cogs", "gross_profit", "net_income", "ebitda", "ebit"},
         "min_detect": 2,
         "items": {
-            "revenue":          (1.0, True),
-            "cogs":             (0.9, True),
-            "gross_profit":     (0.95, True),
-            "ebitda":           (0.85, True),
-            "ebit":             (0.8, True),
-            "net_income":       (0.95, True),
-            "depreciation":     (0.6, False),
+            "revenue": (1.0, True),
+            "cogs": (0.9, True),
+            "gross_profit": (0.95, True),
+            "ebitda": (0.85, True),
+            "ebit": (0.8, True),
+            "net_income": (0.95, True),
+            "depreciation": (0.6, False),
             "interest_expense": (0.7, False),
-            "tax_expense":      (0.65, False),
-            "ebt":              (0.6, False),
-            "opex":             (0.7, False),
+            "tax_expense": (0.65, False),
+            "ebt": (0.6, False),
+            "opex": (0.7, False),
         },
     },
     "balance_sheet": {
         "detection_items": {"total_assets", "total_liabilities", "total_equity", "current_assets"},
         "min_detect": 2,
         "items": {
-            "total_assets":         (1.0, True),
-            "total_liabilities":    (0.95, True),
-            "total_equity":         (0.95, True),
-            "current_assets":       (0.8, True),
-            "cash":                 (0.85, True),
-            "current_liabilities":  (0.8, True),
-            "long_term_debt":       (0.75, False),
-            "accounts_receivable":  (0.7, False),
-            "accounts_payable":     (0.7, False),
-            "ppe":                  (0.65, False),
+            "total_assets": (1.0, True),
+            "total_liabilities": (0.95, True),
+            "total_equity": (0.95, True),
+            "current_assets": (0.8, True),
+            "cash": (0.85, True),
+            "current_liabilities": (0.8, True),
+            "long_term_debt": (0.75, False),
+            "accounts_receivable": (0.7, False),
+            "accounts_payable": (0.7, False),
+            "ppe": (0.65, False),
         },
     },
     "cash_flow": {
         "detection_items": {"cfo", "cfi", "cff", "net_change_cash", "fcf"},
         "min_detect": 2,
         "items": {
-            "cfo":              (1.0, True),
-            "cfi":              (0.9, True),
-            "cff":              (0.9, True),
-            "net_change_cash":  (0.85, True),
-            "capex":            (0.8, True),
-            "fcf":              (0.75, False),
+            "cfo": (1.0, True),
+            "cfi": (0.9, True),
+            "cff": (0.9, True),
+            "net_change_cash": (0.85, True),
+            "capex": (0.8, True),
+            "fcf": (0.75, False),
         },
     },
     "project_finance": {
         "detection_items": {"cfads", "cfae", "dscr", "debt_service", "equity_irr"},
         "min_detect": 2,
         "items": {
-            "cfads":            (1.0, True),
-            "dscr":             (0.95, True),
-            "debt_service":     (0.9, True),
-            "cfae":             (0.85, True),
-            "llcr":             (0.7, False),
-            "plcr":             (0.65, False),
-            "dsra_balance":     (0.6, False),
+            "cfads": (1.0, True),
+            "dscr": (0.95, True),
+            "debt_service": (0.9, True),
+            "cfae": (0.85, True),
+            "llcr": (0.7, False),
+            "plcr": (0.65, False),
+            "dsra_balance": (0.6, False),
         },
     },
     "debt_schedule": {
-        "detection_items": {"debt_opening_balance", "debt_closing_balance", "debt_service", "interest_expense"},
+        "detection_items": {
+            "debt_opening_balance",
+            "debt_closing_balance",
+            "debt_service",
+            "interest_expense",
+        },
         "min_detect": 2,
         "items": {
-            "debt_opening_balance":      (0.9, True),
-            "debt_closing_balance":      (0.9, True),
-            "debt_service":              (0.85, True),
-            "interest_expense":          (0.8, True),
-            "debt_drawdown":             (0.7, False),
-            "debt_mandatory_repayment":  (0.7, False),
+            "debt_opening_balance": (0.9, True),
+            "debt_closing_balance": (0.9, True),
+            "debt_service": (0.85, True),
+            "interest_expense": (0.8, True),
+            "debt_drawdown": (0.7, False),
+            "debt_mandatory_repayment": (0.7, False),
         },
     },
     "construction_budget": {
-        "detection_items": {"total_investment", "development_costs", "equity_contribution", "construction_cost"},
+        "detection_items": {
+            "total_investment",
+            "development_costs",
+            "equity_contribution",
+            "construction_cost",
+        },
         "min_detect": 2,
         "items": {
-            "total_investment":      (1.0, True),
-            "development_costs":     (0.9, True),
-            "equity_contribution":   (0.85, True),
-            "construction_cost":     (0.8, True),
-            "contingency":           (0.6, False),
-            "land_cost":             (0.5, False),
+            "total_investment": (1.0, True),
+            "development_costs": (0.9, True),
+            "equity_contribution": (0.85, True),
+            "construction_cost": (0.8, True),
+            "contingency": (0.6, False),
+            "land_cost": (0.5, False),
         },
     },
     "covenant_compliance": {
         "detection_items": {"dscr", "llcr", "plcr", "debt_covenants"},
         "min_detect": 2,
         "items": {
-            "dscr":              (1.0, True),
-            "llcr":              (0.9, True),
-            "plcr":              (0.85, False),
-            "debt_covenants":    (0.7, False),
+            "dscr": (1.0, True),
+            "llcr": (0.9, True),
+            "plcr": (0.85, False),
+            "debt_covenants": (0.7, False),
         },
     },
     "returns_analysis": {
         "detection_items": {"equity_irr", "pre_tax_irr", "post_tax_irr", "equity_returns"},
         "min_detect": 2,
         "items": {
-            "equity_irr":        (1.0, True),
-            "pre_tax_irr":       (0.85, True),
-            "post_tax_irr":      (0.8, False),
-            "equity_returns":    (0.7, False),
+            "equity_irr": (1.0, True),
+            "pre_tax_irr": (0.85, True),
+            "post_tax_irr": (0.8, False),
+            "equity_returns": (0.7, False),
         },
     },
     "saas_metrics": {
         "detection_items": {"arr", "mrr", "net_revenue_retention"},
         "min_detect": 2,
         "items": {
-            "arr":                    (1.0, True),
-            "mrr":                    (0.9, True),
-            "net_revenue_retention":  (0.8, True),
-            "cac":                    (0.7, False),
-            "ltv":                    (0.7, False),
-            "burn_rate":              (0.6, False),
-            "churn_rate":             (0.6, False),
-            "customer_count":         (0.5, False),
-            "ltv_cac_ratio":          (0.5, False),
-            "cash_runway_months":     (0.5, False),
+            "arr": (1.0, True),
+            "mrr": (0.9, True),
+            "net_revenue_retention": (0.8, True),
+            "cac": (0.7, False),
+            "ltv": (0.7, False),
+            "burn_rate": (0.6, False),
+            "churn_rate": (0.6, False),
+            "customer_count": (0.5, False),
+            "ltv_cac_ratio": (0.5, False),
+            "cash_runway_months": (0.5, False),
         },
     },
 }
@@ -177,8 +191,23 @@ STATEMENT_TEMPLATES: Dict[str, Dict] = {
 
 # ---- Model Type Detection Signals ----
 _IS_INDICATORS = {"revenue", "cogs", "gross_profit", "net_income", "ebitda", "ebit"}
-_PF_INDICATORS = {"cfads", "cfae", "dscr", "debt_service", "equity_irr", "llcr", "plcr", "dsra_balance"}
-_CONSTRUCTION_INDICATORS = {"total_investment", "development_costs", "equity_contribution", "construction_cost", "contingency"}
+_PF_INDICATORS = {
+    "cfads",
+    "cfae",
+    "dscr",
+    "debt_service",
+    "equity_irr",
+    "llcr",
+    "plcr",
+    "dsra_balance",
+}
+_CONSTRUCTION_INDICATORS = {
+    "total_investment",
+    "development_costs",
+    "equity_contribution",
+    "construction_cost",
+    "contingency",
+}
 _SAAS_INDICATORS = {"arr", "mrr", "churn_rate", "ltv", "cac", "net_revenue_retention", "burn_rate"}
 
 
@@ -195,10 +224,7 @@ class CompletenessScorer:
             taxonomy_items: Full taxonomy list (used for category metadata).
             templates: Override statement templates. Defaults to STATEMENT_TEMPLATES.
         """
-        self.taxonomy = {
-            item["canonical_name"]: item
-            for item in (taxonomy_items or [])
-        }
+        self.taxonomy = {item["canonical_name"]: item for item in (taxonomy_items or [])}
         self.templates = templates or STATEMENT_TEMPLATES
 
     def detect_model_type(
@@ -241,7 +267,9 @@ class CompletenessScorer:
 
         return "corporate"
 
-    def score(self, extracted_names: Set[str], model_type: Optional[str] = None) -> CompletenessResult:
+    def score(
+        self, extracted_names: Set[str], model_type: Optional[str] = None
+    ) -> CompletenessResult:
         """Score completeness of extracted data against templates.
 
         Args:
@@ -294,10 +322,13 @@ class CompletenessScorer:
         # weighted by number of expected items in each template
         total_weight = sum(len(self.templates[t]["items"]) for t in detected)
         if total_weight > 0:
-            overall = sum(
-                per_statement[t].weighted_score * len(self.templates[t]["items"])
-                for t in detected
-            ) / total_weight
+            overall = (
+                sum(
+                    per_statement[t].weighted_score * len(self.templates[t]["items"])
+                    for t in detected
+                )
+                / total_weight
+            )
         else:
             overall = 0.0
 
@@ -355,12 +386,14 @@ class CompletenessScorer:
             if name not in extracted_names:
                 weight, is_core = items[name]
                 category = self.taxonomy.get(name, {}).get("category", template_name)
-                missing.append(MissingItem(
-                    canonical_name=name,
-                    category=category,
-                    weight=weight,
-                    is_core=is_core,
-                ))
+                missing.append(
+                    MissingItem(
+                        canonical_name=name,
+                        category=category,
+                        weight=weight,
+                        is_core=is_core,
+                    )
+                )
 
         # Raw score: unweighted ratio
         raw_score = len(found) / max(len(expected), 1)

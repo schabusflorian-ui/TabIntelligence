@@ -3,26 +3,25 @@ Unit tests for logging utilities and audit middleware.
 
 Tests setup_logging, LogContext, log helpers, and audit event creation.
 """
-import logging
-import pytest
-from uuid import uuid4
-from unittest.mock import MagicMock
 
+import logging
+from unittest.mock import MagicMock
+from uuid import uuid4
+
+from src.api.middleware.audit import get_client_ip, log_audit_event
 from src.core.logging import (
-    get_logger,
     LogContext,
+    api_logger,
+    database_logger,
+    extraction_logger,
+    get_logger,
+    lineage_logger,
     log_exception,
     log_performance,
     request_id_ctx,
-    extraction_logger,
-    api_logger,
-    database_logger,
-    lineage_logger,
     validation_logger,
 )
-from src.api.middleware.audit import log_audit_event, get_client_ip
 from src.db.models import AuditLog
-
 
 # ============================================================================
 # MODULE LOGGERS
@@ -30,7 +29,6 @@ from src.db.models import AuditLog
 
 
 class TestModuleLoggers:
-
     def test_extraction_logger_exists(self):
         assert extraction_logger.name == "debtfund.extraction"
 
@@ -58,7 +56,6 @@ class TestModuleLoggers:
 
 
 class TestLogContext:
-
     def test_temporarily_changes_level(self):
         """LogContext should change level temporarily."""
         logger = logging.getLogger("test.context")
@@ -90,7 +87,6 @@ class TestLogContext:
 
 
 class TestLogException:
-
     def test_logs_exception_message(self):
         """Should log exception with class name and message."""
         mock_logger = MagicMock()
@@ -121,7 +117,6 @@ class TestLogException:
 
 
 class TestLogPerformance:
-
     def test_logs_operation_and_duration(self):
         """Should log operation name and duration."""
         mock_logger = MagicMock()
@@ -154,7 +149,6 @@ class TestLogPerformance:
 
 
 class TestRequestIdContext:
-
     def test_default_value(self):
         """Default request ID should be 'no-request'."""
         assert request_id_ctx.get() == "no-request"
@@ -172,7 +166,6 @@ class TestRequestIdContext:
 
 
 class TestLogAuditEvent:
-
     def test_creates_audit_entry(self, db_session):
         """Should create an AuditLog record."""
         resource_id = uuid4()
@@ -211,7 +204,6 @@ class TestLogAuditEvent:
 
 
 class TestGetClientIp:
-
     def test_x_forwarded_for(self):
         """Should extract first IP from X-Forwarded-For."""
         request = MagicMock()

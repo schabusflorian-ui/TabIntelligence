@@ -3,26 +3,26 @@ Unit tests for the custom exception hierarchy.
 
 Tests all exception classes, their attributes, and string representations.
 """
+
 import pytest
 
 from src.core.exceptions import (
-    DebtFundError,
-    ConfigurationError,
-    ExtractionError,
+    AuthenticationError,
     ClaudeAPIError,
-    ValidationError,
+    ConfigurationError,
+    DatabaseError,
+    DebtFundError,
+    ExtractionError,
+    FileStorageError,
+    InvalidFileError,
     LineageError,
     LineageIncompleteError,
-    DatabaseError,
-    FileStorageError,
-    AuthenticationError,
     RateLimitError,
-    InvalidFileError,
+    ValidationError,
 )
 
 
 class TestDebtFundError:
-
     def test_basic_creation(self):
         e = DebtFundError("something failed")
         assert str(e) == "something failed"
@@ -40,7 +40,6 @@ class TestDebtFundError:
 
 
 class TestConfigurationError:
-
     def test_basic(self):
         e = ConfigurationError("missing config")
         assert isinstance(e, DebtFundError)
@@ -52,7 +51,6 @@ class TestConfigurationError:
 
 
 class TestExtractionError:
-
     def test_basic(self):
         e = ExtractionError("extraction failed")
         assert isinstance(e, DebtFundError)
@@ -65,7 +63,6 @@ class TestExtractionError:
 
 
 class TestClaudeAPIError:
-
     def test_basic(self):
         e = ClaudeAPIError("API error", stage="triage")
         assert isinstance(e, ExtractionError)
@@ -73,8 +70,9 @@ class TestClaudeAPIError:
         assert e.retry_count == 0
 
     def test_with_all_fields(self):
-        e = ClaudeAPIError("timeout", stage="mapping", retry_count=3,
-                           status_code=429, file_id="file-1")
+        e = ClaudeAPIError(
+            "timeout", stage="mapping", retry_count=3, status_code=429, file_id="file-1"
+        )
         assert e.stage == "mapping"
         assert e.retry_count == 3
         assert e.status_code == 429
@@ -83,7 +81,6 @@ class TestClaudeAPIError:
 
 
 class TestValidationError:
-
     def test_basic(self):
         e = ValidationError("invalid data")
         assert isinstance(e, ExtractionError)
@@ -95,7 +92,6 @@ class TestValidationError:
 
 
 class TestLineageError:
-
     def test_basic(self):
         e = LineageError("lineage broken")
         assert isinstance(e, DebtFundError)
@@ -106,7 +102,6 @@ class TestLineageError:
 
 
 class TestLineageIncompleteError:
-
     def test_basic(self):
         e = LineageIncompleteError(["triage", "mapping"])
         assert isinstance(e, LineageError)
@@ -120,7 +115,6 @@ class TestLineageIncompleteError:
 
 
 class TestDatabaseError:
-
     def test_basic(self):
         e = DatabaseError("db failed")
         assert isinstance(e, DebtFundError)
@@ -132,7 +126,6 @@ class TestDatabaseError:
 
 
 class TestFileStorageError:
-
     def test_basic(self):
         e = FileStorageError("s3 failed")
         assert isinstance(e, DebtFundError)
@@ -144,7 +137,6 @@ class TestFileStorageError:
 
 
 class TestAuthenticationError:
-
     def test_basic(self):
         e = AuthenticationError("unauthorized")
         assert isinstance(e, DebtFundError)
@@ -155,7 +147,6 @@ class TestAuthenticationError:
 
 
 class TestRateLimitError:
-
     def test_basic(self):
         e = RateLimitError("rate limited", stage="parsing")
         assert isinstance(e, ClaudeAPIError)
@@ -167,7 +158,6 @@ class TestRateLimitError:
 
 
 class TestInvalidFileError:
-
     def test_basic(self):
         e = InvalidFileError("bad file")
         assert isinstance(e, DebtFundError)
@@ -197,7 +187,9 @@ class TestInheritanceChain:
             InvalidFileError("x"),
         ]
         for exc in exceptions:
-            assert isinstance(exc, DebtFundError), f"{type(exc).__name__} doesn't inherit DebtFundError"
+            assert isinstance(exc, DebtFundError), (
+                f"{type(exc).__name__} doesn't inherit DebtFundError"
+            )
 
     def test_claude_api_error_is_extraction_error(self):
         assert isinstance(ClaudeAPIError("x", stage="s"), ExtractionError)

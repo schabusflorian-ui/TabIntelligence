@@ -311,7 +311,9 @@ async def download_file(
         raise HTTPException(404, "File not found")
 
     if not file.s3_key:
-        raise HTTPException(400, "File is not stored in S3 and cannot be downloaded via presigned URL")
+        raise HTTPException(
+            400, "File is not stored in S3 and cannot be downloaded via presigned URL"
+        )
 
     try:
         s3_client = get_s3_client()

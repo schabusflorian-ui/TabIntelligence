@@ -1,4 +1,5 @@
 """Stage 2: Guided Triage - Classify sheets into processing tiers."""
+
 import json
 import time
 from typing import Any, Dict, List
@@ -6,7 +7,8 @@ from typing import Any, Dict, List
 import anthropic
 
 from src.core.exceptions import ClaudeAPIError, ExtractionError, RateLimitError
-from src.core.logging import extraction_logger as logger, log_performance
+from src.core.logging import extraction_logger as logger
+from src.core.logging import log_performance
 from src.extraction.base import ExtractionStage, PipelineContext
 from src.extraction.claude_client import get_claude_client
 from src.extraction.prompts import get_prompt
@@ -138,12 +140,14 @@ class TriageStage(ExtractionStage):
             response = get_claude_client().messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=8192,
-                messages=[{
-                    "role": "user",
-                    "content": get_prompt("triage").render(
-                        sheets=json.dumps(sheets_summary, indent=2)
-                    ),
-                }],
+                messages=[
+                    {
+                        "role": "user",
+                        "content": get_prompt("triage").render(
+                            sheets=json.dumps(sheets_summary, indent=2)
+                        ),
+                    }
+                ],
             )
 
             # Check for truncation — incomplete JSON causes silent data loss
@@ -189,14 +193,8 @@ class TriageStage(ExtractionStage):
                 tier_counts[f"tier_{tier}_count"] += 1
 
             # Section detection metrics
-            total_sections = sum(
-                len(s.get("sections", []))
-                for s in sheets_summary
-            )
-            multi_section_sheets = sum(
-                1 for s in sheets_summary
-                if "sections" in s
-            )
+            total_sections = sum(len(s.get("sections", [])) for s in sheets_summary)
+            multi_section_sheets = sum(1 for s in sheets_summary if "sections" in s)
 
             return {
                 "triage": triage_list,
@@ -214,7 +212,8 @@ class TriageStage(ExtractionStage):
             retry_after = getattr(e.response, "headers", {}).get("retry-after")
             logger.warning(f"Stage 2: Rate limit hit (retry-after={retry_after})")
             raise RateLimitError(
-                "Rate limit exceeded", stage="triage",
+                "Rate limit exceeded",
+                stage="triage",
                 retry_after=int(retry_after) if retry_after else None,
             )
 
@@ -236,4 +235,5 @@ class TriageStage(ExtractionStage):
 
 # Self-register at import time
 from src.extraction.registry import registry  # noqa: E402
+
 registry.register(TriageStage())

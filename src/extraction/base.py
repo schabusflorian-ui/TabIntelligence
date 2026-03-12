@@ -1,4 +1,5 @@
 """Base classes for extraction pipeline stages."""
+
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Optional
 
@@ -99,8 +100,7 @@ class PipelineContext:
         """Get result from a previous stage."""
         if stage_name not in self.results:
             raise KeyError(
-                f"No result for stage '{stage_name}'. "
-                f"Available: {list(self.results.keys())}"
+                f"No result for stage '{stage_name}'. Available: {list(self.results.keys())}"
             )
         return self.results[stage_name]
 

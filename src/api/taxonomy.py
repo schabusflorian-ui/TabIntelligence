@@ -1,18 +1,20 @@
 """Taxonomy API endpoints for browsing and searching canonical line items."""
+
+from typing import Dict, Optional
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from typing import Dict, Optional, List
 
-from src.db.session import get_db
-from src.auth.dependencies import get_current_api_key
-from src.guidelines.taxonomy import TaxonomyManager
 from src.api.schemas import (
+    HierarchyNode,
     TaxonomyItemResponse,
     TaxonomyListResponse,
     TaxonomySearchResponse,
     TaxonomyStatsResponse,
-    HierarchyNode,
 )
+from src.auth.dependencies import get_current_api_key
+from src.db.session import get_db
+from src.guidelines.taxonomy import TaxonomyManager
 
 router = APIRouter(prefix="/api/v1/taxonomy", tags=["taxonomy"])
 
@@ -118,6 +120,7 @@ def get_taxonomy_item(
     item = _manager.get_by_canonical_name(db, canonical_name)
     if not item:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=404, detail=f"Taxonomy item '{canonical_name}' not found")
 
     return {

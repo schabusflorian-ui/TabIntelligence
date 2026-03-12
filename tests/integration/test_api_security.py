@@ -1,6 +1,8 @@
 """Integration tests for API security features."""
-import pytest
+
 import io
+
+import pytest
 
 
 class TestAPIAuthentication:
@@ -12,7 +14,7 @@ class TestAPIAuthentication:
             "file": (
                 "test.xlsx",
                 io.BytesIO(b"PK\x03\x04"),
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
         }
         response = unauthenticated_client.post("/api/v1/files/upload", files=files)
@@ -29,13 +31,7 @@ class TestFileValidation:
 
     def test_excel_file_type_validation(self, test_client_with_db):
         """Verify Excel file type validation exists."""
-        files = {
-            "file": (
-                "test.txt",
-                io.BytesIO(b"not excel"),
-                "text/plain"
-            )
-        }
+        files = {"file": ("test.txt", io.BytesIO(b"not excel"), "text/plain")}
 
         response = test_client_with_db.post("/api/v1/files/upload", files=files)
         assert response.status_code == 400

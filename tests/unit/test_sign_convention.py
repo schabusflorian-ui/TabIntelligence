@@ -4,25 +4,18 @@ from decimal import Decimal
 
 from src.validation.accounting_validator import AccountingValidator
 
-
 D = Decimal
 
 
 def _make_taxonomy_with_signs():
     """Taxonomy items with typical_sign for sign convention tests."""
     return [
-        {"canonical_name": "revenue", "typical_sign": "positive",
-         "validation_rules": {}},
-        {"canonical_name": "cogs", "typical_sign": "negative",
-         "validation_rules": {}},
-        {"canonical_name": "net_income", "typical_sign": "varies",
-         "validation_rules": {}},
-        {"canonical_name": "total_assets", "typical_sign": "positive",
-         "validation_rules": {}},
-        {"canonical_name": "capex", "typical_sign": "negative",
-         "validation_rules": {}},
-        {"canonical_name": "depreciation", "typical_sign": "negative",
-         "validation_rules": {}},
+        {"canonical_name": "revenue", "typical_sign": "positive", "validation_rules": {}},
+        {"canonical_name": "cogs", "typical_sign": "negative", "validation_rules": {}},
+        {"canonical_name": "net_income", "typical_sign": "varies", "validation_rules": {}},
+        {"canonical_name": "total_assets", "typical_sign": "positive", "validation_rules": {}},
+        {"canonical_name": "capex", "typical_sign": "negative", "validation_rules": {}},
+        {"canonical_name": "depreciation", "typical_sign": "negative", "validation_rules": {}},
     ]
 
 
@@ -103,8 +96,8 @@ class TestSignConvention:
         """Multiple sign violations should each generate a warning."""
         data = {
             "revenue": D("-1000000"),  # wrong
-            "cogs": D("600000"),       # wrong
-            "capex": D("200000"),      # wrong
+            "cogs": D("600000"),  # wrong
+            "capex": D("200000"),  # wrong
         }
         results = self.validator.validate_sign_conventions(data)
         violations = [r for r in results if not r.passed]

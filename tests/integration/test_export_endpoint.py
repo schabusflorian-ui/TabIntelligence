@@ -9,11 +9,11 @@ Tests cover:
 - Sheet filtering
 - Edge cases: job not found, job not completed, invalid format
 """
+
 import csv
 import io
-import pytest
-from uuid import UUID
 
+import pytest
 
 # Realistic extraction result matching ExtractionResult.to_dict() schema
 SAMPLE_RESULT = {
@@ -96,7 +96,6 @@ SAMPLE_RESULT = {
 def completed_job(db_session):
     """Create a completed extraction job with realistic result data."""
     from src.db import crud
-    from src.db.models import JobStatusEnum
 
     file = crud.create_file(db_session, filename="test_model.xlsx", file_size=50000)
     job = crud.create_extraction_job(db_session, file_id=file.file_id)
@@ -151,9 +150,7 @@ class TestJsonExport:
 
     def test_export_json_default_format(self, test_client_with_db, completed_job):
         """Default format is JSON when no format specified."""
-        response = test_client_with_db.get(
-            f"/api/v1/jobs/{completed_job.job_id}/export"
-        )
+        response = test_client_with_db.get(f"/api/v1/jobs/{completed_job.job_id}/export")
 
         assert response.status_code == 200
         data = response.json()
@@ -181,9 +178,7 @@ class TestCsvExport:
 
     def test_export_csv_returns_valid_csv(self, test_client_with_db, completed_job):
         """CSV export returns parseable CSV with correct headers."""
-        response = test_client_with_db.get(
-            f"/api/v1/jobs/{completed_job.job_id}/export?format=csv"
-        )
+        response = test_client_with_db.get(f"/api/v1/jobs/{completed_job.job_id}/export?format=csv")
 
         assert response.status_code == 200
         assert "text/csv" in response.headers["content-type"]
@@ -203,9 +198,7 @@ class TestCsvExport:
 
     def test_export_csv_has_period_columns(self, test_client_with_db, completed_job):
         """CSV columns include all period values (FY2022, FY2023, etc.)."""
-        response = test_client_with_db.get(
-            f"/api/v1/jobs/{completed_job.job_id}/export?format=csv"
-        )
+        response = test_client_with_db.get(f"/api/v1/jobs/{completed_job.job_id}/export?format=csv")
 
         reader = csv.reader(io.StringIO(response.text))
         rows = list(reader)
@@ -218,9 +211,7 @@ class TestCsvExport:
 
     def test_export_csv_data_values_correct(self, test_client_with_db, completed_job):
         """CSV data rows contain correct values."""
-        response = test_client_with_db.get(
-            f"/api/v1/jobs/{completed_job.job_id}/export?format=csv"
-        )
+        response = test_client_with_db.get(f"/api/v1/jobs/{completed_job.job_id}/export?format=csv")
 
         reader = csv.DictReader(io.StringIO(response.text))
         rows = list(reader)
@@ -234,9 +225,7 @@ class TestCsvExport:
 
     def test_export_csv_filename_includes_job_id(self, test_client_with_db, completed_job):
         """CSV download filename includes the job ID."""
-        response = test_client_with_db.get(
-            f"/api/v1/jobs/{completed_job.job_id}/export?format=csv"
-        )
+        response = test_client_with_db.get(f"/api/v1/jobs/{completed_job.job_id}/export?format=csv")
 
         disposition = response.headers["content-disposition"]
         assert str(completed_job.job_id) in disposition
@@ -295,8 +284,7 @@ class TestExportFiltering:
     def test_combined_filters(self, test_client_with_db, completed_job):
         """Multiple filters can be combined."""
         response = test_client_with_db.get(
-            f"/api/v1/jobs/{completed_job.job_id}/export"
-            f"?min_confidence=0.8&sheet=Income Statement"
+            f"/api/v1/jobs/{completed_job.job_id}/export?min_confidence=0.8&sheet=Income Statement"
         )
 
         data = response.json()
@@ -319,8 +307,7 @@ class TestExportFiltering:
     def test_csv_export_respects_filters(self, test_client_with_db, completed_job):
         """CSV export also applies filters."""
         response = test_client_with_db.get(
-            f"/api/v1/jobs/{completed_job.job_id}/export"
-            f"?format=csv&min_confidence=0.9"
+            f"/api/v1/jobs/{completed_job.job_id}/export?format=csv&min_confidence=0.9"
         )
 
         reader = csv.reader(io.StringIO(response.text))
@@ -350,17 +337,13 @@ class TestExportErrors:
 
     def test_export_job_not_completed(self, test_client_with_db, pending_job):
         """Returns 409 for jobs that haven't completed yet."""
-        response = test_client_with_db.get(
-            f"/api/v1/jobs/{pending_job.job_id}/export"
-        )
+        response = test_client_with_db.get(f"/api/v1/jobs/{pending_job.job_id}/export")
         assert response.status_code == 409
         assert "not completed" in response.json()["detail"]
 
     def test_export_invalid_format(self, test_client_with_db, completed_job):
         """Returns 400 for unsupported format."""
-        response = test_client_with_db.get(
-            f"/api/v1/jobs/{completed_job.job_id}/export?format=xml"
-        )
+        response = test_client_with_db.get(f"/api/v1/jobs/{completed_job.job_id}/export?format=xml")
         assert response.status_code == 400
 
     def test_export_invalid_min_confidence(self, test_client_with_db, completed_job):

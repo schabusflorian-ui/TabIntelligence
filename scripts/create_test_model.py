@@ -4,33 +4,34 @@ Create a sample financial model for testing.
 
 Usage:
     python scripts/create_test_model.py
-    
+
 Creates: tests/fixtures/sample_model.xlsx
 """
 
-from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment
 from pathlib import Path
+
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill
 
 
 def create_sample_model():
     """Create a simple 3-statement financial model for testing."""
-    
+
     wb = Workbook()
-    
+
     # =========================================================================
     # INCOME STATEMENT
     # =========================================================================
     ws_pl = wb.active
     ws_pl.title = "Income Statement"
-    
+
     # Headers
     headers = ["", "FY2022", "FY2023", "FY2024E"]
     for col, header in enumerate(headers, 1):
         cell = ws_pl.cell(row=1, column=col, value=header)
         cell.font = Font(bold=True)
         cell.fill = PatternFill(start_color="DDDDDD", end_color="DDDDDD", fill_type="solid")
-    
+
     # Data
     pl_data = [
         ("Revenue", 100000, 115000, 132000),
@@ -53,26 +54,26 @@ def create_sample_model():
         ("Tax Expense", 5000, 5625, 6500),
         ("Net Income", 15000, 16875, 19500),
     ]
-    
+
     for row_idx, (label, *values) in enumerate(pl_data, 2):
         ws_pl.cell(row=row_idx, column=1, value=label)
         for col_idx, value in enumerate(values, 2):
             if value is not None:
                 ws_pl.cell(row=row_idx, column=col_idx, value=value)
-    
+
     # Format headers
-    ws_pl.column_dimensions['A'].width = 30
-    
+    ws_pl.column_dimensions["A"].width = 30
+
     # =========================================================================
     # BALANCE SHEET
     # =========================================================================
     ws_bs = wb.create_sheet("Balance Sheet")
-    
+
     for col, header in enumerate(headers, 1):
         cell = ws_bs.cell(row=1, column=col, value=header)
         cell.font = Font(bold=True)
         cell.fill = PatternFill(start_color="DDDDDD", end_color="DDDDDD", fill_type="solid")
-    
+
     bs_data = [
         ("ASSETS", None, None, None),
         ("Current Assets", None, None, None),
@@ -109,25 +110,25 @@ def create_sample_model():
         ("", None, None, None),
         ("Total Liabilities & Equity", 125000, 139000, 153000),
     ]
-    
+
     for row_idx, (label, *values) in enumerate(bs_data, 2):
         ws_bs.cell(row=row_idx, column=1, value=label)
         for col_idx, value in enumerate(values, 2):
             if value is not None:
                 ws_bs.cell(row=row_idx, column=col_idx, value=value)
-    
-    ws_bs.column_dimensions['A'].width = 30
-    
+
+    ws_bs.column_dimensions["A"].width = 30
+
     # =========================================================================
     # CASH FLOW
     # =========================================================================
     ws_cf = wb.create_sheet("Cash Flow")
-    
+
     for col, header in enumerate(headers, 1):
         cell = ws_cf.cell(row=1, column=col, value=header)
         cell.font = Font(bold=True)
         cell.fill = PatternFill(start_color="DDDDDD", end_color="DDDDDD", fill_type="solid")
-    
+
     cf_data = [
         ("Cash from Operating Activities", None, None, None),
         ("  Net Income", 15000, 16875, 19500),
@@ -149,15 +150,15 @@ def create_sample_model():
         ("Beginning Cash", 13000, 25000, 35875),
         ("Ending Cash", 25000, 35875, 46375),
     ]
-    
+
     for row_idx, (label, *values) in enumerate(cf_data, 2):
         ws_cf.cell(row=row_idx, column=1, value=label)
         for col_idx, value in enumerate(values, 2):
             if value is not None:
                 ws_cf.cell(row=row_idx, column=col_idx, value=value)
-    
-    ws_cf.column_dimensions['A'].width = 30
-    
+
+    ws_cf.column_dimensions["A"].width = 30
+
     # =========================================================================
     # SCRATCH SHEET (should be skipped)
     # =========================================================================
@@ -165,18 +166,18 @@ def create_sample_model():
     ws_scratch.cell(row=1, column=1, value="Random notes and calculations")
     ws_scratch.cell(row=2, column=1, value="TODO: fix formula")
     ws_scratch.cell(row=3, column=1, value="Check with John")
-    
+
     # =========================================================================
     # SAVE
     # =========================================================================
     output_dir = Path("tests/fixtures")
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "sample_model.xlsx"
-    
+
     wb.save(output_path)
     print(f"Created: {output_path}")
     print(f"Sheets: {wb.sheetnames}")
-    
+
     return output_path
 
 

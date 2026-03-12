@@ -2,9 +2,11 @@
 Integration tests for FastAPI endpoints.
 Tests the API layer and its integration with the extraction pipeline.
 """
-import pytest
+
 import time
 from io import BytesIO
+
+import pytest
 
 
 def test_health_check(test_client):
@@ -29,7 +31,11 @@ def test_root_endpoint(test_client):
 def test_file_upload_creates_job(test_client_with_db, sample_xlsx, mock_anthropic):
     """Test file upload endpoint creates extraction job."""
     files = {
-        "file": ("test_model.xlsx", BytesIO(sample_xlsx), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        "file": (
+            "test_model.xlsx",
+            BytesIO(sample_xlsx),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
     }
 
     response = test_client_with_db.post("/api/v1/files/upload", files=files)
@@ -46,9 +52,7 @@ def test_file_upload_creates_job(test_client_with_db, sample_xlsx, mock_anthropi
 def test_file_upload_rejects_non_excel_files(test_client_with_db):
     """Test that non-Excel files are rejected."""
     fake_file = BytesIO(b"This is not an Excel file")
-    files = {
-        "file": ("test.txt", fake_file, "text/plain")
-    }
+    files = {"file": ("test.txt", fake_file, "text/plain")}
 
     response = test_client_with_db.post("/api/v1/files/upload", files=files)
 
@@ -67,7 +71,11 @@ def test_job_status_endpoint(test_client_with_db, sample_xlsx, mock_anthropic):
     """Test job status retrieval endpoint."""
     # Upload file first
     files = {
-        "file": ("test.xlsx", BytesIO(sample_xlsx), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        "file": (
+            "test.xlsx",
+            BytesIO(sample_xlsx),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
     }
     upload_response = test_client_with_db.post("/api/v1/files/upload", files=files)
     job_id = upload_response.json()["job_id"]
@@ -98,13 +106,15 @@ def test_job_status_not_found(test_client_with_db):
 def test_upload_with_entity_id(test_client_with_db, sample_xlsx, mock_anthropic):
     """Test file upload with optional entity_id parameter."""
     files = {
-        "file": ("test.xlsx", BytesIO(sample_xlsx), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        "file": (
+            "test.xlsx",
+            BytesIO(sample_xlsx),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
     }
 
     response = test_client_with_db.post(
-        "/api/v1/files/upload",
-        files=files,
-        data={"entity_id": "test-entity-123"}
+        "/api/v1/files/upload", files=files, data={"entity_id": "test-entity-123"}
     )
 
     assert response.status_code == 200
@@ -116,7 +126,11 @@ def test_extraction_job_completion(test_client_with_db, sample_xlsx, mock_anthro
     """Test that extraction job completes successfully (integration test)."""
     # Upload file
     files = {
-        "file": ("test.xlsx", BytesIO(sample_xlsx), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        "file": (
+            "test.xlsx",
+            BytesIO(sample_xlsx),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
     }
     upload_response = test_client_with_db.post("/api/v1/files/upload", files=files)
     job_id = upload_response.json()["job_id"]
@@ -143,7 +157,11 @@ def test_extraction_result_structure(test_client_with_db, sample_xlsx, mock_anth
     """Test that completed extraction has proper result structure."""
     # Upload and wait for completion
     files = {
-        "file": ("test.xlsx", BytesIO(sample_xlsx), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        "file": (
+            "test.xlsx",
+            BytesIO(sample_xlsx),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
     }
     upload_response = test_client_with_db.post("/api/v1/files/upload", files=files)
     job_id = upload_response.json()["job_id"]
@@ -169,9 +187,21 @@ def test_concurrent_uploads(test_client_with_db, mock_anthropic):
     """Test that multiple uploads with different content are handled correctly."""
     # Use unique content for each file to avoid deduplication
     files_list = [
-        ("test1.xlsx", BytesIO(b"PK\x03\x04" + b"\x01" * 100), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
-        ("test2.xlsx", BytesIO(b"PK\x03\x04" + b"\x02" * 100), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
-        ("test3.xlsx", BytesIO(b"PK\x03\x04" + b"\x03" * 100), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+        (
+            "test1.xlsx",
+            BytesIO(b"PK\x03\x04" + b"\x01" * 100),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ),
+        (
+            "test2.xlsx",
+            BytesIO(b"PK\x03\x04" + b"\x02" * 100),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ),
+        (
+            "test3.xlsx",
+            BytesIO(b"PK\x03\x04" + b"\x03" * 100),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ),
     ]
 
     job_ids = []

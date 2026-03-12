@@ -8,8 +8,8 @@ Usage:
     from src.db.slow_query_log import attach_slow_query_logging
     attach_slow_query_logging(engine, threshold_ms=100)
 """
+
 import time
-from typing import Optional
 
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
@@ -19,6 +19,7 @@ from src.core.logging import database_logger as logger
 # Try importing Prometheus metric (optional - don't fail if not available)
 try:
     from src.api.metrics import db_query_duration_seconds
+
     METRICS_AVAILABLE = True
 except ImportError:
     METRICS_AVAILABLE = False

@@ -8,10 +8,11 @@ Generates a unique request ID for each incoming request and:
 
 This enables end-to-end request correlation across logs and traces.
 """
+
 import uuid
+
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import Response
 
 from src.core.logging import request_id_ctx
 
@@ -39,7 +40,7 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
             Response with X-Request-ID header
         """
         # Generate or extract request ID
-        request_id = request.headers.get('X-Request-ID') or str(uuid.uuid4())
+        request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
 
         # Set in context (available to all loggers in this request)
         request_id_ctx.set(request_id)
@@ -48,6 +49,6 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
 
         # Add to response headers for client tracking
-        response.headers['X-Request-ID'] = request_id
+        response.headers["X-Request-ID"] = request_id
 
         return response

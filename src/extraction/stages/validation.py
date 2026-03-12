@@ -1,4 +1,5 @@
 """Stage 4: Validation - Verify extracted data against accounting rules."""
+
 import json
 import time
 from decimal import Decimal, InvalidOperation
@@ -7,18 +8,18 @@ from typing import Any, Dict, List, Optional
 import anthropic
 
 from src.core.exceptions import ClaudeAPIError, ExtractionError, RateLimitError
-from src.core.logging import extraction_logger as logger, log_performance
+from src.core.logging import extraction_logger as logger
+from src.core.logging import log_performance
 from src.extraction.base import ExtractionStage, PipelineContext
 from src.extraction.claude_client import get_claude_client
 from src.extraction.prompts import get_prompt
+from src.extraction.taxonomy_loader import get_all_taxonomy_items, get_validation_rules
 from src.extraction.utils import extract_json
-from src.extraction.taxonomy_loader import get_validation_rules, get_all_taxonomy_items
-from src.validation.accounting_validator import AccountingValidator, ValidationSummary
-from src.validation.lifecycle_detector import LifecycleDetector
-from src.validation.time_series_validator import TimeSeriesValidator
+from src.validation.accounting_validator import AccountingValidator
 from src.validation.completeness_scorer import CompletenessScorer
+from src.validation.lifecycle_detector import LifecycleDetector, LifecycleResult
 from src.validation.quality_scorer import QualityScorer
-
+from src.validation.time_series_validator import TimeSeriesValidator
 
 # Load validation rules from taxonomy.json (29 rules vs. old 7 hardcoded)
 DERIVATION_RULES = get_validation_rules()
@@ -46,9 +47,7 @@ class ValidationStage(ExtractionStage):
         try:
             triage_result = context.get_result("triage")
             triage_list = triage_result.get("triage", [])
-            has_high_priority = any(
-                t.get("tier", 4) in (1, 2) for t in triage_list
-            )
+            has_high_priority = any(t.get("tier", 4) in (1, 2) for t in triage_list)
             if not has_high_priority:
                 logger.info("Stage 4: Skipping validation (no tier 1-2 sheets)")
                 return True
@@ -91,58 +90,70 @@ class ValidationStage(ExtractionStage):
                 "passed": summary.passed + sign_passed,
                 "failed": summary.failed + (len(sign_results) - sign_passed),
                 "success_rate": round(
-                    (summary.passed + sign_passed) /
-                    max(summary.total_checks + len(sign_results), 1),
+                    (summary.passed + sign_passed)
+                    / max(summary.total_checks + len(sign_results), 1),
                     3,
                 ),
             }
             for error in summary.errors:
-                all_flags.append({
-                    "period": period,
-                    "severity": "error",
-                    "item": error.item_name,
-                    "rule": error.rule,
-                    "message": error.message,
-                    "actual": str(error.actual_value) if error.actual_value else None,
-                    "expected": str(error.expected_value) if error.expected_value else None,
-                })
+                all_flags.append(
+                    {
+                        "period": period,
+                        "severity": "error",
+                        "item": error.item_name,
+                        "rule": error.rule,
+                        "message": error.message,
+                        "actual": str(error.actual_value) if error.actual_value else None,
+                        "expected": str(error.expected_value) if error.expected_value else None,
+                    }
+                )
             for warning in summary.warnings_list:
-                all_flags.append({
-                    "period": period,
-                    "severity": "warning",
-                    "item": warning.item_name,
-                    "rule": warning.rule,
-                    "message": warning.message,
-                    "actual": str(warning.actual_value) if warning.actual_value else None,
-                    "expected": str(warning.expected_value) if warning.expected_value else None,
-                })
+                all_flags.append(
+                    {
+                        "period": period,
+                        "severity": "warning",
+                        "item": warning.item_name,
+                        "rule": warning.rule,
+                        "message": warning.message,
+                        "actual": str(warning.actual_value) if warning.actual_value else None,
+                        "expected": str(warning.expected_value) if warning.expected_value else None,
+                    }
+                )
             # Sign convention violations (warnings only)
             for sr in sign_results:
                 if not sr.passed:
-                    all_flags.append({
-                        "period": period,
-                        "severity": sr.severity,
-                        "item": sr.item_name,
-                        "rule": sr.rule,
-                        "message": sr.message,
-                        "actual": str(sr.actual_value) if sr.actual_value else None,
-                        "expected": str(sr.expected_value) if sr.expected_value else None,
-                    })
+                    all_flags.append(
+                        {
+                            "period": period,
+                            "severity": sr.severity,
+                            "item": sr.item_name,
+                            "rule": sr.rule,
+                            "message": sr.message,
+                            "actual": str(sr.actual_value) if sr.actual_value else None,
+                            "expected": str(sr.expected_value) if sr.expected_value else None,
+                        }
+                    )
 
         # --- Cross-Statement Validation ---
         try:
             cross_statement_results = validator.validate_cross_statement(extracted_values)
             for cs_result in cross_statement_results:
                 if not cs_result.passed:
-                    all_flags.append({
-                        "period": "cross_statement",
-                        "severity": cs_result.severity,
-                        "item": cs_result.item_name,
-                        "rule": cs_result.rule,
-                        "message": cs_result.message,
-                        "actual": str(cs_result.actual_value) if cs_result.actual_value else None,
-                        "expected": str(cs_result.expected_value) if cs_result.expected_value else None,
-                    })
+                    all_flags.append(
+                        {
+                            "period": "cross_statement",
+                            "severity": cs_result.severity,
+                            "item": cs_result.item_name,
+                            "rule": cs_result.rule,
+                            "message": cs_result.message,
+                            "actual": str(cs_result.actual_value)
+                            if cs_result.actual_value
+                            else None,
+                            "expected": str(cs_result.expected_value)
+                            if cs_result.expected_value
+                            else None,
+                        }
+                    )
         except Exception as e:
             logger.warning(f"Stage 4: Cross-statement validation failed: {e}")
             cross_statement_results = []
@@ -154,8 +165,12 @@ class ValidationStage(ExtractionStage):
         except Exception as e:
             logger.warning(f"Stage 4: Lifecycle detection failed: {e}")
             from src.validation.lifecycle_detector import LifecycleResult
+
             lifecycle_result = LifecycleResult(
-                phases={}, is_project_finance=False, confidence=0.0, signals_used=[],
+                phases={},
+                is_project_finance=False,
+                confidence=0.0,
+                signals_used=[],
             )
 
         # Filter out false-positive flags from project lifecycle phases
@@ -169,9 +184,13 @@ class ValidationStage(ExtractionStage):
         except Exception as e:
             logger.warning(f"Stage 4: Time-series validation failed: {e}")
             from src.validation.time_series_validator import TimeSeriesSummary
+
             ts_summary = TimeSeriesSummary(
-                total_checks=0, flags=[], items_checked=0,
-                periods_analyzed=0, consistency_score=1.0,
+                total_checks=0,
+                flags=[],
+                items_checked=0,
+                periods_analyzed=0,
+                consistency_score=1.0,
             )
 
         # --- Completeness Scoring ---
@@ -189,8 +208,11 @@ class ValidationStage(ExtractionStage):
         except Exception as e:
             logger.warning(f"Stage 4: Completeness scoring failed: {e}")
             from src.validation.completeness_scorer import CompletenessResult
+
             completeness_result = CompletenessResult(
-                overall_score=0.0, overall_raw_score=0.0, detected_statements=[],
+                overall_score=0.0,
+                overall_raw_score=0.0,
+                detected_statements=[],
             )
 
         # Use Claude to reason about anomalies (only if there are flags)
@@ -199,9 +221,12 @@ class ValidationStage(ExtractionStage):
         input_tokens = 0
         output_tokens = 0
         if all_flags:
-            claude_reasoning, tokens, input_tokens, output_tokens = await self._get_claude_reasoning(
-                all_flags, extracted_values
-            )
+            (
+                claude_reasoning,
+                tokens,
+                input_tokens,
+                output_tokens,
+            ) = await self._get_claude_reasoning(all_flags, extracted_values)
 
         # Build per-canonical-name validation provenance
         item_validation = self._build_item_validation(all_flags, extracted_values)
@@ -254,9 +279,7 @@ class ValidationStage(ExtractionStage):
                 "period_results": period_results,
                 "flags": all_flags,
                 "claude_reasoning": claude_reasoning,
-                "overall_confidence": round(
-                    total_passed / max(total_checks, 1), 3
-                ),
+                "overall_confidence": round(total_passed / max(total_checks, 1), 3),
                 "time_series": {
                     "total_checks": ts_summary.total_checks,
                     "flags": [
@@ -403,9 +426,7 @@ class ValidationStage(ExtractionStage):
         mapping_lookup = {m["original_label"]: m["canonical_name"] for m in mappings}
 
         # Identify processable sheets (tier 1-3)
-        processable = {
-            t["sheet_name"] for t in triage if t.get("tier", 4) <= 3
-        }
+        processable = {t["sheet_name"] for t in triage if t.get("tier", 4) <= 3}
 
         # Build per-sheet unit multiplier lookup from structured parsing data
         multiplier_lookup: Dict[str, Decimal] = {}
@@ -471,7 +492,7 @@ class ValidationStage(ExtractionStage):
     @staticmethod
     def _filter_lifecycle_flags(
         flags: List[Dict],
-        lifecycle: "LifecycleResult",
+        lifecycle: LifecycleResult,
     ) -> List[Dict]:
         """Filter validation flags based on lifecycle phase context.
 
@@ -536,13 +557,15 @@ class ValidationStage(ExtractionStage):
             response = get_claude_client().messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=8192,
-                messages=[{
-                    "role": "user",
-                    "content": get_prompt("validation").render(
-                        flags=json.dumps(flags, indent=2),
-                        extracted_values=json.dumps(values_for_prompt, indent=2),
-                    ),
-                }],
+                messages=[
+                    {
+                        "role": "user",
+                        "content": get_prompt("validation").render(
+                            flags=json.dumps(flags, indent=2),
+                            extracted_values=json.dumps(values_for_prompt, indent=2),
+                        ),
+                    }
+                ],
             )
 
             # Check for truncation — incomplete JSON causes silent data loss
@@ -575,14 +598,16 @@ class ValidationStage(ExtractionStage):
             retry_after = getattr(e.response, "headers", {}).get("retry-after")
             logger.warning(f"Stage 4: Rate limit hit (retry-after={retry_after})")
             raise RateLimitError(
-                "Rate limit exceeded", stage="validation",
+                "Rate limit exceeded",
+                stage="validation",
                 retry_after=int(retry_after) if retry_after else None,
             )
 
         except anthropic.APIError as e:
             logger.error(f"Stage 4: Claude API error - {str(e)}")
             raise ClaudeAPIError(
-                str(e), stage="validation",
+                str(e),
+                stage="validation",
                 status_code=getattr(e, "status_code", None),
             )
 
@@ -593,4 +618,5 @@ class ValidationStage(ExtractionStage):
 
 # Self-register at import time
 from src.extraction.registry import registry  # noqa: E402
+
 registry.register(ValidationStage())

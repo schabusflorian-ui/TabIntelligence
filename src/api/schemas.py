@@ -6,14 +6,15 @@ These models provide:
 - Response validation
 - Consistent serialization
 """
-from pydantic import BaseModel, Field
-from typing import Any, Dict, List, Optional
-from datetime import datetime
 
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 # ============================================================================
 # Root / Service Info
 # ============================================================================
+
 
 class ServiceInfoResponse(BaseModel):
     service: str
@@ -25,11 +26,13 @@ class ServiceInfoResponse(BaseModel):
 # Health Check (GET /health)
 # ============================================================================
 
+
 class ComponentStatus(BaseModel):
     status: str
     latency_ms: Optional[float] = None
     bucket: Optional[str] = None
     error: Optional[str] = None
+
 
 class HealthCheckResponse(BaseModel):
     status: str
@@ -42,9 +45,11 @@ class HealthCheckResponse(BaseModel):
 # Health Probes (health router)
 # ============================================================================
 
+
 class LivenessResponse(BaseModel):
     status: str
     timestamp: str
+
 
 class ReadinessResponse(BaseModel):
     status: str
@@ -53,17 +58,20 @@ class ReadinessResponse(BaseModel):
     error: Optional[str] = None
     timestamp: str
 
+
 class PoolInfo(BaseModel):
     size: int
     checked_out: int
     overflow: int
     total_connections: int
 
+
 class CircuitBreakerInfo(BaseModel):
     state: str
     success_rate: float
     total_requests: int
     failed_requests: int
+
 
 class DatabaseHealthResponse(BaseModel):
     status: str
@@ -75,8 +83,10 @@ class DatabaseHealthResponse(BaseModel):
     warnings: Optional[List[str]] = None
     error: Optional[str] = None
 
+
 class CircuitBreakerStatusResponse(BaseModel):
     """Full circuit breaker stats returned by /health/circuit-breaker."""
+
     state: str
     timestamp: str
     model_config = {"extra": "allow"}
@@ -85,6 +95,7 @@ class CircuitBreakerStatusResponse(BaseModel):
 # ============================================================================
 # File Upload
 # ============================================================================
+
 
 class FileUploadResponse(BaseModel):
     file_id: str
@@ -99,6 +110,7 @@ class FileUploadResponse(BaseModel):
 # ============================================================================
 # Job Status
 # ============================================================================
+
 
 class JobStatusResponse(BaseModel):
     job_id: str
@@ -118,10 +130,12 @@ class JobStatusResponse(BaseModel):
 # Export
 # ============================================================================
 
+
 class ExportFilters(BaseModel):
     min_confidence: Optional[float] = None
     canonical_name: Optional[str] = None
     sheet: Optional[str] = None
+
 
 class ExportResponse(BaseModel):
     job_id: str
@@ -142,9 +156,11 @@ class ExportResponse(BaseModel):
 # Taxonomy
 # ============================================================================
 
+
 class TaxonomyStatsResponse(BaseModel):
     total_items: int
     categories: Dict[str, int]
+
 
 class TaxonomyItemResponse(BaseModel):
     canonical_name: str
@@ -156,9 +172,11 @@ class TaxonomyItemResponse(BaseModel):
     parent_canonical: Optional[str] = None
     validation_rules: Optional[Dict[str, Any]] = None
 
+
 class TaxonomyListResponse(BaseModel):
     count: int
     items: List[TaxonomyItemResponse]
+
 
 class TaxonomySearchItem(BaseModel):
     canonical_name: str
@@ -168,14 +186,17 @@ class TaxonomySearchItem(BaseModel):
     definition: Optional[str] = None
     typical_sign: Optional[str] = None
 
+
 class TaxonomySearchResponse(BaseModel):
     query: str
     count: int
     items: List[TaxonomySearchItem]
 
+
 class HierarchyChild(BaseModel):
     canonical_name: str
     display_name: Optional[str] = None
+
 
 class HierarchyNode(BaseModel):
     canonical_name: str
@@ -188,6 +209,7 @@ class HierarchyNode(BaseModel):
 # Job Listing
 # ============================================================================
 
+
 class JobListItem(BaseModel):
     job_id: str
     file_id: str
@@ -198,6 +220,7 @@ class JobListItem(BaseModel):
     filename: Optional[str] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
+
 
 class JobListResponse(BaseModel):
     count: int
@@ -210,13 +233,16 @@ class JobListResponse(BaseModel):
 # Entity CRUD
 # ============================================================================
 
+
 class EntityCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     industry: Optional[str] = Field(None, max_length=100)
 
+
 class UpdateEntityRequest(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     industry: Optional[str] = Field(None, max_length=100)
+
 
 class EntityResponse(BaseModel):
     id: str
@@ -224,9 +250,11 @@ class EntityResponse(BaseModel):
     industry: Optional[str] = None
     created_at: Optional[str] = None
 
+
 class EntityListResponse(BaseModel):
     count: int
     entities: List[EntityResponse]
+
 
 class EntityDetailResponse(EntityResponse):
     patterns_count: int = 0
@@ -237,11 +265,13 @@ class EntityDetailResponse(EntityResponse):
 # Lineage
 # ============================================================================
 
+
 class LineageEventItem(BaseModel):
     event_id: str
     stage_name: str
     timestamp: Optional[str] = None
     data: Optional[Dict[str, Any]] = None
+
 
 class LineageResponse(BaseModel):
     job_id: str
@@ -254,10 +284,12 @@ class LineageResponse(BaseModel):
 # Extraction Diff
 # ============================================================================
 
+
 class DiffItemResponse(BaseModel):
     canonical_name: str
     change_type: str
     details: Dict[str, Any] = {}
+
 
 class ExtractionDiffResponse(BaseModel):
     job_a_id: str
@@ -275,12 +307,14 @@ class ExtractionDiffResponse(BaseModel):
 # Item-Level Lineage
 # ============================================================================
 
+
 class ItemTransformation(BaseModel):
     stage: str
     action: str
     original_label: str
     timestamp: Optional[str] = None
     model_config = {"extra": "allow"}
+
 
 class ItemLineageResponse(BaseModel):
     job_id: str
@@ -291,6 +325,7 @@ class ItemLineageResponse(BaseModel):
 # ============================================================================
 # Job Retry
 # ============================================================================
+
 
 class RetryResponse(BaseModel):
     original_job_id: str
@@ -304,9 +339,11 @@ class RetryResponse(BaseModel):
 # Job Review
 # ============================================================================
 
+
 class ReviewDecisionRequest(BaseModel):
     decision: str = Field(..., pattern="^(approve|reject)$")
     reason: Optional[str] = Field(None, max_length=1000)
+
 
 class ReviewDecisionResponse(BaseModel):
     job_id: str
@@ -321,6 +358,7 @@ class ReviewDecisionResponse(BaseModel):
 # DLQ Admin
 # ============================================================================
 
+
 class DLQEntryListItem(BaseModel):
     dlq_id: str
     task_id: str
@@ -330,9 +368,11 @@ class DLQEntryListItem(BaseModel):
     replayed_at: Optional[str] = None
     created_at: Optional[str] = None
 
+
 class DLQEntryListResponse(BaseModel):
     count: int
     entries: List[DLQEntryListItem]
+
 
 class DLQEntryDetailResponse(DLQEntryListItem):
     task_args: Optional[Any] = None
@@ -345,13 +385,16 @@ class DLQEntryDetailResponse(DLQEntryListItem):
 # User Corrections & Entity Patterns
 # ============================================================================
 
+
 class CorrectionItem(BaseModel):
     original_label: str
     canonical_name: str
     sheet: Optional[str] = None  # optional context
 
+
 class CorrectionRequest(BaseModel):
     corrections: List[CorrectionItem]
+
 
 class CorrectionResponse(BaseModel):
     patterns_created: int
@@ -363,13 +406,16 @@ class CorrectionResponse(BaseModel):
 # Corrections Application (WS-J: retroactive apply, preview, undo, bulk)
 # ============================================================================
 
+
 class ApplyCorrectionItem(BaseModel):
     original_label: str
     new_canonical_name: str
     sheet: Optional[str] = None  # disambiguate when same label on multiple sheets
 
+
 class ApplyCorrectionRequest(BaseModel):
     corrections: List[ApplyCorrectionItem] = Field(..., min_length=1, max_length=100)
+
 
 class CorrectionDiff(BaseModel):
     original_label: str
@@ -380,6 +426,7 @@ class CorrectionDiff(BaseModel):
     old_confidence: float
     new_confidence: float = 1.0
 
+
 class ApplyCorrectionResponse(BaseModel):
     job_id: str
     corrections_applied: int
@@ -389,12 +436,14 @@ class ApplyCorrectionResponse(BaseModel):
     diffs: List[CorrectionDiff]
     message: str
 
+
 class PreviewCorrectionResponse(BaseModel):
     job_id: str
     corrections_count: int
     diffs: List[CorrectionDiff]
     warnings: List[str] = []
     message: str
+
 
 class CorrectionHistoryItem(BaseModel):
     id: str
@@ -409,12 +458,14 @@ class CorrectionHistoryItem(BaseModel):
     reverted_at: Optional[str] = None
     created_at: Optional[str] = None
 
+
 class CorrectionHistoryResponse(BaseModel):
     job_id: str
     corrections: List[CorrectionHistoryItem]
     total: int
     offset: int = 0
     limit: int = 100
+
 
 class UndoCorrectionResponse(BaseModel):
     correction_id: str
@@ -433,6 +484,7 @@ class PatternResponse(BaseModel):
     created_by: str
     created_at: Optional[str] = None
 
+
 class PatternListResponse(BaseModel):
     entity_id: str
     patterns: List[PatternResponse]
@@ -442,6 +494,7 @@ class PatternListResponse(BaseModel):
 # ============================================================================
 # Pattern Stats (GET /api/v1/entities/{entity_id}/pattern-stats)
 # ============================================================================
+
 
 class PatternStatsResponse(BaseModel):
     entity_id: str
@@ -459,6 +512,7 @@ class PatternStatsResponse(BaseModel):
 # Learned Aliases
 # ============================================================================
 
+
 class LearnedAliasResponse(BaseModel):
     id: str
     canonical_name: str
@@ -468,9 +522,11 @@ class LearnedAliasResponse(BaseModel):
     promoted: bool
     created_at: Optional[str] = None
 
+
 class LearnedAliasListResponse(BaseModel):
     aliases: List[LearnedAliasResponse]
     total: int
+
 
 class LearnedAliasPromoteResponse(BaseModel):
     id: str
@@ -483,6 +539,7 @@ class LearnedAliasPromoteResponse(BaseModel):
 # ============================================================================
 # Extraction Facts (GET /api/v1/facts)
 # ============================================================================
+
 
 class ExtractionFactResponse(BaseModel):
     id: str
@@ -501,6 +558,7 @@ class ExtractionFactResponse(BaseModel):
     validation_passed: Optional[bool] = None
     created_at: Optional[str] = None
 
+
 class FactsListResponse(BaseModel):
     facts: List[ExtractionFactResponse]
     count: int
@@ -512,14 +570,17 @@ class FactsListResponse(BaseModel):
 # Analytics: Entity Financials
 # ============================================================================
 
+
 class PeriodValue(BaseModel):
     period: str
     amount: float
+
 
 class FinancialLineItem(BaseModel):
     canonical_name: str
     taxonomy_category: Optional[str] = None
     values: List[PeriodValue]
+
 
 class EntityFinancialsResponse(BaseModel):
     entity_id: str
@@ -534,16 +595,19 @@ class EntityFinancialsResponse(BaseModel):
 # Analytics: Cross-Entity Comparison
 # ============================================================================
 
+
 class EntityComparisonValue(BaseModel):
     entity_id: str
     entity_name: Optional[str] = None
     amount: Optional[float] = None
     confidence: Optional[float] = None
 
+
 class ComparisonItem(BaseModel):
     canonical_name: str
     period: str
     entities: List[EntityComparisonValue]
+
 
 class CrossEntityComparisonResponse(BaseModel):
     canonical_names: List[str]
@@ -555,9 +619,11 @@ class CrossEntityComparisonResponse(BaseModel):
 # Analytics: Portfolio Summary
 # ============================================================================
 
+
 class QualityDistribution(BaseModel):
     grade: str
     count: int
+
 
 class PortfolioSummaryResponse(BaseModel):
     total_entities: int
@@ -572,10 +638,12 @@ class PortfolioSummaryResponse(BaseModel):
 # Analytics: Entity Trends
 # ============================================================================
 
+
 class TrendPoint(BaseModel):
     period: str
     amount: float
     yoy_change_pct: Optional[float] = None
+
 
 class EntityTrendsResponse(BaseModel):
     entity_id: str
@@ -587,11 +655,13 @@ class EntityTrendsResponse(BaseModel):
 # Analytics: Taxonomy Coverage
 # ============================================================================
 
+
 class TaxonomyCoverageItem(BaseModel):
     canonical_name: str
     category: str
     times_mapped: int
     avg_confidence: Optional[float] = None
+
 
 class TaxonomyCoverageResponse(BaseModel):
     total_taxonomy_items: int
@@ -605,16 +675,19 @@ class TaxonomyCoverageResponse(BaseModel):
 # Analytics: Cost Analytics
 # ============================================================================
 
+
 class CostByEntity(BaseModel):
     entity_id: str
     entity_name: Optional[str] = None
     total_cost: float
     job_count: int
 
+
 class DailyCost(BaseModel):
     date: str
     cost: float
     job_count: int
+
 
 class CostAnalyticsResponse(BaseModel):
     total_cost: float

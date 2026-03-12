@@ -7,10 +7,11 @@ Sheet 3 (SaaS Metrics): ARR, MRR, NRR, churn, CAC, LTV, customers
 Sheet 4 (Headcount): Team size by department with rev-per-employee
 Sheet 5 (Scratch): Pure text notes (should be tier 4 skip)
 """
+
 from pathlib import Path
 
 import openpyxl
-from openpyxl.styles import Font, Alignment
+from openpyxl.styles import Alignment, Font
 
 OUTPUT = Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "saas_startup.xlsx"
 

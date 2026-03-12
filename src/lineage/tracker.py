@@ -3,14 +3,15 @@ Simplified Lineage Tracker using synchronous database.
 
 Tracks data provenance throughout the extraction pipeline.
 """
-import uuid
-from typing import Optional, Dict, List
-from datetime import datetime, timezone
 
-from src.db.session import get_db_context
-from src.db import crud
-from src.core.logging import lineage_logger as logger
+import uuid
+from datetime import datetime, timezone
+from typing import Dict, List, Optional
+
 from src.core.exceptions import LineageError, LineageIncompleteError
+from src.core.logging import lineage_logger as logger
+from src.db import crud
+from src.db.session import get_db_context
 
 
 class LineageTracker:
@@ -37,7 +38,7 @@ class LineageTracker:
         stage: int,
         event_type: str,
         input_lineage_id: Optional[str] = None,
-        metadata: Optional[Dict] = None
+        metadata: Optional[Dict] = None,
     ) -> str:
         """
         Emit a lineage event.
@@ -59,7 +60,7 @@ class LineageTracker:
             "event_type": event_type,
             "input_lineage_id": input_lineage_id,
             "metadata": metadata or {},
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         self.events.append(event)
@@ -89,11 +90,12 @@ class LineageTracker:
             error_msg = f"Missing lineage for stages: {missing_stages}"
             logger.error(f"Lineage validation failed for job {self.job_id}: {error_msg}")
             raise LineageIncompleteError(
-                missing_events=[f"stage_{s}" for s in missing_stages],
-                job_id=self.job_id
+                missing_events=[f"stage_{s}" for s in missing_stages], job_id=self.job_id
             )
 
-        logger.info(f"Lineage validation passed for job {self.job_id}: all {len(stages)} stages complete")
+        logger.info(
+            f"Lineage validation passed for job {self.job_id}: all {len(stages)} stages complete"
+        )
 
     def save_to_db(self) -> None:
         """
@@ -127,13 +129,15 @@ class LineageTracker:
                                 "event_type": event["event_type"],
                                 "input_lineage_id": event["input_lineage_id"],
                                 "metadata": event["metadata"],
-                                "timestamp": event["timestamp"]
-                            }
+                                "timestamp": event["timestamp"],
+                            },
                         )
 
                     # Explicit commit for transaction - all or nothing
                     db.commit()
-                    logger.info(f"Saved {len(self.events)} lineage events to database for job {self.job_id}")
+                    logger.info(
+                        f"Saved {len(self.events)} lineage events to database for job {self.job_id}"
+                    )
 
                 except Exception as e:
                     # Rollback on any error to prevent partial saves
@@ -154,13 +158,15 @@ class LineageTracker:
         details: Optional[Dict] = None,
     ) -> None:
         """Record a transformation for a specific line item."""
-        self.item_lineage.setdefault(canonical_name, []).append({
-            "stage": stage,
-            "action": action,
-            "original_label": original_label,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            **(details or {}),
-        })
+        self.item_lineage.setdefault(canonical_name, []).append(
+            {
+                "stage": stage,
+                "action": action,
+                "original_label": original_label,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                **(details or {}),
+            }
+        )
 
     def get_item_lineage(self, canonical_name: str) -> List[Dict]:
         """Get transformation chain for a specific item."""
@@ -180,5 +186,5 @@ class LineageTracker:
         return {
             "total_events": len(self.events),
             "stages": list({event["stage"] for event in self.events}),
-            "event_types": list({event["event_type"] for event in self.events})
+            "event_types": list({event["event_type"] for event in self.events}),
         }

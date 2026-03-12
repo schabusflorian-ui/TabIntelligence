@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-03-12T09:06:55.724775+00:00",
+  "timestamp": "2026-03-12T12:23:29.429705+00:00",
   "file": "edge_cases.xlsx",
-  "duration_seconds": 134.95,
+  "duration_seconds": 126.28,
   "sheets": [
     "Financials",
     "Quarterly Detail",
@@ -17,7 +17,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Core Income Statement section with standard P&L structure including revenue, COGS, gross profit, and operating expenses. Contains subtotals and bold formatting indicating structured financial statement."
+      "reasoning": "Core Income Statement section with standard P&L structure including Revenue, Cost of Goods Sold, and Gross Profit. Has proper subtotals and bold section headers indicating structured financial statement."
     },
     {
       "sheet_name": "Financials",
@@ -26,8 +26,8 @@
       "section_end_row": 17,
       "tier": 1,
       "decision": "PROCESS_HIGH",
-      "confidence": 0.95,
-      "reasoning": "Continuation of Income Statement with operating income, interest expense, tax, and net income - core P&L components requiring high accuracy."
+      "confidence": 0.9,
+      "reasoning": "Continuation of Income Statement with Operating Income, Interest Expense, and Net Income calculations. Part of core P&L financial statement structure."
     },
     {
       "sheet_name": "Financials",
@@ -37,7 +37,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Core Balance Sheet section showing assets structure with cash, accounts receivable, inventory. Essential financial statement requiring high accuracy."
+      "reasoning": "Core Balance Sheet section showing Assets including Cash, Accounts Receivable, and Inventory. Standard financial statement with proper subtotals and structure."
     },
     {
       "sheet_name": "Financials",
@@ -46,8 +46,8 @@
       "section_end_row": 38,
       "tier": 1,
       "decision": "PROCESS_HIGH",
-      "confidence": 0.95,
-      "reasoning": "Balance Sheet liabilities section including current liabilities and long-term debt - core financial statement components."
+      "confidence": 0.9,
+      "reasoning": "Liabilities section of Balance Sheet with Accounts Payable, Accrued Expenses, and Long-Term Debt. Essential component of core financial statement."
     },
     {
       "sheet_name": "Financials",
@@ -56,15 +56,15 @@
       "section_end_row": 41,
       "tier": 1,
       "decision": "PROCESS_HIGH",
-      "confidence": 0.95,
-      "reasoning": "Balance Sheet equity section completing the core financial statement - essential for balance sheet integrity."
+      "confidence": 0.85,
+      "reasoning": "Equity section completing the Balance Sheet with Total Equity and balancing Total Liabilities & Equity. Critical for balance sheet integrity."
     },
     {
       "sheet_name": "Quarterly Detail",
-      "tier": 3,
-      "decision": "PROCESS_LOW",
-      "confidence": 0.85,
-      "reasoning": "Revenue detail breakdown by quarters - analytical supporting data for core income statement. Low row count but provides granular revenue analysis.",
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.9,
+      "reasoning": "Supporting schedule showing quarterly breakdown of revenue and expenses. Name explicitly indicates 'Quarterly Detail' which fits Tier 2 criteria for periodic breakdowns.",
       "section": null,
       "section_start_row": null,
       "section_end_row": null
@@ -73,8 +73,8 @@
       "sheet_name": "Sensitivities",
       "tier": 3,
       "decision": "PROCESS_LOW",
-      "confidence": 0.9,
-      "reasoning": "Sensitivity analysis showing revenue growth and margin scenarios - clearly analytical/scenario planning content that fits Tier 3 criteria.",
+      "confidence": 0.85,
+      "reasoning": "Sensitivity analysis sheet examining revenue growth and margin scenarios. Contains analytical content for testing different assumptions, fitting Tier 3 criteria.",
       "section": null,
       "section_start_row": null,
       "section_end_row": null
@@ -84,34 +84,34 @@
       "tier": 4,
       "decision": "SKIP",
       "confidence": 0.95,
-      "reasoning": "Contains 'Old' and 'Draft' in name, explicitly marked as 'DRAFT - DO NOT USE' and noted as old version - clear skip criteria met.",
+      "reasoning": "Sheet name contains 'Old' and 'Draft' which are explicit SKIP criteria. Sample labels confirm it's marked as 'DRAFT - DO NOT USE' and described as old version.",
       "section": null,
       "section_start_row": null,
       "section_end_row": null
     }
   ],
   "line_items_count": 45,
-  "tokens_used": 45591,
-  "cost_usd": 0.292329,
+  "tokens_used": 47694,
+  "cost_usd": 0.302898,
   "validation": {
     "period_results": {
       "FY2022": {
-        "total_checks": 56,
-        "passed": 53,
+        "total_checks": 55,
+        "passed": 52,
         "failed": 3,
-        "success_rate": 0.946
+        "success_rate": 0.945
       },
       "FY2023": {
-        "total_checks": 56,
-        "passed": 53,
+        "total_checks": 55,
+        "passed": 52,
         "failed": 3,
-        "success_rate": 0.946
+        "success_rate": 0.945
       },
       "FY2024E": {
-        "total_checks": 56,
-        "passed": 53,
+        "total_checks": 55,
+        "passed": 52,
         "failed": 3,
-        "success_rate": 0.946
+        "success_rate": 0.945
       },
       "Q1 FY24": {
         "total_checks": 15,
@@ -367,172 +367,172 @@
         "flag_index": 0,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "COGS is consistently negative across all periods, which suggests an extraction error. COGS should be positive as it represents costs. The negative values appear to be incorrectly signed.",
-        "suggested_fix": "Convert COGS to positive value: 22500"
+        "reasoning": "COGS should always be positive in financial statements. The negative value suggests extraction error - likely extracted as an expense format rather than absolute cost value.",
+        "suggested_fix": "22500 (convert negative to positive)"
       },
       {
         "flag_index": 1,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "This is a consequence of the negative COGS issue. If COGS were correctly positive (22500), then Revenue (50000) - COGS (22500) = 27500, which matches the actual gross profit. The error is in COGS sign, not the calculation.",
-        "suggested_fix": "Fix COGS to positive 22500, then the formula validates correctly"
+        "reasoning": "Mathematical inconsistency: Revenue (50000) - COGS (-22500) = 72500, but extracted gross profit is 27500. This confirms COGS sign error.",
+        "suggested_fix": "COGS should be 22500 (positive), making gross profit = 50000 - 22500 = 27500"
       },
       {
         "flag_index": 2,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Same root cause as flag 1 - the gross profit value is actually correct, but the validation fails due to negative COGS. Once COGS is corrected to positive, this will resolve.",
-        "suggested_fix": "Fix COGS to positive 22500, then gross profit of 27500 is correct"
+        "reasoning": "Same mathematical inconsistency as above. Gross profit is actually correct at 27500, but COGS needs sign correction.",
+        "suggested_fix": "Correct COGS to positive 22500"
       },
       {
         "flag_index": 3,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Same systematic issue as FY2022 - COGS should be positive. The pattern of negative COGS across all periods indicates a consistent extraction error with expense sign conventions.",
-        "suggested_fix": "Convert COGS to positive value: 24750"
+        "reasoning": "Same systematic issue - COGS extracted as negative when it should be positive.",
+        "suggested_fix": "24750 (convert negative to positive)"
       },
       {
         "flag_index": 4,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Consequence of negative COGS. With corrected positive COGS (24750), Revenue (55000) - COGS (24750) = 30250, matching actual gross profit.",
-        "suggested_fix": "Fix COGS to positive 24750"
+        "reasoning": "Revenue (55000) - COGS (-24750) = 79750, but gross profit shows 30250. COGS sign error confirmed.",
+        "suggested_fix": "COGS should be 24750 (positive)"
       },
       {
         "flag_index": 5,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Same root cause - gross profit is correct but validation fails due to negative COGS input.",
-        "suggested_fix": "Fix COGS to positive 24750"
+        "reasoning": "Gross profit is correct at 30250, confirms COGS should be 24750 positive (55000 - 24750 = 30250).",
+        "suggested_fix": "Correct COGS to positive 24750"
       },
       {
         "flag_index": 6,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Continuation of the systematic COGS sign error pattern across all periods including estimates.",
-        "suggested_fix": "Convert COGS to positive value: 27225"
+        "reasoning": "Systematic COGS sign error continues in FY2024E projections.",
+        "suggested_fix": "27225 (convert negative to positive)"
       },
       {
         "flag_index": 7,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "With corrected positive COGS (27225), Revenue (60500) - COGS (27225) = 33275, matching actual gross profit.",
-        "suggested_fix": "Fix COGS to positive 27225"
+        "reasoning": "Revenue (60500) - COGS (-27225) = 87725, but gross profit is 33275. COGS sign error.",
+        "suggested_fix": "COGS should be 27225 (positive)"
       },
       {
         "flag_index": 8,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Gross profit calculation is correct once COGS sign is fixed.",
-        "suggested_fix": "Fix COGS to positive 27225"
+        "reasoning": "Gross profit is correct at 33275, confirms COGS should be 27225 positive.",
+        "suggested_fix": "Correct COGS to positive 27225"
       },
       {
         "flag_index": 9,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Quarterly data shows same systematic COGS sign error. Pattern is consistent across all periods.",
-        "suggested_fix": "Convert COGS to positive value: 6300"
+        "reasoning": "Q1 FY24 shows same systematic COGS sign error.",
+        "suggested_fix": "6300 (convert negative to positive)"
       },
       {
         "flag_index": 10,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "With corrected COGS (6300), Revenue (14000) - COGS (6300) = 7700, matching actual gross profit.",
-        "suggested_fix": "Fix COGS to positive 6300"
+        "reasoning": "Revenue (14000) - COGS (-6300) = 20300, but gross profit is 7700. COGS sign error.",
+        "suggested_fix": "COGS should be 6300 (positive)"
       },
       {
         "flag_index": 11,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Quarterly gross profit is correct once COGS sign is corrected.",
-        "suggested_fix": "Fix COGS to positive 6300"
+        "reasoning": "Gross profit is correct at 7700, confirms COGS should be 6300 positive.",
+        "suggested_fix": "Correct COGS to positive 6300"
       },
       {
         "flag_index": 12,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Q2 continues the same COGS sign error pattern.",
-        "suggested_fix": "Convert COGS to positive value: 6525"
+        "reasoning": "Q2 FY24 systematic COGS sign error.",
+        "suggested_fix": "6525 (convert negative to positive)"
       },
       {
         "flag_index": 13,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "With corrected COGS, the gross profit calculation validates correctly.",
-        "suggested_fix": "Fix COGS to positive 6525"
+        "reasoning": "Revenue (14500) - COGS (-6525) = 21025, but gross profit is 7975. COGS sign error.",
+        "suggested_fix": "COGS should be 6525 (positive)"
       },
       {
         "flag_index": 14,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Q2 gross profit is correct once COGS sign is fixed.",
-        "suggested_fix": "Fix COGS to positive 6525"
+        "reasoning": "Gross profit is correct at 7975, confirms COGS should be 6525 positive.",
+        "suggested_fix": "Correct COGS to positive 6525"
       },
       {
         "flag_index": 15,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Q3 COGS sign error continues the systematic pattern.",
-        "suggested_fix": "Convert COGS to positive value: 6975"
+        "reasoning": "Q3 FY24 systematic COGS sign error.",
+        "suggested_fix": "6975 (convert negative to positive)"
       },
       {
         "flag_index": 16,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Q3 gross profit calculation will validate with corrected COGS.",
-        "suggested_fix": "Fix COGS to positive 6975"
+        "reasoning": "Revenue (15500) - COGS (-6975) = 22475, but gross profit is 8525. COGS sign error.",
+        "suggested_fix": "COGS should be 6975 (positive)"
       },
       {
         "flag_index": 17,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Q3 gross profit is mathematically correct once COGS is positive.",
-        "suggested_fix": "Fix COGS to positive 6975"
+        "reasoning": "Gross profit is correct at 8525, confirms COGS should be 6975 positive.",
+        "suggested_fix": "Correct COGS to positive 6975"
       },
       {
         "flag_index": 18,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Q4 completes the pattern of negative COGS across all quarters.",
-        "suggested_fix": "Convert COGS to positive value: 7425"
+        "reasoning": "Q4 FY24 systematic COGS sign error.",
+        "suggested_fix": "7425 (convert negative to positive)"
       },
       {
         "flag_index": 19,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Q4 validation will pass with positive COGS.",
-        "suggested_fix": "Fix COGS to positive 7425"
+        "reasoning": "Revenue (16500) - COGS (-7425) = 23925, but gross profit is 9075. COGS sign error.",
+        "suggested_fix": "COGS should be 7425 (positive)"
       },
       {
         "flag_index": 20,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Q4 gross profit is correct with proper COGS sign.",
-        "suggested_fix": "Fix COGS to positive 7425"
+        "reasoning": "Gross profit is correct at 9075, confirms COGS should be 7425 positive.",
+        "suggested_fix": "Correct COGS to positive 7425"
       },
       {
         "flag_index": 21,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "FY2024 annual COGS continues the systematic sign error (duplicate of FY2024E).",
-        "suggested_fix": "Convert COGS to positive value: 27225"
+        "reasoning": "FY2024 annual total shows same systematic COGS sign error.",
+        "suggested_fix": "27225 (convert negative to positive)"
       },
       {
         "flag_index": 22,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Annual validation will pass with corrected COGS sign.",
-        "suggested_fix": "Fix COGS to positive 27225"
+        "reasoning": "Revenue (60500) - COGS (-27225) = 87725, but gross profit is 33275. COGS sign error.",
+        "suggested_fix": "COGS should be 27225 (positive)"
       },
       {
         "flag_index": 23,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Annual gross profit is mathematically sound once COGS sign is corrected.",
-        "suggested_fix": "Fix COGS to positive 27225"
+        "reasoning": "Gross profit is correct at 33275, confirms COGS should be 27225 positive.",
+        "suggested_fix": "Correct COGS to positive 27225"
       }
     ],
-    "overall_confidence": 0.901,
+    "overall_confidence": 0.9,
     "time_series": {
       "total_checks": 320,
       "flags": [
@@ -582,6 +582,14 @@
           "period": "FY2024E",
           "severity": "info",
           "message": "ebit missing in period FY2024E (gap in series)",
+          "details": null
+        },
+        {
+          "check_type": "gap",
+          "canonical_name": "fixed_assets",
+          "period": "FY2024",
+          "severity": "info",
+          "message": "fixed_assets missing in period FY2024 (gap in series)",
           "details": null
         },
         {
@@ -638,14 +646,6 @@
           "period": "FY2024",
           "severity": "info",
           "message": "net_income missing in period FY2024 (gap in series)",
-          "details": null
-        },
-        {
-          "check_type": "gap",
-          "canonical_name": "net_ppe",
-          "period": "FY2024",
-          "severity": "info",
-          "message": "net_ppe missing in period FY2024 (gap in series)",
           "details": null
         },
         {
@@ -858,7 +858,7 @@
         },
         {
           "name": "validation_success",
-          "score": 0.901,
+          "score": 0.9,
           "weight": 0.25,
           "details": null
         },
@@ -906,17 +906,17 @@
       5
     ],
     "event_types": [
-      "enhanced_mapping",
-      "mapping",
       "triage",
       "validation",
+      "mapping",
+      "enhanced_mapping",
       "parsing"
     ]
   },
   "triage_accuracy": {
-    "correct": 3,
+    "correct": 4,
     "total": 4,
-    "accuracy": 0.75,
+    "accuracy": 1.0,
     "details": [
       {
         "sheet_name": "Financials",
@@ -927,8 +927,8 @@
       {
         "sheet_name": "Quarterly Detail",
         "expected_tier": 2,
-        "actual_tier": 3,
-        "correct": false
+        "actual_tier": 2,
+        "correct": true
       },
       {
         "sheet_name": "Sensitivities",
@@ -1075,7 +1075,7 @@
       },
       {
         "name": "validation_success",
-        "score": 0.901,
+        "score": 0.9,
         "weight": 0.25,
         "details": null
       },
@@ -1121,7 +1121,7 @@
           "method": "hierarchical",
           "stage": 3,
           "taxonomy_category": "unknown",
-          "reasoning": "Section header for income statement - not a mappable financial line item"
+          "reasoning": "This is a section header for the income statement, not a mappable financial line item"
         },
         "validation": null,
         "enhanced_mapping": {
@@ -1179,7 +1179,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Revenue line item on Old Draft sheet"
+          "reasoning": "Direct match - Revenue is the primary canonical name for top-line sales"
         },
         "validation": {
           "rules_applied": [],
@@ -1234,7 +1234,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Specific revenue type for product sales, matches canonical exactly"
+          "reasoning": "Exact match - Product Revenue maps directly to product_revenue canonical"
         },
         "validation": {
           "rules_applied": [],
@@ -1289,7 +1289,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Specific revenue type for service sales, matches canonical exactly"
+          "reasoning": "Exact match - Service Revenue maps directly to service_revenue canonical"
         },
         "validation": {
           "rules_applied": [],
@@ -1344,7 +1344,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Standard COGS line item on income statement"
+          "reasoning": "Direct match - Cost of Goods Sold is listed as an alias for cogs"
         },
         "validation": {
           "rules_applied": [
@@ -1547,7 +1547,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Gross profit calculation"
+          "reasoning": "Direct match - Gross Profit maps to gross_profit canonical"
         },
         "validation": {
           "rules_applied": [
@@ -1677,7 +1677,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Selling expenses typically map to sales & marketing canonical"
+          "reasoning": "Selling Expenses typically refers to sales and marketing costs"
         },
         "validation": {
           "rules_applied": [],
@@ -1732,7 +1732,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Administrative expenses map to G&A canonical"
+          "reasoning": "Administrative expenses map to general_admin (G&A) canonical"
         },
         "validation": {
           "rules_applied": [],
@@ -1787,7 +1787,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Total of all operating expenses, matches canonical exactly"
+          "reasoning": "Direct match - Total Operating Expenses maps to operating_expenses"
         },
         "validation": {
           "rules_applied": [],
@@ -1842,7 +1842,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Operating income on income statement, matches canonical exactly"
+          "reasoning": "Direct match - Operating Income maps to operating_income canonical"
         },
         "validation": {
           "rules_applied": [],
@@ -1897,7 +1897,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "On income statement - maps to income statement interest expense canonical (not debt schedule version)"
+          "reasoning": "On Income Statement - maps to interest_expense (not interest_expense_debt which is for debt schedules)"
         },
         "validation": {
           "rules_applied": [],
@@ -1952,7 +1952,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Pre-tax earnings line item, matches canonical exactly"
+          "reasoning": "Direct match - Earnings Before Tax maps to earnings_before_tax canonical"
         },
         "validation": {
           "rules_applied": [],
@@ -2007,7 +2007,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Tax expense on income statement"
+          "reasoning": "Direct match - Income Tax maps to income_tax canonical"
         },
         "validation": {
           "rules_applied": [],
@@ -2062,7 +2062,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Net income line item - maps to income statement canonical"
+          "reasoning": "On Income Statement context - maps to net_income (not net_income_cf which is for cash flow statements)"
         },
         "validation": {
           "rules_applied": [],
@@ -2098,7 +2098,7 @@
           "method": "hierarchical",
           "stage": 3,
           "taxonomy_category": "unknown",
-          "reasoning": "Section header for balance sheet - not a mappable financial line item"
+          "reasoning": "This is a section header for the balance sheet, not a mappable financial line item"
         },
         "validation": null,
         "enhanced_mapping": {
@@ -2115,9 +2115,9 @@
       "sheet": "Financials",
       "row": 23,
       "original_label": "Assets",
-      "canonical_name": "unmapped",
+      "canonical_name": "total_assets",
       "values": {},
-      "confidence": 0.95,
+      "confidence": 0.9,
       "hierarchy_level": 0,
       "provenance": {
         "source_cells": [
@@ -2134,20 +2134,17 @@
           "is_subtotal": false
         },
         "mapping": {
-          "method": "hierarchical",
+          "method": "claude",
           "stage": 3,
-          "taxonomy_category": "unknown",
-          "reasoning": "Section header within balance sheet - not a specific mappable line item"
+          "taxonomy_category": "balance_sheet",
+          "reasoning": "Section header - not mappable to canonical taxonomy"
         },
-        "validation": null,
-        "enhanced_mapping": {
-          "was_remapped": true,
-          "old_canonical": "unmapped",
-          "old_confidence": 0.9,
-          "new_canonical": "unmapped",
-          "new_confidence": 0.95,
-          "stage": 5
-        }
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
       }
     },
     {
@@ -2195,7 +2192,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "balance_sheet",
-          "reasoning": "Cash line item on balance sheet"
+          "reasoning": "Direct match - Cash maps to cash canonical on Balance Sheet"
         },
         "validation": {
           "rules_applied": [],
@@ -2250,7 +2247,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "balance_sheet",
-          "reasoning": "A/R on balance sheet, matches canonical exactly"
+          "reasoning": "Direct match - Accounts Receivable maps to accounts_receivable canonical"
         },
         "validation": {
           "rules_applied": [],
@@ -2305,7 +2302,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "balance_sheet",
-          "reasoning": "Inventory on balance sheet"
+          "reasoning": "Direct match - Inventory maps to inventory canonical"
         },
         "validation": {
           "rules_applied": [],
@@ -2360,7 +2357,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "balance_sheet",
-          "reasoning": "Sum of all current assets on balance sheet"
+          "reasoning": "Direct match - Total Current Assets maps to total_current_assets canonical"
         },
         "validation": {
           "rules_applied": [],

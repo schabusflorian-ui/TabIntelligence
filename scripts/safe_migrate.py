@@ -14,13 +14,14 @@ Usage:
     python scripts/safe_migrate.py --rollback       # Rollback last migration
     python scripts/safe_migrate.py --backup         # Create backup only
 """
-import sys
-import subprocess
+
 import argparse
-from pathlib import Path
-from datetime import datetime
-from typing import List, Dict, Optional
 import re
+import subprocess
+import sys
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -35,6 +36,7 @@ logger = setup_logging(level="INFO")
 # Migration Analysis
 # ============================================================================
 
+
 class MigrationSafetyChecker:
     """Analyze migrations for potential safety issues."""
 
@@ -42,32 +44,32 @@ class MigrationSafetyChecker:
         "DROP TABLE": {
             "severity": "CRITICAL",
             "message": "Drops entire table - DATA LOSS",
-            "recommendation": "Export data first, coordinate downtime"
+            "recommendation": "Export data first, coordinate downtime",
         },
         "DROP COLUMN": {
             "severity": "CRITICAL",
             "message": "Drops column - DATA LOSS",
-            "recommendation": "Deprecated column first, remove in next release"
+            "recommendation": "Deprecated column first, remove in next release",
         },
         "ALTER COLUMN.*TYPE": {
             "severity": "HIGH",
             "message": "Changes column type - may require table rewrite",
-            "recommendation": "Test on copy of production data, plan downtime"
+            "recommendation": "Test on copy of production data, plan downtime",
         },
         "CREATE UNIQUE INDEX": {
             "severity": "MEDIUM",
             "message": "Creates unique index - requires table lock",
-            "recommendation": "Use CONCURRENTLY if possible, plan for lock time"
+            "recommendation": "Use CONCURRENTLY if possible, plan for lock time",
         },
         "ALTER TABLE.*ADD CONSTRAINT.*FOREIGN KEY": {
             "severity": "MEDIUM",
             "message": "Adds foreign key - requires validation scan",
-            "recommendation": "Add as NOT VALID first, validate separately"
+            "recommendation": "Add as NOT VALID first, validate separately",
         },
         "ALTER TABLE.*ADD CONSTRAINT.*CHECK": {
             "severity": "MEDIUM",
             "message": "Adds check constraint - requires validation scan",
-            "recommendation": "Add as NOT VALID first, validate separately"
+            "recommendation": "Add as NOT VALID first, validate separately",
         },
     }
 
@@ -89,12 +91,14 @@ class MigrationSafetyChecker:
 
         for pattern, info in self.DANGEROUS_PATTERNS.items():
             if re.search(pattern, content, re.IGNORECASE):
-                warnings.append({
-                    "pattern": pattern,
-                    "severity": info["severity"],
-                    "message": info["message"],
-                    "recommendation": info["recommendation"],
-                })
+                warnings.append(
+                    {
+                        "pattern": pattern,
+                        "severity": info["severity"],
+                        "message": info["message"],
+                        "recommendation": info["recommendation"],
+                    }
+                )
                 severity_levels.append(info["severity"])
 
         # Determine overall safety
@@ -117,12 +121,7 @@ class MigrationSafetyChecker:
     def analyze_all_pending(self) -> List[Dict]:
         """Analyze all pending migrations."""
         # Get pending migrations from Alembic
-        result = subprocess.run(
-            ["alembic", "heads"],
-            capture_output=True,
-            text=True,
-            check=True
-        )
+        subprocess.run(["alembic", "heads"], capture_output=True, text=True, check=True)
 
         # This is simplified - real implementation would parse Alembic output
         migrations_dir = Path("alembic/versions")
@@ -142,6 +141,7 @@ class MigrationSafetyChecker:
 # ============================================================================
 # Database Backup
 # ============================================================================
+
 
 class DatabaseBackup:
     """Handle database backups before migrations."""
@@ -168,10 +168,8 @@ class DatabaseBackup:
         # Extract connection details from DATABASE_URL
         # postgresql://user:pass@host:port/dbname
         import re
-        match = re.match(
-            r"postgresql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)",
-            settings.database_url
-        )
+
+        match = re.match(r"postgresql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)", settings.database_url)
         if not match:
             raise ValueError("Could not parse DATABASE_URL")
 
@@ -180,11 +178,16 @@ class DatabaseBackup:
         # Create pg_dump command
         cmd = [
             "pg_dump",
-            "-h", host,
-            "-p", port,
-            "-U", user,
-            "-d", dbname,
-            "-f", str(backup_file),
+            "-h",
+            host,
+            "-p",
+            port,
+            "-U",
+            user,
+            "-d",
+            dbname,
+            "-f",
+            str(backup_file),
             "--clean",  # Include DROP statements
             "--if-exists",  # Use IF EXISTS
             "--create",  # Include CREATE DATABASE
@@ -192,6 +195,7 @@ class DatabaseBackup:
 
         # Set password via environment
         import os
+
         env = os.environ.copy()
         env["PGPASSWORD"] = password
 
@@ -215,10 +219,8 @@ class DatabaseBackup:
 
         # Extract connection details
         import re
-        match = re.match(
-            r"postgresql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)",
-            settings.database_url
-        )
+
+        match = re.match(r"postgresql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)", settings.database_url)
         if not match:
             raise ValueError("Could not parse DATABASE_URL")
 
@@ -227,15 +229,21 @@ class DatabaseBackup:
         # Create psql command
         cmd = [
             "psql",
-            "-h", host,
-            "-p", port,
-            "-U", user,
-            "-d", dbname,
-            "-f", str(backup_file),
+            "-h",
+            host,
+            "-p",
+            port,
+            "-U",
+            user,
+            "-d",
+            dbname,
+            "-f",
+            str(backup_file),
         ]
 
         # Set password via environment
         import os
+
         env = os.environ.copy()
         env["PGPASSWORD"] = password
 
@@ -250,6 +258,7 @@ class DatabaseBackup:
 # ============================================================================
 # Safe Migration Executor
 # ============================================================================
+
 
 class SafeMigration:
     """Execute migrations with safety checks and backups."""
@@ -274,13 +283,13 @@ class SafeMigration:
             logger.info(f"\nMigration: {analysis['file']}")
             logger.info(f"Safety Level: {analysis['safety_level']}")
 
-            if analysis['warnings']:
+            if analysis["warnings"]:
                 logger.warning(f"Found {len(analysis['warnings'])} warnings:")
-                for warning in analysis['warnings']:
+                for warning in analysis["warnings"]:
                     logger.warning(f"  [{warning['severity']}] {warning['message']}")
                     logger.warning(f"    Recommendation: {warning['recommendation']}")
 
-            if analysis['requires_downtime']:
+            if analysis["requires_downtime"]:
                 logger.warning("  ⚠️  This migration may require downtime")
 
     def upgrade(self, auto_backup: bool = True, force: bool = False):
@@ -321,10 +330,7 @@ class SafeMigration:
         logger.info("\nRunning Alembic upgrade...")
         try:
             result = subprocess.run(
-                ["alembic", "upgrade", "head"],
-                check=True,
-                capture_output=True,
-                text=True
+                ["alembic", "upgrade", "head"], check=True, capture_output=True, text=True
             )
             logger.info(result.stdout)
             logger.info("✅ Migration completed successfully")
@@ -350,16 +356,13 @@ class SafeMigration:
         logger.info("=" * 60)
 
         # Create backup before rollback
-        backup_file = self.backup.create_backup(label="pre-rollback")
+        self.backup.create_backup(label="pre-rollback")
 
         # Rollback
         logger.info("\nRunning Alembic downgrade...")
         try:
             result = subprocess.run(
-                ["alembic", "downgrade", "-1"],
-                check=True,
-                capture_output=True,
-                text=True
+                ["alembic", "downgrade", "-1"], check=True, capture_output=True, text=True
             )
             logger.info(result.stdout)
             logger.info("✅ Rollback completed successfully")
@@ -371,6 +374,7 @@ class SafeMigration:
 # ============================================================================
 # CLI
 # ============================================================================
+
 
 def main():
     parser = argparse.ArgumentParser(description="Safe database migration utility")
@@ -389,10 +393,7 @@ def main():
         migrator.check_migrations()
 
     elif args.upgrade:
-        migrator.upgrade(
-            auto_backup=not args.no_backup,
-            force=args.force
-        )
+        migrator.upgrade(auto_backup=not args.no_backup, force=args.force)
 
     elif args.rollback:
         migrator.rollback()

@@ -3,20 +3,22 @@
 Compares two extraction jobs to surface added, removed, and changed
 line items, including per-period value deltas.
 """
-from dataclasses import dataclass, field, asdict
-from typing import List, Dict, Optional, Any
+
+from dataclasses import asdict, dataclass, field
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from sqlalchemy.orm import Session
 
+from src.core.logging import lineage_logger as logger
 from src.db import crud
 from src.db.models import ExtractionFact
-from src.core.logging import lineage_logger as logger
 
 
 @dataclass
 class DiffItem:
     """A single difference between two extractions."""
+
     canonical_name: str
     change_type: str  # "added", "removed", "mapping_changed", "value_changed", "confidence_changed"
     details: Dict[str, Any] = field(default_factory=dict)
@@ -28,6 +30,7 @@ class DiffItem:
 @dataclass
 class ExtractionDiff:
     """Full diff between two extraction jobs."""
+
     job_a_id: str
     job_b_id: str
     added_items: List[DiffItem] = field(default_factory=list)
@@ -81,13 +84,18 @@ class ExtractionDiffer:
 
         if facts_a or facts_b:
             return self._diff_from_facts(
-                job_a_id, job_b_id, facts_a, facts_b,
+                job_a_id,
+                job_b_id,
+                facts_a,
+                facts_b,
                 canonical_name=canonical_name,
                 min_change_pct=min_change_pct,
             )
 
         return self._diff_from_results(
-            db, job_a_id, job_b_id,
+            db,
+            job_a_id,
+            job_b_id,
             canonical_name=canonical_name,
             min_change_pct=min_change_pct,
         )
@@ -95,11 +103,7 @@ class ExtractionDiffer:
     @staticmethod
     def _load_all_facts(db: Session, job_id: UUID) -> List:
         """Load all extraction facts for a job without row limit."""
-        return (
-            db.query(ExtractionFact)
-            .filter(ExtractionFact.job_id == job_id)
-            .all()
-        )
+        return db.query(ExtractionFact).filter(ExtractionFact.job_id == job_id).all()
 
     def _diff_from_facts(
         self,
@@ -137,7 +141,8 @@ class ExtractionDiffer:
 
     @staticmethod
     def _facts_to_lookup(
-        facts: list, canonical_name: Optional[str] = None,
+        facts: list,
+        canonical_name: Optional[str] = None,
     ) -> Dict[str, Dict[str, Any]]:
         """Group facts by original_label into a comparison lookup."""
         lookup: Dict[str, Dict[str, Any]] = {}
@@ -157,7 +162,8 @@ class ExtractionDiffer:
 
     @staticmethod
     def _items_to_lookup(
-        items: list, canonical_name: Optional[str] = None,
+        items: list,
+        canonical_name: Optional[str] = None,
     ) -> Dict[str, Dict[str, Any]]:
         """Group line_items by original_label into a comparison lookup."""
         lookup: Dict[str, Dict[str, Any]] = {}
@@ -170,8 +176,7 @@ class ExtractionDiffer:
                 "canonical_name": cn,
                 "confidence": item.get("confidence"),
                 "values": {
-                    k: float(v) for k, v in (item.get("values") or {}).items()
-                    if v is not None
+                    k: float(v) for k, v in (item.get("values") or {}).items() if v is not None
                 },
             }
         return lookup
@@ -192,19 +197,23 @@ class ExtractionDiffer:
 
         # Removed items (in A, not in B)
         for label in labels_a - labels_b:
-            diff.removed_items.append(DiffItem(
-                canonical_name=lookup_a[label]["canonical_name"],
-                change_type="removed",
-                details={"original_label": label},
-            ))
+            diff.removed_items.append(
+                DiffItem(
+                    canonical_name=lookup_a[label]["canonical_name"],
+                    change_type="removed",
+                    details={"original_label": label},
+                )
+            )
 
         # Added items (in B, not in A)
         for label in labels_b - labels_a:
-            diff.added_items.append(DiffItem(
-                canonical_name=lookup_b[label]["canonical_name"],
-                change_type="added",
-                details={"original_label": label},
-            ))
+            diff.added_items.append(
+                DiffItem(
+                    canonical_name=lookup_b[label]["canonical_name"],
+                    change_type="added",
+                    details={"original_label": label},
+                )
+            )
 
         # Common items — check for changes
         for label in labels_a & labels_b:
@@ -214,30 +223,34 @@ class ExtractionDiffer:
 
             # Mapping changed
             if item_a["canonical_name"] != item_b["canonical_name"]:
-                diff.changed_items.append(DiffItem(
-                    canonical_name=item_b["canonical_name"],
-                    change_type="mapping_changed",
-                    details={
-                        "original_label": label,
-                        "old_canonical": item_a["canonical_name"],
-                        "new_canonical": item_b["canonical_name"],
-                    },
-                ))
+                diff.changed_items.append(
+                    DiffItem(
+                        canonical_name=item_b["canonical_name"],
+                        change_type="mapping_changed",
+                        details={
+                            "original_label": label,
+                            "old_canonical": item_a["canonical_name"],
+                            "new_canonical": item_b["canonical_name"],
+                        },
+                    )
+                )
                 changed = True
 
             # Confidence changed
             conf_a = item_a.get("confidence")
             conf_b = item_b.get("confidence")
             if conf_a is not None and conf_b is not None and abs(conf_a - conf_b) > 0.001:
-                diff.changed_items.append(DiffItem(
-                    canonical_name=item_b["canonical_name"],
-                    change_type="confidence_changed",
-                    details={
-                        "original_label": label,
-                        "old_confidence": conf_a,
-                        "new_confidence": conf_b,
-                    },
-                ))
+                diff.changed_items.append(
+                    DiffItem(
+                        canonical_name=item_b["canonical_name"],
+                        change_type="confidence_changed",
+                        details={
+                            "original_label": label,
+                            "old_confidence": conf_a,
+                            "new_confidence": conf_b,
+                        },
+                    )
+                )
                 changed = True
 
             # Value changes per period
@@ -258,20 +271,24 @@ class ExtractionDiffer:
                     if min_change_pct is not None and pct is not None and abs(pct) < min_change_pct:
                         continue
 
-                    diff.value_changes.append({
-                        "canonical_name": item_b["canonical_name"],
-                        "original_label": label,
-                        "period": period,
-                        "old_value": va,
-                        "new_value": vb,
-                        "pct_change": pct,
-                    })
+                    diff.value_changes.append(
+                        {
+                            "canonical_name": item_b["canonical_name"],
+                            "original_label": label,
+                            "period": period,
+                            "old_value": va,
+                            "new_value": vb,
+                            "pct_change": pct,
+                        }
+                    )
                     if not changed:
-                        diff.changed_items.append(DiffItem(
-                            canonical_name=item_b["canonical_name"],
-                            change_type="value_changed",
-                            details={"original_label": label},
-                        ))
+                        diff.changed_items.append(
+                            DiffItem(
+                                canonical_name=item_b["canonical_name"],
+                                change_type="value_changed",
+                                details={"original_label": label},
+                            )
+                        )
                         changed = True
 
             if not changed:

@@ -4,6 +4,7 @@ Constraint violation handler for converting SQLAlchemy exceptions to HTTP respon
 Maps database integrity errors to appropriate HTTP status codes
 and user-friendly error messages.
 """
+
 import re
 from typing import Optional
 

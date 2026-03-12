@@ -4,13 +4,13 @@ Unit tests for database constraint violation handler.
 Tests that SQLAlchemy IntegrityErrors are correctly mapped
 to appropriate HTTP status codes.
 """
-import pytest
+
 from unittest.mock import MagicMock
 
 from src.db.constraint_handler import (
-    handle_integrity_error,
-    _extract_constraint_name,
     _extract_column_name,
+    _extract_constraint_name,
+    handle_integrity_error,
 )
 
 
@@ -34,9 +34,7 @@ class TestHandleIntegrityError:
 
     def test_unique_constraint_sqlite(self):
         """SQLite unique constraint should also return 409."""
-        error = self._make_integrity_error(
-            "UNIQUE constraint failed: taxonomy.canonical_name"
-        )
+        error = self._make_integrity_error("UNIQUE constraint failed: taxonomy.canonical_name")
         result = handle_integrity_error(error)
         assert result.status_code == 409
 
@@ -95,9 +93,7 @@ class TestExtractConstraintName:
 
     def test_sqlite_format(self):
         """Extract constraint info from SQLite error."""
-        result = _extract_constraint_name(
-            "unique constraint failed: taxonomy.canonical_name"
-        )
+        result = _extract_constraint_name("unique constraint failed: taxonomy.canonical_name")
         assert result == "taxonomy.canonical_name"
 
     def test_no_match(self):
@@ -111,16 +107,12 @@ class TestExtractColumnName:
 
     def test_postgresql_format(self):
         """Extract column name from PostgreSQL not-null error."""
-        result = _extract_column_name(
-            'null value in column "name" violates not-null constraint'
-        )
+        result = _extract_column_name('null value in column "name" violates not-null constraint')
         assert result == "name"
 
     def test_sqlite_format(self):
         """Extract column name from SQLite not-null error."""
-        result = _extract_column_name(
-            "not null constraint failed: entities.name"
-        )
+        result = _extract_column_name("not null constraint failed: entities.name")
         assert result == "name"
 
     def test_no_match(self):

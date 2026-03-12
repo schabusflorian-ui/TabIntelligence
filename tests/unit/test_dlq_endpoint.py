@@ -1,7 +1,7 @@
 # NOTE: This file overlaps with test_dlq_api.py — both test DLQ API endpoints.
 # Kept intentionally; consolidation deferred.
 """Tests for DLQ admin endpoints (GET/DELETE /api/v1/admin/dlq)."""
-import pytest
+
 from uuid import uuid4
 
 
@@ -61,7 +61,7 @@ class TestDLQList:
                 error="error1",
                 traceback="tb1",
             )
-            entry2 = crud.create_dlq_entry(
+            crud.create_dlq_entry(
                 session,
                 task_id="task-2",
                 task_name="test.task",

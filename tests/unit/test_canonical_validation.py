@@ -1,12 +1,12 @@
 """Tests for canonical_name validation across the pipeline."""
+
 import json
-import pytest
-from decimal import Decimal
-from unittest.mock import MagicMock, patch, Mock, PropertyMock
+from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
-from src.extraction.orchestrator import extract
+import pytest
 
+from src.extraction.orchestrator import extract
 
 # ============================================================================
 # TestGetAllCanonicalNames
@@ -81,7 +81,11 @@ class TestValidateCanonicalNames:
         from src.extraction.utils import validate_canonical_names
 
         mappings = [
-            {"original_label": "Total Revenues", "canonical_name": "total_revenues", "confidence": 0.92},
+            {
+                "original_label": "Total Revenues",
+                "canonical_name": "total_revenues",
+                "confidence": 0.92,
+            },
         ]
         result = validate_canonical_names(mappings, stage="test")
         assert result[0]["canonical_name"] == "unmapped"
@@ -133,7 +137,8 @@ class TestMappingStageValidation:
 
     @pytest.mark.asyncio
     async def test_hallucinated_name_rescued_by_alias(self):
-        """Claude response with hallucinated name gets fixed, then rescued if label is a valid alias."""
+        """Claude response with hallucinated name gets fixed,
+        then rescued if label is a valid alias."""
         from src.extraction.stages.mapping import MappingStage
 
         stage = MappingStage()
@@ -145,7 +150,12 @@ class TestMappingStageValidation:
                     {
                         "sheet_name": "IS",
                         "rows": [
-                            {"label": "Revenue", "hierarchy_level": 1, "is_formula": False, "is_subtotal": False},
+                            {
+                                "label": "Revenue",
+                                "hierarchy_level": 1,
+                                "is_formula": False,
+                                "is_subtotal": False,
+                            },
                         ],
                     }
                 ]
@@ -154,22 +164,30 @@ class TestMappingStageValidation:
 
         # Claude returns a hallucinated canonical name
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(text=json.dumps([
-            {
-                "original_label": "Revenue",
-                "canonical_name": "total_revenues_hallucinated",
-                "confidence": 0.92,
-                "reasoning": "Looks like revenue",
-            }
-        ]))]
+        mock_response.content = [
+            MagicMock(
+                text=json.dumps(
+                    [
+                        {
+                            "original_label": "Revenue",
+                            "canonical_name": "total_revenues_hallucinated",
+                            "confidence": 0.92,
+                            "reasoning": "Looks like revenue",
+                        }
+                    ]
+                )
+            )
+        ]
         mock_response.usage = MagicMock(input_tokens=100, output_tokens=50)
         mock_response.stop_reason = "end_turn"
 
         mock_claude = MagicMock()
         mock_claude.messages.create.return_value = mock_response
 
-        with patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude), \
-             patch.object(stage, "_build_entity_hints", return_value=""):
+        with (
+            patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude),
+            patch.object(stage, "_build_entity_hints", return_value=""),
+        ):
             result = await stage.execute(context)
 
         # The hallucinated name is first reset to "unmapped", then rescued by
@@ -191,7 +209,12 @@ class TestMappingStageValidation:
                     {
                         "sheet_name": "IS",
                         "rows": [
-                            {"label": "Custom Widget Metric", "hierarchy_level": 1, "is_formula": False, "is_subtotal": False},
+                            {
+                                "label": "Custom Widget Metric",
+                                "hierarchy_level": 1,
+                                "is_formula": False,
+                                "is_subtotal": False,
+                            },
                         ],
                     }
                 ]
@@ -200,22 +223,30 @@ class TestMappingStageValidation:
 
         # Claude returns a hallucinated canonical name for a label with no alias
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(text=json.dumps([
-            {
-                "original_label": "Custom Widget Metric",
-                "canonical_name": "widget_hallucinated",
-                "confidence": 0.92,
-                "reasoning": "Widget metric",
-            }
-        ]))]
+        mock_response.content = [
+            MagicMock(
+                text=json.dumps(
+                    [
+                        {
+                            "original_label": "Custom Widget Metric",
+                            "canonical_name": "widget_hallucinated",
+                            "confidence": 0.92,
+                            "reasoning": "Widget metric",
+                        }
+                    ]
+                )
+            )
+        ]
         mock_response.usage = MagicMock(input_tokens=100, output_tokens=50)
         mock_response.stop_reason = "end_turn"
 
         mock_claude = MagicMock()
         mock_claude.messages.create.return_value = mock_response
 
-        with patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude), \
-             patch.object(stage, "_build_entity_hints", return_value=""):
+        with (
+            patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude),
+            patch.object(stage, "_build_entity_hints", return_value=""),
+        ):
             result = await stage.execute(context)
 
         # No alias match for "Custom Widget Metric", so stays unmapped
@@ -237,7 +268,12 @@ class TestMappingStageValidation:
                     {
                         "sheet_name": "IS",
                         "rows": [
-                            {"label": "Revenue", "hierarchy_level": 1, "is_formula": False, "is_subtotal": False},
+                            {
+                                "label": "Revenue",
+                                "hierarchy_level": 1,
+                                "is_formula": False,
+                                "is_subtotal": False,
+                            },
                         ],
                     }
                 ]
@@ -245,22 +281,30 @@ class TestMappingStageValidation:
         }
 
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(text=json.dumps([
-            {
-                "original_label": "Revenue",
-                "canonical_name": "revenue",
-                "confidence": 0.95,
-                "reasoning": "Direct match",
-            }
-        ]))]
+        mock_response.content = [
+            MagicMock(
+                text=json.dumps(
+                    [
+                        {
+                            "original_label": "Revenue",
+                            "canonical_name": "revenue",
+                            "confidence": 0.95,
+                            "reasoning": "Direct match",
+                        }
+                    ]
+                )
+            )
+        ]
         mock_response.usage = MagicMock(input_tokens=100, output_tokens=50)
         mock_response.stop_reason = "end_turn"
 
         mock_claude = MagicMock()
         mock_claude.messages.create.return_value = mock_response
 
-        with patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude), \
-             patch.object(stage, "_build_entity_hints", return_value=""):
+        with (
+            patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude),
+            patch.object(stage, "_build_entity_hints", return_value=""),
+        ):
             result = await stage.execute(context)
 
         assert result["mappings"][0]["canonical_name"] == "revenue"
@@ -299,9 +343,7 @@ class TestPersistenceGuard:
                 },
             ]
 
-            count = bulk_upsert_entity_patterns(
-                db, entity.id, mappings, min_confidence=0.8
-            )
+            count = bulk_upsert_entity_patterns(db, entity.id, mappings, min_confidence=0.8)
 
             # Only the valid one should be persisted
             assert count == 1
@@ -488,7 +530,6 @@ class TestFullPipelineHallucinationCascade:
         ]
 
         mock_client = MagicMock()
-        call_count = {"mapping": 0}
 
         def create_mock_response(model, max_tokens, messages):
             prompt_text = ""
@@ -506,8 +547,13 @@ class TestFullPipelineHallucinationCascade:
                 data = triage_response
             elif "validation flags" in prompt_text.lower():
                 data = [
-                    {"flag_index": 0, "assessment": "acceptable", "confidence": 0.8,
-                     "reasoning": "Within tolerance", "suggested_fix": None}
+                    {
+                        "flag_index": 0,
+                        "assessment": "acceptable",
+                        "confidence": 0.8,
+                        "reasoning": "Within tolerance",
+                        "suggested_fix": None,
+                    }
                 ]
             elif "could not be confidently mapped" in prompt_text.lower():
                 # Stage 5: Enhanced mapping — uniquely contains this phrase
@@ -555,10 +601,22 @@ class TestFullPipelineHallucinationCascade:
                             {
                                 "row_index": 1,
                                 "cells": [
-                                    {"ref": "A1", "value": "Revenue", "formula": None,
-                                     "is_bold": True, "indent_level": 0, "number_format": "General"},
-                                    {"ref": "B1", "value": 100000, "formula": None,
-                                     "is_bold": False, "indent_level": 0, "number_format": "#,##0"},
+                                    {
+                                        "ref": "A1",
+                                        "value": "Revenue",
+                                        "formula": None,
+                                        "is_bold": True,
+                                        "indent_level": 0,
+                                        "number_format": "General",
+                                    },
+                                    {
+                                        "ref": "B1",
+                                        "value": 100000,
+                                        "formula": None,
+                                        "is_bold": False,
+                                        "indent_level": 0,
+                                        "number_format": "#,##0",
+                                    },
                                 ],
                             }
                         ],
@@ -570,18 +628,29 @@ class TestFullPipelineHallucinationCascade:
             }
 
         def mock_structured_to_markdown(structured):
-            return "## Sheet: Income Statement\n| Row | Label | Value |\n|---|---|---|\n| 1 | Revenue | 100000 |\n"
+            return (
+                "## Sheet: Income Statement\n"
+                "| Row | Label | Value |\n"
+                "|---|---|---|\n"
+                "| 1 | Revenue | 100000 |\n"
+            )
 
-        monkeypatch.setattr("src.extraction.stages.parsing.ParsingStage._excel_to_structured_repr",
-                            staticmethod(mock_excel_to_structured_repr))
-        monkeypatch.setattr("src.extraction.stages.parsing.ParsingStage._structured_to_markdown",
-                            staticmethod(mock_structured_to_markdown))
+        monkeypatch.setattr(
+            "src.extraction.stages.parsing.ParsingStage._excel_to_structured_repr",
+            staticmethod(mock_excel_to_structured_repr),
+        )
+        monkeypatch.setattr(
+            "src.extraction.stages.parsing.ParsingStage._structured_to_markdown",
+            staticmethod(mock_structured_to_markdown),
+        )
         monkeypatch.setattr("src.extraction.claude_client.get_claude_client", mock_get_client)
         monkeypatch.setattr("src.extraction.stages.parsing.get_claude_client", mock_get_client)
         monkeypatch.setattr("src.extraction.stages.triage.get_claude_client", mock_get_client)
         monkeypatch.setattr("src.extraction.stages.mapping.get_claude_client", mock_get_client)
         monkeypatch.setattr("src.extraction.stages.validation.get_claude_client", mock_get_client)
-        monkeypatch.setattr("src.extraction.stages.enhanced_mapping.get_claude_client", mock_get_client)
+        monkeypatch.setattr(
+            "src.extraction.stages.enhanced_mapping.get_claude_client", mock_get_client
+        )
         monkeypatch.setattr("src.lineage.tracker.LineageTracker.save_to_db", mock_save_to_db)
 
         return mock_client
@@ -598,10 +667,7 @@ class TestFullPipelineHallucinationCascade:
         assert len(result["line_items"]) > 0
 
         # Build lookup of canonical names in final output
-        canonical_names = {
-            item["canonical_name"]
-            for item in result["line_items"]
-        }
+        canonical_names = {item["canonical_name"] for item in result["line_items"]}
 
         # "cost_of_sales_hallucinated" must NOT appear in final output
         assert "cost_of_sales_hallucinated" not in canonical_names

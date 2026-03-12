@@ -1,13 +1,11 @@
 """Unit tests for section_detector.py — section detection for multi-statement sheets."""
-import pytest
 
 from src.extraction.section_detector import (
-    SheetSection,
     SectionDetector,
     _guess_category,
+    _has_distinct_fill,
     _is_content_header_row,
     _is_full_width_bold,
-    _has_distinct_fill,
     _is_full_width_merge,
 )
 
@@ -28,22 +26,28 @@ def _make_row(row_index, label=None, bold=False, formula=None, is_subtotal=False
     """Build a minimal row dict."""
     cells = []
     if label is not None:
-        cells.append({
-            "ref": f"A{row_index}",
-            "value": label,
-            "is_bold": bold,
-        })
+        cells.append(
+            {
+                "ref": f"A{row_index}",
+                "value": label,
+                "is_bold": bold,
+            }
+        )
     if formula:
-        cells.append({
-            "ref": f"B{row_index}",
-            "value": 100,
-            "formula": formula,
-        })
+        cells.append(
+            {
+                "ref": f"B{row_index}",
+                "value": 100,
+                "formula": formula,
+            }
+        )
     else:
-        cells.append({
-            "ref": f"B{row_index}",
-            "value": 100,
-        })
+        cells.append(
+            {
+                "ref": f"B{row_index}",
+                "value": 100,
+            }
+        )
 
     row = {"row_index": row_index, "cells": cells}
     if is_subtotal:
@@ -320,18 +324,27 @@ class TestSectionSummaryFields:
     def test_label_column_used(self):
         """Section detector respects label_column metadata."""
         rows = [
-            {"row_index": 1, "cells": [
-                {"ref": "A1", "value": 1},
-                {"ref": "B1", "value": "Revenue", "is_bold": True},
-            ]},
-            {"row_index": 2, "cells": [
-                {"ref": "A2", "value": 2},
-                {"ref": "B2", "value": "COGS"},
-            ]},
-            {"row_index": 3, "cells": [
-                {"ref": "A3", "value": 3},
-                {"ref": "B3", "value": "Profit"},
-            ]},
+            {
+                "row_index": 1,
+                "cells": [
+                    {"ref": "A1", "value": 1},
+                    {"ref": "B1", "value": "Revenue", "is_bold": True},
+                ],
+            },
+            {
+                "row_index": 2,
+                "cells": [
+                    {"ref": "A2", "value": 2},
+                    {"ref": "B2", "value": "COGS"},
+                ],
+            },
+            {
+                "row_index": 3,
+                "cells": [
+                    {"ref": "A3", "value": 3},
+                    {"ref": "B3", "value": "Profit"},
+                ],
+            },
         ]
         sheet = _make_sheet(rows, label_column="B")
         detector = SectionDetector()
@@ -345,8 +358,15 @@ class TestSectionSummaryFields:
 # ============================================================================
 
 
-def _make_row_with_format(row_index, label=None, bold=False, fill_color=None,
-                          is_merged=False, merge_origin=None, num_cells=3):
+def _make_row_with_format(
+    row_index,
+    label=None,
+    bold=False,
+    fill_color=None,
+    is_merged=False,
+    merge_origin=None,
+    num_cells=3,
+):
     """Build a row dict with formatting metadata."""
     cells = []
     for col_idx in range(num_cells):
@@ -401,8 +421,11 @@ class TestFormatBasedBoundaries:
         """Merged row creates boundary."""
         rows = (
             [_make_row(i, f"Row {i}") for i in range(1, 6)]
-            + [_make_row_with_format(6, "Debt Schedule", is_merged=True,
-                                      merge_origin="A6", num_cells=3)]
+            + [
+                _make_row_with_format(
+                    6, "Debt Schedule", is_merged=True, merge_origin="A6", num_cells=3
+                )
+            ]
             + [_make_row(i, f"Row {i}") for i in range(7, 12)]
         )
         detector = SectionDetector()
@@ -412,10 +435,7 @@ class TestFormatBasedBoundaries:
 
     def test_no_false_positive_same_fill(self):
         """Uniform fill colour does NOT create boundaries."""
-        rows = [
-            _make_row_with_format(i, f"Row {i}", fill_color="4472c4")
-            for i in range(1, 11)
-        ]
+        rows = [_make_row_with_format(i, f"Row {i}", fill_color="4472c4") for i in range(1, 11)]
         detector = SectionDetector()
         result = detector.detect_sections(_make_sheet(rows))
         assert len(result) == 1
@@ -457,15 +477,11 @@ class TestHelperFunctions:
     """Test the new helper functions directly."""
 
     def test_is_full_width_bold_true(self):
-        row = {"cells": [
-            {"is_bold": True}, {"is_bold": True}, {"is_bold": True}
-        ]}
+        row = {"cells": [{"is_bold": True}, {"is_bold": True}, {"is_bold": True}]}
         assert _is_full_width_bold(row) is True
 
     def test_is_full_width_bold_false_mixed(self):
-        row = {"cells": [
-            {"is_bold": True}, {"is_bold": False}, {"is_bold": True}
-        ]}
+        row = {"cells": [{"is_bold": True}, {"is_bold": False}, {"is_bold": True}]}
         assert _is_full_width_bold(row) is False
 
     def test_is_full_width_bold_single_cell(self):
@@ -474,21 +490,13 @@ class TestHelperFunctions:
         assert _is_full_width_bold(row) is False
 
     def test_has_distinct_fill_different(self):
-        row = {"cells": [
-            {"fill_color": "ff0000"}, {"fill_color": "ff0000"}
-        ]}
-        prev = {"cells": [
-            {"fill_color": "ffffff"}, {"fill_color": "ffffff"}
-        ]}
+        row = {"cells": [{"fill_color": "ff0000"}, {"fill_color": "ff0000"}]}
+        prev = {"cells": [{"fill_color": "ffffff"}, {"fill_color": "ffffff"}]}
         assert _has_distinct_fill(row, prev) is True
 
     def test_has_distinct_fill_same(self):
-        row = {"cells": [
-            {"fill_color": "ffffff"}, {"fill_color": "ffffff"}
-        ]}
-        prev = {"cells": [
-            {"fill_color": "ffffff"}, {"fill_color": "ffffff"}
-        ]}
+        row = {"cells": [{"fill_color": "ffffff"}, {"fill_color": "ffffff"}]}
+        prev = {"cells": [{"fill_color": "ffffff"}, {"fill_color": "ffffff"}]}
         assert _has_distinct_fill(row, prev) is False
 
     def test_has_distinct_fill_no_fill(self):
@@ -497,24 +505,26 @@ class TestHelperFunctions:
         assert _has_distinct_fill(row, prev) is False
 
     def test_is_full_width_merge_true(self):
-        row = {"cells": [
-            {"is_merged": True, "merge_origin": "A1"},
-            {"is_merged": True, "merge_origin": "A1"},
-            {"is_merged": True, "merge_origin": "A1"},
-        ]}
+        row = {
+            "cells": [
+                {"is_merged": True, "merge_origin": "A1"},
+                {"is_merged": True, "merge_origin": "A1"},
+                {"is_merged": True, "merge_origin": "A1"},
+            ]
+        }
         assert _is_full_width_merge(row) is True
 
     def test_is_full_width_merge_false_different_origins(self):
-        row = {"cells": [
-            {"is_merged": True, "merge_origin": "A1"},
-            {"is_merged": True, "merge_origin": "C1"},
-        ]}
+        row = {
+            "cells": [
+                {"is_merged": True, "merge_origin": "A1"},
+                {"is_merged": True, "merge_origin": "C1"},
+            ]
+        }
         assert _is_full_width_merge(row) is False
 
     def test_is_full_width_merge_false_not_merged(self):
-        row = {"cells": [
-            {"value": "A"}, {"value": "B"}, {"value": "C"}
-        ]}
+        row = {"cells": [{"value": "A"}, {"value": "B"}, {"value": "C"}]}
         assert _is_full_width_merge(row) is False
 
 
@@ -523,31 +533,43 @@ class TestContentBasedFallback:
 
     def test_plain_text_header_detected(self):
         """Unformatted 'Income Statement' with no numeric values → True."""
-        row = {"row_index": 5, "cells": [
-            {"ref": "A5", "value": "Income Statement"},
-        ]}
+        row = {
+            "row_index": 5,
+            "cells": [
+                {"ref": "A5", "value": "Income Statement"},
+            ],
+        }
         assert _is_content_header_row(row, "A") is True
 
     def test_data_row_not_detected(self):
         """'Cash Flow' with numeric values → False (data row, not header)."""
-        row = {"row_index": 5, "cells": [
-            {"ref": "A5", "value": "Cash Flow"},
-            {"ref": "B5", "value": 50000},
-        ]}
+        row = {
+            "row_index": 5,
+            "cells": [
+                {"ref": "A5", "value": "Cash Flow"},
+                {"ref": "B5", "value": 50000},
+            ],
+        }
         assert _is_content_header_row(row, "A") is False
 
     def test_line_item_not_detected(self):
         """'Revenue' is not a section keyword → False."""
-        row = {"row_index": 5, "cells": [
-            {"ref": "A5", "value": "Revenue"},
-        ]}
+        row = {
+            "row_index": 5,
+            "cells": [
+                {"ref": "A5", "value": "Revenue"},
+            ],
+        }
         assert _is_content_header_row(row, "A") is False
 
     def test_empty_label_not_detected(self):
         """Row with no label → False."""
-        row = {"row_index": 5, "cells": [
-            {"ref": "A5", "value": None},
-        ]}
+        row = {
+            "row_index": 5,
+            "cells": [
+                {"ref": "A5", "value": None},
+            ],
+        }
         assert _is_content_header_row(row, "A") is False
 
     def test_content_fallback_creates_boundary(self):
@@ -556,16 +578,20 @@ class TestContentBasedFallback:
             # Section 1: rows 1-5 (no gap, no formatting at all)
             [_make_row(i, f"Row {i}") for i in range(1, 6)]
             # Row 6: plain text "Balance Sheet" — no bold, no gap, no color
-            + [{"row_index": 6, "cells": [
-                {"ref": "A6", "value": "Balance Sheet"},
-            ]}]
+            + [
+                {
+                    "row_index": 6,
+                    "cells": [
+                        {"ref": "A6", "value": "Balance Sheet"},
+                    ],
+                }
+            ]
             + [_make_row(i, f"Row {i}") for i in range(7, 12)]
         )
         detector = SectionDetector()
         result = detector.detect_sections(_make_sheet(rows))
         assert len(result) == 2, (
-            f"Expected 2 sections, got {len(result)}: "
-            f"{[s.label for s in result]}"
+            f"Expected 2 sections, got {len(result)}: {[s.label for s in result]}"
         )
         assert result[1].label == "Balance Sheet"
         assert result[1].category_hint == "balance_sheet"
@@ -588,10 +614,15 @@ class TestContentBasedFallback:
         rows = (
             [_make_row(i, f"Row {i}") for i in range(1, 6)]
             # Row 6: keyword but has numeric value
-            + [{"row_index": 6, "cells": [
-                {"ref": "A6", "value": "Profit & Loss"},
-                {"ref": "B6", "value": 100000},
-            ]}]
+            + [
+                {
+                    "row_index": 6,
+                    "cells": [
+                        {"ref": "A6", "value": "Profit & Loss"},
+                        {"ref": "B6", "value": 100000},
+                    ],
+                }
+            ]
             + [_make_row(i, f"Row {i}") for i in range(7, 12)]
         )
         detector = SectionDetector()

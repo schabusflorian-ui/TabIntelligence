@@ -13,7 +13,6 @@ from src.extraction.base import ExtractionStage, PipelineContext
 from src.extraction.claude_client import get_claude_client
 from src.extraction.prompts import get_prompt
 from src.extraction.taxonomy_loader import (
-    TAXONOMY_PATH,  # Re-exported for backward compat
     format_taxonomy_for_prompt,
     get_alias_to_canonicals_with_promoted,
     get_canonical_to_category,
@@ -111,12 +110,8 @@ def _disambiguate_by_sheet_category(
             continue
 
         # Check if current canonical already matches one of the expected categories
-        current_cat = next(
-            (cat for c, cat in candidates if c == current_canonical), None
-        )
-        current_matches_sheet = current_cat and any(
-            ec == current_cat for _, ec in sheet_categories
-        )
+        current_cat = next((cat for c, cat in candidates if c == current_canonical), None)
+        current_matches_sheet = current_cat and any(ec == current_cat for _, ec in sheet_categories)
 
         if not current_matches_sheet:
             # Current canonical is in the WRONG category — find the right one
@@ -148,18 +143,13 @@ def _disambiguate_by_sheet_category(
             matching = [c for c in candidates if c[1] == expected_category]
             if len(matching) > 1:
                 # Multiple matches in expected category — prefer closest canonical name
-                label_normalized = (
-                    label.lower().replace("&", "and").replace("-", " ").strip()
-                )
+                label_normalized = label.lower().replace("&", "and").replace("-", " ").strip()
                 best, best_score = None, -1
                 for canonical, category in matching:
                     canonical_words = canonical.replace("_", " ")
                     if canonical_words == label_normalized:
                         score = 100
-                    elif (
-                        canonical_words in label_normalized
-                        or label_normalized in canonical_words
-                    ):
+                    elif canonical_words in label_normalized or label_normalized in canonical_words:
                         score = 50 + len(canonical_words)
                     else:
                         score = 0

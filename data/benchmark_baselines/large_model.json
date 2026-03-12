@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-03-12T09:48:49.116130+00:00",
+  "timestamp": "2026-03-12T12:34:57.316262+00:00",
   "file": "large_model.xlsx",
-  "duration_seconds": 416.47,
+  "duration_seconds": 576.99,
   "sheets": [
     "Income Statement",
     "Balance Sheet",
@@ -25,7 +25,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Core Income Statement header section with standard P&L structure"
+      "reasoning": "Core income statement header section with clear financial statement structure"
     },
     {
       "sheet_name": "Income Statement",
@@ -35,7 +35,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Revenue section of Income Statement with product breakdowns and subtotals"
+      "reasoning": "Revenue section of income statement with product breakdown and subtotals"
     },
     {
       "sheet_name": "Income Statement",
@@ -45,7 +45,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Operating expenses section of Income Statement with standard OpEx categories"
+      "reasoning": "Operating expense section of income statement with detailed expense categories"
     },
     {
       "sheet_name": "Income Statement",
@@ -55,7 +55,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Operating expenses total line in Income Statement"
+      "reasoning": "Total operating expenses subtotal line - critical income statement component"
     },
     {
       "sheet_name": "Income Statement",
@@ -65,7 +65,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Operating income and below-the-line items in Income Statement"
+      "reasoning": "Operating income and non-operating items section of income statement"
     },
     {
       "sheet_name": "Income Statement",
@@ -75,7 +75,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Pre-tax income and tax expense section of Income Statement"
+      "reasoning": "Pre-tax income and tax expense section of income statement"
     },
     {
       "sheet_name": "Income Statement",
@@ -85,7 +85,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Bottom line Net Income in Income Statement"
+      "reasoning": "Net income bottom line - critical income statement component"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -95,7 +95,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Assets section of Balance Sheet with current assets breakdown"
+      "reasoning": "Balance sheet assets section with current assets breakdown"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -105,7 +105,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Current assets total in Balance Sheet"
+      "reasoning": "Total current assets subtotal - key balance sheet line"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -115,7 +115,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Non-current assets section of Balance Sheet"
+      "reasoning": "Non-current assets section including PP&E and intangibles"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -125,7 +125,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Non-current assets total in Balance Sheet"
+      "reasoning": "Total non-current assets subtotal - key balance sheet line"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -135,7 +135,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Total assets line in Balance Sheet"
+      "reasoning": "Total assets - critical balance sheet balancing figure"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -145,7 +145,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Current liabilities section of Balance Sheet"
+      "reasoning": "Current liabilities section with detailed breakdown"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -155,7 +155,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Current liabilities total in Balance Sheet"
+      "reasoning": "Total current liabilities subtotal - key balance sheet line"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -165,7 +165,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Non-current liabilities section of Balance Sheet"
+      "reasoning": "Non-current liabilities including long-term debt"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -175,7 +175,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Non-current liabilities total in Balance Sheet"
+      "reasoning": "Total non-current liabilities subtotal - key balance sheet line"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -185,7 +185,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Total liabilities line in Balance Sheet"
+      "reasoning": "Total liabilities - critical balance sheet component"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -195,7 +195,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Shareholders' equity section of Balance Sheet"
+      "reasoning": "Shareholders' equity section with detailed breakdown"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -205,7 +205,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Total shareholders' equity in Balance Sheet"
+      "reasoning": "Total shareholders' equity - critical balance sheet component"
     },
     {
       "sheet_name": "Balance Sheet",
@@ -215,7 +215,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Balancing line for Total Liabilities & Equity in Balance Sheet"
+      "reasoning": "Total liabilities & equity - critical balance sheet balancing figure"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -225,7 +225,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Operating activities section of Cash Flow Statement with working capital changes"
+      "reasoning": "Operating activities section of cash flow statement with detailed cash flow items"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -235,7 +235,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Operating cash flow total in Cash Flow Statement"
+      "reasoning": "Cash from operations subtotal - key cash flow statement line"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -245,7 +245,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Investing activities section of Cash Flow Statement"
+      "reasoning": "Investing activities section of cash flow statement"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -255,7 +255,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Investing cash flow total in Cash Flow Statement"
+      "reasoning": "Cash from investing subtotal - key cash flow statement line"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -265,7 +265,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Financing activities section of Cash Flow Statement"
+      "reasoning": "Financing activities section of cash flow statement"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -275,7 +275,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Financing cash flow total in Cash Flow Statement"
+      "reasoning": "Cash from financing subtotal - key cash flow statement line"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -285,7 +285,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Net cash change and cash reconciliation in Cash Flow Statement"
+      "reasoning": "Net change in cash calculation - critical cash flow statement component"
     },
     {
       "sheet_name": "Cash Flow Statement",
@@ -295,7 +295,7 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Ending cash balance in Cash Flow Statement"
+      "reasoning": "Ending cash balance - critical cash flow statement bottom line"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -305,7 +305,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Header section of debt schedule supporting balance sheet debt balances"
+      "reasoning": "Debt schedule header - supporting schedule for debt tracking"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -315,7 +315,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Term Loan A debt service calculations with draws and repayments"
+      "reasoning": "Term Loan A details with draws and repayments - supporting debt schedule"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -325,7 +325,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Term Loan A ending balance and interest calculations"
+      "reasoning": "Debt ending balance and interest calculations - supporting schedule"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -335,7 +335,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Term Loan B debt service calculations with draws and repayments"
+      "reasoning": "Term Loan B details with draws and repayments - supporting debt schedule"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -345,7 +345,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Term Loan B ending balance and interest calculations"
+      "reasoning": "Debt ending balance and interest calculations - supporting schedule"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -355,7 +355,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Revolving credit facility debt service calculations"
+      "reasoning": "Revolving credit facility details - supporting debt schedule"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -365,7 +365,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Revolving credit facility ending balance and interest calculations"
+      "reasoning": "Credit facility ending balance and interest - supporting schedule"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -375,7 +375,7 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Total debt balance aggregation for balance sheet"
+      "reasoning": "Total debt summary - key supporting schedule subtotal"
     },
     {
       "sheet_name": "Debt Schedule",
@@ -385,167 +385,167 @@
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.85,
-      "reasoning": "Total interest expense aggregation for income statement"
+      "reasoning": "Total interest expense - key supporting schedule subtotal"
     },
     {
       "sheet_name": "Revenue Build",
       "section": "Revenue Build",
       "section_start_row": 1,
       "section_end_row": 6,
-      "tier": 3,
-      "decision": "PROCESS_LOW",
-      "confidence": 0.75,
-      "reasoning": "Revenue detail build-up by product and geography - analytical supporting schedule"
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Product A revenue breakdown by geography - supporting revenue schedule"
     },
     {
       "sheet_name": "Revenue Build",
       "section": "Total Product A",
       "section_start_row": 7,
       "section_end_row": 7,
-      "tier": 3,
-      "decision": "PROCESS_LOW",
-      "confidence": 0.75,
-      "reasoning": "Product A revenue subtotal in revenue build analysis"
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Product A total - revenue build subtotal"
     },
     {
       "sheet_name": "Revenue Build",
       "section": "Product B",
       "section_start_row": 9,
       "section_end_row": 12,
-      "tier": 3,
-      "decision": "PROCESS_LOW",
-      "confidence": 0.75,
-      "reasoning": "Product B revenue build-up by geography - analytical detail"
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Product B revenue breakdown by geography - supporting revenue schedule"
     },
     {
       "sheet_name": "Revenue Build",
       "section": "Total Product B",
       "section_start_row": 13,
       "section_end_row": 13,
-      "tier": 3,
-      "decision": "PROCESS_LOW",
-      "confidence": 0.75,
-      "reasoning": "Product B revenue subtotal in revenue build analysis"
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Product B total - revenue build subtotal"
     },
     {
       "sheet_name": "Revenue Build",
       "section": "Product C",
       "section_start_row": 15,
       "section_end_row": 17,
-      "tier": 3,
-      "decision": "PROCESS_LOW",
-      "confidence": 0.75,
-      "reasoning": "Product C revenue build-up - analytical detail"
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Product C revenue breakdown - supporting revenue schedule"
     },
     {
       "sheet_name": "Revenue Build",
       "section": "Total Product C",
       "section_start_row": 18,
       "section_end_row": 18,
-      "tier": 3,
-      "decision": "PROCESS_LOW",
-      "confidence": 0.75,
-      "reasoning": "Product C revenue subtotal in revenue build analysis"
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Product C total - revenue build subtotal"
     },
     {
       "sheet_name": "Revenue Build",
       "section": "Licensing",
       "section_start_row": 20,
       "section_end_row": 20,
-      "tier": 3,
-      "decision": "PROCESS_LOW",
-      "confidence": 0.75,
-      "reasoning": "Licensing revenue detail - analytical component"
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Licensing revenue line - supporting revenue schedule"
     },
     {
       "sheet_name": "Revenue Build",
       "section": "Total Licensing",
       "section_start_row": 21,
       "section_end_row": 21,
-      "tier": 3,
-      "decision": "PROCESS_LOW",
-      "confidence": 0.75,
-      "reasoning": "Licensing revenue subtotal in revenue build analysis"
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Licensing total - revenue build subtotal"
     },
     {
       "sheet_name": "Revenue Build",
       "section": "Total Revenue",
       "section_start_row": 23,
       "section_end_row": 23,
-      "tier": 3,
-      "decision": "PROCESS_LOW",
-      "confidence": 0.75,
-      "reasoning": "Total revenue aggregation from detailed build-up"
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Total revenue - key revenue build summary"
     },
     {
       "sheet_name": "OpEx Build",
       "section": "OpEx Build",
       "section_start_row": 1,
       "section_end_row": 8,
-      "tier": 3,
-      "decision": "PROCESS_LOW",
-      "confidence": 0.75,
-      "reasoning": "Sales & Marketing expense build-up - analytical detail supporting P&L"
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Sales & Marketing OpEx breakdown - supporting expense schedule"
     },
     {
       "sheet_name": "OpEx Build",
       "section": "Total Sales & Marketing",
       "section_start_row": 9,
       "section_end_row": 9,
-      "tier": 3,
-      "decision": "PROCESS_LOW",
-      "confidence": 0.75,
-      "reasoning": "Sales & Marketing total from detailed build-up"
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Sales & Marketing total - OpEx build subtotal"
     },
     {
       "sheet_name": "OpEx Build",
       "section": "Research & Development",
       "section_start_row": 11,
       "section_end_row": 15,
-      "tier": 3,
-      "decision": "PROCESS_LOW",
-      "confidence": 0.75,
-      "reasoning": "R&D expense build-up - analytical detail supporting P&L"
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "R&D OpEx breakdown - supporting expense schedule"
     },
     {
       "sheet_name": "OpEx Build",
       "section": "Total R&D",
       "section_start_row": 16,
       "section_end_row": 16,
-      "tier": 3,
-      "decision": "PROCESS_LOW",
-      "confidence": 0.75,
-      "reasoning": "R&D total from detailed build-up"
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "R&D total - OpEx build subtotal"
     },
     {
       "sheet_name": "OpEx Build",
       "section": "General & Administrative",
       "section_start_row": 18,
       "section_end_row": 23,
-      "tier": 3,
-      "decision": "PROCESS_LOW",
-      "confidence": 0.75,
-      "reasoning": "G&A expense build-up - analytical detail supporting P&L"
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "G&A OpEx breakdown - supporting expense schedule"
     },
     {
       "sheet_name": "OpEx Build",
       "section": "Total G&A",
       "section_start_row": 24,
       "section_end_row": 24,
-      "tier": 3,
-      "decision": "PROCESS_LOW",
-      "confidence": 0.75,
-      "reasoning": "G&A total from detailed build-up"
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "G&A total - OpEx build subtotal"
     },
     {
       "sheet_name": "OpEx Build",
       "section": "Total Cash Operating Expenses",
       "section_start_row": 26,
       "section_end_row": 26,
-      "tier": 3,
-      "decision": "PROCESS_LOW",
-      "confidence": 0.75,
-      "reasoning": "Total cash OpEx aggregation from detailed build-up"
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Total cash OpEx - key expense build summary"
     },
     {
       "sheet_name": "Working Capital",
@@ -554,8 +554,8 @@
       "section_end_row": 12,
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
-      "confidence": 0.8,
-      "reasoning": "Working capital schedule with AR, inventory, and AP calculations supporting balance sheet"
+      "confidence": 0.85,
+      "reasoning": "Working capital components with days calculations - supporting schedule"
     },
     {
       "sheet_name": "Working Capital",
@@ -564,8 +564,8 @@
       "section_end_row": 14,
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
-      "confidence": 0.8,
-      "reasoning": "Net working capital total supporting balance sheet"
+      "confidence": 0.85,
+      "reasoning": "Net working capital total - key supporting schedule subtotal"
     },
     {
       "sheet_name": "Working Capital",
@@ -574,8 +574,8 @@
       "section_end_row": 15,
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
-      "confidence": 0.8,
-      "reasoning": "Working capital change calculation for cash flow statement"
+      "confidence": 0.85,
+      "reasoning": "Change in NWC for cash flow - supporting schedule calculation"
     },
     {
       "sheet_name": "D&A Schedule",
@@ -584,8 +584,8 @@
       "section_end_row": 4,
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
-      "confidence": 0.8,
-      "reasoning": "Depreciation schedule supporting P&L and balance sheet fixed assets"
+      "confidence": 0.85,
+      "reasoning": "Depreciation components - supporting D&A schedule"
     },
     {
       "sheet_name": "D&A Schedule",
@@ -594,8 +594,8 @@
       "section_end_row": 8,
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
-      "confidence": 0.8,
-      "reasoning": "Depreciation and amortization totals for P&L"
+      "confidence": 0.85,
+      "reasoning": "Total depreciation and amortization components - supporting schedule"
     },
     {
       "sheet_name": "D&A Schedule",
@@ -604,8 +604,8 @@
       "section_end_row": 9,
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
-      "confidence": 0.8,
-      "reasoning": "Total amortization for P&L"
+      "confidence": 0.85,
+      "reasoning": "Total amortization subtotal - supporting schedule"
     },
     {
       "sheet_name": "D&A Schedule",
@@ -614,38 +614,38 @@
       "section_end_row": 12,
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
-      "confidence": 0.8,
-      "reasoning": "Total D&A for P&L and cash flow statement"
+      "confidence": 0.85,
+      "reasoning": "Total D&A summary - key supporting schedule total"
     },
     {
       "sheet_name": "Tax Schedule",
       "section": "Tax Schedule",
       "section_start_row": 1,
       "section_end_row": 2,
-      "tier": 3,
-      "decision": "PROCESS_LOW",
-      "confidence": 0.7,
-      "reasoning": "Tax schedule header - analytical supporting schedule"
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Tax schedule header - supporting tax calculation schedule"
     },
     {
       "sheet_name": "Tax Schedule",
       "section": "Pretax Income",
       "section_start_row": 3,
       "section_end_row": 10,
-      "tier": 3,
-      "decision": "PROCESS_LOW",
-      "confidence": 0.7,
-      "reasoning": "Tax calculation details with rates and components - analytical"
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Tax calculation components with rates - supporting tax schedule"
     },
     {
       "sheet_name": "Tax Schedule",
       "section": "Total Tax Expense",
       "section_start_row": 11,
       "section_end_row": 11,
-      "tier": 3,
-      "decision": "PROCESS_LOW",
-      "confidence": 0.7,
-      "reasoning": "Total tax expense for P&L from detailed calculations"
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "confidence": 0.85,
+      "reasoning": "Total tax expense - key supporting schedule subtotal"
     },
     {
       "sheet_name": "Assumptions",
@@ -655,7 +655,7 @@
       "tier": 3,
       "decision": "PROCESS_LOW",
       "confidence": 0.75,
-      "reasoning": "Key assumptions and drivers for model - analytical input schedule"
+      "reasoning": "Financial assumptions and ratios - analytical inputs with lower accuracy target"
     },
     {
       "sheet_name": "Assumptions",
@@ -665,7 +665,7 @@
       "tier": 3,
       "decision": "PROCESS_LOW",
       "confidence": 0.75,
-      "reasoning": "Working capital assumptions and ratios - analytical drivers"
+      "reasoning": "Working capital and other ratio assumptions - analytical drivers"
     },
     {
       "sheet_name": "Returns Analysis",
@@ -675,7 +675,7 @@
       "tier": 3,
       "decision": "PROCESS_LOW",
       "confidence": 0.75,
-      "reasoning": "Returns analysis with equity and dividend calculations - analytical"
+      "reasoning": "Investment returns inputs - analytical calculations with lower accuracy target"
     },
     {
       "sheet_name": "Returns Analysis",
@@ -685,53 +685,53 @@
       "tier": 3,
       "decision": "PROCESS_LOW",
       "confidence": 0.75,
-      "reasoning": "Return metrics (MOIC, ROE, ROIC) - analytical calculations"
+      "reasoning": "Returns metrics (MOIC, ROE, ROIC) - analytical calculations"
     },
     {
       "sheet_name": "Cover Page",
       "tier": 4,
       "decision": "SKIP",
-      "confidence": 0.9,
-      "reasoning": "Cover page with no data rows - presentation sheet with title only",
+      "confidence": 0.95,
+      "reasoning": "Cover page with no data rows - presentation sheet with no financial content",
       "section": null,
       "section_start_row": null,
       "section_end_row": null
     }
   ],
   "line_items_count": 166,
-  "tokens_used": 107222,
-  "cost_usd": 0.841866,
+  "tokens_used": 108901,
+  "cost_usd": 0.844071,
   "validation": {
     "period_results": {
       "FY2022A": {
-        "total_checks": 115,
+        "total_checks": 114,
         "passed": 107,
-        "failed": 8,
-        "success_rate": 0.93
+        "failed": 7,
+        "success_rate": 0.939
       },
       "FY2023A": {
-        "total_checks": 119,
+        "total_checks": 118,
         "passed": 111,
-        "failed": 8,
-        "success_rate": 0.933
+        "failed": 7,
+        "success_rate": 0.941
       },
       "FY2024E": {
-        "total_checks": 120,
+        "total_checks": 119,
         "passed": 112,
-        "failed": 8,
-        "success_rate": 0.933
+        "failed": 7,
+        "success_rate": 0.941
       },
       "FY2025E": {
-        "total_checks": 119,
+        "total_checks": 118,
         "passed": 111,
-        "failed": 8,
-        "success_rate": 0.933
+        "failed": 7,
+        "success_rate": 0.941
       },
       "FY2026E": {
-        "total_checks": 119,
+        "total_checks": 118,
         "passed": 111,
-        "failed": 8,
-        "success_rate": 0.933
+        "failed": 7,
+        "success_rate": 0.941
       }
     },
     "flags": [
@@ -799,15 +799,6 @@
         "expected": "negative"
       },
       {
-        "period": "FY2022A",
-        "severity": "warning",
-        "item": "current_tax_expense",
-        "rule": "sign_convention",
-        "message": "current_tax_expense is positive (28600) but typically negative",
-        "actual": "28600",
-        "expected": "negative"
-      },
-      {
         "period": "FY2023A",
         "severity": "error",
         "item": "cogs",
@@ -868,15 +859,6 @@
         "rule": "sign_convention",
         "message": "depreciation_and_amortization is positive (20900) but typically negative",
         "actual": "20900",
-        "expected": "negative"
-      },
-      {
-        "period": "FY2023A",
-        "severity": "warning",
-        "item": "current_tax_expense",
-        "rule": "sign_convention",
-        "message": "current_tax_expense is positive (30756) but typically negative",
-        "actual": "30756",
         "expected": "negative"
       },
       {
@@ -943,15 +925,6 @@
         "expected": "negative"
       },
       {
-        "period": "FY2024E",
-        "severity": "warning",
-        "item": "current_tax_expense",
-        "rule": "sign_convention",
-        "message": "current_tax_expense is positive (33027) but typically negative",
-        "actual": "33027",
-        "expected": "negative"
-      },
-      {
         "period": "FY2025E",
         "severity": "error",
         "item": "cogs",
@@ -1012,15 +985,6 @@
         "rule": "sign_convention",
         "message": "depreciation_and_amortization is positive (22865) but typically negative",
         "actual": "22865",
-        "expected": "negative"
-      },
-      {
-        "period": "FY2025E",
-        "severity": "warning",
-        "item": "current_tax_expense",
-        "rule": "sign_convention",
-        "message": "current_tax_expense is positive (35420) but typically negative",
-        "actual": "35420",
         "expected": "negative"
       },
       {
@@ -1085,15 +1049,6 @@
         "message": "depreciation_and_amortization is positive (23937) but typically negative",
         "actual": "23937",
         "expected": "negative"
-      },
-      {
-        "period": "FY2026E",
-        "severity": "warning",
-        "item": "current_tax_expense",
-        "rule": "sign_convention",
-        "message": "current_tax_expense is positive (37941) but typically negative",
-        "actual": "37941",
-        "expected": "negative"
       }
     ],
     "claude_reasoning": [
@@ -1101,286 +1056,251 @@
         "flag_index": 0,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "COGS should always be positive as it represents costs. The negative value (-225000) suggests a sign convention error in extraction.",
+        "reasoning": "COGS is showing as negative (-225000) but should be positive. The validation expects positive COGS values, and negative COGS makes no economic sense.",
         "suggested_fix": "225000"
       },
       {
         "flag_index": 1,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Gross profit calculation is incorrect due to negative COGS. With revenue 500000 and correct COGS 225000, gross profit should be 275000, but formula expects 725000.",
-        "suggested_fix": "Fix COGS sign first, then recalculate: 500000 - 225000 = 275000"
+        "reasoning": "Gross profit calculation is incorrect due to negative COGS. If COGS were positive 225000, then gross profit would be 500000 - 225000 = 275000, which matches the actual value. This confirms COGS sign error.",
+        "suggested_fix": "Fix COGS sign convention"
       },
       {
         "flag_index": 2,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Same underlying issue as flag 1 - gross profit calculation error stemming from incorrect COGS sign.",
-        "suggested_fix": "275000 (current value is actually correct once COGS is fixed)"
+        "reasoning": "Same root cause as flag 1 - gross profit calculation fails because COGS has wrong sign. The actual gross profit of 275000 is correct if COGS is positive.",
+        "suggested_fix": "Fix COGS sign convention"
       },
       {
         "flag_index": 3,
         "assessment": "acceptable",
         "confidence": 0.8,
-        "reasoning": "D&A components (-15000 depreciation, -5000 amortization) sum to -20000, but D&A shows +20000. This appears to be a consistent sign convention where D&A is presented as positive for cash flow purposes.",
+        "reasoning": "D&A shows as positive 20000 but validation expects negative. However, depreciation (-15000) + amortization (-5000) = -20000. The model may legitimately present D&A as positive in this context while individual components are negative.",
         "suggested_fix": null
       },
       {
         "flag_index": 4,
         "assessment": "acceptable",
-        "confidence": 0.9,
-        "reasoning": "Interest expense is correctly negative (-12000) representing an expense/cash outflow. This follows proper expense sign convention.",
+        "confidence": 0.7,
+        "reasoning": "Interest expense showing as negative (-12000) is actually correct accounting convention - expenses are typically negative. The validation rule expecting positive may be incorrect.",
         "suggested_fix": null
       },
       {
         "flag_index": 5,
         "assessment": "acceptable",
-        "confidence": 0.9,
-        "reasoning": "Marketing expense is correctly negative (-8000) representing an expense/cash outflow. This follows proper expense sign convention.",
+        "confidence": 0.7,
+        "reasoning": "Marketing expense as negative (-8000) follows proper expense convention. Expenses should be negative in financial statements.",
         "suggested_fix": null
       },
       {
         "flag_index": 6,
         "assessment": "acceptable",
-        "confidence": 0.8,
-        "reasoning": "D&A is positive (20000) which is common in cash flow presentations where it's treated as an add-back. This appears to be a consistent modeling convention.",
+        "confidence": 0.7,
+        "reasoning": "D&A presentation as positive (20000) may be legitimate - some models show D&A as positive for cash flow purposes while underlying depreciation/amortization components remain negative.",
         "suggested_fix": null
       },
       {
         "flag_index": 7,
-        "assessment": "acceptable",
-        "confidence": 0.8,
-        "reasoning": "Current tax expense is positive (28600) which is correct - it represents the tax liability/expense amount before sign conventions for cash flow impact.",
-        "suggested_fix": null
+        "assessment": "error",
+        "confidence": 0.95,
+        "reasoning": "Same COGS sign issue in FY2023A. COGS should be positive 238500, not negative.",
+        "suggested_fix": "238500"
       },
       {
         "flag_index": 8,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Same COGS sign error as FY2022A. COGS should be positive as it represents costs.",
-        "suggested_fix": "238500"
+        "reasoning": "Gross profit calculation error due to negative COGS in FY2023A. Root cause is COGS sign convention.",
+        "suggested_fix": "Fix COGS sign convention"
       },
       {
         "flag_index": 9,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Gross profit calculation error due to negative COGS. Current value 291500 is actually correct once COGS sign is fixed.",
-        "suggested_fix": "Fix COGS sign first: 530000 - 238500 = 291500"
+        "reasoning": "Same gross profit calculation issue in FY2023A due to COGS sign error.",
+        "suggested_fix": "Fix COGS sign convention"
       },
       {
         "flag_index": 10,
-        "assessment": "error",
-        "confidence": 0.95,
-        "reasoning": "Same gross profit calculation issue as flag 9.",
-        "suggested_fix": "291500 (current value is correct once COGS is fixed)"
+        "assessment": "acceptable",
+        "confidence": 0.8,
+        "reasoning": "D&A sign convention issue consistent with previous period. Likely acceptable model presentation.",
+        "suggested_fix": null
       },
       {
         "flag_index": 11,
         "assessment": "acceptable",
-        "confidence": 0.8,
-        "reasoning": "Consistent D&A sign convention issue as in FY2022A. Model appears to use positive D&A consistently.",
+        "confidence": 0.7,
+        "reasoning": "Interest expense as negative follows proper accounting convention.",
         "suggested_fix": null
       },
       {
         "flag_index": 12,
         "assessment": "acceptable",
-        "confidence": 0.9,
-        "reasoning": "Interest expense correctly negative following expense convention.",
+        "confidence": 0.7,
+        "reasoning": "Marketing expense as negative is proper expense convention.",
         "suggested_fix": null
       },
       {
         "flag_index": 13,
         "assessment": "acceptable",
-        "confidence": 0.9,
-        "reasoning": "Marketing expense correctly negative following expense convention.",
+        "confidence": 0.7,
+        "reasoning": "D&A presentation consistent with model convention.",
         "suggested_fix": null
       },
       {
         "flag_index": 14,
-        "assessment": "acceptable",
-        "confidence": 0.8,
-        "reasoning": "Consistent D&A positive convention as in prior periods.",
-        "suggested_fix": null
+        "assessment": "error",
+        "confidence": 0.95,
+        "reasoning": "COGS sign error continues in FY2024E. Should be positive 252810.",
+        "suggested_fix": "252810"
       },
       {
         "flag_index": 15,
-        "assessment": "acceptable",
-        "confidence": 0.8,
-        "reasoning": "Current tax expense positive is correct representation of tax liability.",
-        "suggested_fix": null
+        "assessment": "error",
+        "confidence": 0.95,
+        "reasoning": "Gross profit calculation error in FY2024E due to COGS sign issue.",
+        "suggested_fix": "Fix COGS sign convention"
       },
       {
         "flag_index": 16,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "COGS sign error continues in FY2024E projections.",
-        "suggested_fix": "252810"
+        "reasoning": "Same gross profit calculation issue in FY2024E.",
+        "suggested_fix": "Fix COGS sign convention"
       },
       {
         "flag_index": 17,
-        "assessment": "error",
-        "confidence": 0.95,
-        "reasoning": "Gross profit calculation error due to COGS sign issue.",
-        "suggested_fix": "Fix COGS: 561800 - 252810 = 308990"
+        "assessment": "acceptable",
+        "confidence": 0.8,
+        "reasoning": "D&A sign convention consistent with model approach.",
+        "suggested_fix": null
       },
       {
         "flag_index": 18,
-        "assessment": "error",
-        "confidence": 0.95,
-        "reasoning": "Same gross profit issue as flag 17.",
-        "suggested_fix": "308990 (current value correct once COGS fixed)"
+        "assessment": "acceptable",
+        "confidence": 0.7,
+        "reasoning": "Interest expense as negative is proper convention.",
+        "suggested_fix": null
       },
       {
         "flag_index": 19,
         "assessment": "acceptable",
-        "confidence": 0.8,
-        "reasoning": "Consistent D&A sign convention maintained in projections.",
+        "confidence": 0.7,
+        "reasoning": "Marketing expense as negative follows proper convention.",
         "suggested_fix": null
       },
       {
         "flag_index": 20,
         "assessment": "acceptable",
-        "confidence": 0.9,
-        "reasoning": "Interest expense correctly negative.",
+        "confidence": 0.7,
+        "reasoning": "D&A presentation consistent across periods.",
         "suggested_fix": null
       },
       {
         "flag_index": 21,
-        "assessment": "acceptable",
-        "confidence": 0.9,
-        "reasoning": "Marketing expense correctly negative.",
-        "suggested_fix": null
-      },
-      {
-        "flag_index": 22,
-        "assessment": "acceptable",
-        "confidence": 0.8,
-        "reasoning": "D&A positive convention consistent across model.",
-        "suggested_fix": null
-      },
-      {
-        "flag_index": 23,
-        "assessment": "acceptable",
-        "confidence": 0.8,
-        "reasoning": "Current tax expense positive is appropriate.",
-        "suggested_fix": null
-      },
-      {
-        "flag_index": 24,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "COGS sign error in FY2025E projections.",
+        "reasoning": "COGS sign error in FY2025E. Should be positive 267978.",
         "suggested_fix": "267978"
       },
       {
-        "flag_index": 25,
+        "flag_index": 22,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Gross profit calculation error due to COGS sign.",
-        "suggested_fix": "Fix COGS: 595508 - 267978 = 327530"
+        "reasoning": "Gross profit calculation error in FY2025E due to COGS sign issue.",
+        "suggested_fix": "Fix COGS sign convention"
+      },
+      {
+        "flag_index": 23,
+        "assessment": "error",
+        "confidence": 0.95,
+        "reasoning": "Same gross profit issue in FY2025E.",
+        "suggested_fix": "Fix COGS sign convention"
+      },
+      {
+        "flag_index": 24,
+        "assessment": "acceptable",
+        "confidence": 0.8,
+        "reasoning": "D&A sign convention consistent with model.",
+        "suggested_fix": null
+      },
+      {
+        "flag_index": 25,
+        "assessment": "acceptable",
+        "confidence": 0.7,
+        "reasoning": "Interest expense negative is proper accounting.",
+        "suggested_fix": null
       },
       {
         "flag_index": 26,
-        "assessment": "error",
-        "confidence": 0.95,
-        "reasoning": "Same gross profit calculation issue.",
-        "suggested_fix": "327530 (current value correct once COGS fixed)"
+        "assessment": "acceptable",
+        "confidence": 0.7,
+        "reasoning": "Marketing expense negative is proper convention.",
+        "suggested_fix": null
       },
       {
         "flag_index": 27,
         "assessment": "acceptable",
-        "confidence": 0.8,
-        "reasoning": "Consistent D&A convention.",
+        "confidence": 0.7,
+        "reasoning": "D&A presentation consistent.",
         "suggested_fix": null
       },
       {
         "flag_index": 28,
-        "assessment": "acceptable",
-        "confidence": 0.9,
-        "reasoning": "Interest expense correctly negative.",
-        "suggested_fix": null
+        "assessment": "error",
+        "confidence": 0.95,
+        "reasoning": "COGS sign error in FY2026E. Should be positive 284057.",
+        "suggested_fix": "284057"
       },
       {
         "flag_index": 29,
-        "assessment": "acceptable",
-        "confidence": 0.9,
-        "reasoning": "Marketing expense correctly negative.",
-        "suggested_fix": null
+        "assessment": "error",
+        "confidence": 0.95,
+        "reasoning": "Gross profit calculation error in FY2026E due to COGS sign issue.",
+        "suggested_fix": "Fix COGS sign convention"
       },
       {
         "flag_index": 30,
-        "assessment": "acceptable",
-        "confidence": 0.8,
-        "reasoning": "D&A positive convention maintained.",
-        "suggested_fix": null
+        "assessment": "error",
+        "confidence": 0.95,
+        "reasoning": "Same gross profit issue in FY2026E.",
+        "suggested_fix": "Fix COGS sign convention"
       },
       {
         "flag_index": 31,
         "assessment": "acceptable",
         "confidence": 0.8,
-        "reasoning": "Current tax expense positive is correct.",
+        "reasoning": "D&A sign convention consistent.",
         "suggested_fix": null
       },
       {
         "flag_index": 32,
-        "assessment": "error",
-        "confidence": 0.95,
-        "reasoning": "COGS sign error in FY2026E projections.",
-        "suggested_fix": "284057"
+        "assessment": "acceptable",
+        "confidence": 0.7,
+        "reasoning": "Interest expense negative is proper.",
+        "suggested_fix": null
       },
       {
         "flag_index": 33,
-        "assessment": "error",
-        "confidence": 0.95,
-        "reasoning": "Gross profit calculation error due to COGS sign.",
-        "suggested_fix": "Fix COGS: 631238 - 284057 = 347181"
+        "assessment": "acceptable",
+        "confidence": 0.7,
+        "reasoning": "Marketing expense negative is proper.",
+        "suggested_fix": null
       },
       {
         "flag_index": 34,
-        "assessment": "error",
-        "confidence": 0.95,
-        "reasoning": "Same gross profit calculation issue.",
-        "suggested_fix": "347181 (current value correct once COGS fixed)"
-      },
-      {
-        "flag_index": 35,
         "assessment": "acceptable",
-        "confidence": 0.8,
-        "reasoning": "Consistent D&A convention.",
-        "suggested_fix": null
-      },
-      {
-        "flag_index": 36,
-        "assessment": "acceptable",
-        "confidence": 0.9,
-        "reasoning": "Interest expense correctly negative.",
-        "suggested_fix": null
-      },
-      {
-        "flag_index": 37,
-        "assessment": "acceptable",
-        "confidence": 0.9,
-        "reasoning": "Marketing expense correctly negative.",
-        "suggested_fix": null
-      },
-      {
-        "flag_index": 38,
-        "assessment": "acceptable",
-        "confidence": 0.8,
-        "reasoning": "D&A positive convention maintained.",
-        "suggested_fix": null
-      },
-      {
-        "flag_index": 39,
-        "assessment": "acceptable",
-        "confidence": 0.8,
-        "reasoning": "Current tax expense positive is correct.",
+        "confidence": 0.7,
+        "reasoning": "D&A presentation consistent across all periods.",
         "suggested_fix": null
       }
     ],
-    "overall_confidence": 0.933,
+    "overall_confidence": 0.941,
     "time_series": {
-      "total_checks": 1588,
+      "total_checks": 1570,
       "flags": [
         {
           "check_type": "yoy_change",
@@ -1427,12 +1347,12 @@
         }
       ],
       "consistency_score": 0.997,
-      "items_checked": 88,
+      "items_checked": 87,
       "periods_analyzed": 5
     },
     "completeness": {
       "model_type": "corporate",
-      "overall_score": 0.531,
+      "overall_score": 0.501,
       "detected_statements": [
         "balance_sheet",
         "cash_flow",
@@ -1440,8 +1360,8 @@
         "income_statement"
       ],
       "total_expected": 32,
-      "total_found": 17,
-      "total_missing": 15,
+      "total_found": 16,
+      "total_missing": 16,
       "missing_items": [
         {
           "canonical_name": "current_assets",
@@ -1471,6 +1391,12 @@
           "canonical_name": "cfo",
           "category": "cash_flow",
           "weight": 1.0,
+          "is_core": true
+        },
+        {
+          "canonical_name": "net_change_cash",
+          "category": "cash_flow",
+          "weight": 0.85,
           "is_core": true
         },
         {
@@ -1555,16 +1481,16 @@
           ]
         },
         "cash_flow": {
-          "raw_score": 0.5,
-          "weighted_score": 0.51,
-          "core_score": 0.596,
+          "raw_score": 0.333,
+          "weighted_score": 0.346,
+          "core_score": 0.405,
           "found": [
             "cfi",
-            "cff",
-            "net_change_cash"
+            "cff"
           ],
           "missing": [
             "cfo",
+            "net_change_cash",
             "capex",
             "fcf"
           ]
@@ -1607,25 +1533,25 @@
       }
     },
     "quality": {
-      "numeric_score": 0.833,
+      "numeric_score": 0.824,
       "letter_grade": "B",
       "label": "trustworthy",
       "dimensions": [
         {
           "name": "mapping_confidence",
-          "score": 0.893,
+          "score": 0.882,
           "weight": 0.3,
           "details": null
         },
         {
           "name": "validation_success",
-          "score": 0.933,
+          "score": 0.941,
           "weight": 0.25,
           "details": null
         },
         {
           "name": "completeness",
-          "score": 0.531,
+          "score": 0.501,
           "weight": 0.25,
           "details": null
         },
@@ -1665,17 +1591,17 @@
       5
     ],
     "event_types": [
-      "validation",
-      "enhanced_mapping",
       "mapping",
       "triage",
-      "parsing"
+      "validation",
+      "parsing",
+      "enhanced_mapping"
     ]
   },
   "triage_accuracy": {
-    "correct": 9,
+    "correct": 12,
     "total": 12,
-    "accuracy": 0.75,
+    "accuracy": 1.0,
     "details": [
       {
         "sheet_name": "Income Statement",
@@ -1704,14 +1630,14 @@
       {
         "sheet_name": "Revenue Build",
         "expected_tier": 2,
-        "actual_tier": 3,
-        "correct": false
+        "actual_tier": 2,
+        "correct": true
       },
       {
         "sheet_name": "OpEx Build",
         "expected_tier": 2,
-        "actual_tier": 3,
-        "correct": false
+        "actual_tier": 2,
+        "correct": true
       },
       {
         "sheet_name": "Working Capital",
@@ -1728,8 +1654,8 @@
       {
         "sheet_name": "Tax Schedule",
         "expected_tier": 2,
-        "actual_tier": 3,
-        "correct": false
+        "actual_tier": 2,
+        "correct": true
       },
       {
         "sheet_name": "Assumptions",
@@ -1850,7 +1776,7 @@
   },
   "completeness": {
     "model_type": "corporate",
-    "overall_score": 0.531,
+    "overall_score": 0.501,
     "detected_statements": [
       "balance_sheet",
       "cash_flow",
@@ -1858,8 +1784,8 @@
       "income_statement"
     ],
     "total_expected": 32,
-    "total_found": 17,
-    "total_missing": 15,
+    "total_found": 16,
+    "total_missing": 16,
     "missing_items": [
       {
         "canonical_name": "current_assets",
@@ -1889,6 +1815,12 @@
         "canonical_name": "cfo",
         "category": "cash_flow",
         "weight": 1.0,
+        "is_core": true
+      },
+      {
+        "canonical_name": "net_change_cash",
+        "category": "cash_flow",
+        "weight": 0.85,
         "is_core": true
       },
       {
@@ -1973,16 +1905,16 @@
         ]
       },
       "cash_flow": {
-        "raw_score": 0.5,
-        "weighted_score": 0.51,
-        "core_score": 0.596,
+        "raw_score": 0.333,
+        "weighted_score": 0.346,
+        "core_score": 0.405,
         "found": [
           "cfi",
-          "cff",
-          "net_change_cash"
+          "cff"
         ],
         "missing": [
           "cfo",
+          "net_change_cash",
           "capex",
           "fcf"
         ]
@@ -2025,25 +1957,25 @@
     }
   },
   "quality": {
-    "numeric_score": 0.833,
+    "numeric_score": 0.824,
     "letter_grade": "B",
     "label": "trustworthy",
     "dimensions": [
       {
         "name": "mapping_confidence",
-        "score": 0.893,
+        "score": 0.882,
         "weight": 0.3,
         "details": null
       },
       {
         "name": "validation_success",
-        "score": 0.933,
+        "score": 0.941,
         "weight": 0.25,
         "details": null
       },
       {
         "name": "completeness",
-        "score": 0.531,
+        "score": 0.501,
         "weight": 0.25,
         "details": null
       },
@@ -2114,7 +2046,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Net Revenue is a common term for total revenue on Income Statement"
+          "reasoning": "Net Revenue on Income Statement is a section header (level 0) and subtotal for total revenue"
         },
         "validation": {
           "rules_applied": [],
@@ -2136,7 +2068,7 @@
         "FY2025E": 238203,
         "FY2026E": 252495
       },
-      "confidence": 0.9,
+      "confidence": 0.85,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -2181,7 +2113,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Product A is a product revenue line item under Net Revenue"
+          "reasoning": "Product A under Net Revenue section represents product-based revenue stream"
         },
         "validation": {
           "rules_applied": [],
@@ -2203,7 +2135,7 @@
         "FY2025E": 178652,
         "FY2026E": 189371
       },
-      "confidence": 0.9,
+      "confidence": 0.85,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -2248,7 +2180,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Product B is a product revenue line item under Net Revenue"
+          "reasoning": "Product B under Net Revenue section represents product-based revenue stream"
         },
         "validation": {
           "rules_applied": [],
@@ -2270,7 +2202,7 @@
         "FY2025E": 119102,
         "FY2026E": 126248
       },
-      "confidence": 0.9,
+      "confidence": 0.85,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -2315,7 +2247,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Product C is a product revenue line item under Net Revenue"
+          "reasoning": "Product C under Net Revenue section represents product-based revenue stream"
         },
         "validation": {
           "rules_applied": [],
@@ -2337,7 +2269,7 @@
         "FY2025E": 59551,
         "FY2026E": 63124
       },
-      "confidence": 0.85,
+      "confidence": 0.8,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -2382,7 +2314,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Licensing Revenue is a type of other revenue distinct from product sales"
+          "reasoning": "Licensing Revenue is a distinct revenue stream, best categorized as other revenue"
         },
         "validation": {
           "rules_applied": [],
@@ -2610,7 +2542,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to Gross Profit canonical name"
+          "reasoning": "Direct match to gross profit canonical name"
         },
         "validation": {
           "rules_applied": [
@@ -2725,7 +2657,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to Sales & Marketing operating expense"
+          "reasoning": "Direct match to sales and marketing expenses"
         },
         "validation": {
           "rules_applied": [],
@@ -2859,7 +2791,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to G&A expense canonical name"
+          "reasoning": "Direct match to G&A expenses canonical name"
         },
         "validation": {
           "rules_applied": [],
@@ -2881,7 +2813,7 @@
         "FY2025E": -17865,
         "FY2026E": -18937
       },
-      "confidence": 0.9,
+      "confidence": 0.95,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -2926,7 +2858,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "On Income Statement, maps to depreciation expense (not depreciation_cf)"
+          "reasoning": "On Income Statement, maps to depreciation expense (not cash flow depreciation_cf)"
         },
         "validation": {
           "rules_applied": [],
@@ -2948,7 +2880,7 @@
         "FY2025E": -5000,
         "FY2026E": -5000
       },
-      "confidence": 0.9,
+      "confidence": 0.95,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -2993,7 +2925,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "On Income Statement, maps to amortization expense"
+          "reasoning": "On Income Statement, maps to amortization expense (not cash flow amortization_cf)"
         },
         "validation": {
           "rules_applied": [],
@@ -3127,7 +3059,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match to operating income/EBIT"
+          "reasoning": "Direct match to operating income canonical name"
         },
         "validation": {
           "rules_applied": [],
@@ -3194,7 +3126,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "debt_schedule",
-          "reasoning": "On Debt Schedule, Interest Expense maps to interest_expense_debt"
+          "reasoning": "On Debt Schedule, Interest Expense maps to interest_expense_debt (not income statement interest_expense)"
         },
         "validation": {
           "rules_applied": [
@@ -3376,7 +3308,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Income Before Tax matches earnings_before_tax canonical name"
+          "reasoning": "Income Before Tax matches earnings before tax canonical name"
         },
         "validation": {
           "rules_applied": [],
@@ -3510,7 +3442,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "cash_flow",
-          "reasoning": "On Cash Flow Statement, Net Income maps to net_income_cf"
+          "reasoning": "On Cash Flow Statement, Net Income maps to net_income_cf (not net_income)"
         },
         "validation": {
           "rules_applied": [],
@@ -3577,7 +3509,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "balance_sheet",
-          "reasoning": "Direct match to cash and equivalents on Balance Sheet"
+          "reasoning": "Direct match to cash and cash equivalents"
         },
         "validation": {
           "rules_applied": [],

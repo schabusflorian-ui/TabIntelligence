@@ -5,7 +5,7 @@ Note: process_dlq_message and replay_dlq_entry are Celery-decorated tasks
 which become MagicMocks due to the module-level Celery mock in conftest.
 We test the DLQTask class methods directly since they ARE testable.
 """
-import pytest
+
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
@@ -16,6 +16,7 @@ class TestDLQTaskOnFailure:
     def _make_task(self):
         """Create a DLQTask instance for testing."""
         from src.jobs.dlq import DLQTask
+
         task = DLQTask()
         task.name = "debtfund.extraction.run"
         task.max_retries = 3
@@ -33,10 +34,11 @@ class TestDLQTaskOnFailure:
 
         mock_db = MagicMock()
 
-        with patch("src.jobs.dlq.celery_app") as mock_celery, \
-             patch("src.jobs.dlq.get_db_context") as mock_db_ctx, \
-             patch("src.jobs.dlq.crud") as mock_crud:
-
+        with (
+            patch("src.jobs.dlq.celery_app") as mock_celery,
+            patch("src.jobs.dlq.get_db_context") as mock_db_ctx,
+            patch("src.jobs.dlq.crud") as mock_crud,
+        ):
             mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_db)
             mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
 
@@ -45,10 +47,10 @@ class TestDLQTaskOnFailure:
             # Should send to DLQ
             mock_celery.send_task.assert_called_once()
             call_args = mock_celery.send_task.call_args
-            assert call_args[0][0] == 'src.jobs.dlq.process_dlq_message'
-            assert call_args[1]['queue'] == 'extraction.dlq'
-            assert call_args[1]['kwargs']['original_task_id'] == task_id
-            assert call_args[1]['kwargs']['error'] == "extraction failed"
+            assert call_args[0][0] == "src.jobs.dlq.process_dlq_message"
+            assert call_args[1]["queue"] == "extraction.dlq"
+            assert call_args[1]["kwargs"]["original_task_id"] == task_id
+            assert call_args[1]["kwargs"]["error"] == "extraction failed"
 
             # Should mark job as failed
             mock_crud.fail_job.assert_called_once()
@@ -60,10 +62,11 @@ class TestDLQTaskOnFailure:
 
         mock_db = MagicMock()
 
-        with patch("src.jobs.dlq.celery_app") as mock_celery, \
-             patch("src.jobs.dlq.get_db_context") as mock_db_ctx, \
-             patch("src.jobs.dlq.crud"):
-
+        with (
+            patch("src.jobs.dlq.celery_app") as mock_celery,
+            patch("src.jobs.dlq.get_db_context") as mock_db_ctx,
+            patch("src.jobs.dlq.crud"),
+        ):
             mock_celery.send_task.side_effect = Exception("Redis down")
             mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_db)
             mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
@@ -76,9 +79,7 @@ class TestDLQTaskOnFailure:
         task = self._make_task()
         job_id = str(uuid4())
 
-        with patch("src.jobs.dlq.celery_app"), \
-             patch("src.jobs.dlq.get_db_context") as mock_db_ctx:
-
+        with patch("src.jobs.dlq.celery_app"), patch("src.jobs.dlq.get_db_context") as mock_db_ctx:
             mock_db_ctx.return_value.__enter__ = MagicMock(
                 side_effect=Exception("DB connection lost")
             )
@@ -91,9 +92,7 @@ class TestDLQTaskOnFailure:
         """Test on_failure skips DB update when no job_id in args."""
         task = self._make_task()
 
-        with patch("src.jobs.dlq.celery_app"), \
-             patch("src.jobs.dlq.crud") as mock_crud:
-
+        with patch("src.jobs.dlq.celery_app"), patch("src.jobs.dlq.crud") as mock_crud:
             task.on_failure(ValueError("err"), "tid", [], {}, MagicMock())
 
         mock_crud.fail_job.assert_not_called()

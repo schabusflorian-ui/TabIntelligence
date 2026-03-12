@@ -5,12 +5,11 @@ Sheet 2 (Combined FS): P&L rows 1-25, blank 26-28, BS rows 29-50 on ONE sheet
 Sheet 3 (Metrics & Notes): SaaS metrics mixed with annotations and separators
 Sheet 4 (Notes): Pure text notes (should be tier 4 skip)
 """
-import io
-import sys
+
 from pathlib import Path
 
 import openpyxl
-from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.styles import Font
 
 OUTPUT = Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "messy_startup.xlsx"
 
@@ -125,9 +124,13 @@ def _build_sheet2_combined_fs(wb: openpyxl.Workbook) -> None:
         if label is not None:
             cell = ws.cell(row=row_num, column=1, value=label)
             if label in (
-                "Revenue", "Gross Profit", "Operating Expenses",
-                "Total Operating Expenses", "Operating Income",
-                "Net Income", "EBITDA",
+                "Revenue",
+                "Gross Profit",
+                "Operating Expenses",
+                "Total Operating Expenses",
+                "Operating Income",
+                "Net Income",
+                "EBITDA",
             ):
                 cell.font = bold
         for i, v in enumerate(vals):
@@ -181,9 +184,14 @@ def _build_sheet2_combined_fs(wb: openpyxl.Workbook) -> None:
         if label is not None:
             cell = ws.cell(row=row_num, column=1, value=label)
             if label in (
-                "Assets", "Total Current Assets", "Total Non-Current Assets",
-                "Total Assets", "Liabilities", "Total Current Liabilities",
-                "Total Liabilities", "Total Equity",
+                "Assets",
+                "Total Current Assets",
+                "Total Non-Current Assets",
+                "Total Assets",
+                "Liabilities",
+                "Total Current Liabilities",
+                "Total Liabilities",
+                "Total Equity",
             ):
                 cell.font = bold
         for i, v in enumerate(vals):
@@ -198,7 +206,7 @@ def _build_sheet2_combined_fs(wb: openpyxl.Workbook) -> None:
 def _build_sheet3_metrics(wb: openpyxl.Workbook) -> None:
     """Sheet 3: SaaS metrics mixed with annotations."""
     ws = wb.create_sheet("Metrics & Notes")
-    bold = Font(bold=True)
+    Font(bold=True)
 
     ws["A1"] = "Key SaaS Metrics"
     ws["A1"].font = Font(bold=True, size=12)
@@ -223,7 +231,7 @@ def _build_sheet3_metrics(wb: openpyxl.Workbook) -> None:
 
     for row_num, label, *vals in metrics_data:
         if label is not None:
-            cell = ws.cell(row=row_num, column=1, value=label)
+            ws.cell(row=row_num, column=1, value=label)
         for i, v in enumerate(vals):
             if v is not None:
                 c = ws.cell(row=row_num, column=2 + i, value=v)

@@ -14,8 +14,8 @@ from sqlalchemy.orm import Session
 
 from src.auth.api_key import verify_api_key
 from src.auth.models import APIKey
-from src.db.session import get_db
 from src.core.logging import api_logger as logger
+from src.db.session import get_db
 
 # HTTP Bearer scheme for Authorization header
 security = HTTPBearer()
@@ -42,8 +42,7 @@ def _check_rate_limit(api_key: APIKey) -> None:
 
     if len(timestamps) >= limit:
         logger.warning(
-            f"Rate limit exceeded for key '{api_key.name}' "
-            f"({len(timestamps)}/{limit} per minute)"
+            f"Rate limit exceeded for key '{api_key.name}' ({len(timestamps)}/{limit} per minute)"
         )
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -80,7 +79,9 @@ def get_current_api_key(
         )
 
     # Check expiry
-    if isinstance(api_key.expires_at, datetime) and api_key.expires_at <= datetime.now(timezone.utc):
+    if isinstance(api_key.expires_at, datetime) and api_key.expires_at <= datetime.now(
+        timezone.utc
+    ):
         logger.warning(f"Expired API key used: {api_key.name}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -95,9 +96,7 @@ def get_current_api_key(
     api_key.last_used_at = datetime.now(timezone.utc)
     db.commit()
 
-    logger.debug(
-        f"Authentication successful - key: {api_key.name}, entity: {api_key.entity_id}"
-    )
+    logger.debug(f"Authentication successful - key: {api_key.name}, entity: {api_key.entity_id}")
 
     return api_key
 
@@ -141,9 +140,7 @@ def require_entity_scope(
 
 
 def get_optional_api_key(
-    credentials: Optional[HTTPAuthorizationCredentials] = Security(
-        HTTPBearer(auto_error=False)
-    ),
+    credentials: Optional[HTTPAuthorizationCredentials] = Security(HTTPBearer(auto_error=False)),
     db: Session = Depends(get_db),
 ) -> Optional[APIKey]:
     """
@@ -157,7 +154,9 @@ def get_optional_api_key(
 
     if api_key:
         # Check expiry silently
-        if isinstance(api_key.expires_at, datetime) and api_key.expires_at <= datetime.now(timezone.utc):
+        if isinstance(api_key.expires_at, datetime) and api_key.expires_at <= datetime.now(
+            timezone.utc
+        ):
             return None
 
         # Update last_used_at timestamp

@@ -1,15 +1,15 @@
 """Tests for regression_tracker.py."""
+
 import json
+import sys
 from pathlib import Path
 
 import pytest
 
-import sys
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.regression_tracker import (
-    RegressionResult,
     compare_fixture,
     get_thresholds,
     load_baselines,
@@ -36,9 +36,7 @@ class TestGetThresholds:
     def test_threshold_file_override(self, tmp_path):
         """Custom threshold file overrides defaults."""
         threshold_file = tmp_path / "thresholds.json"
-        threshold_file.write_text(json.dumps({
-            "my_fixture": {"mapping": 0.10, "triage": 0.03}
-        }))
+        threshold_file.write_text(json.dumps({"my_fixture": {"mapping": 0.10, "triage": 0.03}}))
 
         t = get_thresholds("my_fixture", str(threshold_file))
         assert t["mapping"] == 0.10
@@ -68,14 +66,22 @@ class TestLoadBaselines:
 
     def test_load_baselines_valid(self, tmp_path):
         """Loads baseline JSON files correctly."""
-        (tmp_path / "realistic_model.json").write_text(json.dumps({
-            "mapping_accuracy": {"accuracy": 0.98},
-            "triage_accuracy": {"accuracy": 1.0},
-        }))
-        (tmp_path / "saas_startup.json").write_text(json.dumps({
-            "mapping_accuracy": {"accuracy": 0.85},
-            "triage_accuracy": {"accuracy": 0.90},
-        }))
+        (tmp_path / "realistic_model.json").write_text(
+            json.dumps(
+                {
+                    "mapping_accuracy": {"accuracy": 0.98},
+                    "triage_accuracy": {"accuracy": 1.0},
+                }
+            )
+        )
+        (tmp_path / "saas_startup.json").write_text(
+            json.dumps(
+                {
+                    "mapping_accuracy": {"accuracy": 0.85},
+                    "triage_accuracy": {"accuracy": 0.90},
+                }
+            )
+        )
 
         result = load_baselines(str(tmp_path))
 
@@ -109,14 +115,22 @@ class TestLoadLatestResults:
 
     def test_load_latest_picks_newest_per_fixture(self, tmp_path):
         """Keeps the latest result per fixture (by filename sort)."""
-        (tmp_path / "20260101_120000.json").write_text(json.dumps({
-            "file": "realistic_model.xlsx",
-            "mapping_accuracy": {"accuracy": 0.90},
-        }))
-        (tmp_path / "20260201_120000.json").write_text(json.dumps({
-            "file": "realistic_model.xlsx",
-            "mapping_accuracy": {"accuracy": 0.95},
-        }))
+        (tmp_path / "20260101_120000.json").write_text(
+            json.dumps(
+                {
+                    "file": "realistic_model.xlsx",
+                    "mapping_accuracy": {"accuracy": 0.90},
+                }
+            )
+        )
+        (tmp_path / "20260201_120000.json").write_text(
+            json.dumps(
+                {
+                    "file": "realistic_model.xlsx",
+                    "mapping_accuracy": {"accuracy": 0.95},
+                }
+            )
+        )
 
         result = load_latest_results(str(tmp_path))
 
@@ -125,14 +139,22 @@ class TestLoadLatestResults:
 
     def test_load_latest_multiple_fixtures(self, tmp_path):
         """Loads results for multiple fixtures."""
-        (tmp_path / "20260101_120000.json").write_text(json.dumps({
-            "file": "realistic_model.xlsx",
-            "mapping_accuracy": {"accuracy": 0.95},
-        }))
-        (tmp_path / "20260102_120000.json").write_text(json.dumps({
-            "file": "saas_startup.xlsx",
-            "mapping_accuracy": {"accuracy": 0.85},
-        }))
+        (tmp_path / "20260101_120000.json").write_text(
+            json.dumps(
+                {
+                    "file": "realistic_model.xlsx",
+                    "mapping_accuracy": {"accuracy": 0.95},
+                }
+            )
+        )
+        (tmp_path / "20260102_120000.json").write_text(
+            json.dumps(
+                {
+                    "file": "saas_startup.xlsx",
+                    "mapping_accuracy": {"accuracy": 0.85},
+                }
+            )
+        )
 
         result = load_latest_results(str(tmp_path))
 

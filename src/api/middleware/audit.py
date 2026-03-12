@@ -4,14 +4,13 @@ Audit trail middleware for compliance logging.
 Logs all API requests with relevant context for regulatory compliance.
 """
 
-from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from src.db.models import AuditLog
 from src.core.logging import api_logger as logger
+from src.db.models import AuditLog
 
 
 def log_audit_event(

@@ -1,8 +1,9 @@
 """Unit tests for composite quality scorer."""
+
 from src.validation.quality_scorer import (
-    QualityScorer,
     DEFAULT_WEIGHTS,
     MODEL_TYPE_WEIGHTS,
+    QualityScorer,
 )
 
 
@@ -110,29 +111,35 @@ class TestCustomConfig:
     """Test custom weights and thresholds."""
 
     def test_custom_weights(self):
-        scorer = QualityScorer(weights={
-            "mapping_confidence": 1.0,
-            "validation_success": 0.0,
-            "completeness": 0.0,
-            "time_series_consistency": 0.0,
-        })
+        scorer = QualityScorer(
+            weights={
+                "mapping_confidence": 1.0,
+                "validation_success": 0.0,
+                "completeness": 0.0,
+                "time_series_consistency": 0.0,
+            }
+        )
         result = scorer.score(0.95, 0.0, 0.0, 0.0)
         assert abs(result.numeric_score - 0.95) < 0.001
 
     def test_custom_grade_thresholds(self):
-        scorer = QualityScorer(grade_thresholds=[
-            ("A", 0.95),
-            ("B", 0.50),
-            ("F", 0.0),
-        ])
+        scorer = QualityScorer(
+            grade_thresholds=[
+                ("A", 0.95),
+                ("B", 0.50),
+                ("F", 0.0),
+            ]
+        )
         result = scorer.score(0.92, 0.92, 0.92, 0.92)
         assert result.letter_grade == "B"  # below custom A threshold
 
     def test_custom_label_thresholds(self):
-        scorer = QualityScorer(label_thresholds=[
-            ("trustworthy", 0.95),
-            ("unreliable", 0.0),
-        ])
+        scorer = QualityScorer(
+            label_thresholds=[
+                ("trustworthy", 0.95),
+                ("unreliable", 0.0),
+            ]
+        )
         result = scorer.score(0.9, 0.9, 0.9, 0.9)
         assert result.label == "unreliable"  # below custom trustworthy threshold
 

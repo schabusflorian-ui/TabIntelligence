@@ -1,7 +1,6 @@
 """Tests for fixture generators and expected JSON files."""
+
 import json
-import subprocess
-import sys
 from pathlib import Path
 
 import pytest
@@ -106,7 +105,9 @@ class TestGeneratorsProduceValidFiles:
         expected = EXPECTED_SHEETS[output_file]
 
         assert len(wb.sheetnames) == expected["count"], (
-            f"{output_file}: expected {expected['count']} sheets, got {len(wb.sheetnames)}: {wb.sheetnames}"
+            f"{output_file}: expected {expected['count']}"
+            f" sheets, got {len(wb.sheetnames)}:"
+            f" {wb.sheetnames}"
         )
 
         for name in expected["names"]:
@@ -129,8 +130,13 @@ class TestExpectedJsonStructure:
         with open(path) as f:
             data = json.load(f)
 
-        required = ["description", "model_info", "expected_triage",
-                     "expected_mappings", "acceptable_alternatives"]
+        required = [
+            "description",
+            "model_info",
+            "expected_triage",
+            "expected_mappings",
+            "acceptable_alternatives",
+        ]
         for key in required:
             assert key in data, f"{expected_file} missing key: {key}"
 
@@ -190,9 +196,7 @@ class TestExpectedJsonStructure:
 
         for sheet, labels in by_sheet.items():
             dupes = [l for l in labels if labels.count(l) > 1]
-            assert not dupes, (
-                f"{expected_file}: duplicate labels in '{sheet}': {set(dupes)}"
-            )
+            assert not dupes, f"{expected_file}: duplicate labels in '{sheet}': {set(dupes)}"
 
     @pytest.mark.parametrize("expected_file", EXPECTED_FILES)
     def test_mappings_have_required_fields(self, expected_file):
@@ -244,9 +248,8 @@ class TestCanonicalNamesValid:
             if cn not in all_canonical_names:
                 missing.append(f"{m['original_label']} -> {cn}")
 
-        assert not missing, (
-            f"{expected_file}: canonical names not in taxonomy:\n"
-            + "\n".join(f"  - {m}" for m in missing)
+        assert not missing, f"{expected_file}: canonical names not in taxonomy:\n" + "\n".join(
+            f"  - {m}" for m in missing
         )
 
     @pytest.mark.parametrize("expected_file", EXPECTED_FILES)
@@ -265,7 +268,6 @@ class TestCanonicalNamesValid:
                 if alt not in all_canonical_names:
                     missing.append(f"{canonical}: alt '{alt}' not in taxonomy")
 
-        assert not missing, (
-            f"{expected_file}: invalid alternatives:\n"
-            + "\n".join(f"  - {m}" for m in missing)
+        assert not missing, f"{expected_file}: invalid alternatives:\n" + "\n".join(
+            f"  - {m}" for m in missing
         )

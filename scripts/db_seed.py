@@ -9,26 +9,27 @@ Usage:
     # or from db_reset.sh:
     ./scripts/db_reset.sh --seed
 """
+
 import sys
-from pathlib import Path
-from uuid import uuid4
 from datetime import datetime, timezone
 from decimal import Decimal
+from pathlib import Path
+from uuid import uuid4
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.db.session import get_db_sync
+from src.auth.api_key import generate_api_key
+from src.auth.models import APIKey
 from src.db.models import (
     Entity,
     EntityPattern,
-    File,
     ExtractionJob,
-    LineageEvent,
+    File,
     JobStatusEnum,
+    LineageEvent,
 )
-from src.auth.models import APIKey
-from src.auth.api_key import generate_api_key
+from src.db.session import get_db_sync
 
 
 def seed_entities(db):
@@ -180,7 +181,7 @@ def seed_api_key(db, entities):
     db.flush()
 
     print(f"  Created API key: {plain_key}")
-    print(f"  (Save this key - it cannot be retrieved later!)")
+    print("  (Save this key - it cannot be retrieved later!)")
     return api_key, plain_key
 
 
@@ -199,7 +200,7 @@ def main():
         db.commit()
 
     print("\nSeed complete! Summary:")
-    print(f"  3 entities, 4 files, 4 jobs, 6 lineage events, 6 patterns, 1 API key")
+    print("  3 entities, 4 files, 4 jobs, 6 lineage events, 6 patterns, 1 API key")
     print(f"\nDev API key: {plain_key}")
 
 

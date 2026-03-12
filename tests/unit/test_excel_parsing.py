@@ -5,6 +5,7 @@ Tests run against the real sample_model.xlsx fixture to verify that
 structured extraction preserves formulas, formatting, hierarchy, merged
 cells, cell references, and sheet metadata.
 """
+
 import io
 
 import openpyxl
@@ -13,10 +14,10 @@ import pytest
 from src.core.exceptions import InvalidFileError
 from src.extraction.stages.parsing import ParsingStage
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_minimal_xlsx(
     data: dict | None = None,
@@ -78,7 +79,8 @@ def _make_minimal_xlsx(
             for c_idx, val in enumerate(row, start=1):
                 key = (sheet_name, r_idx, c_idx)
                 cell_obj = ws.cell(
-                    row=r_idx, column=c_idx,
+                    row=r_idx,
+                    column=c_idx,
                     value=formulas[key] if key in formulas else val,
                 )
                 # Consolidate font (bold + color + underline)
@@ -170,6 +172,7 @@ class TestStructuredReprWithFixture:
     def test_cell_refs_are_valid(self, sample_xlsx):
         """Every cell ref must look like A1, B12, AA3 etc."""
         import re
+
         ref_pat = re.compile(r"^[A-Z]+\d+$")
         result = ParsingStage._excel_to_structured_repr(sample_xlsx)
         for sheet in result["sheets"]:
@@ -345,9 +348,14 @@ class TestStructuredToMarkdown:
                         {
                             "row_index": 1,
                             "cells": [
-                                {"ref": "A1", "value": "x", "formula": None,
-                                 "is_bold": False, "indent_level": 0,
-                                 "number_format": "General"},
+                                {
+                                    "ref": "A1",
+                                    "value": "x",
+                                    "formula": None,
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                },
                             ],
                         }
                     ],
@@ -369,9 +377,9 @@ class TestStructuredToMarkdown:
         assert len(table_lines) > 0
 
     def test_empty_structured_produces_output(self):
-        md = ParsingStage._structured_to_markdown({
-            "sheets": [], "named_ranges": {}, "sheet_count": 0, "total_rows": 0
-        })
+        md = ParsingStage._structured_to_markdown(
+            {"sheets": [], "named_ranges": {}, "sheet_count": 0, "total_rows": 0}
+        )
         assert isinstance(md, str)
 
     def test_named_ranges_section(self):
@@ -484,9 +492,10 @@ class TestChunking:
 
     def test_estimate_token_count_returns_int(self):
         structured = {
-            "sheets": [{"sheet_name": "S1", "is_hidden": False,
-                        "merged_regions": [], "rows": []}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 0,
+            "sheets": [{"sheet_name": "S1", "is_hidden": False, "merged_regions": [], "rows": []}],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 0,
         }
         count = ParsingStage._estimate_token_count(structured)
         assert isinstance(count, int)
@@ -494,9 +503,10 @@ class TestChunking:
 
     def test_should_chunk_false_for_small_file(self):
         structured = {
-            "sheets": [{"sheet_name": "S1", "is_hidden": False,
-                        "merged_regions": [], "rows": []}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 0,
+            "sheets": [{"sheet_name": "S1", "is_hidden": False, "merged_regions": [], "rows": []}],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 0,
         }
         assert ParsingStage._should_chunk(structured) is False
 
@@ -506,26 +516,60 @@ class TestChunking:
         # multiple columns to produce enough output.
         big_rows = []
         for i in range(2000):
-            big_rows.append({
-                "row_index": i,
-                "cells": [
-                    {"ref": f"A{i}", "value": f"Financial line item label for row number {i}",
-                     "formula": None, "is_bold": False, "indent_level": 0,
-                     "number_format": "General"},
-                    {"ref": f"B{i}", "value": 12345.67, "formula": None,
-                     "is_bold": False, "indent_level": 0, "number_format": "#,##0"},
-                    {"ref": f"C{i}", "value": 23456.78, "formula": None,
-                     "is_bold": False, "indent_level": 0, "number_format": "#,##0"},
-                    {"ref": f"D{i}", "value": 34567.89, "formula": None,
-                     "is_bold": False, "indent_level": 0, "number_format": "#,##0"},
-                    {"ref": f"E{i}", "value": 45678.90, "formula": None,
-                     "is_bold": False, "indent_level": 0, "number_format": "#,##0"},
-                ],
-            })
+            big_rows.append(
+                {
+                    "row_index": i,
+                    "cells": [
+                        {
+                            "ref": f"A{i}",
+                            "value": f"Financial line item label for row number {i}",
+                            "formula": None,
+                            "is_bold": False,
+                            "indent_level": 0,
+                            "number_format": "General",
+                        },
+                        {
+                            "ref": f"B{i}",
+                            "value": 12345.67,
+                            "formula": None,
+                            "is_bold": False,
+                            "indent_level": 0,
+                            "number_format": "#,##0",
+                        },
+                        {
+                            "ref": f"C{i}",
+                            "value": 23456.78,
+                            "formula": None,
+                            "is_bold": False,
+                            "indent_level": 0,
+                            "number_format": "#,##0",
+                        },
+                        {
+                            "ref": f"D{i}",
+                            "value": 34567.89,
+                            "formula": None,
+                            "is_bold": False,
+                            "indent_level": 0,
+                            "number_format": "#,##0",
+                        },
+                        {
+                            "ref": f"E{i}",
+                            "value": 45678.90,
+                            "formula": None,
+                            "is_bold": False,
+                            "indent_level": 0,
+                            "number_format": "#,##0",
+                        },
+                    ],
+                }
+            )
         structured = {
-            "sheets": [{"sheet_name": "S1", "is_hidden": False,
-                        "merged_regions": [], "rows": big_rows}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 2000,
+            "sheets": [
+                {"sheet_name": "S1", "is_hidden": False, "merged_regions": [], "rows": big_rows}
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 2000,
         }
         assert ParsingStage._should_chunk(structured) is True
 
@@ -607,18 +651,24 @@ class TestHiddenSheetMarkdown:
 
     def test_hidden_sheet_uses_prefix(self):
         structured = {
-            "sheets": [{"sheet_name": "Secret", "is_hidden": True,
-                        "merged_regions": [], "rows": []}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 0,
+            "sheets": [
+                {"sheet_name": "Secret", "is_hidden": True, "merged_regions": [], "rows": []}
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 0,
         }
         md = ParsingStage._structured_to_markdown(structured)
         assert "## Sheet: [HIDDEN] Secret" in md
 
     def test_visible_sheet_no_prefix(self):
         structured = {
-            "sheets": [{"sheet_name": "Visible", "is_hidden": False,
-                        "merged_regions": [], "rows": []}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 0,
+            "sheets": [
+                {"sheet_name": "Visible", "is_hidden": False, "merged_regions": [], "rows": []}
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 0,
         }
         md = ParsingStage._structured_to_markdown(structured)
         assert "[HIDDEN]" not in md
@@ -636,23 +686,56 @@ class TestFormatAnnotations:
     def test_percentage_column_annotated(self):
         """Column with >50% percentage-formatted cells should be annotated."""
         rows = [
-            {"row_index": 1, "cells": [
-                {"ref": "A1", "value": "Label", "formula": None,
-                 "is_bold": True, "indent_level": 0, "number_format": "General"},
-                {"ref": "B1", "value": 0.05, "formula": None,
-                 "is_bold": False, "indent_level": 0, "number_format": "0.0%"},
-            ]},
-            {"row_index": 2, "cells": [
-                {"ref": "A2", "value": "Rate2", "formula": None,
-                 "is_bold": False, "indent_level": 0, "number_format": "General"},
-                {"ref": "B2", "value": 0.08, "formula": None,
-                 "is_bold": False, "indent_level": 0, "number_format": "0.0%"},
-            ]},
+            {
+                "row_index": 1,
+                "cells": [
+                    {
+                        "ref": "A1",
+                        "value": "Label",
+                        "formula": None,
+                        "is_bold": True,
+                        "indent_level": 0,
+                        "number_format": "General",
+                    },
+                    {
+                        "ref": "B1",
+                        "value": 0.05,
+                        "formula": None,
+                        "is_bold": False,
+                        "indent_level": 0,
+                        "number_format": "0.0%",
+                    },
+                ],
+            },
+            {
+                "row_index": 2,
+                "cells": [
+                    {
+                        "ref": "A2",
+                        "value": "Rate2",
+                        "formula": None,
+                        "is_bold": False,
+                        "indent_level": 0,
+                        "number_format": "General",
+                    },
+                    {
+                        "ref": "B2",
+                        "value": 0.08,
+                        "formula": None,
+                        "is_bold": False,
+                        "indent_level": 0,
+                        "number_format": "0.0%",
+                    },
+                ],
+            },
         ]
         structured = {
-            "sheets": [{"sheet_name": "S1", "is_hidden": False,
-                        "merged_regions": [], "rows": rows}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 2,
+            "sheets": [
+                {"sheet_name": "S1", "is_hidden": False, "merged_regions": [], "rows": rows}
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 2,
         }
         md = ParsingStage._structured_to_markdown(structured)
         assert "| Fmt |" in md
@@ -661,23 +744,56 @@ class TestFormatAnnotations:
     def test_currency_column_annotated(self):
         """Column with >50% currency-formatted cells gets $ annotation."""
         rows = [
-            {"row_index": 1, "cells": [
-                {"ref": "A1", "value": "Revenue", "formula": None,
-                 "is_bold": False, "indent_level": 0, "number_format": "General"},
-                {"ref": "B1", "value": 100000, "formula": None,
-                 "is_bold": False, "indent_level": 0, "number_format": "#,##0"},
-            ]},
-            {"row_index": 2, "cells": [
-                {"ref": "A2", "value": "Costs", "formula": None,
-                 "is_bold": False, "indent_level": 0, "number_format": "General"},
-                {"ref": "B2", "value": 50000, "formula": None,
-                 "is_bold": False, "indent_level": 0, "number_format": "#,##0"},
-            ]},
+            {
+                "row_index": 1,
+                "cells": [
+                    {
+                        "ref": "A1",
+                        "value": "Revenue",
+                        "formula": None,
+                        "is_bold": False,
+                        "indent_level": 0,
+                        "number_format": "General",
+                    },
+                    {
+                        "ref": "B1",
+                        "value": 100000,
+                        "formula": None,
+                        "is_bold": False,
+                        "indent_level": 0,
+                        "number_format": "#,##0",
+                    },
+                ],
+            },
+            {
+                "row_index": 2,
+                "cells": [
+                    {
+                        "ref": "A2",
+                        "value": "Costs",
+                        "formula": None,
+                        "is_bold": False,
+                        "indent_level": 0,
+                        "number_format": "General",
+                    },
+                    {
+                        "ref": "B2",
+                        "value": 50000,
+                        "formula": None,
+                        "is_bold": False,
+                        "indent_level": 0,
+                        "number_format": "#,##0",
+                    },
+                ],
+            },
         ]
         structured = {
-            "sheets": [{"sheet_name": "S1", "is_hidden": False,
-                        "merged_regions": [], "rows": rows}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 2,
+            "sheets": [
+                {"sheet_name": "S1", "is_hidden": False, "merged_regions": [], "rows": rows}
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 2,
         }
         md = ParsingStage._structured_to_markdown(structured)
         assert "| Fmt |" in md
@@ -686,23 +802,53 @@ class TestFormatAnnotations:
     def test_no_annotation_when_mixed_formats(self):
         """No format annotation when column has mixed formats (<50% any)."""
         rows = [
-            {"row_index": 1, "cells": [
-                {"ref": "B1", "value": 100, "formula": None,
-                 "is_bold": False, "indent_level": 0, "number_format": "#,##0"},
-            ]},
-            {"row_index": 2, "cells": [
-                {"ref": "B2", "value": 0.05, "formula": None,
-                 "is_bold": False, "indent_level": 0, "number_format": "0.0%"},
-            ]},
-            {"row_index": 3, "cells": [
-                {"ref": "B3", "value": 42, "formula": None,
-                 "is_bold": False, "indent_level": 0, "number_format": "General"},
-            ]},
+            {
+                "row_index": 1,
+                "cells": [
+                    {
+                        "ref": "B1",
+                        "value": 100,
+                        "formula": None,
+                        "is_bold": False,
+                        "indent_level": 0,
+                        "number_format": "#,##0",
+                    },
+                ],
+            },
+            {
+                "row_index": 2,
+                "cells": [
+                    {
+                        "ref": "B2",
+                        "value": 0.05,
+                        "formula": None,
+                        "is_bold": False,
+                        "indent_level": 0,
+                        "number_format": "0.0%",
+                    },
+                ],
+            },
+            {
+                "row_index": 3,
+                "cells": [
+                    {
+                        "ref": "B3",
+                        "value": 42,
+                        "formula": None,
+                        "is_bold": False,
+                        "indent_level": 0,
+                        "number_format": "General",
+                    },
+                ],
+            },
         ]
         structured = {
-            "sheets": [{"sheet_name": "S1", "is_hidden": False,
-                        "merged_regions": [], "rows": rows}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 3,
+            "sheets": [
+                {"sheet_name": "S1", "is_hidden": False, "merged_regions": [], "rows": rows}
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 3,
         }
         md = ParsingStage._structured_to_markdown(structured)
         assert "| Fmt |" not in md
@@ -710,23 +856,56 @@ class TestFormatAnnotations:
     def test_format_row_has_empty_indent_formula(self):
         """Fmt annotation row should have empty entries for Indent and Formula columns."""
         rows = [
-            {"row_index": 1, "cells": [
-                {"ref": "A1", "value": "Label", "formula": None,
-                 "is_bold": False, "indent_level": 0, "number_format": "General"},
-                {"ref": "B1", "value": 0.05, "formula": None,
-                 "is_bold": False, "indent_level": 0, "number_format": "0.0%"},
-            ]},
-            {"row_index": 2, "cells": [
-                {"ref": "A2", "value": "Rate2", "formula": None,
-                 "is_bold": False, "indent_level": 0, "number_format": "General"},
-                {"ref": "B2", "value": 0.08, "formula": None,
-                 "is_bold": False, "indent_level": 0, "number_format": "0.0%"},
-            ]},
+            {
+                "row_index": 1,
+                "cells": [
+                    {
+                        "ref": "A1",
+                        "value": "Label",
+                        "formula": None,
+                        "is_bold": False,
+                        "indent_level": 0,
+                        "number_format": "General",
+                    },
+                    {
+                        "ref": "B1",
+                        "value": 0.05,
+                        "formula": None,
+                        "is_bold": False,
+                        "indent_level": 0,
+                        "number_format": "0.0%",
+                    },
+                ],
+            },
+            {
+                "row_index": 2,
+                "cells": [
+                    {
+                        "ref": "A2",
+                        "value": "Rate2",
+                        "formula": None,
+                        "is_bold": False,
+                        "indent_level": 0,
+                        "number_format": "General",
+                    },
+                    {
+                        "ref": "B2",
+                        "value": 0.08,
+                        "formula": None,
+                        "is_bold": False,
+                        "indent_level": 0,
+                        "number_format": "0.0%",
+                    },
+                ],
+            },
         ]
         structured = {
-            "sheets": [{"sheet_name": "S1", "is_hidden": False,
-                        "merged_regions": [], "rows": rows}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 2,
+            "sheets": [
+                {"sheet_name": "S1", "is_hidden": False, "merged_regions": [], "rows": rows}
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 2,
         }
         md = ParsingStage._structured_to_markdown(structured)
         fmt_line = [l for l in md.split("\n") if l.startswith("| Fmt")]
@@ -751,14 +930,31 @@ class TestMarkdownFormulaColumn:
     def test_formula_column_in_header(self):
         """Header row should contain 'Formula' column."""
         structured = {
-            "sheets": [{"sheet_name": "S1", "is_hidden": False,
-                        "merged_regions": [], "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "A1", "value": "X", "formula": None,
-                     "is_bold": False, "indent_level": 0, "number_format": "General"},
-                ]}
-            ]}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 1,
+            "sheets": [
+                {
+                    "sheet_name": "S1",
+                    "is_hidden": False,
+                    "merged_regions": [],
+                    "rows": [
+                        {
+                            "row_index": 1,
+                            "cells": [
+                                {
+                                    "ref": "A1",
+                                    "value": "X",
+                                    "formula": None,
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                },
+                            ],
+                        }
+                    ],
+                }
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 1,
         }
         md = ParsingStage._structured_to_markdown(structured)
         header_line = [l for l in md.split("\n") if l.startswith("| Row")][0]
@@ -767,16 +963,39 @@ class TestMarkdownFormulaColumn:
     def test_formula_shown_for_formula_cell(self):
         """Row with a formula cell should show the formula in the Formula column."""
         structured = {
-            "sheets": [{"sheet_name": "S1", "is_hidden": False,
-                        "merged_regions": [], "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "A1", "value": "Total", "formula": None,
-                     "is_bold": False, "indent_level": 0, "number_format": "General"},
-                    {"ref": "B1", "value": 300, "formula": "=SUM(B2:B5)",
-                     "is_bold": False, "indent_level": 0, "number_format": "General"},
-                ]}
-            ]}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 1,
+            "sheets": [
+                {
+                    "sheet_name": "S1",
+                    "is_hidden": False,
+                    "merged_regions": [],
+                    "rows": [
+                        {
+                            "row_index": 1,
+                            "cells": [
+                                {
+                                    "ref": "A1",
+                                    "value": "Total",
+                                    "formula": None,
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                },
+                                {
+                                    "ref": "B1",
+                                    "value": 300,
+                                    "formula": "=SUM(B2:B5)",
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                },
+                            ],
+                        }
+                    ],
+                }
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 1,
         }
         md = ParsingStage._structured_to_markdown(structured)
         data_lines = [l for l in md.split("\n") if l.startswith("| 1")]
@@ -786,16 +1005,39 @@ class TestMarkdownFormulaColumn:
     def test_no_formula_for_plain_value(self):
         """Row without formula should have empty Formula column."""
         structured = {
-            "sheets": [{"sheet_name": "S1", "is_hidden": False,
-                        "merged_regions": [], "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "A1", "value": "Revenue", "formula": None,
-                     "is_bold": False, "indent_level": 0, "number_format": "General"},
-                    {"ref": "B1", "value": 100, "formula": None,
-                     "is_bold": False, "indent_level": 0, "number_format": "General"},
-                ]}
-            ]}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 1,
+            "sheets": [
+                {
+                    "sheet_name": "S1",
+                    "is_hidden": False,
+                    "merged_regions": [],
+                    "rows": [
+                        {
+                            "row_index": 1,
+                            "cells": [
+                                {
+                                    "ref": "A1",
+                                    "value": "Revenue",
+                                    "formula": None,
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                },
+                                {
+                                    "ref": "B1",
+                                    "value": 100,
+                                    "formula": None,
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                },
+                            ],
+                        }
+                    ],
+                }
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 1,
         }
         md = ParsingStage._structured_to_markdown(structured)
         data_lines = [l for l in md.split("\n") if l.startswith("| 1")]
@@ -809,18 +1051,47 @@ class TestMarkdownFormulaColumn:
     def test_formula_picks_first_formula_cell(self):
         """When multiple cells have formulas, use the first one encountered."""
         structured = {
-            "sheets": [{"sheet_name": "S1", "is_hidden": False,
-                        "merged_regions": [], "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "A1", "value": "Item", "formula": None,
-                     "is_bold": False, "indent_level": 0, "number_format": "General"},
-                    {"ref": "B1", "value": 100, "formula": "=C1+D1",
-                     "is_bold": False, "indent_level": 0, "number_format": "General"},
-                    {"ref": "C1", "value": 50, "formula": "=D1*2",
-                     "is_bold": False, "indent_level": 0, "number_format": "General"},
-                ]}
-            ]}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 1,
+            "sheets": [
+                {
+                    "sheet_name": "S1",
+                    "is_hidden": False,
+                    "merged_regions": [],
+                    "rows": [
+                        {
+                            "row_index": 1,
+                            "cells": [
+                                {
+                                    "ref": "A1",
+                                    "value": "Item",
+                                    "formula": None,
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                },
+                                {
+                                    "ref": "B1",
+                                    "value": 100,
+                                    "formula": "=C1+D1",
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                },
+                                {
+                                    "ref": "C1",
+                                    "value": 50,
+                                    "formula": "=D1*2",
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                },
+                            ],
+                        }
+                    ],
+                }
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 1,
         }
         md = ParsingStage._structured_to_markdown(structured)
         data_lines = [l for l in md.split("\n") if l.startswith("| 1")]
@@ -838,14 +1109,31 @@ class TestMarkdownIndentColumn:
     def test_indent_column_in_header(self):
         """Header row should contain 'Indent' column."""
         structured = {
-            "sheets": [{"sheet_name": "S1", "is_hidden": False,
-                        "merged_regions": [], "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "A1", "value": "X", "formula": None,
-                     "is_bold": False, "indent_level": 0, "number_format": "General"},
-                ]}
-            ]}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 1,
+            "sheets": [
+                {
+                    "sheet_name": "S1",
+                    "is_hidden": False,
+                    "merged_regions": [],
+                    "rows": [
+                        {
+                            "row_index": 1,
+                            "cells": [
+                                {
+                                    "ref": "A1",
+                                    "value": "X",
+                                    "formula": None,
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                },
+                            ],
+                        }
+                    ],
+                }
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 1,
         }
         md = ParsingStage._structured_to_markdown(structured)
         header_line = [l for l in md.split("\n") if l.startswith("| Row")][0]
@@ -854,14 +1142,31 @@ class TestMarkdownIndentColumn:
     def test_indent_level_rendered(self):
         """Cell with indent_level=2 should show '2' in the Indent column."""
         structured = {
-            "sheets": [{"sheet_name": "S1", "is_hidden": False,
-                        "merged_regions": [], "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "A1", "value": "Sub-item", "formula": None,
-                     "is_bold": False, "indent_level": 2, "number_format": "General"},
-                ]}
-            ]}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 1,
+            "sheets": [
+                {
+                    "sheet_name": "S1",
+                    "is_hidden": False,
+                    "merged_regions": [],
+                    "rows": [
+                        {
+                            "row_index": 1,
+                            "cells": [
+                                {
+                                    "ref": "A1",
+                                    "value": "Sub-item",
+                                    "formula": None,
+                                    "is_bold": False,
+                                    "indent_level": 2,
+                                    "number_format": "General",
+                                },
+                            ],
+                        }
+                    ],
+                }
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 1,
         }
         md = ParsingStage._structured_to_markdown(structured)
         data_lines = [l for l in md.split("\n") if l.startswith("| 1")]
@@ -874,14 +1179,31 @@ class TestMarkdownIndentColumn:
     def test_zero_indent_default(self):
         """Cell with no indent should show '0' in the Indent column."""
         structured = {
-            "sheets": [{"sheet_name": "S1", "is_hidden": False,
-                        "merged_regions": [], "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "A1", "value": "Top-level", "formula": None,
-                     "is_bold": False, "indent_level": 0, "number_format": "General"},
-                ]}
-            ]}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 1,
+            "sheets": [
+                {
+                    "sheet_name": "S1",
+                    "is_hidden": False,
+                    "merged_regions": [],
+                    "rows": [
+                        {
+                            "row_index": 1,
+                            "cells": [
+                                {
+                                    "ref": "A1",
+                                    "value": "Top-level",
+                                    "formula": None,
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                },
+                            ],
+                        }
+                    ],
+                }
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 1,
         }
         md = ParsingStage._structured_to_markdown(structured)
         data_lines = [l for l in md.split("\n") if l.startswith("| 1")]
@@ -1103,11 +1425,13 @@ class TestSectionBoundaryDetection:
     def test_bold_after_gap_is_boundary(self):
         """Bold row preceded by gap in row_index should be a section boundary."""
         xlsx = _make_minimal_xlsx(
-            data={"S1": [
-                [1, 2],        # row 1
-                [None, None],  # row 2 (will be skipped as empty)
-                ["Revenue", 100],  # row 3
-            ]},
+            data={
+                "S1": [
+                    [1, 2],  # row 1
+                    [None, None],  # row 2 (will be skipped as empty)
+                    ["Revenue", 100],  # row 3
+                ]
+            },
             bold_cells={("S1", 3, 1)},
         )
         result = ParsingStage._excel_to_structured_repr(xlsx)
@@ -1128,10 +1452,12 @@ class TestSectionBoundaryDetection:
     def test_bold_with_border_is_boundary(self):
         """Bold row with border_bottom should be a section boundary."""
         xlsx = _make_minimal_xlsx(
-            data={"S1": [
-                ["Data", 100],
-                ["Revenue", 200],
-            ]},
+            data={
+                "S1": [
+                    ["Data", 100],
+                    ["Revenue", 200],
+                ]
+            },
             bold_cells={("S1", 2, 1)},
             borders={("S1", 2, 1): {"bottom": True, "right": False}},
         )
@@ -1142,11 +1468,13 @@ class TestSectionBoundaryDetection:
     def test_non_bold_row_not_boundary(self):
         """Non-bold row should not be a section boundary even after gap."""
         xlsx = _make_minimal_xlsx(
-            data={"S1": [
-                [1, 2],
-                [None, None],
-                ["Revenue", 100],
-            ]},
+            data={
+                "S1": [
+                    [1, 2],
+                    [None, None],
+                    ["Revenue", 100],
+                ]
+            },
         )
         result = ParsingStage._excel_to_structured_repr(xlsx)
         boundaries = result["sheets"][0]["section_boundaries"]
@@ -1248,16 +1576,33 @@ class TestCommentExtraction:
     def test_comment_in_markdown_footnotes(self):
         """Comments should appear as footnotes in markdown output."""
         structured = {
-            "sheets": [{"sheet_name": "S1", "is_hidden": False,
-                        "merged_regions": [], "section_boundaries": [],
-                        "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "A1", "value": "Revenue", "formula": None,
-                     "is_bold": False, "indent_level": 0,
-                     "number_format": "General", "comment": "Source: mgmt"},
-                ]}
-            ]}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 1,
+            "sheets": [
+                {
+                    "sheet_name": "S1",
+                    "is_hidden": False,
+                    "merged_regions": [],
+                    "section_boundaries": [],
+                    "rows": [
+                        {
+                            "row_index": 1,
+                            "cells": [
+                                {
+                                    "ref": "A1",
+                                    "value": "Revenue",
+                                    "formula": None,
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                    "comment": "Source: mgmt",
+                                },
+                            ],
+                        }
+                    ],
+                }
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 1,
         }
         md = ParsingStage._structured_to_markdown(structured)
         assert "**Notes:**" in md
@@ -1275,15 +1620,32 @@ class TestEnhancedMarkdown:
     def test_type_column_in_header(self):
         """Header row should contain 'Type' column."""
         structured = {
-            "sheets": [{"sheet_name": "S1", "is_hidden": False,
-                        "merged_regions": [], "section_boundaries": [],
-                        "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "A1", "value": "X", "formula": None,
-                     "is_bold": False, "indent_level": 0, "number_format": "General"},
-                ]}
-            ]}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 1,
+            "sheets": [
+                {
+                    "sheet_name": "S1",
+                    "is_hidden": False,
+                    "merged_regions": [],
+                    "section_boundaries": [],
+                    "rows": [
+                        {
+                            "row_index": 1,
+                            "cells": [
+                                {
+                                    "ref": "A1",
+                                    "value": "X",
+                                    "formula": None,
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                },
+                            ],
+                        }
+                    ],
+                }
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 1,
         }
         md = ParsingStage._structured_to_markdown(structured)
         header_line = [l for l in md.split("\n") if l.startswith("| Row")][0]
@@ -1292,16 +1654,33 @@ class TestEnhancedMarkdown:
     def test_type_column_shows_formula(self):
         """Row with formula cell should show Type=F."""
         structured = {
-            "sheets": [{"sheet_name": "S1", "is_hidden": False,
-                        "merged_regions": [], "section_boundaries": [],
-                        "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "A1", "value": 100, "formula": "=SUM(A2:A5)",
-                     "is_bold": False, "indent_level": 0,
-                     "number_format": "General", "cell_type": "formula"},
-                ]}
-            ]}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 1,
+            "sheets": [
+                {
+                    "sheet_name": "S1",
+                    "is_hidden": False,
+                    "merged_regions": [],
+                    "section_boundaries": [],
+                    "rows": [
+                        {
+                            "row_index": 1,
+                            "cells": [
+                                {
+                                    "ref": "A1",
+                                    "value": 100,
+                                    "formula": "=SUM(A2:A5)",
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                    "cell_type": "formula",
+                                },
+                            ],
+                        }
+                    ],
+                }
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 1,
         }
         md = ParsingStage._structured_to_markdown(structured)
         data_lines = [l for l in md.split("\n") if l.startswith("| 1")]
@@ -1312,16 +1691,33 @@ class TestEnhancedMarkdown:
     def test_type_column_shows_input(self):
         """Row with input cell should show Type=I."""
         structured = {
-            "sheets": [{"sheet_name": "S1", "is_hidden": False,
-                        "merged_regions": [], "section_boundaries": [],
-                        "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "A1", "value": 100, "formula": None,
-                     "is_bold": False, "indent_level": 0,
-                     "number_format": "General", "cell_type": "input"},
-                ]}
-            ]}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 1,
+            "sheets": [
+                {
+                    "sheet_name": "S1",
+                    "is_hidden": False,
+                    "merged_regions": [],
+                    "section_boundaries": [],
+                    "rows": [
+                        {
+                            "row_index": 1,
+                            "cells": [
+                                {
+                                    "ref": "A1",
+                                    "value": 100,
+                                    "formula": None,
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                    "cell_type": "input",
+                                },
+                            ],
+                        }
+                    ],
+                }
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 1,
         }
         md = ParsingStage._structured_to_markdown(structured)
         data_lines = [l for l in md.split("\n") if l.startswith("| 1")]
@@ -1331,16 +1727,33 @@ class TestEnhancedMarkdown:
     def test_very_hidden_sheet_annotated(self):
         """veryHidden sheet should show [VERY HIDDEN] in markdown."""
         structured = {
-            "sheets": [{"sheet_name": "Secret", "is_hidden": True,
-                        "visibility": "veryHidden",
-                        "merged_regions": [], "section_boundaries": [],
-                        "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "A1", "value": 1, "formula": None,
-                     "is_bold": False, "indent_level": 0, "number_format": "General"},
-                ]}
-            ]}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 1,
+            "sheets": [
+                {
+                    "sheet_name": "Secret",
+                    "is_hidden": True,
+                    "visibility": "veryHidden",
+                    "merged_regions": [],
+                    "section_boundaries": [],
+                    "rows": [
+                        {
+                            "row_index": 1,
+                            "cells": [
+                                {
+                                    "ref": "A1",
+                                    "value": 1,
+                                    "formula": None,
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                },
+                            ],
+                        }
+                    ],
+                }
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 1,
         }
         md = ParsingStage._structured_to_markdown(structured)
         assert "[VERY HIDDEN]" in md
@@ -1348,20 +1761,45 @@ class TestEnhancedMarkdown:
     def test_section_separator_in_markdown(self):
         """Section boundary rows should be preceded by a separator."""
         structured = {
-            "sheets": [{"sheet_name": "S1", "is_hidden": False,
-                        "merged_regions": [],
-                        "section_boundaries": [{"row_index": 3, "label": "Revenue"}],
-                        "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "A1", "value": "Data", "formula": None,
-                     "is_bold": False, "indent_level": 0, "number_format": "General"},
-                ]},
-                {"row_index": 3, "cells": [
-                    {"ref": "A3", "value": "Revenue", "formula": None,
-                     "is_bold": True, "indent_level": 0, "number_format": "General"},
-                ]},
-            ]}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 2,
+            "sheets": [
+                {
+                    "sheet_name": "S1",
+                    "is_hidden": False,
+                    "merged_regions": [],
+                    "section_boundaries": [{"row_index": 3, "label": "Revenue"}],
+                    "rows": [
+                        {
+                            "row_index": 1,
+                            "cells": [
+                                {
+                                    "ref": "A1",
+                                    "value": "Data",
+                                    "formula": None,
+                                    "is_bold": False,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                },
+                            ],
+                        },
+                        {
+                            "row_index": 3,
+                            "cells": [
+                                {
+                                    "ref": "A3",
+                                    "value": "Revenue",
+                                    "formula": None,
+                                    "is_bold": True,
+                                    "indent_level": 0,
+                                    "number_format": "General",
+                                },
+                            ],
+                        },
+                    ],
+                }
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 2,
         }
         md = ParsingStage._structured_to_markdown(structured)
         lines = md.split("\n")
@@ -1376,24 +1814,62 @@ class TestEnhancedMarkdown:
     def test_multiplier_format_annotation(self):
         """Column formatted as '0.0x' should show 'x' in Fmt row."""
         rows = [
-            {"row_index": 1, "cells": [
-                {"ref": "A1", "value": "Turns", "formula": None,
-                 "is_bold": False, "indent_level": 0, "number_format": "General"},
-                {"ref": "B1", "value": 3.5, "formula": None,
-                 "is_bold": False, "indent_level": 0, "number_format": "0.0"},
-            ]},
-            {"row_index": 2, "cells": [
-                {"ref": "A2", "value": "Coverage", "formula": None,
-                 "is_bold": False, "indent_level": 0, "number_format": "General"},
-                {"ref": "B2", "value": 2.1, "formula": None,
-                 "is_bold": False, "indent_level": 0, "number_format": "0.0"},
-            ]},
+            {
+                "row_index": 1,
+                "cells": [
+                    {
+                        "ref": "A1",
+                        "value": "Turns",
+                        "formula": None,
+                        "is_bold": False,
+                        "indent_level": 0,
+                        "number_format": "General",
+                    },
+                    {
+                        "ref": "B1",
+                        "value": 3.5,
+                        "formula": None,
+                        "is_bold": False,
+                        "indent_level": 0,
+                        "number_format": "0.0",
+                    },
+                ],
+            },
+            {
+                "row_index": 2,
+                "cells": [
+                    {
+                        "ref": "A2",
+                        "value": "Coverage",
+                        "formula": None,
+                        "is_bold": False,
+                        "indent_level": 0,
+                        "number_format": "General",
+                    },
+                    {
+                        "ref": "B2",
+                        "value": 2.1,
+                        "formula": None,
+                        "is_bold": False,
+                        "indent_level": 0,
+                        "number_format": "0.0",
+                    },
+                ],
+            },
         ]
         structured = {
-            "sheets": [{"sheet_name": "S1", "is_hidden": False,
-                        "merged_regions": [], "section_boundaries": [],
-                        "rows": rows}],
-            "named_ranges": {}, "sheet_count": 1, "total_rows": 2,
+            "sheets": [
+                {
+                    "sheet_name": "S1",
+                    "is_hidden": False,
+                    "merged_regions": [],
+                    "section_boundaries": [],
+                    "rows": rows,
+                }
+            ],
+            "named_ranges": {},
+            "sheet_count": 1,
+            "total_rows": 2,
         }
         md = ParsingStage._structured_to_markdown(structured)
         fmt_line = [l for l in md.split("\n") if l.startswith("| Fmt")]
@@ -1447,35 +1923,47 @@ class TestDetectLabelColumn:
 
     def test_standard_layout_returns_A(self):
         """Column A has string labels, B-D have numbers -> 'A'."""
-        xlsx = _make_minimal_xlsx(data={"S1": [
-            ["Revenue", 100, 200, 300],
-            ["COGS", 50, 60, 70],
-            ["Gross Profit", 50, 140, 230],
-            ["OpEx", 20, 30, 40],
-        ]})
+        xlsx = _make_minimal_xlsx(
+            data={
+                "S1": [
+                    ["Revenue", 100, 200, 300],
+                    ["COGS", 50, 60, 70],
+                    ["Gross Profit", 50, 140, 230],
+                    ["OpEx", 20, 30, 40],
+                ]
+            }
+        )
         result = ParsingStage._excel_to_structured_repr(xlsx)
         col = ParsingStage._detect_label_column(result["sheets"][0]["rows"])
         assert col == "A"
 
     def test_offset_labels_in_column_B(self):
         """Column A has row numbers, column B has strings -> 'B'."""
-        xlsx = _make_minimal_xlsx(data={"S1": [
-            [1, "Revenue", 100, 200],
-            [2, "COGS", 50, 60],
-            [3, "Gross Profit", 50, 140],
-            [4, "OpEx", 20, 30],
-        ]})
+        xlsx = _make_minimal_xlsx(
+            data={
+                "S1": [
+                    [1, "Revenue", 100, 200],
+                    [2, "COGS", 50, 60],
+                    [3, "Gross Profit", 50, 140],
+                    [4, "OpEx", 20, 30],
+                ]
+            }
+        )
         result = ParsingStage._excel_to_structured_repr(xlsx)
         col = ParsingStage._detect_label_column(result["sheets"][0]["rows"])
         assert col == "B"
 
     def test_all_numeric_returns_none(self):
         """All columns are numbers -> None."""
-        xlsx = _make_minimal_xlsx(data={"S1": [
-            [1, 2, 3],
-            [4, 5, 6],
-            [7, 8, 9],
-        ]})
+        xlsx = _make_minimal_xlsx(
+            data={
+                "S1": [
+                    [1, 2, 3],
+                    [4, 5, 6],
+                    [7, 8, 9],
+                ]
+            }
+        )
         result = ParsingStage._excel_to_structured_repr(xlsx)
         col = ParsingStage._detect_label_column(result["sheets"][0]["rows"])
         assert col is None
@@ -1491,32 +1979,44 @@ class TestDetectHeaderRow:
 
     def test_fiscal_year_header(self):
         """Row 1 has 'FY2022', 'FY2023', 'FY2024E' -> row 1."""
-        xlsx = _make_minimal_xlsx(data={"S1": [
-            ["", "FY2022", "FY2023", "FY2024E"],
-            ["Revenue", 100, 200, 300],
-        ]})
+        xlsx = _make_minimal_xlsx(
+            data={
+                "S1": [
+                    ["", "FY2022", "FY2023", "FY2024E"],
+                    ["Revenue", 100, 200, 300],
+                ]
+            }
+        )
         result = ParsingStage._excel_to_structured_repr(xlsx)
         row_idx = ParsingStage._detect_header_row(result["sheets"][0]["rows"])
         assert row_idx == 1
 
     def test_header_in_row_3(self):
         """Title rows 1-2, period values in row 3 -> row 3."""
-        xlsx = _make_minimal_xlsx(data={"S1": [
-            ["Company Name", None, None],
-            ["Financial Statements", None, None],
-            ["", "2022", "2023", "2024"],
-            ["Revenue", 100, 200, 300],
-        ]})
+        xlsx = _make_minimal_xlsx(
+            data={
+                "S1": [
+                    ["Company Name", None, None],
+                    ["Financial Statements", None, None],
+                    ["", "2022", "2023", "2024"],
+                    ["Revenue", 100, 200, 300],
+                ]
+            }
+        )
         result = ParsingStage._excel_to_structured_repr(xlsx)
         row_idx = ParsingStage._detect_header_row(result["sheets"][0]["rows"])
         assert row_idx == 3
 
     def test_no_period_values_returns_none(self):
         """No row has period-like values -> None."""
-        xlsx = _make_minimal_xlsx(data={"S1": [
-            ["Revenue", 100, 200],
-            ["COGS", 50, 60],
-        ]})
+        xlsx = _make_minimal_xlsx(
+            data={
+                "S1": [
+                    ["Revenue", 100, 200],
+                    ["COGS", 50, 60],
+                ]
+            }
+        )
         result = ParsingStage._excel_to_structured_repr(xlsx)
         row_idx = ParsingStage._detect_header_row(result["sheets"][0]["rows"])
         assert row_idx is None
@@ -1537,15 +2037,17 @@ class TestDetectTableRegions:
 
     def test_single_region(self):
         """Contiguous rows -> 1 region."""
-        xlsx = _make_minimal_xlsx(data={"S1": [
-            ["A", 1],
-            ["B", 2],
-            ["C", 3],
-        ]})
-        result = ParsingStage._excel_to_structured_repr(xlsx)
-        regions = ParsingStage._detect_table_regions(
-            result["sheets"][0]["rows"]
+        xlsx = _make_minimal_xlsx(
+            data={
+                "S1": [
+                    ["A", 1],
+                    ["B", 2],
+                    ["C", 3],
+                ]
+            }
         )
+        result = ParsingStage._excel_to_structured_repr(xlsx)
+        regions = ParsingStage._detect_table_regions(result["sheets"][0]["rows"])
         assert len(regions) == 1
         assert regions[0]["start_row"] == 1
         assert regions[0]["end_row"] == 3
@@ -1554,22 +2056,20 @@ class TestDetectTableRegions:
         """Rows 1-3, blank rows 4-6, rows 7-9 -> 2 regions."""
         data = {
             "S1": [
-                ["Revenue", 100],     # row 1
-                ["COGS", 50],         # row 2
-                ["Profit", 50],       # row 3
-                [None, None],         # row 4 (blank)
-                [None, None],         # row 5 (blank)
-                [None, None],         # row 6 (blank)
-                ["Assets", 1000],     # row 7
-                ["Liabilities", 500], # row 8
-                ["Equity", 500],      # row 9
+                ["Revenue", 100],  # row 1
+                ["COGS", 50],  # row 2
+                ["Profit", 50],  # row 3
+                [None, None],  # row 4 (blank)
+                [None, None],  # row 5 (blank)
+                [None, None],  # row 6 (blank)
+                ["Assets", 1000],  # row 7
+                ["Liabilities", 500],  # row 8
+                ["Equity", 500],  # row 9
             ]
         }
         xlsx = _make_minimal_xlsx(data=data)
         result = ParsingStage._excel_to_structured_repr(xlsx)
-        regions = ParsingStage._detect_table_regions(
-            result["sheets"][0]["rows"]
-        )
+        regions = ParsingStage._detect_table_regions(result["sheets"][0]["rows"])
         assert len(regions) == 2
         assert regions[0]["start_row"] == 1
         assert regions[0]["end_row"] == 3
@@ -1587,30 +2087,34 @@ class TestDetectTransposed:
 
     def test_transposed_detected(self):
         """Periods in column A -> True."""
-        xlsx = _make_minimal_xlsx(data={"S1": [
-            ["2020", 100, 200],
-            ["2021", 110, 210],
-            ["2022", 120, 220],
-            ["2023", 130, 230],
-            ["2024", 140, 240],
-        ]})
-        result = ParsingStage._excel_to_structured_repr(xlsx)
-        is_t = ParsingStage._detect_transposed(
-            result["sheets"][0]["rows"], "A"
+        xlsx = _make_minimal_xlsx(
+            data={
+                "S1": [
+                    ["2020", 100, 200],
+                    ["2021", 110, 210],
+                    ["2022", 120, 220],
+                    ["2023", 130, 230],
+                    ["2024", 140, 240],
+                ]
+            }
         )
+        result = ParsingStage._excel_to_structured_repr(xlsx)
+        is_t = ParsingStage._detect_transposed(result["sheets"][0]["rows"], "A")
         assert is_t is True
 
     def test_not_transposed(self):
         """Standard layout -> False."""
-        xlsx = _make_minimal_xlsx(data={"S1": [
-            ["Revenue", 100, 200],
-            ["COGS", 50, 60],
-            ["Profit", 50, 140],
-        ]})
-        result = ParsingStage._excel_to_structured_repr(xlsx)
-        is_t = ParsingStage._detect_transposed(
-            result["sheets"][0]["rows"], "A"
+        xlsx = _make_minimal_xlsx(
+            data={
+                "S1": [
+                    ["Revenue", 100, 200],
+                    ["COGS", 50, 60],
+                    ["Profit", 50, 140],
+                ]
+            }
         )
+        result = ParsingStage._excel_to_structured_repr(xlsx)
+        is_t = ParsingStage._detect_transposed(result["sheets"][0]["rows"], "A")
         assert is_t is False
 
 
@@ -1619,16 +2123,18 @@ class TestDetectNonFinancialRows:
 
     def test_source_and_separator_detected(self):
         """'Source:' and '---' rows are marked as non-financial."""
-        xlsx = _make_minimal_xlsx(data={"S1": [
-            ["Revenue", 100],
-            ["COGS", 50],
-            ["Source: Company filings", None],
-            ["---", None],
-        ]})
-        result = ParsingStage._excel_to_structured_repr(xlsx)
-        nf = ParsingStage._detect_non_financial_rows(
-            result["sheets"][0]["rows"]
+        xlsx = _make_minimal_xlsx(
+            data={
+                "S1": [
+                    ["Revenue", 100],
+                    ["COGS", 50],
+                    ["Source: Company filings", None],
+                    ["---", None],
+                ]
+            }
         )
+        result = ParsingStage._excel_to_structured_repr(xlsx)
+        nf = ParsingStage._detect_non_financial_rows(result["sheets"][0]["rows"])
         assert 3 in nf
         assert 4 in nf
         assert 1 not in nf
@@ -1636,14 +2142,16 @@ class TestDetectNonFinancialRows:
 
     def test_note_detected(self):
         """'Note: ...' rows are non-financial."""
-        xlsx = _make_minimal_xlsx(data={"S1": [
-            ["Revenue", 100],
-            ["Note: audited figures", None],
-        ]})
-        result = ParsingStage._excel_to_structured_repr(xlsx)
-        nf = ParsingStage._detect_non_financial_rows(
-            result["sheets"][0]["rows"]
+        xlsx = _make_minimal_xlsx(
+            data={
+                "S1": [
+                    ["Revenue", 100],
+                    ["Note: audited figures", None],
+                ]
+            }
         )
+        result = ParsingStage._excel_to_structured_repr(xlsx)
+        nf = ParsingStage._detect_non_financial_rows(result["sheets"][0]["rows"])
         assert 2 in nf
 
     def test_management_estimates_detected(self):
@@ -1686,38 +2194,44 @@ class TestDetectUnitHint:
 
     def test_thousands_in_cell(self):
         """'(in thousands)' in first rows -> ('thousands', 1000.0)."""
-        xlsx = _make_minimal_xlsx(data={"S1": [
-            ["(in thousands)", None, None],
-            ["Revenue", 100, 200],
-        ]})
-        result = ParsingStage._excel_to_structured_repr(xlsx)
-        hint, mult = ParsingStage._detect_unit_hint(
-            result["sheets"][0]["rows"], "S1"
+        xlsx = _make_minimal_xlsx(
+            data={
+                "S1": [
+                    ["(in thousands)", None, None],
+                    ["Revenue", 100, 200],
+                ]
+            }
         )
+        result = ParsingStage._excel_to_structured_repr(xlsx)
+        hint, mult = ParsingStage._detect_unit_hint(result["sheets"][0]["rows"], "S1")
         assert hint == "thousands"
         assert mult == 1_000.0
 
     def test_millions_in_sheet_name(self):
         """Sheet name '($millions)' -> ('millions', 1000000.0)."""
-        xlsx = _make_minimal_xlsx(data={"P&L ($millions)": [
-            ["Revenue", 100],
-        ]})
-        result = ParsingStage._excel_to_structured_repr(xlsx)
-        hint, mult = ParsingStage._detect_unit_hint(
-            result["sheets"][0]["rows"], "P&L ($millions)"
+        xlsx = _make_minimal_xlsx(
+            data={
+                "P&L ($millions)": [
+                    ["Revenue", 100],
+                ]
+            }
         )
+        result = ParsingStage._excel_to_structured_repr(xlsx)
+        hint, mult = ParsingStage._detect_unit_hint(result["sheets"][0]["rows"], "P&L ($millions)")
         assert hint == "millions"
         assert mult == 1_000_000.0
 
     def test_no_unit_returns_none(self):
         """No unit text -> (None, None)."""
-        xlsx = _make_minimal_xlsx(data={"S1": [
-            ["Revenue", 100],
-        ]})
-        result = ParsingStage._excel_to_structured_repr(xlsx)
-        hint, mult = ParsingStage._detect_unit_hint(
-            result["sheets"][0]["rows"], "S1"
+        xlsx = _make_minimal_xlsx(
+            data={
+                "S1": [
+                    ["Revenue", 100],
+                ]
+            }
         )
+        result = ParsingStage._excel_to_structured_repr(xlsx)
+        hint, mult = ParsingStage._detect_unit_hint(result["sheets"][0]["rows"], "S1")
         assert hint is None
         assert mult is None
 
@@ -1736,9 +2250,7 @@ class TestDetectUnitHint:
         ]
         xlsx = _make_minimal_xlsx(data={"S1": data})
         result = ParsingStage._excel_to_structured_repr(xlsx)
-        hint, mult = ParsingStage._detect_unit_hint(
-            result["sheets"][0]["rows"], "S1"
-        )
+        hint, mult = ParsingStage._detect_unit_hint(result["sheets"][0]["rows"], "S1")
         assert hint == "millions"
         assert mult == 1_000_000.0
 
@@ -1748,10 +2260,14 @@ class TestSheetMetadata:
 
     def test_metadata_dict_has_all_keys(self):
         """_detect_sheet_metadata returns dict with expected keys."""
-        xlsx = _make_minimal_xlsx(data={"S1": [
-            ["Revenue", 100, 200],
-            ["COGS", 50, 60],
-        ]})
+        xlsx = _make_minimal_xlsx(
+            data={
+                "S1": [
+                    ["Revenue", 100, 200],
+                    ["COGS", 50, 60],
+                ]
+            }
+        )
         result = ParsingStage._excel_to_structured_repr(xlsx)
         meta = ParsingStage._detect_sheet_metadata(result["sheets"][0])
         assert "label_column" in meta
@@ -1764,10 +2280,14 @@ class TestSheetMetadata:
 
     def test_max_row_captured(self):
         """max_row key is present in sheet dict after extraction."""
-        xlsx = _make_minimal_xlsx(data={"S1": [
-            ["A", 1],
-            ["B", 2],
-        ]})
+        xlsx = _make_minimal_xlsx(
+            data={
+                "S1": [
+                    ["A", 1],
+                    ["B", 2],
+                ]
+            }
+        )
         result = ParsingStage._excel_to_structured_repr(xlsx)
         assert "max_row" in result["sheets"][0]
         assert result["sheets"][0]["max_row"] >= 2
@@ -1785,9 +2305,12 @@ class TestSheetMetadata:
             "table_regions": [],
             "non_financial_rows": set(),
             "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "B1", "value": "Revenue", "number_format": "General"},
-                ]},
+                {
+                    "row_index": 1,
+                    "cells": [
+                        {"ref": "B1", "value": "Revenue", "number_format": "General"},
+                    ],
+                },
             ],
         }
         md = ParsingStage._structured_to_markdown({"sheets": [sheet]})
@@ -1806,9 +2329,12 @@ class TestSheetMetadata:
             "table_regions": [],
             "non_financial_rows": set(),
             "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "A1", "value": "Revenue", "number_format": "General"},
-                ]},
+                {
+                    "row_index": 1,
+                    "cells": [
+                        {"ref": "A1", "value": "Revenue", "number_format": "General"},
+                    ],
+                },
             ],
         }
         md = ParsingStage._structured_to_markdown({"sheets": [sheet]})
@@ -1830,9 +2356,12 @@ class TestSheetMetadata:
             ],
             "non_financial_rows": set(),
             "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "A1", "value": "Revenue", "number_format": "General"},
-                ]},
+                {
+                    "row_index": 1,
+                    "cells": [
+                        {"ref": "A1", "value": "Revenue", "number_format": "General"},
+                    ],
+                },
             ],
         }
         md = ParsingStage._structured_to_markdown({"sheets": [sheet]})
@@ -1846,12 +2375,18 @@ class TestSheetMetadata:
             "merged_regions": [],
             "non_financial_rows": {2},
             "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "A1", "value": "Revenue", "number_format": "General"},
-                ]},
-                {"row_index": 2, "cells": [
-                    {"ref": "A2", "value": "Source: filings", "number_format": "General"},
-                ]},
+                {
+                    "row_index": 1,
+                    "cells": [
+                        {"ref": "A1", "value": "Revenue", "number_format": "General"},
+                    ],
+                },
+                {
+                    "row_index": 2,
+                    "cells": [
+                        {"ref": "A2", "value": "Source: filings", "number_format": "General"},
+                    ],
+                },
             ],
         }
         md = ParsingStage._structured_to_markdown({"sheets": [sheet]})
@@ -1863,21 +2398,29 @@ class TestSheetMetadata:
 
     def test_float_inf_nan_no_crash(self):
         """float('inf') and float('nan') should not crash markdown rendering."""
-        import math
         sheet = {
             "sheet_name": "S1",
             "is_hidden": False,
             "merged_regions": [],
             "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "A1", "value": float("inf"), "number_format": "General"},
-                ]},
-                {"row_index": 2, "cells": [
-                    {"ref": "A2", "value": float("nan"), "number_format": "General"},
-                ]},
-                {"row_index": 3, "cells": [
-                    {"ref": "A3", "value": float("-inf"), "number_format": "General"},
-                ]},
+                {
+                    "row_index": 1,
+                    "cells": [
+                        {"ref": "A1", "value": float("inf"), "number_format": "General"},
+                    ],
+                },
+                {
+                    "row_index": 2,
+                    "cells": [
+                        {"ref": "A2", "value": float("nan"), "number_format": "General"},
+                    ],
+                },
+                {
+                    "row_index": 3,
+                    "cells": [
+                        {"ref": "A3", "value": float("-inf"), "number_format": "General"},
+                    ],
+                },
             ],
         }
         md = ParsingStage._structured_to_markdown({"sheets": [sheet]})
@@ -1910,6 +2453,7 @@ class TestThemeAndIndexedColors:
     def test_theme_color_accent1_blue(self):
         """Theme=4 (accent1) resolves to the standard blue."""
         from unittest.mock import MagicMock
+
         from src.extraction.stages.parsing import _normalize_color
 
         color = MagicMock()
@@ -1922,6 +2466,7 @@ class TestThemeAndIndexedColors:
     def test_theme_color_dk1_black(self):
         """Theme=0 (dk1) resolves to black."""
         from unittest.mock import MagicMock
+
         from src.extraction.stages.parsing import _normalize_color
 
         color = MagicMock()
@@ -1934,6 +2479,7 @@ class TestThemeAndIndexedColors:
     def test_theme_color_with_positive_tint(self):
         """Theme=4 with positive tint lightens the color."""
         from unittest.mock import MagicMock
+
         from src.extraction.stages.parsing import _normalize_color
 
         color = MagicMock()
@@ -1956,6 +2502,7 @@ class TestThemeAndIndexedColors:
     def test_theme_color_with_negative_tint(self):
         """Theme=1 (white) with negative tint darkens."""
         from unittest.mock import MagicMock
+
         from src.extraction.stages.parsing import _normalize_color
 
         color = MagicMock()
@@ -1972,6 +2519,7 @@ class TestThemeAndIndexedColors:
     def test_indexed_color_blue(self):
         """Indexed=4 resolves to blue."""
         from unittest.mock import MagicMock
+
         from src.extraction.stages.parsing import _normalize_color
 
         color = MagicMock()
@@ -1983,6 +2531,7 @@ class TestThemeAndIndexedColors:
     def test_indexed_color_out_of_range(self):
         """Indexed=50 (beyond our 8-entry palette) returns None."""
         from unittest.mock import MagicMock
+
         from src.extraction.stages.parsing import _normalize_color
 
         color = MagicMock()
@@ -2084,14 +2633,24 @@ class TestUnderlineDetection:
         """Underlined header after gap → detected as section boundary."""
         # Row 1: data, Row 5: underlined header (gap of 3)
         rows = [
-            {"row_index": 1, "cells": [
-                {"ref": "A1", "value": "Revenue", "is_bold": False,
-                 "is_underline": False},
-            ]},
-            {"row_index": 5, "cells": [
-                {"ref": "A5", "value": "Balance Sheet", "is_bold": False,
-                 "is_underline": True, "has_border_bottom": False},
-            ]},
+            {
+                "row_index": 1,
+                "cells": [
+                    {"ref": "A1", "value": "Revenue", "is_bold": False, "is_underline": False},
+                ],
+            },
+            {
+                "row_index": 5,
+                "cells": [
+                    {
+                        "ref": "A5",
+                        "value": "Balance Sheet",
+                        "is_bold": False,
+                        "is_underline": True,
+                        "has_border_bottom": False,
+                    },
+                ],
+            },
         ]
         boundaries = ParsingStage._detect_section_boundaries(rows)
         assert len(boundaries) == 1
@@ -2112,16 +2671,20 @@ class TestSectionBoundaryCap:
         rows = []
         for i in range(30):
             row_idx = i * 3 + 1  # gap of 2 between each
-            rows.append({
-                "row_index": row_idx,
-                "cells": [{
-                    "ref": f"A{row_idx}",
-                    "value": f"Section {i + 1}",
-                    "is_bold": True,
-                    "is_underline": False,
-                    "has_border_bottom": False,
-                }],
-            })
+            rows.append(
+                {
+                    "row_index": row_idx,
+                    "cells": [
+                        {
+                            "ref": f"A{row_idx}",
+                            "value": f"Section {i + 1}",
+                            "is_bold": True,
+                            "is_underline": False,
+                            "has_border_bottom": False,
+                        }
+                    ],
+                }
+            )
         boundaries = ParsingStage._detect_section_boundaries(rows)
         assert len(boundaries) == 20
 
@@ -2130,16 +2693,20 @@ class TestSectionBoundaryCap:
         rows = []
         for i in range(25):
             row_idx = i * 3 + 1
-            rows.append({
-                "row_index": row_idx,
-                "cells": [{
-                    "ref": f"A{row_idx}",
-                    "value": f"Section {i + 1}",
-                    "is_bold": True,
-                    "is_underline": False,
-                    "has_border_bottom": False,
-                }],
-            })
+            rows.append(
+                {
+                    "row_index": row_idx,
+                    "cells": [
+                        {
+                            "ref": f"A{row_idx}",
+                            "value": f"Section {i + 1}",
+                            "is_bold": True,
+                            "is_underline": False,
+                            "has_border_bottom": False,
+                        }
+                    ],
+                }
+            )
         boundaries = ParsingStage._detect_section_boundaries(rows)
         assert len(boundaries) == 20
         assert boundaries[-1].get("truncated") is True
@@ -2160,10 +2727,13 @@ class TestLabelColumnReclassification:
         sheet = {
             "label_column": "E",
             "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "E1", "value": "Revenue", "cell_type": "value"},
-                    {"ref": "F1", "value": 100, "cell_type": "value"},
-                ]},
+                {
+                    "row_index": 1,
+                    "cells": [
+                        {"ref": "E1", "value": "Revenue", "cell_type": "value"},
+                        {"ref": "F1", "value": 100, "cell_type": "value"},
+                    ],
+                },
             ],
         }
         ParsingStage._reclassify_cell_types(sheet)
@@ -2176,9 +2746,12 @@ class TestLabelColumnReclassification:
         sheet = {
             "label_column": "A",
             "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "A1", "value": "Revenue", "cell_type": "label"},
-                ]},
+                {
+                    "row_index": 1,
+                    "cells": [
+                        {"ref": "A1", "value": "Revenue", "cell_type": "label"},
+                    ],
+                },
             ],
         }
         ParsingStage._reclassify_cell_types(sheet)
@@ -2189,9 +2762,12 @@ class TestLabelColumnReclassification:
         sheet = {
             "label_column": "E",
             "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "E1", "value": 42.0, "cell_type": "value"},
-                ]},
+                {
+                    "row_index": 1,
+                    "cells": [
+                        {"ref": "E1", "value": 42.0, "cell_type": "value"},
+                    ],
+                },
             ],
         }
         ParsingStage._reclassify_cell_types(sheet)
@@ -2201,9 +2777,12 @@ class TestLabelColumnReclassification:
         """No label_column → no-op."""
         sheet = {
             "rows": [
-                {"row_index": 1, "cells": [
-                    {"ref": "D1", "value": "Label", "cell_type": "value"},
-                ]},
+                {
+                    "row_index": 1,
+                    "cells": [
+                        {"ref": "D1", "value": "Label", "cell_type": "value"},
+                    ],
+                },
             ],
         }
         ParsingStage._reclassify_cell_types(sheet)
@@ -2246,7 +2825,7 @@ class TestTintApplication:
 # ============================================================================
 
 
-class TestLabelColumnReclassification:
+class TestLabelColumnDeriveCellType:
     """Tests for _reclassify_cell_types and _derive_cell_type with label_col_index."""
 
     def test_derive_cell_type_with_label_col_index(self):

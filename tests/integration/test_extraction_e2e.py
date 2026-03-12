@@ -1,8 +1,10 @@
 """End-to-end extraction pipeline test."""
-import pytest
-import time
+
 import io
+import time
 from pathlib import Path
+
+import pytest
 
 
 @pytest.mark.integration
@@ -22,7 +24,7 @@ def test_full_extraction_pipeline(test_client, sample_excel_file):
         "file": (
             "financial_model.xlsx",
             sample_excel_file,
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
     }
     upload_response = test_client.post("/api/v1/files/upload", files=files)
@@ -74,7 +76,7 @@ def test_upload_creates_database_records(test_client_with_db):
         "file": (
             "test_model.xlsx",
             io.BytesIO(file_content),
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
     }
     upload_response = test_client_with_db.post("/api/v1/files/upload", files=files)
@@ -96,7 +98,7 @@ def test_job_status_endpoint(test_client_with_db):
         "file": (
             "status_test.xlsx",
             io.BytesIO(file_content),
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
     }
     upload_response = test_client_with_db.post("/api/v1/files/upload", files=files)

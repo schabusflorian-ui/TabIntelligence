@@ -1,4 +1,5 @@
 """Tests for analytics API endpoints and CRUD functions."""
+
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -7,14 +8,15 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================
 
+
 @pytest.fixture
 def mock_api_key():
     from src.auth.models import APIKey
+
     key = Mock(spec=APIKey)
     key.id = None
     key.name = "test-key"
@@ -73,7 +75,6 @@ def _make_entity(entity_id=None, name="Acme Corp", industry="Technology"):
 
 
 class TestEntityFinancials:
-
     @patch("src.api.analytics.crud")
     def test_financials_200(self, mock_crud, analytics_client):
         entity_id = str(uuid.uuid4())
@@ -81,9 +82,25 @@ class TestEntityFinancials:
         mock_crud.get_entity.return_value = entity
 
         facts = [
-            _make_fact(entity_id=uuid.UUID(entity_id), canonical_name="revenue", period="FY2022", value=Decimal("100000")),
-            _make_fact(entity_id=uuid.UUID(entity_id), canonical_name="revenue", period="FY2023", value=Decimal("115000")),
-            _make_fact(entity_id=uuid.UUID(entity_id), canonical_name="cogs", period="FY2023", value=Decimal("46000"), taxonomy_category="income_statement"),
+            _make_fact(
+                entity_id=uuid.UUID(entity_id),
+                canonical_name="revenue",
+                period="FY2022",
+                value=Decimal("100000"),
+            ),
+            _make_fact(
+                entity_id=uuid.UUID(entity_id),
+                canonical_name="revenue",
+                period="FY2023",
+                value=Decimal("115000"),
+            ),
+            _make_fact(
+                entity_id=uuid.UUID(entity_id),
+                canonical_name="cogs",
+                period="FY2023",
+                value=Decimal("46000"),
+                taxonomy_category="income_statement",
+            ),
         ]
         mock_crud.get_entity_financials.return_value = facts
 
@@ -133,10 +150,17 @@ class TestEntityFinancials:
         mock_crud.get_entity_financials.return_value = []
 
         from src.api.schemas import EntityFinancialsResponse
+
         fallback = EntityFinancialsResponse(
             entity_id=entity_id,
             entity_name=None,
-            items=[{"canonical_name": "revenue", "taxonomy_category": None, "values": [{"period": "FY2023", "amount": 100000}]}],
+            items=[
+                {
+                    "canonical_name": "revenue",
+                    "taxonomy_category": None,
+                    "values": [{"period": "FY2023", "amount": 100000}],
+                }
+            ],
             periods=["FY2023"],
             source="json_fallback",
         )
@@ -155,7 +179,12 @@ class TestEntityFinancials:
         mock_crud.get_entity.return_value = entity
 
         facts = [
-            _make_fact(entity_id=uuid.UUID(entity_id), canonical_name="revenue", period="FY2023", value=Decimal("115000")),
+            _make_fact(
+                entity_id=uuid.UUID(entity_id),
+                canonical_name="revenue",
+                period="FY2023",
+                value=Decimal("115000"),
+            ),
         ]
         mock_crud.get_entity_financials.return_value = facts
 
@@ -175,7 +204,6 @@ class TestEntityFinancials:
 
 
 class TestCrossEntityComparison:
-
     @patch("src.api.analytics.crud")
     def test_compare_200(self, mock_crud, analytics_client):
         eid1 = uuid.uuid4()
@@ -185,8 +213,12 @@ class TestCrossEntityComparison:
         entity2 = _make_entity(entity_id=eid2, name="BetaCo")
 
         facts = [
-            _make_fact(entity_id=eid1, canonical_name="revenue", period="FY2023", value=Decimal("100000")),
-            _make_fact(entity_id=eid2, canonical_name="revenue", period="FY2023", value=Decimal("200000")),
+            _make_fact(
+                entity_id=eid1, canonical_name="revenue", period="FY2023", value=Decimal("100000")
+            ),
+            _make_fact(
+                entity_id=eid2, canonical_name="revenue", period="FY2023", value=Decimal("200000")
+            ),
         ]
         mock_crud.get_cross_entity_comparison.return_value = facts
 
@@ -197,8 +229,8 @@ class TestCrossEntityComparison:
         mock_entity_cls.id.in_.return_value = "mock_filter"
 
         # Need to inject a db session that returns entities on query()
-        from src.db.session import get_db
         from src.api.main import app
+        from src.db.session import get_db
 
         mock_db = MagicMock()
         mock_query = MagicMock()
@@ -251,7 +283,6 @@ class TestCrossEntityComparison:
 
 
 class TestPortfolioSummary:
-
     @patch("src.api.analytics.crud")
     def test_portfolio_summary_200(self, mock_crud, analytics_client):
         mock_crud.get_portfolio_summary.return_value = {
@@ -323,7 +354,6 @@ class TestPortfolioSummary:
 
 
 class TestEntityTrends:
-
     @patch("src.api.analytics.crud")
     def test_trends_200_with_yoy(self, mock_crud, analytics_client):
         entity_id = str(uuid.uuid4())
@@ -331,9 +361,24 @@ class TestEntityTrends:
         mock_crud.get_entity.return_value = entity
 
         facts = [
-            _make_fact(entity_id=uuid.UUID(entity_id), canonical_name="revenue", period="FY2022", value=Decimal("100000")),
-            _make_fact(entity_id=uuid.UUID(entity_id), canonical_name="revenue", period="FY2023", value=Decimal("115000")),
-            _make_fact(entity_id=uuid.UUID(entity_id), canonical_name="revenue", period="FY2024", value=Decimal("138000")),
+            _make_fact(
+                entity_id=uuid.UUID(entity_id),
+                canonical_name="revenue",
+                period="FY2022",
+                value=Decimal("100000"),
+            ),
+            _make_fact(
+                entity_id=uuid.UUID(entity_id),
+                canonical_name="revenue",
+                period="FY2023",
+                value=Decimal("115000"),
+            ),
+            _make_fact(
+                entity_id=uuid.UUID(entity_id),
+                canonical_name="revenue",
+                period="FY2024",
+                value=Decimal("138000"),
+            ),
         ]
         mock_crud.get_entity_trends.return_value = facts
 
@@ -391,7 +436,6 @@ class TestEntityTrends:
 
 
 class TestTaxonomyCoverage:
-
     @patch("src.api.analytics.crud")
     def test_coverage_200(self, mock_crud, analytics_client):
         mock_crud.get_taxonomy_coverage.return_value = {
@@ -440,7 +484,6 @@ class TestTaxonomyCoverage:
 
 
 class TestCostAnalytics:
-
     @patch("src.api.analytics.crud")
     def test_costs_200(self, mock_crud, analytics_client):
         mock_crud.get_cost_analytics.return_value = {
@@ -534,7 +577,6 @@ class TestCostAnalytics:
 
 
 class TestAnalyticsCRUD:
-
     def test_get_entity_financials(self):
         """Test CRUD entity financials with mock DB."""
         from src.db.crud import get_entity_financials
@@ -567,7 +609,8 @@ class TestAnalyticsCRUD:
         mock_query.all.return_value = []
 
         result = get_entity_financials(
-            db, entity_id,
+            db,
+            entity_id,
             canonical_names=["revenue", "cogs"],
             period_start="FY2022",
             period_end="FY2024",
@@ -686,7 +729,7 @@ class TestAnalyticsCRUD:
         # Entity query and daily query return rows
         mock_query.all.side_effect = [
             [(eid, "TestCo", 0.5, 1)],  # cost_by_entity
-            [("2024-01-15", 0.5, 1)],    # cost_trend_daily
+            [("2024-01-15", 0.5, 1)],  # cost_trend_daily
         ]
 
         result = get_cost_analytics(db)
@@ -727,7 +770,6 @@ class TestAnalyticsCRUD:
 
 
 class TestStatementTypeFilter:
-
     @patch("src.api.analytics.crud")
     def test_financials_with_statement_type(self, mock_crud, analytics_client):
         entity_id = str(uuid.uuid4())
@@ -766,9 +808,7 @@ class TestStatementTypeFilter:
         mock_query.order_by.return_value = mock_query
         mock_query.all.return_value = []
 
-        result = get_entity_financials(
-            db, entity_id, statement_type="balance_sheet"
-        )
+        result = get_entity_financials(db, entity_id, statement_type="balance_sheet")
         assert result == []
         # entity_id filter + statement_type filter = 2 filter calls
         assert mock_query.filter.call_count == 2
@@ -780,7 +820,6 @@ class TestStatementTypeFilter:
 
 
 class TestPagination:
-
     @patch("src.api.analytics.crud")
     def test_financials_with_pagination(self, mock_crud, analytics_client):
         entity_id = str(uuid.uuid4())
@@ -833,11 +872,9 @@ class TestPagination:
 
 
 class TestFinancialsJsonFallback:
-
     def test_financials_from_json_actual_data(self):
         """Test _financials_from_json with realistic ExtractionJob.result data."""
         from src.api.analytics import _financials_from_json
-        from src.db.models import JobStatusEnum
 
         db = MagicMock()
         entity_id = uuid.uuid4()
@@ -848,7 +885,10 @@ class TestFinancialsJsonFallback:
                 {"canonical_name": "revenue", "values": {"FY2023": 100000, "FY2024": 115000}},
                 {"canonical_name": "cogs", "values": {"FY2023": 40000}},
                 {"canonical_name": "unmapped", "values": {"FY2023": 0}},  # should be skipped
-                {"canonical_name": "ebitda", "values": {"FY2023": "not_a_number"}},  # should be skipped
+                {
+                    "canonical_name": "ebitda",
+                    "values": {"FY2023": "not_a_number"},
+                },  # should be skipped
             ]
         }
 
@@ -922,7 +962,6 @@ class TestFinancialsJsonFallback:
 
 
 class TestDatabaseErrorHandling:
-
     @patch("src.api.analytics.crud")
     def test_financials_database_error(self, mock_crud, analytics_client):
         from src.core.exceptions import DatabaseError
@@ -939,9 +978,9 @@ class TestDatabaseErrorHandling:
 
     @patch("src.api.analytics.crud")
     def test_compare_database_error(self, mock_crud, analytics_client):
+        from src.api.main import app
         from src.core.exceptions import DatabaseError
         from src.db.session import get_db
-        from src.api.main import app
 
         eid = str(uuid.uuid4())
 

@@ -4,9 +4,10 @@ SQLAlchemy base configuration and engine utilities.
 Provides Base class and utility functions for database operations.
 This is the canonical location per Week 2 strategy.
 """
-from src.db.models import Base
-from src.db.session import get_sync_engine, async_engine
+
 from src.core.logging import database_logger as logger
+from src.db.models import Base
+from src.db.session import get_sync_engine
 
 
 def get_engine():

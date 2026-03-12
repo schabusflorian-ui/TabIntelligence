@@ -3,13 +3,14 @@ Unit tests for authentication module.
 
 Tests API key generation, verification, creation, and revocation.
 """
+
 import hashlib
-import pytest
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
-from src.auth.api_key import generate_api_key
+import pytest
 
+from src.auth.api_key import generate_api_key
 
 # ============================================================================
 # GENERATE API KEY
@@ -17,7 +18,6 @@ from src.auth.api_key import generate_api_key
 
 
 class TestGenerateApiKey:
-
     def test_returns_tuple_of_key_and_hash(self):
         """Should return (plain_key, key_hash) tuple."""
         key, key_hash = generate_api_key()
@@ -53,7 +53,8 @@ class TestGenerateApiKey:
         key, _ = generate_api_key()
         token = key[4:]
         import re
-        assert re.match(r'^[a-zA-Z0-9_-]+$', token)
+
+        assert re.match(r"^[a-zA-Z0-9_-]+$", token)
 
 
 # ============================================================================
@@ -62,7 +63,6 @@ class TestGenerateApiKey:
 
 
 class TestVerifyApiKey:
-
     def test_returns_api_key_on_valid_key(self):
         """Should return APIKey record for valid active key."""
         from src.auth.api_key import verify_api_key
@@ -115,16 +115,13 @@ class TestVerifyApiKey:
 
 
 class TestCreateApiKey:
-
     def test_creates_key_and_returns_record(self):
         """Should create key record and return (record, plain_key)."""
         from src.auth.api_key import create_api_key
 
         mock_db = MagicMock()
 
-        api_key_record, plain_key = create_api_key(
-            mock_db, name="Test Key"
-        )
+        api_key_record, plain_key = create_api_key(mock_db, name="Test Key")
 
         assert plain_key.startswith("emi_")
         mock_db.add.assert_called_once()
@@ -138,9 +135,7 @@ class TestCreateApiKey:
         mock_db = MagicMock()
         entity_id = uuid4()
 
-        api_key_record, _ = create_api_key(
-            mock_db, name="Entity Key", entity_id=entity_id
-        )
+        api_key_record, _ = create_api_key(mock_db, name="Entity Key", entity_id=entity_id)
 
         added_obj = mock_db.add.call_args[0][0]
         assert added_obj.entity_id == entity_id
@@ -151,9 +146,7 @@ class TestCreateApiKey:
 
         mock_db = MagicMock()
 
-        api_key_record, _ = create_api_key(
-            mock_db, name="Premium Key", rate_limit_per_minute=120
-        )
+        api_key_record, _ = create_api_key(mock_db, name="Premium Key", rate_limit_per_minute=120)
 
         added_obj = mock_db.add.call_args[0][0]
         assert added_obj.rate_limit_per_minute == 120
@@ -165,7 +158,6 @@ class TestCreateApiKey:
 
 
 class TestRevokeApiKey:
-
     def test_revokes_existing_key(self):
         """Should deactivate key and return True."""
         from src.auth.api_key import revoke_api_key
@@ -206,7 +198,6 @@ class TestRevokeApiKey:
 
 
 class TestGetCurrentApiKey:
-
     def test_returns_api_key_on_valid_credentials(self):
         """Should return APIKey when credentials are valid."""
         from src.auth.dependencies import get_current_api_key
@@ -221,9 +212,7 @@ class TestGetCurrentApiKey:
         mock_db = MagicMock()
 
         with patch("src.auth.dependencies.verify_api_key", return_value=mock_api_key):
-            result = get_current_api_key(
-                credentials=mock_credentials, db=mock_db
-            )
+            result = get_current_api_key(credentials=mock_credentials, db=mock_db)
 
         assert result == mock_api_key
         mock_db.commit.assert_called_once()
@@ -231,6 +220,7 @@ class TestGetCurrentApiKey:
     def test_raises_401_on_invalid_credentials(self):
         """Should raise HTTPException 401 when key is invalid."""
         from fastapi import HTTPException
+
         from src.auth.dependencies import get_current_api_key
 
         mock_credentials = MagicMock()
@@ -240,15 +230,12 @@ class TestGetCurrentApiKey:
 
         with patch("src.auth.dependencies.verify_api_key", return_value=None):
             with pytest.raises(HTTPException) as exc_info:
-                get_current_api_key(
-                    credentials=mock_credentials, db=mock_db
-                )
+                get_current_api_key(credentials=mock_credentials, db=mock_db)
 
             assert exc_info.value.status_code == 401
 
 
 class TestGetOptionalApiKey:
-
     def test_returns_none_when_no_credentials(self):
         """Should return None when no credentials provided."""
         from src.auth.dependencies import get_optional_api_key
@@ -271,9 +258,7 @@ class TestGetOptionalApiKey:
         mock_db = MagicMock()
 
         with patch("src.auth.dependencies.verify_api_key", return_value=mock_api_key):
-            result = get_optional_api_key(
-                credentials=mock_credentials, db=mock_db
-            )
+            result = get_optional_api_key(credentials=mock_credentials, db=mock_db)
 
         assert result == mock_api_key
         mock_db.commit.assert_called_once()
@@ -288,9 +273,7 @@ class TestGetOptionalApiKey:
         mock_db = MagicMock()
 
         with patch("src.auth.dependencies.verify_api_key", return_value=None):
-            result = get_optional_api_key(
-                credentials=mock_credentials, db=mock_db
-            )
+            result = get_optional_api_key(credentials=mock_credentials, db=mock_db)
 
         assert result is None
 
@@ -306,6 +289,7 @@ class TestAPIKeyModel:
     def test_create_api_key_model(self, db_session):
         """Test creating an APIKey model instance."""
         from src.auth.models import APIKey
+
         _, key_hash = generate_api_key()
 
         api_key = APIKey(
@@ -347,6 +331,7 @@ class TestAPIKeyModel:
     def test_api_key_default_rate_limit(self, db_session):
         """Test that default rate limit is set."""
         from src.auth.models import APIKey
+
         _, key_hash = generate_api_key()
 
         api_key = APIKey(
@@ -361,6 +346,7 @@ class TestAPIKeyModel:
     def test_api_key_repr(self, db_session):
         """Test APIKey string representation."""
         from src.auth.models import APIKey
+
         _, key_hash = generate_api_key()
 
         api_key = APIKey(
@@ -381,6 +367,7 @@ class TestAuditLogModel:
     def test_create_audit_log(self, db_session):
         """Test creating an audit log entry."""
         from uuid import uuid4
+
         from src.db.models import AuditLog
 
         log = AuditLog(
@@ -404,6 +391,7 @@ class TestAuditLogModel:
     def test_audit_log_repr(self, db_session):
         """Test AuditLog string representation."""
         from uuid import uuid4
+
         from src.db.models import AuditLog
 
         resource_id = uuid4()

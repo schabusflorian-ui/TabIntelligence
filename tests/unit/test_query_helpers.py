@@ -3,36 +3,36 @@ Unit tests for database query helpers.
 
 Tests all query helper functions using sync SQLite sessions.
 """
-import pytest
+
 from decimal import Decimal
 from uuid import uuid4
-from datetime import datetime, timezone
+
+import pytest
 
 from src.db.models import (
+    AuditLog,
     Entity,
     EntityPattern,
     ExtractionJob,
     File,
-    LineageEvent,
-    AuditLog,
     JobStatusEnum,
+    LineageEvent,
 )
 from src.db.query_helpers import (
-    get_entity_with_files,
-    get_or_create_entity,
-    get_job_with_lineage,
-    get_jobs_by_status,
-    get_recent_jobs,
-    get_lineage_chain,
-    validate_lineage_completeness,
-    get_patterns_by_confidence,
-    find_pattern_match,
     bulk_create_lineage_events,
     bulk_update_pattern_confidence,
+    find_pattern_match,
     get_audit_log,
+    get_entity_with_files,
     get_job_statistics,
+    get_job_with_lineage,
+    get_jobs_by_status,
+    get_lineage_chain,
+    get_or_create_entity,
+    get_patterns_by_confidence,
+    get_recent_jobs,
+    validate_lineage_completeness,
 )
-
 
 # ============================================================================
 # FIXTURES
@@ -132,7 +132,6 @@ def patterns(db_session, entity):
 
 
 class TestEntityQueries:
-
     def test_get_entity_with_files(self, db_session, entity, patterns):
         """Should return entity with patterns eagerly loaded."""
         result = get_entity_with_files(db_session, entity.id)
@@ -170,7 +169,6 @@ class TestEntityQueries:
 
 
 class TestJobQueries:
-
     def test_get_job_with_lineage(self, db_session, job_with_lineage):
         """Should return job with lineage events loaded."""
         result = get_job_with_lineage(db_session, job_with_lineage.job_id)
@@ -205,10 +203,13 @@ class TestJobQueries:
     def test_get_jobs_by_status_with_limit(self, db_session, file_record):
         """Should respect limit parameter."""
         for _ in range(5):
-            db_session.add(ExtractionJob(
-                job_id=uuid4(), file_id=file_record.file_id,
-                status=JobStatusEnum.PENDING,
-            ))
+            db_session.add(
+                ExtractionJob(
+                    job_id=uuid4(),
+                    file_id=file_record.file_id,
+                    status=JobStatusEnum.PENDING,
+                )
+            )
         db_session.commit()
 
         result = get_jobs_by_status(db_session, JobStatusEnum.PENDING, limit=3)
@@ -217,10 +218,13 @@ class TestJobQueries:
     def test_get_recent_jobs(self, db_session, file_record):
         """Should return jobs ordered by most recent first."""
         for _ in range(5):
-            db_session.add(ExtractionJob(
-                job_id=uuid4(), file_id=file_record.file_id,
-                status=JobStatusEnum.PENDING,
-            ))
+            db_session.add(
+                ExtractionJob(
+                    job_id=uuid4(),
+                    file_id=file_record.file_id,
+                    status=JobStatusEnum.PENDING,
+                )
+            )
         db_session.commit()
 
         result = get_recent_jobs(db_session, limit=3)
@@ -238,7 +242,6 @@ class TestJobQueries:
 
 
 class TestLineageQueries:
-
     def test_get_lineage_chain(self, db_session, job_with_lineage):
         """Should return lineage events in chronological order."""
         chain = get_lineage_chain(db_session, job_with_lineage.job_id)
@@ -261,17 +264,21 @@ class TestLineageQueries:
     def test_validate_lineage_completeness_incomplete(self, db_session, file_record):
         """Should return False when stages are missing."""
         j = ExtractionJob(
-            job_id=uuid4(), file_id=file_record.file_id,
+            job_id=uuid4(),
+            file_id=file_record.file_id,
             status=JobStatusEnum.PROCESSING,
         )
         db_session.add(j)
         db_session.flush()
 
         # Only add parsing event
-        db_session.add(LineageEvent(
-            event_id=uuid4(), job_id=j.job_id,
-            stage_name="parsing",
-        ))
+        db_session.add(
+            LineageEvent(
+                event_id=uuid4(),
+                job_id=j.job_id,
+                stage_name="parsing",
+            )
+        )
         db_session.commit()
 
         result = validate_lineage_completeness(db_session, j.job_id)
@@ -281,15 +288,13 @@ class TestLineageQueries:
         """Should validate against custom stage list."""
         # Only require parsing and mapping (skip triage)
         result = validate_lineage_completeness(
-            db_session, job_with_lineage.job_id,
-            required_stages=["parsing", "mapping"]
+            db_session, job_with_lineage.job_id, required_stages=["parsing", "mapping"]
         )
         assert result is True
 
         # Require a stage that doesn't exist
         result = validate_lineage_completeness(
-            db_session, job_with_lineage.job_id,
-            required_stages=["parsing", "validation"]
+            db_session, job_with_lineage.job_id, required_stages=["parsing", "validation"]
         )
         assert result is False
 
@@ -300,7 +305,6 @@ class TestLineageQueries:
 
 
 class TestPatternQueries:
-
     def test_get_patterns_by_confidence_default(self, db_session, entity, patterns):
         """Should return patterns with confidence >= 0.8."""
         result = get_patterns_by_confidence(db_session, entity.id)
@@ -309,21 +313,15 @@ class TestPatternQueries:
 
     def test_get_patterns_by_confidence_custom_threshold(self, db_session, entity, patterns):
         """Should respect custom confidence threshold."""
-        result = get_patterns_by_confidence(
-            db_session, entity.id, min_confidence=Decimal("0.6")
-        )
+        result = get_patterns_by_confidence(db_session, entity.id, min_confidence=Decimal("0.6"))
         assert len(result) == 4  # All patterns
 
-        result = get_patterns_by_confidence(
-            db_session, entity.id, min_confidence=Decimal("0.99")
-        )
+        result = get_patterns_by_confidence(db_session, entity.id, min_confidence=Decimal("0.99"))
         assert len(result) == 0
 
     def test_get_patterns_ordered_by_confidence(self, db_session, entity, patterns):
         """Should return patterns ordered by confidence descending."""
-        result = get_patterns_by_confidence(
-            db_session, entity.id, min_confidence=Decimal("0.5")
-        )
+        result = get_patterns_by_confidence(db_session, entity.id, min_confidence=Decimal("0.5"))
         confidences = [p.confidence for p in result]
         assert confidences == sorted(confidences, reverse=True)
 
@@ -353,7 +351,6 @@ class TestPatternQueries:
 
 
 class TestBatchOperations:
-
     def test_bulk_create_lineage_events(self, db_session, job):
         """Should bulk insert multiple lineage events."""
         events = [
@@ -391,9 +388,7 @@ class TestBatchOperations:
 
         # Verify updates persisted
         db_session.expire_all()
-        updated = get_patterns_by_confidence(
-            db_session, entity.id, min_confidence=Decimal("0.9")
-        )
+        updated = get_patterns_by_confidence(db_session, entity.id, min_confidence=Decimal("0.9"))
         assert len(updated) >= 2
 
     def test_bulk_update_pattern_confidence_empty(self, db_session):
@@ -408,20 +403,39 @@ class TestBatchOperations:
 
 
 class TestAuditQueries:
-
     @pytest.fixture
     def audit_entries(self, db_session):
         """Create sample audit log entries."""
         resource_id = uuid4()
         entries = [
-            AuditLog(action="upload", resource_type="file", resource_id=resource_id,
-                     ip_address="192.168.1.1", status_code=200),
-            AuditLog(action="view", resource_type="job", resource_id=uuid4(),
-                     ip_address="192.168.1.2", status_code=200),
-            AuditLog(action="upload", resource_type="file", resource_id=uuid4(),
-                     ip_address="10.0.0.1", status_code=200),
-            AuditLog(action="revoke_key", resource_type="api_key", resource_id=uuid4(),
-                     ip_address="10.0.0.1", status_code=200),
+            AuditLog(
+                action="upload",
+                resource_type="file",
+                resource_id=resource_id,
+                ip_address="192.168.1.1",
+                status_code=200,
+            ),
+            AuditLog(
+                action="view",
+                resource_type="job",
+                resource_id=uuid4(),
+                ip_address="192.168.1.2",
+                status_code=200,
+            ),
+            AuditLog(
+                action="upload",
+                resource_type="file",
+                resource_id=uuid4(),
+                ip_address="10.0.0.1",
+                status_code=200,
+            ),
+            AuditLog(
+                action="revoke_key",
+                resource_type="api_key",
+                resource_id=uuid4(),
+                ip_address="10.0.0.1",
+                status_code=200,
+            ),
         ]
         for entry in entries:
             db_session.add(entry)
@@ -474,7 +488,6 @@ class TestAuditQueries:
 
 
 class TestStatistics:
-
     def test_get_job_statistics_empty(self, db_session):
         """Should return zero counts when no jobs exist."""
         stats = get_job_statistics(db_session)
@@ -491,9 +504,13 @@ class TestStatistics:
             JobStatusEnum.COMPLETED,
             JobStatusEnum.FAILED,
         ]:
-            db_session.add(ExtractionJob(
-                job_id=uuid4(), file_id=file_record.file_id, status=status,
-            ))
+            db_session.add(
+                ExtractionJob(
+                    job_id=uuid4(),
+                    file_id=file_record.file_id,
+                    status=status,
+                )
+            )
         db_session.commit()
 
         stats = get_job_statistics(db_session)

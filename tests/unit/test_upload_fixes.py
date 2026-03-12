@@ -5,9 +5,8 @@ Tests for upload endpoint bug fixes:
 - Fix 3: Celery enqueue failure returns 503
 - Fix 4: Task receives s3_key instead of file_bytes
 """
-import pytest
-from unittest.mock import patch, MagicMock
-from uuid import uuid4
+
+from unittest.mock import MagicMock, patch
 
 # Valid XLSX magic bytes (ZIP header) so uploads pass magic-byte validation
 _FAKE_XLSX = b"PK\x03\x04" + b"\x00" * 100
@@ -35,6 +34,7 @@ class TestUploadS3FailureNoOrphanedRecords:
 
         # Verify no orphaned DB records were created
         from src.db import crud
+
         session = test_db()
         try:
             files = crud.list_files(session, limit=100)
@@ -57,8 +57,10 @@ class TestCeleryEnqueueFailureReturns503:
         mock_task = MagicMock()
         mock_task.delay.side_effect = ConnectionError("Redis connection refused")
 
-        with patch("src.api.files.get_s3_client", return_value=mock_s3), \
-             patch("src.api.files.run_extraction_task", mock_task):
+        with (
+            patch("src.api.files.get_s3_client", return_value=mock_s3),
+            patch("src.api.files.run_extraction_task", mock_task),
+        ):
             response = test_client_with_db.post(
                 "/api/v1/files/upload",
                 files={"file": ("test.xlsx", _FAKE_XLSX, "application/vnd.ms-excel")},
@@ -68,10 +70,10 @@ class TestCeleryEnqueueFailureReturns503:
         assert "Task queue unavailable" in response.json()["detail"]
 
         # Verify the job was marked as FAILED
-        from src.db import crud
         session = test_db()
         try:
             from src.db.models import ExtractionJob
+
             jobs = session.query(ExtractionJob).all()
             assert len(jobs) == 1, "One job should exist"
             assert jobs[0].status == JobStatusEnum.FAILED
@@ -94,8 +96,10 @@ class TestTaskReceivesS3Key:
         mock_result.id = "test-task-id"
         mock_task.delay.return_value = mock_result
 
-        with patch("src.api.files.get_s3_client", return_value=mock_s3), \
-             patch("src.api.files.run_extraction_task", mock_task):
+        with (
+            patch("src.api.files.get_s3_client", return_value=mock_s3),
+            patch("src.api.files.run_extraction_task", mock_task),
+        ):
             response = test_client_with_db.post(
                 "/api/v1/files/upload",
                 files={"file": ("test.xlsx", _FAKE_XLSX, "application/vnd.ms-excel")},
@@ -173,8 +177,12 @@ class TestQualityGradeAndNeedsReview:
                 },
             }
             crud.complete_job(
-                session, job.job_id, result=result,
-                tokens_used=500, cost_usd=0.01, quality_grade="B"
+                session,
+                job.job_id,
+                result=result,
+                tokens_used=500,
+                cost_usd=0.01,
+                quality_grade="B",
             )
 
             updated = crud.get_job(session, job.job_id)
@@ -203,8 +211,12 @@ class TestQualityGradeAndNeedsReview:
                 },
             }
             crud.complete_job(
-                session, job.job_id, result=result,
-                tokens_used=500, cost_usd=0.01, quality_grade="F"
+                session,
+                job.job_id,
+                result=result,
+                tokens_used=500,
+                cost_usd=0.01,
+                quality_grade="F",
             )
 
             updated = crud.get_job(session, job.job_id)
@@ -233,8 +245,12 @@ class TestQualityGradeAndNeedsReview:
                 },
             }
             crud.complete_job(
-                session, job.job_id, result=result,
-                tokens_used=500, cost_usd=0.01, quality_grade="A"
+                session,
+                job.job_id,
+                result=result,
+                tokens_used=500,
+                cost_usd=0.01,
+                quality_grade="A",
             )
 
             updated = crud.get_job(session, job.job_id)
@@ -255,10 +271,7 @@ class TestQualityGradeAndNeedsReview:
             job = crud.create_extraction_job(session, file_id=file.file_id)
 
             result = {"quality": {"letter_grade": "C"}}
-            crud.complete_job(
-                session, job.job_id, result=result,
-                tokens_used=100, cost_usd=0.001
-            )
+            crud.complete_job(session, job.job_id, result=result, tokens_used=100, cost_usd=0.001)
 
             updated = crud.get_job(session, job.job_id)
             assert updated.status == JobStatusEnum.COMPLETED

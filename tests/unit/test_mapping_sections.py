@@ -1,5 +1,4 @@
 """Unit tests for section context in mapping (WS-3 Part D)."""
-import pytest
 
 from src.extraction.stages.mapping import (
     MappingStage,
@@ -58,13 +57,15 @@ class TestGroupedItemsSectionCategory:
     def test_no_section_lookup(self):
         """Without section_lookup, items have no section_category."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "IS",
-                "rows": [
-                    {"label": "Revenue", "row_index": 1},
-                    {"label": "COGS", "row_index": 2},
-                ],
-            }],
+            "sheets": [
+                {
+                    "sheet_name": "IS",
+                    "rows": [
+                        {"label": "Revenue", "row_index": 1},
+                        {"label": "COGS", "row_index": 2},
+                    ],
+                }
+            ],
         }
         items = MappingStage._build_grouped_line_items(parsed)
         assert all("section_category" not in item for item in items)
@@ -72,13 +73,15 @@ class TestGroupedItemsSectionCategory:
     def test_with_section_lookup(self):
         """Rows in a section get section_category."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "Combined",
-                "rows": [
-                    {"label": "Revenue", "row_index": 5},
-                    {"label": "Total Assets", "row_index": 30},
-                ],
-            }],
+            "sheets": [
+                {
+                    "sheet_name": "Combined",
+                    "rows": [
+                        {"label": "Revenue", "row_index": 5},
+                        {"label": "Total Assets", "row_index": 30},
+                    ],
+                }
+            ],
         }
         section_lookup = {
             "Combined": [
@@ -102,12 +105,14 @@ class TestGroupedItemsSectionCategory:
     def test_row_outside_sections(self):
         """Row not in any section range -> no section_category."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "Combined",
-                "rows": [
-                    {"label": "Revenue", "row_index": 100},  # outside all sections
-                ],
-            }],
+            "sheets": [
+                {
+                    "sheet_name": "Combined",
+                    "rows": [
+                        {"label": "Revenue", "row_index": 100},  # outside all sections
+                    ],
+                }
+            ],
         }
         section_lookup = {
             "Combined": [
@@ -122,23 +127,28 @@ class TestGroupedItemsSectionCategory:
         assert len(items) == 1
         assert "section_category" not in items[0]
 
-
     def test_row_at_section_boundary_inclusive(self):
         """Rows at exact start/end of section are included (inclusive)."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "Combined",
-                "rows": [
-                    {"label": "Revenue", "row_index": 1},    # exact start
-                    {"label": "Net Income", "row_index": 25}, # exact end
-                    {"label": "Cash", "row_index": 28},       # exact start
-                    {"label": "Total", "row_index": 50},      # exact end
-                ],
-            }],
+            "sheets": [
+                {
+                    "sheet_name": "Combined",
+                    "rows": [
+                        {"label": "Revenue", "row_index": 1},  # exact start
+                        {"label": "Net Income", "row_index": 25},  # exact end
+                        {"label": "Cash", "row_index": 28},  # exact start
+                        {"label": "Total", "row_index": 50},  # exact end
+                    ],
+                }
+            ],
         }
         section_lookup = {
             "Combined": [
-                {"section_start_row": 1, "section_end_row": 25, "category_hint": "income_statement"},
+                {
+                    "section_start_row": 1,
+                    "section_end_row": 25,
+                    "category_hint": "income_statement",
+                },
                 {"section_start_row": 28, "section_end_row": 50, "category_hint": "balance_sheet"},
             ],
         }
@@ -177,7 +187,9 @@ class TestDisambiguationWithSections:
             ],
         }
         count = _disambiguate_by_sheet_category(
-            mappings, grouped_items, alias_lookup,
+            mappings,
+            grouped_items,
+            alias_lookup,
         )
         assert count == 1
         assert mappings[0]["canonical_name"] == "depreciation_and_amortization"
@@ -203,7 +215,9 @@ class TestDisambiguationWithSections:
             ],
         }
         count = _disambiguate_by_sheet_category(
-            mappings, grouped_items, alias_lookup,
+            mappings,
+            grouped_items,
+            alias_lookup,
         )
         assert count == 1
         assert mappings[0]["canonical_name"] == "depreciation_and_amortization"
@@ -229,7 +243,9 @@ class TestDisambiguationWithSections:
             ],
         }
         count = _disambiguate_by_sheet_category(
-            mappings, grouped_items, alias_lookup,
+            mappings,
+            grouped_items,
+            alias_lookup,
         )
         assert count == 0
         assert mappings[0]["canonical_name"] == "revenue"

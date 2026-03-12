@@ -8,6 +8,7 @@ Run:
     pytest tests/e2e/test_real_claude.py -v -s
     pytest tests/e2e/test_real_claude.py -v -s -m real_claude
 """
+
 import asyncio
 import json
 import os
@@ -19,6 +20,7 @@ import pytest
 # Load .env so ANTHROPIC_API_KEY is available via os.getenv
 try:
     from dotenv import load_dotenv
+
     load_dotenv(Path(__file__).parent.parent.parent / ".env")
 except ImportError:
     pass
@@ -39,8 +41,7 @@ def _get_api_key():
 # Skip entire module if no real API key
 pytestmark = [
     pytest.mark.skipif(
-        _get_api_key() is None,
-        reason="ANTHROPIC_API_KEY not set or is placeholder"
+        _get_api_key() is None, reason="ANTHROPIC_API_KEY not set or is placeholder"
     ),
     pytest.mark.real_claude,
     pytest.mark.slow,
@@ -75,6 +76,7 @@ def expected_results():
 # =========================================================================
 # Original test: sample_model.xlsx (simple 4-sheet model)
 # =========================================================================
+
 
 def test_real_extraction_produces_valid_output(real_extract):
     """Send sample_model.xlsx through the real 5-stage pipeline and validate."""
@@ -144,16 +146,22 @@ def test_real_extraction_produces_valid_output(real_extract):
     ts = validation["time_series"]
     assert "consistency_score" in ts
     assert 0.0 <= ts["consistency_score"] <= 1.0
-    print(f"  Time-series: {ts['total_checks']} checks, {len(ts['flags'])} flags, score={ts['consistency_score']:.3f}")
+    print(
+        f"  Time-series: {ts['total_checks']} checks, "
+        f"{len(ts['flags'])} flags, "
+        f"score={ts['consistency_score']:.3f}"
+    )
 
     # --- Completeness Scoring ---
     assert "completeness" in validation, "Missing completeness in validation output"
     comp = validation["completeness"]
     assert "overall_score" in comp
     assert 0.0 <= comp["overall_score"] <= 1.0
-    print(f"  Completeness: score={comp['overall_score']:.3f}, "
-          f"statements={comp['detected_statements']}, "
-          f"found={comp['total_found']}/{comp['total_expected']}")
+    print(
+        f"  Completeness: score={comp['overall_score']:.3f}, "
+        f"statements={comp['detected_statements']}, "
+        f"found={comp['total_found']}/{comp['total_expected']}"
+    )
 
     # --- Quality Score ---
     assert "quality" in validation, "Missing quality in validation output"
@@ -172,7 +180,7 @@ def test_real_extraction_produces_valid_output(real_extract):
     assert result["cost_usd"] > 0
     assert result["cost_usd"] < 1.0, "Single extraction should cost well under $1"
 
-    print(f"\n  REAL E2E PASSED!")
+    print("\n  REAL E2E PASSED!")
     print(f"  {len(result['line_items'])} items extracted from {len(result['sheets'])} sheets")
     print(f"  Validation confidence: {validation['overall_confidence']:.1%}")
 
@@ -181,13 +189,16 @@ def test_real_extraction_produces_valid_output(real_extract):
 # New tests: realistic_model.xlsx (8-sheet mid-market LBO model)
 # =========================================================================
 
+
 def test_realistic_model_extraction(real_extract):
     """Send realistic_model.xlsx through the pipeline and validate structure."""
     if not REALISTIC_FIXTURE_PATH.exists():
         pytest.skip(f"Realistic fixture missing: {REALISTIC_FIXTURE_PATH}")
 
     file_bytes = REALISTIC_FIXTURE_PATH.read_bytes()
-    print(f"\n  Sending {REALISTIC_FIXTURE_PATH.name} ({len(file_bytes)} bytes) to real Claude API...")
+    print(
+        f"\n  Sending {REALISTIC_FIXTURE_PATH.name} ({len(file_bytes)} bytes) to real Claude API..."
+    )
 
     result = asyncio.run(real_extract(file_bytes))
 
@@ -208,9 +219,7 @@ def test_realistic_model_extraction(real_extract):
     assert len(triage_sheets) == 8, (
         f"Expected 8 triaged sheets, got {len(triage_sheets)}: {triage_sheets}"
     )
-    assert len(result["triage"]) >= 8, (
-        f"Expected >= 8 triage entries, got {len(result['triage'])}"
-    )
+    assert len(result["triage"]) >= 8, f"Expected >= 8 triage entries, got {len(result['triage'])}"
 
     # Should extract a meaningful number of line items (the model has ~100+ data rows)
     assert len(result["line_items"]) >= 15, (
@@ -240,10 +249,16 @@ def test_realistic_model_extraction(real_extract):
     print(f"  Tokens: {result['tokens_used']:,}")
     print(f"  Cost: ${result['cost_usd']:.4f}")
     print(f"  Validation confidence: {validation.get('overall_confidence', 0):.1%}")
-    print(f"  Time-series: {ts['total_checks']} checks, {len(ts['flags'])} flags, score={ts['consistency_score']:.3f}")
-    print(f"  Completeness: score={comp['overall_score']:.3f}, "
-          f"statements={comp['detected_statements']}, "
-          f"found={comp['total_found']}/{comp['total_expected']}")
+    print(
+        f"  Time-series: {ts['total_checks']} checks, "
+        f"{len(ts['flags'])} flags, "
+        f"score={ts['consistency_score']:.3f}"
+    )
+    print(
+        f"  Completeness: score={comp['overall_score']:.3f}, "
+        f"statements={comp['detected_statements']}, "
+        f"found={comp['total_found']}/{comp['total_expected']}"
+    )
     print(f"  Quality: {q['numeric_score']:.3f} ({q['letter_grade']}) - {q['label']}")
 
 
@@ -279,8 +294,7 @@ def test_realistic_model_triage_accuracy(real_extract, expected_results):
 
     # Conservative starting target: 60%
     assert accuracy >= 0.60, (
-        f"Triage accuracy {accuracy:.1%} below 60% threshold. "
-        f"{correct}/{total} correct."
+        f"Triage accuracy {accuracy:.1%} below 60% threshold. {correct}/{total} correct."
     )
 
 
@@ -318,13 +332,13 @@ def test_realistic_model_mapping_accuracy(real_extract, expected_results):
 
         if act_canonical is None or act_canonical == "unmapped":
             unmapped += 1
-            print(f"    [UNMAPPED] \"{label}\" -> unmapped (expected: {exp_canonical})")
+            print(f'    [UNMAPPED] "{label}" -> unmapped (expected: {exp_canonical})')
         elif act_canonical in alts:
             correct += 1
-            print(f"    [OK]       \"{label}\" -> {act_canonical}")
+            print(f'    [OK]       "{label}" -> {act_canonical}')
         else:
             mismatches.append((label, exp_canonical, act_canonical))
-            print(f"    [MISS]     \"{label}\" -> {act_canonical} (expected: {exp_canonical})")
+            print(f'    [MISS]     "{label}" -> {act_canonical} (expected: {exp_canonical})')
 
     accuracy = correct / max(total, 1)
     print(f"\n  Mapping accuracy: {correct}/{total} ({accuracy:.1%})")

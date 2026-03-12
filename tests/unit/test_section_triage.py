@@ -1,5 +1,4 @@
 """Unit tests for section-aware triage (WS-3 Part C)."""
-import pytest
 
 from src.extraction.stages.triage import TriageStage
 
@@ -10,21 +9,24 @@ class TestBuildSheetSummaryWithSections:
     def test_no_sections_for_simple_sheet(self):
         """Standard sheet with contiguous rows -> no 'sections' key."""
         parsed = {
-            "sheets": [{"sheet_name": "IS", "rows": [
-                {"label": f"Row {i}"} for i in range(10)
-            ]}],
+            "sheets": [{"sheet_name": "IS", "rows": [{"label": f"Row {i}"} for i in range(10)]}],
         }
         structured = {
-            "sheets": [{
-                "sheet_name": "IS",
-                "rows": [
-                    {"row_index": i, "cells": [
-                        {"ref": f"A{i}", "value": f"Row {i}", "is_bold": False},
-                    ]}
-                    for i in range(1, 11)
-                ],
-                "merged_regions": [],
-            }],
+            "sheets": [
+                {
+                    "sheet_name": "IS",
+                    "rows": [
+                        {
+                            "row_index": i,
+                            "cells": [
+                                {"ref": f"A{i}", "value": f"Row {i}", "is_bold": False},
+                            ],
+                        }
+                        for i in range(1, 11)
+                    ],
+                    "merged_regions": [],
+                }
+            ],
         }
         summaries = TriageStage._build_sheet_summary(parsed, structured)
         assert len(summaries) == 1
@@ -33,37 +35,72 @@ class TestBuildSheetSummaryWithSections:
     def test_sections_for_multi_statement_sheet(self):
         """Sheet with 3 sections separated by gaps -> 'sections' key present."""
         parsed = {
-            "sheets": [{"sheet_name": "Combined", "rows": [
-                {"label": f"Row {i}"} for i in range(25)
-            ]}],
+            "sheets": [
+                {"sheet_name": "Combined", "rows": [{"label": f"Row {i}"} for i in range(25)]}
+            ],
         }
         # Build structured with gaps: rows 1-8, gap, rows 12-20, gap, rows 24-32
         struct_rows = (
-            [{"row_index": 1, "cells": [
-                {"ref": "A1", "value": "Income Statement", "is_bold": True},
-            ]}]
-            + [{"row_index": i, "cells": [
-                {"ref": f"A{i}", "value": f"IS row {i}", "is_bold": False},
-            ]} for i in range(2, 9)]
-            + [{"row_index": 12, "cells": [
-                {"ref": "A12", "value": "Balance Sheet", "is_bold": True},
-            ]}]
-            + [{"row_index": i, "cells": [
-                {"ref": f"A{i}", "value": f"BS row {i}", "is_bold": False},
-            ]} for i in range(13, 21)]
-            + [{"row_index": 24, "cells": [
-                {"ref": "A24", "value": "Cash Flow", "is_bold": True},
-            ]}]
-            + [{"row_index": i, "cells": [
-                {"ref": f"A{i}", "value": f"CF row {i}", "is_bold": False},
-            ]} for i in range(25, 33)]
+            [
+                {
+                    "row_index": 1,
+                    "cells": [
+                        {"ref": "A1", "value": "Income Statement", "is_bold": True},
+                    ],
+                }
+            ]
+            + [
+                {
+                    "row_index": i,
+                    "cells": [
+                        {"ref": f"A{i}", "value": f"IS row {i}", "is_bold": False},
+                    ],
+                }
+                for i in range(2, 9)
+            ]
+            + [
+                {
+                    "row_index": 12,
+                    "cells": [
+                        {"ref": "A12", "value": "Balance Sheet", "is_bold": True},
+                    ],
+                }
+            ]
+            + [
+                {
+                    "row_index": i,
+                    "cells": [
+                        {"ref": f"A{i}", "value": f"BS row {i}", "is_bold": False},
+                    ],
+                }
+                for i in range(13, 21)
+            ]
+            + [
+                {
+                    "row_index": 24,
+                    "cells": [
+                        {"ref": "A24", "value": "Cash Flow", "is_bold": True},
+                    ],
+                }
+            ]
+            + [
+                {
+                    "row_index": i,
+                    "cells": [
+                        {"ref": f"A{i}", "value": f"CF row {i}", "is_bold": False},
+                    ],
+                }
+                for i in range(25, 33)
+            ]
         )
         structured = {
-            "sheets": [{
-                "sheet_name": "Combined",
-                "rows": struct_rows,
-                "merged_regions": [],
-            }],
+            "sheets": [
+                {
+                    "sheet_name": "Combined",
+                    "rows": struct_rows,
+                    "merged_regions": [],
+                }
+            ],
         }
         summaries = TriageStage._build_sheet_summary(parsed, structured)
         assert len(summaries) == 1
@@ -77,9 +114,14 @@ class TestBuildSheetSummaryWithSections:
     def test_no_sections_without_structured_data(self):
         """Without structured data, no sections detected."""
         parsed = {
-            "sheets": [{"sheet_name": "IS", "rows": [
-                {"label": "Revenue"},
-            ]}],
+            "sheets": [
+                {
+                    "sheet_name": "IS",
+                    "rows": [
+                        {"label": "Revenue"},
+                    ],
+                }
+            ],
         }
         summaries = TriageStage._build_sheet_summary(parsed, {})
         assert len(summaries) == 1
@@ -133,27 +175,27 @@ class TestSectionMetricsComputation:
     def test_section_counts_from_summaries(self):
         """Section metrics are correctly computed from sheet summaries."""
         summaries = [
-            {"name": "Combined", "sections": [
-                {"label": "IS", "start_row": 1, "end_row": 10},
-                {"label": "BS", "start_row": 15, "end_row": 25},
-                {"label": "CF", "start_row": 30, "end_row": 40},
-            ]},
+            {
+                "name": "Combined",
+                "sections": [
+                    {"label": "IS", "start_row": 1, "end_row": 10},
+                    {"label": "BS", "start_row": 15, "end_row": 25},
+                    {"label": "CF", "start_row": 30, "end_row": 40},
+                ],
+            },
             {"name": "IS Only"},  # No sections key
-            {"name": "Another Combined", "sections": [
-                {"label": "IS", "start_row": 1, "end_row": 10},
-                {"label": "BS", "start_row": 15, "end_row": 25},
-            ]},
+            {
+                "name": "Another Combined",
+                "sections": [
+                    {"label": "IS", "start_row": 1, "end_row": 10},
+                    {"label": "BS", "start_row": 15, "end_row": 25},
+                ],
+            },
         ]
 
         # Same computation as triage.py execute()
-        total_sections = sum(
-            len(s.get("sections", []))
-            for s in summaries
-        )
-        multi_section_sheets = sum(
-            1 for s in summaries
-            if "sections" in s
-        )
+        total_sections = sum(len(s.get("sections", [])) for s in summaries)
+        multi_section_sheets = sum(1 for s in summaries if "sections" in s)
 
         assert total_sections == 5
         assert multi_section_sheets == 2
@@ -165,14 +207,8 @@ class TestSectionMetricsComputation:
             {"name": "BS Only"},
         ]
 
-        total_sections = sum(
-            len(s.get("sections", []))
-            for s in summaries
-        )
-        multi_section_sheets = sum(
-            1 for s in summaries
-            if "sections" in s
-        )
+        total_sections = sum(len(s.get("sections", [])) for s in summaries)
+        multi_section_sheets = sum(1 for s in summaries if "sections" in s)
 
         assert total_sections == 0
         assert multi_section_sheets == 0

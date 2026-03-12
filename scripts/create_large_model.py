@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Create tests/fixtures/large_model.xlsx -- large 12-sheet corporate model (~200 items)."""
+
 from pathlib import Path
 
 from openpyxl import Workbook
@@ -166,9 +167,14 @@ CF_CHG_ACCRUED = [0] + [(BS_ACCRUED[i] - BS_ACCRUED[i - 1]) for i in range(1, 5)
 CF_CHG_DEFREV = [0] + [(BS_DEFERRED_REV[i] - BS_DEFERRED_REV[i - 1]) for i in range(1, 5)]
 
 CF_CFO = [
-    IS_NET_INCOME[i] + CF_DA[i] + SBC[i]
-    + CF_CHG_AR[i] + CF_CHG_INV[i] + CF_CHG_AP[i]
-    + CF_CHG_ACCRUED[i] + CF_CHG_DEFREV[i]
+    IS_NET_INCOME[i]
+    + CF_DA[i]
+    + SBC[i]
+    + CF_CHG_AR[i]
+    + CF_CHG_INV[i]
+    + CF_CHG_AP[i]
+    + CF_CHG_ACCRUED[i]
+    + CF_CHG_DEFREV[i]
     for i in range(5)
 ]
 
@@ -201,33 +207,29 @@ BS_CASH = CF_END_CASH[:]
 # ---------------------------------------------------------------------------
 
 BS_TOTAL_CA_EX_CASH = [
-    BS_AR[i] + BS_INVENTORY[i] + BS_PREPAID[i] + BS_OTHER_CA[i]
-    for i in range(5)
+    BS_AR[i] + BS_INVENTORY[i] + BS_PREPAID[i] + BS_OTHER_CA[i] for i in range(5)
 ]
 BS_TOTAL_CA = [BS_CASH[i] + BS_TOTAL_CA_EX_CASH[i] for i in range(5)]
 BS_TOTAL_NCA = [
-    BS_PPE[i] + BS_GOODWILL[i] + BS_INTANGIBLES[i] + BS_DTA[i]
-    + BS_ROU[i] + BS_OTHER_NCA[i]
+    BS_PPE[i] + BS_GOODWILL[i] + BS_INTANGIBLES[i] + BS_DTA[i] + BS_ROU[i] + BS_OTHER_NCA[i]
     for i in range(5)
 ]
 BS_TOTAL_ASSETS = [BS_TOTAL_CA[i] + BS_TOTAL_NCA[i] for i in range(5)]
 
 BS_TOTAL_CL = [
-    BS_AP[i] + BS_ACCRUED[i] + BS_CURRENT_DEBT[i] + BS_DEFERRED_REV[i]
-    + BS_LEASE_CL[i] + BS_OTHER_CL[i]
+    BS_AP[i]
+    + BS_ACCRUED[i]
+    + BS_CURRENT_DEBT[i]
+    + BS_DEFERRED_REV[i]
+    + BS_LEASE_CL[i]
+    + BS_OTHER_CL[i]
     for i in range(5)
 ]
-BS_TOTAL_NCL = [
-    BS_LTD[i] + BS_DTL[i] + BS_LEASE_NCL[i] + BS_OTHER_NCL[i]
-    for i in range(5)
-]
+BS_TOTAL_NCL = [BS_LTD[i] + BS_DTL[i] + BS_LEASE_NCL[i] + BS_OTHER_NCL[i] for i in range(5)]
 BS_TOTAL_LIAB = [BS_TOTAL_CL[i] + BS_TOTAL_NCL[i] for i in range(5)]
 
 # APIC = plug: Total Assets - Total Liabilities - Common - Retained
-BS_APIC = [
-    BS_TOTAL_ASSETS[i] - BS_TOTAL_LIAB[i] - BS_COMMON[i] - BS_RETAINED[i]
-    for i in range(5)
-]
+BS_APIC = [BS_TOTAL_ASSETS[i] - BS_TOTAL_LIAB[i] - BS_COMMON[i] - BS_RETAINED[i] for i in range(5)]
 BS_TOTAL_EQUITY = [BS_COMMON[i] + BS_APIC[i] + BS_RETAINED[i] for i in range(5)]
 BS_TOTAL_LE = [BS_TOTAL_LIAB[i] + BS_TOTAL_EQUITY[i] for i in range(5)]
 
@@ -235,6 +237,7 @@ BS_TOTAL_LE = [BS_TOTAL_LIAB[i] + BS_TOTAL_EQUITY[i] for i in range(5)]
 # ---------------------------------------------------------------------------
 # Sheet builders
 # ---------------------------------------------------------------------------
+
 
 def _build_income_statement(ws):
     rows = [
@@ -521,8 +524,7 @@ WC_INV_DAYS = [50, 50, 50, 50, 50]
 WC_AP_DAYS = [50, 50, 50, 50, 50]
 
 WC_NWC = [
-    BS_AR[i] + BS_INVENTORY[i] + BS_PREPAID[i]
-    - BS_AP[i] - BS_ACCRUED[i] - BS_DEFERRED_REV[i]
+    BS_AR[i] + BS_INVENTORY[i] + BS_PREPAID[i] - BS_AP[i] - BS_ACCRUED[i] - BS_DEFERRED_REV[i]
     for i in range(5)
 ]
 WC_CHG = [0] + [WC_NWC[i] - WC_NWC[i - 1] for i in range(1, 5)]
@@ -648,20 +650,16 @@ def _build_assumptions(ws):
 
 RA_ENTRY_EQUITY = [BS_TOTAL_EQUITY[0]] * 5
 RA_EXIT_EQUITY = BS_TOTAL_EQUITY[:]
-RA_DIVS_RECEIVED = [
-    sum(abs(DIVIDENDS[j]) for j in range(i + 1)) for i in range(5)
-]
+RA_DIVS_RECEIVED = [sum(abs(DIVIDENDS[j]) for j in range(i + 1)) for i in range(5)]
 RA_HOLDING = [1, 2, 3, 4, 5]
 RA_MOIC = [
-    round((RA_EXIT_EQUITY[i] + RA_DIVS_RECEIVED[i]) / RA_ENTRY_EQUITY[i], 2)
-    for i in range(5)
+    round((RA_EXIT_EQUITY[i] + RA_DIVS_RECEIVED[i]) / RA_ENTRY_EQUITY[i], 2) for i in range(5)
 ]
-RA_ROE = [
-    round(IS_NET_INCOME[i] / BS_TOTAL_EQUITY[i], 4) for i in range(5)
-]
+RA_ROE = [round(IS_NET_INCOME[i] / BS_TOTAL_EQUITY[i], 4) for i in range(5)]
 RA_ROIC = [
     round(
-        IS_OPER_INCOME[i] * (1 - 0.25)
+        IS_OPER_INCOME[i]
+        * (1 - 0.25)
         / (BS_TOTAL_EQUITY[i] + BS_LTD[i] + BS_CURRENT_DEBT[i] - BS_CASH[i]),
         4,
     )

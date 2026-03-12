@@ -7,21 +7,23 @@ Tests:
 - AccountingValidator cross-item validation
 - Confidence scoring metadata presence
 """
+
 import json
-import pytest
 from decimal import Decimal
-from pathlib import Path
 from uuid import uuid4
 
-from src.db.models import Taxonomy
-from src.guidelines.taxonomy import TaxonomyManager
-from src.extraction.stages.mapping import _load_taxonomy_for_prompt, TAXONOMY_PATH
-from src.validation.accounting_validator import AccountingValidator, ValidationSummary
+import pytest
 
+from src.db.models import Taxonomy
+from src.extraction.stages.mapping import _load_taxonomy_for_prompt
+from src.extraction.taxonomy_loader import TAXONOMY_PATH
+from src.guidelines.taxonomy import TaxonomyManager
+from src.validation.accounting_validator import AccountingValidator, ValidationSummary
 
 # ============================================================
 # Taxonomy JSON file tests
 # ============================================================
+
 
 class TestTaxonomyJSON:
     """Test the taxonomy.json file structure and Phase 1-3 enhancements."""
@@ -42,18 +44,32 @@ class TestTaxonomyJSON:
         assert len(self.all_items) >= 295
 
     def test_all_categories_present(self):
-        expected = {"income_statement", "balance_sheet", "cash_flow", "debt_schedule", "metrics", "project_finance"}
+        expected = {
+            "income_statement",
+            "balance_sheet",
+            "cash_flow",
+            "debt_schedule",
+            "metrics",
+            "project_finance",
+        }
         assert expected.issubset(set(self.data["categories"].keys()))
 
     def test_all_items_have_required_fields(self):
-        required = {"canonical_name", "category", "display_name", "aliases", "definition", "typical_sign"}
+        required = {
+            "canonical_name",
+            "category",
+            "display_name",
+            "aliases",
+            "definition",
+            "typical_sign",
+        }
         for item in self.all_items:
             missing = required - set(item.keys())
             assert not missing, f"{item['canonical_name']} missing: {missing}"
 
     def test_no_duplicate_canonical_names(self):
         names = [item["canonical_name"] for item in self.all_items]
-        assert len(names) == len(set(names)), f"Duplicate names found"
+        assert len(names) == len(set(names)), "Duplicate names found"
 
     def test_all_items_have_at_least_one_alias(self):
         for item in self.all_items:
@@ -64,7 +80,9 @@ class TestTaxonomyJSON:
         for item in self.all_items:
             parent = item.get("parent_canonical")
             if parent:
-                assert parent in valid_names, f"{item['canonical_name']} refs missing parent: {parent}"
+                assert parent in valid_names, (
+                    f"{item['canonical_name']} refs missing parent: {parent}"
+                )
 
     # Phase 1: OCR variants
     def test_ocr_variants_present_on_key_items(self):
@@ -163,53 +181,96 @@ class TestTaxonomyJSON:
     def test_startup_items_exist(self):
         found = {item["canonical_name"] for item in self.all_items}
         startup_items = {
-            "recurring_revenue", "non_recurring_revenue",
-            "usage_based_revenue", "adjusted_ebitda", "stock_based_compensation_expense",
-            "restructuring_charges", "current_tax_expense", "deferred_tax_expense",
+            "recurring_revenue",
+            "non_recurring_revenue",
+            "usage_based_revenue",
+            "adjusted_ebitda",
+            "stock_based_compensation_expense",
+            "restructuring_charges",
+            "current_tax_expense",
+            "deferred_tax_expense",
             "contribution_margin",
-            "contract_assets", "contract_liabilities",
-            "right_of_use_asset", "lease_liability_current", "lease_liability_non_current",
-            "tax_loss_carryforward", "convertible_notes", "safe_notes",
-            "change_in_contract_liabilities", "proceeds_from_convertible_notes",
+            "contract_assets",
+            "contract_liabilities",
+            "right_of_use_asset",
+            "lease_liability_current",
+            "lease_liability_non_current",
+            "tax_loss_carryforward",
+            "convertible_notes",
+            "safe_notes",
+            "change_in_contract_liabilities",
+            "proceeds_from_convertible_notes",
             "change_in_deferred_revenue_cf",
-            "burn_rate", "cash_runway_months", "bookings", "acv",
-            "customer_count", "new_customers", "churned_customers",
-            "headcount", "revenue_per_employee",
-            "logo_churn_rate", "revenue_churn_rate",
-            "monthly_burn", "pipeline_value",
+            "burn_rate",
+            "cash_runway_months",
+            "bookings",
+            "acv",
+            "customer_count",
+            "new_customers",
+            "churned_customers",
+            "headcount",
+            "revenue_per_employee",
+            "logo_churn_rate",
+            "revenue_churn_rate",
+            "monthly_burn",
+            "pipeline_value",
         }
         missing = startup_items - found
         assert not missing, f"Missing startup items: {missing}"
 
     def test_new_saas_items_tagged(self):
         saas_names = {
-            "recurring_revenue", "usage_based_revenue", "burn_rate",
-            "cash_runway_months", "bookings", "acv",
+            "recurring_revenue",
+            "usage_based_revenue",
+            "burn_rate",
+            "cash_runway_months",
+            "bookings",
+            "acv",
         }
         for name in saas_names:
             item = next((i for i in self.all_items if i["canonical_name"] == name), None)
             assert item is not None, f"{name} not found"
             tags = item.get("industry_tags", [])
-            assert "saas" in tags or "subscription" in tags, \
+            assert "saas" in tags or "subscription" in tags, (
                 f"{name} should be tagged 'saas' or 'subscription', got {tags}"
+            )
 
     def test_no_conflicting_aliases_among_ws4_items(self):
         """WS-4 new items should not have aliases that conflict with each other."""
         ws4_items = {
-            "recurring_revenue", "non_recurring_revenue",
-            "usage_based_revenue", "adjusted_ebitda", "stock_based_compensation_expense",
-            "restructuring_charges", "current_tax_expense", "deferred_tax_expense",
+            "recurring_revenue",
+            "non_recurring_revenue",
+            "usage_based_revenue",
+            "adjusted_ebitda",
+            "stock_based_compensation_expense",
+            "restructuring_charges",
+            "current_tax_expense",
+            "deferred_tax_expense",
             "contribution_margin",
-            "contract_assets", "contract_liabilities",
-            "right_of_use_asset", "lease_liability_current", "lease_liability_non_current",
-            "tax_loss_carryforward", "convertible_notes", "safe_notes",
-            "change_in_contract_liabilities", "proceeds_from_convertible_notes",
+            "contract_assets",
+            "contract_liabilities",
+            "right_of_use_asset",
+            "lease_liability_current",
+            "lease_liability_non_current",
+            "tax_loss_carryforward",
+            "convertible_notes",
+            "safe_notes",
+            "change_in_contract_liabilities",
+            "proceeds_from_convertible_notes",
             "change_in_deferred_revenue_cf",
-            "burn_rate", "cash_runway_months", "bookings", "acv",
-            "customer_count", "new_customers", "churned_customers",
-            "headcount", "revenue_per_employee",
-            "logo_churn_rate", "revenue_churn_rate",
-            "monthly_burn", "pipeline_value",
+            "burn_rate",
+            "cash_runway_months",
+            "bookings",
+            "acv",
+            "customer_count",
+            "new_customers",
+            "churned_customers",
+            "headcount",
+            "revenue_per_employee",
+            "logo_churn_rate",
+            "revenue_churn_rate",
+            "monthly_burn",
+            "pipeline_value",
         }
         for category, items in self.data["categories"].items():
             ws4_in_cat = [i for i in items if i["canonical_name"] in ws4_items]
@@ -279,13 +340,15 @@ class TestTaxonomyJSON:
         for item in self.all_items:
             name = item["canonical_name"]
             if name in expected:
-                assert item["category"] == expected[name], \
+                assert item["category"] == expected[name], (
                     f"{name} should be in {expected[name]}, got {item['category']}"
+                )
 
 
 # ============================================================
 # Mapping stage prompt generation tests
 # ============================================================
+
 
 class TestLoadTaxonomyForPrompt:
     """Test _load_taxonomy_for_prompt with alias inclusion."""
@@ -311,13 +374,20 @@ class TestLoadTaxonomyForPrompt:
 
     def test_all_categories_in_output(self):
         result = _load_taxonomy_for_prompt()
-        for category in ["Income Statement", "Balance Sheet", "Cash Flow", "Debt Schedule", "Metrics"]:
+        for category in [
+            "Income Statement",
+            "Balance Sheet",
+            "Cash Flow",
+            "Debt Schedule",
+            "Metrics",
+        ]:
             assert category in result, f"Missing category: {category}"
 
 
 # ============================================================
 # Accounting validator tests
 # ============================================================
+
 
 class TestAccountingValidator:
     """Test the AccountingValidator with cross-item validation rules."""
@@ -332,22 +402,28 @@ class TestAccountingValidator:
                     "cross_item_validation": {
                         "must_be_positive": True,
                         "relationships": [
-                            {"rule": "revenue >= gross_profit", "error_message": "Revenue < gross profit"},
+                            {
+                                "rule": "revenue >= gross_profit",
+                                "error_message": "Revenue < gross profit",
+                            },
                             {"rule": "revenue >= cogs", "error_message": "Revenue < COGS"},
-                        ]
+                        ],
                     }
-                }
+                },
             },
             {
                 "canonical_name": "gross_profit",
                 "validation_rules": {
                     "cross_item_validation": {
                         "relationships": [
-                            {"rule": "gross_profit == revenue - cogs", "tolerance": 0.01,
-                             "error_message": "GP != revenue - COGS"}
+                            {
+                                "rule": "gross_profit == revenue - cogs",
+                                "tolerance": 0.01,
+                                "error_message": "GP != revenue - COGS",
+                            }
                         ]
                     }
-                }
+                },
             },
             {
                 "canonical_name": "total_assets",
@@ -355,13 +431,15 @@ class TestAccountingValidator:
                     "cross_item_validation": {
                         "must_be_positive": True,
                         "relationships": [
-                            {"rule": "total_assets == total_liabilities + total_equity",
-                             "tolerance": 0.01,
-                             "error_message": "A != L + E",
-                             "critical": True}
-                        ]
+                            {
+                                "rule": "total_assets == total_liabilities + total_equity",
+                                "tolerance": 0.01,
+                                "error_message": "A != L + E",
+                                "critical": True,
+                            }
+                        ],
                     }
-                }
+                },
             },
         ]
 
@@ -432,7 +510,9 @@ class TestAccountingValidator:
             "gross_profit": Decimal("400001"),  # Off by 1 (within 1% tolerance)
         }
         results = validator.validate(data)
-        gp_results = [r for r in results.all_results if "GP" in r.message or "gross_profit" in r.rule]
+        gp_results = [
+            r for r in results.all_results if "GP" in r.message or "gross_profit" in r.rule
+        ]
         # Within tolerance, should pass
         for r in gp_results:
             if "==" in r.rule:
@@ -470,11 +550,11 @@ class TestAccountingValidator:
                                 "rule": "arr == mrr * 12",
                                 "tolerance": 0.05,
                                 "optional": True,
-                                "error_message": "ARR should be approximately MRR x 12"
+                                "error_message": "ARR should be approximately MRR x 12",
                             }
                         ]
                     }
-                }
+                },
             }
         ]
         validator = AccountingValidator(taxonomy)
@@ -500,11 +580,11 @@ class TestAccountingValidator:
                         "relationships": [
                             {
                                 "rule": "0 <= gross_retention <= 1",
-                                "error_message": "Gross retention must be between 0% and 100%"
+                                "error_message": "Gross retention must be between 0% and 100%",
                             }
                         ]
-                    }
-                }
+                    },
+                },
             }
         ]
         validator = AccountingValidator(taxonomy)
@@ -523,6 +603,7 @@ class TestAccountingValidator:
 # ============================================================
 # TaxonomyManager database integration tests
 # ============================================================
+
 
 class TestTaxonomyManagerEnhancements:
     """Test TaxonomyManager with enhanced taxonomy data in DB."""
@@ -545,9 +626,7 @@ class TestTaxonomyManagerEnhancements:
                     "min_value": 0,
                     "ocr_variants": ["Rev enue", "REVENUE"],
                     "industry_tags": ["all", "saas", "retail"],
-                    "confidence_scoring": {
-                        "high_confidence_signals": ["First line item in P&L"]
-                    },
+                    "confidence_scoring": {"high_confidence_signals": ["First line item in P&L"]},
                 },
             ),
             Taxonomy(

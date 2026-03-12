@@ -11,6 +11,7 @@ Prerequisites:
 Can also run standalone:
     python tests/e2e/test_e2e.py
 """
+
 import os
 import time
 from pathlib import Path
@@ -24,7 +25,7 @@ import requests
 BASE_URL = os.getenv("E2E_BASE_URL", "http://localhost:8100")
 API_KEY = os.getenv("E2E_API_KEY", "emi_e2e_test_key_for_integration_testing")
 FIXTURE_PATH = Path(__file__).parent.parent / "fixtures" / "sample_model.xlsx"
-POLL_INTERVAL = 2   # seconds
+POLL_INTERVAL = 2  # seconds
 POLL_TIMEOUT = 120  # seconds
 
 
@@ -35,6 +36,7 @@ def _headers():
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 def test_health():
     """API health check - database and S3 must be up."""
@@ -88,9 +90,11 @@ def test_upload_and_extract():
         job_data = resp.json()
         status = job_data["status"]
 
-        print(f"  Poll: status={status}, "
-              f"stage={job_data.get('current_stage')}, "
-              f"progress={job_data.get('progress_percent')}%")
+        print(
+            f"  Poll: status={status}, "
+            f"stage={job_data.get('current_stage')}, "
+            f"progress={job_data.get('progress_percent')}%"
+        )
 
         if status in ("completed", "failed"):
             break
@@ -115,9 +119,11 @@ def test_upload_and_extract():
     assert len(result["sheets"]) >= 1
     assert result["tokens_used"] > 0
 
-    print(f"\n  Result: {len(result['sheets'])} sheets, "
-          f"{len(result['line_items'])} line items, "
-          f"{result['tokens_used']} tokens, ${result['cost_usd']:.4f}")
+    print(
+        f"\n  Result: {len(result['sheets'])} sheets, "
+        f"{len(result['line_items'])} line items, "
+        f"{result['tokens_used']} tokens, ${result['cost_usd']:.4f}"
+    )
 
 
 def test_deduplication():
@@ -164,9 +170,7 @@ def test_invalid_file_rejected():
     resp = requests.post(
         f"{BASE_URL}/api/v1/files/upload",
         headers=_headers(),
-        files={
-            "file": ("not_excel.txt", b"this is not excel", "text/plain")
-        },
+        files={"file": ("not_excel.txt", b"this is not excel", "text/plain")},
         timeout=10,
     )
     assert resp.status_code == 400, f"Expected 400, got {resp.status_code}: {resp.text}"

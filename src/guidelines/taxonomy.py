@@ -4,13 +4,15 @@ Taxonomy Manager - Agent 4: Guidelines Manager
 Provides access to the canonical financial taxonomy for extraction guidance.
 Supports querying, searching, and formatting taxonomy for Claude prompts.
 """
-from typing import List, Optional, Dict, Any
-import sqlalchemy as sa
-from sqlalchemy.orm import Session
-from sqlalchemy import select, or_, func
 
-from src.db.models import Taxonomy
+from typing import Any, Dict, List, Optional
+
+import sqlalchemy as sa
+from sqlalchemy import func, or_, select
+from sqlalchemy.orm import Session
+
 from src.core.logging import get_logger
+from src.db.models import Taxonomy
 
 logger = get_logger(__name__)
 
@@ -48,9 +50,7 @@ class TaxonomyManager:
         logger.info(f"Retrieved {len(items)} taxonomy items")
         return items
 
-    def get_by_category(
-        self, session: Session, category: str
-    ) -> List[Taxonomy]:
+    def get_by_category(self, session: Session, category: str) -> List[Taxonomy]:
         """
         Get taxonomy items for a specific category.
 
@@ -70,9 +70,7 @@ class TaxonomyManager:
         logger.debug(f"Fetching taxonomy items for category: {category}")
 
         stmt = (
-            select(Taxonomy)
-            .where(Taxonomy.category == category)
-            .order_by(Taxonomy.canonical_name)
+            select(Taxonomy).where(Taxonomy.category == category).order_by(Taxonomy.canonical_name)
         )
         result = session.execute(stmt)
         items = list(result.scalars().all())
@@ -121,9 +119,7 @@ class TaxonomyManager:
         logger.info(f"Found {len(items)} taxonomy items matching '{query}'")
         return items
 
-    def get_by_canonical_name(
-        self, session: Session, canonical_name: str
-    ) -> Optional[Taxonomy]:
+    def get_by_canonical_name(self, session: Session, canonical_name: str) -> Optional[Taxonomy]:
         """
         Get specific taxonomy item by canonical name.
 
@@ -177,18 +173,14 @@ class TaxonomyManager:
         """
         logger.debug(f"Fetching {len(canonical_names)} taxonomy items")
 
-        stmt = select(Taxonomy).where(
-            Taxonomy.canonical_name.in_(canonical_names)
-        )
+        stmt = select(Taxonomy).where(Taxonomy.canonical_name.in_(canonical_names))
         result = session.execute(stmt)
         items = list(result.scalars().all())
 
         logger.info(f"Found {len(items)}/{len(canonical_names)} taxonomy items")
         return items
 
-    def format_for_prompt(
-        self, session: Session, category: Optional[str] = None
-    ) -> str:
+    def format_for_prompt(self, session: Session, category: Optional[str] = None) -> str:
         """
         Format taxonomy for Claude prompt.
 
@@ -295,15 +287,11 @@ class TaxonomyManager:
         """
         logger.debug(f"Building taxonomy hierarchy (category={category})")
 
-        items = (
-            self.get_by_category(session, category)
-            if category
-            else self.get_all(session)
-        )
+        items = self.get_by_category(session, category) if category else self.get_all(session)
 
         # Build hierarchy
         hierarchy: Dict[str, Dict[str, Any]] = {}
-        items_by_name = {item.canonical_name: item for item in items}
+        {item.canonical_name: item for item in items}
 
         # First pass: identify top-level items (no parent)
         for item in items:

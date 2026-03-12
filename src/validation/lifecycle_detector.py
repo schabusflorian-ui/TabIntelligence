@@ -14,13 +14,12 @@ Usage:
     print(result.is_project_finance)  # True/False
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from decimal import Decimal
 from statistics import median
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Set
 
 from src.validation.utils import sort_periods
-
 
 ZERO = Decimal("0")
 
@@ -28,10 +27,11 @@ ZERO = Decimal("0")
 @dataclass
 class LifecycleResult:
     """Result of lifecycle phase detection."""
-    phases: Dict[str, str]              # period -> phase name
+
+    phases: Dict[str, str]  # period -> phase name
     is_project_finance: bool
-    confidence: float                   # 0.0 to 1.0
-    signals_used: List[str]             # e.g. ["revenue", "capex", "debt_drawdown"]
+    confidence: float  # 0.0 to 1.0
+    signals_used: List[str]  # e.g. ["revenue", "capex", "debt_drawdown"]
 
 
 class LifecycleDetector:
@@ -51,9 +51,18 @@ class LifecycleDetector:
     """
 
     PF_INDICATORS: Set[str] = {
-        "cfads", "cfae", "dscr", "llcr", "plcr", "debt_service",
-        "equity_irr", "dsra_balance", "sculpted_debt_service",
-        "equity_contribution", "development_costs", "total_investment",
+        "cfads",
+        "cfae",
+        "dscr",
+        "llcr",
+        "plcr",
+        "debt_service",
+        "equity_irr",
+        "dsra_balance",
+        "sculpted_debt_service",
+        "equity_contribution",
+        "development_costs",
+        "total_investment",
     }
 
     # Signals we look for in the data
@@ -73,7 +82,10 @@ class LifecycleDetector:
         """
         if not multi_period_data:
             return LifecycleResult(
-                phases={}, is_project_finance=False, confidence=0.0, signals_used=[],
+                phases={},
+                is_project_finance=False,
+                confidence=0.0,
+                signals_used=[],
             )
 
         sorted_periods = sort_periods(list(multi_period_data.keys()))
@@ -85,26 +97,29 @@ class LifecycleDetector:
         signals_used = self._find_signals(multi_period_data)
 
         # Find operational window from revenue
-        rev_values = {
-            p: multi_period_data[p].get("revenue", ZERO)
-            for p in sorted_periods
-        }
+        rev_values = {p: multi_period_data[p].get("revenue", ZERO) for p in sorted_periods}
         op_periods = [p for p in sorted_periods if rev_values.get(p, ZERO) > 0]
 
         if not op_periods:
             # No revenue data — can't determine phases
             return LifecycleResult(
-                phases={}, is_project_finance=is_pf,
-                confidence=0.0, signals_used=signals_used,
+                phases={},
+                is_project_finance=is_pf,
+                confidence=0.0,
+                signals_used=signals_used,
             )
 
         if is_pf:
             phases = self._detect_pf_phases(
-                sorted_periods, multi_period_data, op_periods, rev_values,
+                sorted_periods,
+                multi_period_data,
+                op_periods,
+                rev_values,
             )
         else:
             phases = self._detect_corporate_phases(
-                sorted_periods, op_periods,
+                sorted_periods,
+                op_periods,
             )
 
         confidence = self._compute_confidence(signals_used, is_pf, pf_indicator_count)
@@ -121,7 +136,8 @@ class LifecycleDetector:
     # ------------------------------------------------------------------
 
     def _detect_project_finance(
-        self, multi_period_data: Dict[str, Dict[str, Decimal]],
+        self,
+        multi_period_data: Dict[str, Dict[str, Decimal]],
     ) -> tuple[bool, int]:
         """Check if PF indicators are present across any period.
 
@@ -139,7 +155,8 @@ class LifecycleDetector:
     # ------------------------------------------------------------------
 
     def _find_signals(
-        self, multi_period_data: Dict[str, Dict[str, Decimal]],
+        self,
+        multi_period_data: Dict[str, Dict[str, Decimal]],
     ) -> List[str]:
         """Return list of signal names that have data in at least one period."""
         signals = []
@@ -249,7 +266,11 @@ class LifecycleDetector:
             if rev <= 0 and i > first_op_idx and i < last_op_idx:
                 # Check if flanked by positive revenue
                 prev_rev = float(rev_values.get(sorted_periods[i - 1], 0))
-                next_rev = float(rev_values.get(sorted_periods[i + 1], 0)) if i + 1 < len(sorted_periods) else 0
+                next_rev = (
+                    float(rev_values.get(sorted_periods[i + 1], 0))
+                    if i + 1 < len(sorted_periods)
+                    else 0
+                )
                 if prev_rev > 0 or next_rev > 0:
                     phases[period] = "maintenance_shutdown"
 
@@ -302,4 +323,3 @@ class LifecycleDetector:
             pf_boost = min(pf_indicator_count / 5, 1.0) * 0.2
             return min(signal_score * 0.8 + pf_boost, 1.0)
         return signal_score
-

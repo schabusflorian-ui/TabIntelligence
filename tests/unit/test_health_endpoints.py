@@ -2,13 +2,15 @@
 Tests for health check endpoints.
 Covers liveness, readiness, database health, and circuit breaker status.
 """
-import pytest
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 
 # ============================================================================
 # Liveness Probe
 # ============================================================================
+
 
 @pytest.mark.asyncio
 async def test_liveness_returns_alive():
@@ -23,6 +25,7 @@ async def test_liveness_returns_alive():
 # ============================================================================
 # Readiness Probe
 # ============================================================================
+
 
 @pytest.mark.asyncio
 async def test_readiness_healthy_db():
@@ -58,6 +61,7 @@ async def test_readiness_unhealthy_db():
 
     # JSONResponse returned — parse the body
     import json
+
     body = json.loads(result.body.decode())
     assert body["status"] == "not_ready"
     assert body["database"] == "disconnected"
@@ -69,8 +73,10 @@ async def test_readiness_unhealthy_db():
 # Detailed Database Health
 # ============================================================================
 
-def _make_db_health_mocks(pool_checked_out=2, pool_overflow=0, pool_size=10,
-                          breaker_state="closed", success_rate=0.99):
+
+def _make_db_health_mocks(
+    pool_checked_out=2, pool_overflow=0, pool_size=10, breaker_state="closed", success_rate=0.99
+):
     """Helper to create standard mocks for database_health tests."""
     mock_result = MagicMock()
     mock_result.scalar.return_value = 1
@@ -111,10 +117,11 @@ async def test_database_health_healthy():
 
     mock_ctx, mock_engine, mock_breaker_stats = _make_db_health_mocks()
 
-    with patch("src.api.health.get_db_async", return_value=mock_ctx), \
-         patch("src.api.health.async_engine", mock_engine), \
-         patch("src.api.health.db_circuit_breaker") as mock_breaker:
-
+    with (
+        patch("src.api.health.get_db_async", return_value=mock_ctx),
+        patch("src.api.health.async_engine", mock_engine),
+        patch("src.api.health.db_circuit_breaker") as mock_breaker,
+    ):
         mock_breaker.get_stats.return_value = mock_breaker_stats
         result = await database_health()
 
@@ -135,10 +142,11 @@ async def test_database_health_degraded_high_pool_utilization():
         pool_checked_out=10, pool_overflow=1
     )
 
-    with patch("src.api.health.get_db_async", return_value=mock_ctx), \
-         patch("src.api.health.async_engine", mock_engine), \
-         patch("src.api.health.db_circuit_breaker") as mock_breaker:
-
+    with (
+        patch("src.api.health.get_db_async", return_value=mock_ctx),
+        patch("src.api.health.async_engine", mock_engine),
+        patch("src.api.health.db_circuit_breaker") as mock_breaker,
+    ):
         mock_breaker.get_stats.return_value = mock_breaker_stats
         result = await database_health()
 
@@ -155,10 +163,11 @@ async def test_database_health_degraded_circuit_half_open():
         breaker_state="half_open", success_rate=0.85
     )
 
-    with patch("src.api.health.get_db_async", return_value=mock_ctx), \
-         patch("src.api.health.async_engine", mock_engine), \
-         patch("src.api.health.db_circuit_breaker") as mock_breaker:
-
+    with (
+        patch("src.api.health.get_db_async", return_value=mock_ctx),
+        patch("src.api.health.async_engine", mock_engine),
+        patch("src.api.health.db_circuit_breaker") as mock_breaker,
+    ):
         mock_breaker.get_stats.return_value = mock_breaker_stats
         result = await database_health()
 
@@ -175,10 +184,11 @@ async def test_database_health_circuit_open_with_low_success():
         breaker_state="open", success_rate=0.5
     )
 
-    with patch("src.api.health.get_db_async", return_value=mock_ctx), \
-         patch("src.api.health.async_engine", mock_engine), \
-         patch("src.api.health.db_circuit_breaker") as mock_breaker:
-
+    with (
+        patch("src.api.health.get_db_async", return_value=mock_ctx),
+        patch("src.api.health.async_engine", mock_engine),
+        patch("src.api.health.db_circuit_breaker") as mock_breaker,
+    ):
         mock_breaker.get_stats.return_value = mock_breaker_stats
         result = await database_health()
 
@@ -203,6 +213,7 @@ async def test_database_health_exception():
 
     # JSONResponse returned — parse the body
     import json
+
     body = json.loads(result.body.decode())
     assert body["status"] == "unhealthy"
     assert "DB down" in body["error"]
@@ -212,6 +223,7 @@ async def test_database_health_exception():
 # ============================================================================
 # Circuit Breaker Status
 # ============================================================================
+
 
 @pytest.mark.asyncio
 async def test_circuit_breaker_status():
@@ -241,6 +253,7 @@ async def test_circuit_breaker_status():
 # DB Metrics Endpoint
 # ============================================================================
 
+
 @pytest.mark.asyncio
 async def test_db_metrics_endpoint():
     """Test Prometheus-compatible metrics endpoint."""
@@ -268,10 +281,11 @@ async def test_db_metrics_endpoint():
         "rejected_requests": 0,
     }
 
-    with patch("src.api.health.get_db_async", return_value=mock_ctx), \
-         patch("src.api.health.async_engine", mock_engine), \
-         patch("src.api.health.db_circuit_breaker") as mock_breaker:
-
+    with (
+        patch("src.api.health.get_db_async", return_value=mock_ctx),
+        patch("src.api.health.async_engine", mock_engine),
+        patch("src.api.health.db_circuit_breaker") as mock_breaker,
+    ):
         mock_breaker.get_stats.return_value = mock_breaker_stats
         result = await db_metrics()
 

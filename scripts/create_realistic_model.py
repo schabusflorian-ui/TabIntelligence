@@ -19,9 +19,8 @@ Creates: tests/fixtures/realistic_model.xlsx
 from pathlib import Path
 
 from openpyxl import Workbook
-from openpyxl.styles import Alignment, Border, Font, PatternFill, Side, numbers
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
-
 
 # =============================================================================
 # Financial Data
@@ -31,22 +30,23 @@ PERIODS = ["FY2022A", "FY2023A", "FY2024E", "FY2025E", "FY2026E"]
 
 # Assumptions (used to derive everything else)
 ASSUMPTIONS = {
-    "Revenue Growth Rate":       [None,   0.08,   0.10,   0.09,   0.07],
-    "Gross Margin":              [0.545,  0.550,  0.555,  0.560,  0.565],
-    "SG&A % of Revenue":        [0.120,  0.118,  0.115,  0.113,  0.110],
-    "R&D % of Revenue":         [0.060,  0.062,  0.065,  0.063,  0.060],
-    "Other OpEx % of Revenue":  [0.025,  0.024,  0.023,  0.022,  0.020],
-    "Capex % of Revenue":       [0.045,  0.048,  0.050,  0.048,  0.045],
-    "Tax Rate":                 [0.250,  0.250,  0.250,  0.250,  0.250],
-    "Term Loan A Rate":         [0.045,  0.050,  0.055,  0.052,  0.048],
-    "Senior Notes Rate":        [0.065,  0.065,  0.065,  0.065,  0.065],
-    "DSO (days)":               [52,     50,     48,     47,     45],
-    "DIO (days)":               [38,     36,     35,     34,     33],
-    "DPO (days)":               [42,     44,     45,     46,     48],
+    "Revenue Growth Rate": [None, 0.08, 0.10, 0.09, 0.07],
+    "Gross Margin": [0.545, 0.550, 0.555, 0.560, 0.565],
+    "SG&A % of Revenue": [0.120, 0.118, 0.115, 0.113, 0.110],
+    "R&D % of Revenue": [0.060, 0.062, 0.065, 0.063, 0.060],
+    "Other OpEx % of Revenue": [0.025, 0.024, 0.023, 0.022, 0.020],
+    "Capex % of Revenue": [0.045, 0.048, 0.050, 0.048, 0.045],
+    "Tax Rate": [0.250, 0.250, 0.250, 0.250, 0.250],
+    "Term Loan A Rate": [0.045, 0.050, 0.055, 0.052, 0.048],
+    "Senior Notes Rate": [0.065, 0.065, 0.065, 0.065, 0.065],
+    "DSO (days)": [52, 50, 48, 47, 45],
+    "DIO (days)": [38, 36, 35, 34, 33],
+    "DPO (days)": [42, 44, 45, 46, 48],
 }
 
 # Base revenue for FY2022A
 BASE_REVENUE = 232_000
+
 
 # Derive revenue series
 def _revenue_series():
@@ -56,6 +56,7 @@ def _revenue_series():
             continue
         rev.append(round(rev[-1] * (1 + g)))
     return rev
+
 
 REVENUE = _revenue_series()  # e.g. [232000, 250560, 275616, 300421, 321451]
 
@@ -96,17 +97,17 @@ def _build_income_statement():
     rows.append(("  Service Revenue", service_rev, "indent"))
     rows.append(("Cost of Sales", cogs, "normal"))
     rows.append(("Gross Profit", gross_profit, "bold"))
-    rows.append(("", [None]*5, "spacer"))
-    rows.append(("Operating Expenses:", [None]*5, "section"))
+    rows.append(("", [None] * 5, "spacer"))
+    rows.append(("Operating Expenses:", [None] * 5, "section"))
     rows.append(("  SG&A", sga, "indent"))
     rows.append(("  R&D Expenses", rd, "indent"))
     rows.append(("  Other Operating Expenses", other_opex, "indent"))
     rows.append(("Total Operating Expenses", total_opex, "bold"))
-    rows.append(("", [None]*5, "spacer"))
+    rows.append(("", [None] * 5, "spacer"))
     rows.append(("EBITDA", ebitda, "bold"))
     rows.append(("Depreciation & Amortization", da_values, "normal"))
     rows.append(("EBIT", ebit, "bold"))
-    rows.append(("", [None]*5, "spacer"))
+    rows.append(("", [None] * 5, "spacer"))
     rows.append(("Interest Expense", interest, "normal"))
     rows.append(("Other (Income) / Expense, Net", other_inc_exp, "normal"))
     rows.append(("Pre-Tax Income", pretax, "bold"))
@@ -114,11 +115,21 @@ def _build_income_statement():
     rows.append(("Net Income", net_income, "bold"))
 
     return rows, {
-        "revenue": REVENUE, "cogs": cogs, "gross_profit": gross_profit,
-        "sga": sga, "rd": rd, "other_opex": other_opex, "total_opex": total_opex,
-        "ebitda": ebitda, "da": da_values, "ebit": ebit,
-        "interest": interest, "other_inc_exp": other_inc_exp,
-        "pretax": pretax, "tax": tax, "net_income": net_income,
+        "revenue": REVENUE,
+        "cogs": cogs,
+        "gross_profit": gross_profit,
+        "sga": sga,
+        "rd": rd,
+        "other_opex": other_opex,
+        "total_opex": total_opex,
+        "ebitda": ebitda,
+        "da": da_values,
+        "ebit": ebit,
+        "interest": interest,
+        "other_inc_exp": other_inc_exp,
+        "pretax": pretax,
+        "tax": tax,
+        "net_income": net_income,
     }
 
 
@@ -142,7 +153,9 @@ def _interest_values():
     senior_balance = [50000, 50000, 50000, 50000, 50000]
 
     tla_interest = [round(tla_balance[i] * ASSUMPTIONS["Term Loan A Rate"][i]) for i in range(5)]
-    senior_interest = [round(senior_balance[i] * ASSUMPTIONS["Senior Notes Rate"][i]) for i in range(5)]
+    senior_interest = [
+        round(senior_balance[i] * ASSUMPTIONS["Senior Notes Rate"][i]) for i in range(5)
+    ]
     total_interest = [tla_interest[i] + senior_interest[i] for i in range(5)]
     return total_interest
 
@@ -162,7 +175,7 @@ def _build_balance_sheet(is_data):
     ppe_net = [42000, 42000, 42000, 42000, 42000]  # initial
     for i in range(5):
         if i > 0:
-            ppe_net[i] = ppe_net[i-1] + capex[i] - is_data["da"][i]
+            ppe_net[i] = ppe_net[i - 1] + capex[i] - is_data["da"][i]
         else:
             ppe_net[i] = 42000
 
@@ -174,7 +187,9 @@ def _build_balance_sheet(is_data):
 
     # We need cash to make BS balance -- compute last
     # Non-current assets subtotal (before cash determination)
-    total_nca_excl = [ppe_net[i] + goodwill[i] + intangibles_net[i] + other_nca[i] for i in range(5)]
+    total_nca_excl = [
+        ppe_net[i] + goodwill[i] + intangibles_net[i] + other_nca[i] for i in range(5)
+    ]
 
     # Liabilities
     ap = [round(is_data["cogs"][i] * ASSUMPTIONS["DPO (days)"][i] / 365) for i in range(5)]
@@ -207,56 +222,70 @@ def _build_balance_sheet(is_data):
     total_assets = [total_ca_with_cash[i] + total_nca_excl[i] for i in range(5)]
 
     rows = []
-    rows.append(("ASSETS", [None]*5, "section"))
-    rows.append(("Current Assets", [None]*5, "subsection"))
+    rows.append(("ASSETS", [None] * 5, "section"))
+    rows.append(("Current Assets", [None] * 5, "subsection"))
     rows.append(("  Cash & Equivalents", cash, "indent"))
     rows.append(("  Accounts Receivable", ar, "indent"))
     rows.append(("  Inventory", inventory, "indent"))
     rows.append(("  Prepaid Expenses", prepaid, "indent"))
     rows.append(("  Other Current Assets", other_ca, "indent"))
     rows.append(("Total Current Assets", total_ca_with_cash, "bold"))
-    rows.append(("", [None]*5, "spacer"))
-    rows.append(("Non-Current Assets", [None]*5, "subsection"))
+    rows.append(("", [None] * 5, "spacer"))
+    rows.append(("Non-Current Assets", [None] * 5, "subsection"))
     rows.append(("  PP&E (Net)", ppe_net, "indent"))
     rows.append(("  Goodwill", goodwill, "indent"))
     rows.append(("  Other Intangibles (Net)", intangibles_net, "indent"))
     rows.append(("  Other Non-Current Assets", other_nca, "indent"))
     rows.append(("Total Assets", total_assets, "bold"))
-    rows.append(("", [None]*5, "spacer"))
-    rows.append(("LIABILITIES", [None]*5, "section"))
-    rows.append(("Current Liabilities", [None]*5, "subsection"))
+    rows.append(("", [None] * 5, "spacer"))
+    rows.append(("LIABILITIES", [None] * 5, "section"))
+    rows.append(("Current Liabilities", [None] * 5, "subsection"))
     rows.append(("  Accounts Payable", ap, "indent"))
     rows.append(("  Accrued Liabilities", accrued, "indent"))
     rows.append(("  Current Portion of LT Debt", current_ltd, "indent"))
     rows.append(("  Other Current Liabilities", other_cl, "indent"))
     rows.append(("Total Current Liabilities", total_cl, "bold"))
-    rows.append(("", [None]*5, "spacer"))
-    rows.append(("Long-Term Debt", [None]*5, "subsection"))
+    rows.append(("", [None] * 5, "spacer"))
+    rows.append(("Long-Term Debt", [None] * 5, "subsection"))
     rows.append(("  Term Loan A", tla_balance, "indent"))
     # Term Loan B is zero for this company
     rows.append(("  Senior Notes", senior_notes, "indent"))
     rows.append(("Total Long-Term Debt", total_ltd, "bold"))
-    rows.append(("", [None]*5, "spacer"))
+    rows.append(("", [None] * 5, "spacer"))
     rows.append(("Total Liabilities", total_liab, "bold"))
-    rows.append(("", [None]*5, "spacer"))
-    rows.append(("SHAREHOLDERS' EQUITY", [None]*5, "section"))
+    rows.append(("", [None] * 5, "spacer"))
+    rows.append(("SHAREHOLDERS' EQUITY", [None] * 5, "section"))
     rows.append(("  Common Stock", common_stock, "indent"))
     rows.append(("  Retained Earnings", retained, "indent"))
     rows.append(("Total Shareholders' Equity", total_equity, "bold"))
-    rows.append(("", [None]*5, "spacer"))
+    rows.append(("", [None] * 5, "spacer"))
     rows.append(("Total Liabilities & Shareholders' Equity", total_le, "bold"))
 
     return rows, {
-        "cash": cash, "ar": ar, "inventory": inventory, "prepaid": prepaid,
-        "other_ca": other_ca, "total_ca": total_ca_with_cash,
-        "ppe_net": ppe_net, "goodwill": goodwill, "intangibles_net": intangibles_net,
-        "other_nca": other_nca, "total_assets": total_assets,
-        "ap": ap, "accrued": accrued, "current_ltd": current_ltd,
-        "other_cl": other_cl, "total_cl": total_cl,
-        "tla_balance": tla_balance, "senior_notes": senior_notes,
-        "total_ltd": total_ltd, "total_liab": total_liab,
-        "common_stock": common_stock, "retained": retained,
-        "total_equity": total_equity, "total_le": total_le,
+        "cash": cash,
+        "ar": ar,
+        "inventory": inventory,
+        "prepaid": prepaid,
+        "other_ca": other_ca,
+        "total_ca": total_ca_with_cash,
+        "ppe_net": ppe_net,
+        "goodwill": goodwill,
+        "intangibles_net": intangibles_net,
+        "other_nca": other_nca,
+        "total_assets": total_assets,
+        "ap": ap,
+        "accrued": accrued,
+        "current_ltd": current_ltd,
+        "other_cl": other_cl,
+        "total_cl": total_cl,
+        "tla_balance": tla_balance,
+        "senior_notes": senior_notes,
+        "total_ltd": total_ltd,
+        "total_liab": total_liab,
+        "common_stock": common_stock,
+        "retained": retained,
+        "total_equity": total_equity,
+        "total_le": total_le,
     }
 
 
@@ -266,14 +295,14 @@ def _build_cash_flow(is_data, bs_data):
     da = is_data["da"]
 
     # Working capital changes (delta in current assets/liabilities)
-    chg_ar = [0] + [-(bs_data["ar"][i] - bs_data["ar"][i-1]) for i in range(1, 5)]
-    chg_inv = [0] + [-(bs_data["inventory"][i] - bs_data["inventory"][i-1]) for i in range(1, 5)]
-    chg_ap = [0] + [(bs_data["ap"][i] - bs_data["ap"][i-1]) for i in range(1, 5)]
+    chg_ar = [0] + [-(bs_data["ar"][i] - bs_data["ar"][i - 1]) for i in range(1, 5)]
+    chg_inv = [0] + [-(bs_data["inventory"][i] - bs_data["inventory"][i - 1]) for i in range(1, 5)]
+    chg_ap = [0] + [(bs_data["ap"][i] - bs_data["ap"][i - 1]) for i in range(1, 5)]
     chg_other_wc = [0] + [
-        -(bs_data["prepaid"][i] - bs_data["prepaid"][i-1])
-        - (bs_data["other_ca"][i] - bs_data["other_ca"][i-1])
-        + (bs_data["accrued"][i] - bs_data["accrued"][i-1])
-        + (bs_data["other_cl"][i] - bs_data["other_cl"][i-1])
+        -(bs_data["prepaid"][i] - bs_data["prepaid"][i - 1])
+        - (bs_data["other_ca"][i] - bs_data["other_ca"][i - 1])
+        + (bs_data["accrued"][i] - bs_data["accrued"][i - 1])
+        + (bs_data["other_cl"][i] - bs_data["other_cl"][i - 1])
         for i in range(1, 5)
     ]
     total_wc_chg = [chg_ar[i] + chg_inv[i] + chg_ap[i] + chg_other_wc[i] for i in range(5)]
@@ -300,7 +329,7 @@ def _build_cash_flow(is_data, bs_data):
     fcf = [cfo[i] + capex_neg[i] for i in range(5)]
 
     rows = []
-    rows.append(("Cash from Operating Activities", [None]*5, "section"))
+    rows.append(("Cash from Operating Activities", [None] * 5, "section"))
     rows.append(("  Net Income", net_income, "indent"))
     rows.append(("  Depreciation & Amortization", da, "indent"))
     rows.append(("  Changes in Accounts Receivable", chg_ar, "indent"))
@@ -308,19 +337,19 @@ def _build_cash_flow(is_data, bs_data):
     rows.append(("  Changes in Accounts Payable", chg_ap, "indent"))
     rows.append(("  Other Working Capital Changes", chg_other_wc, "indent"))
     rows.append(("Cash from Operations", cfo, "bold"))
-    rows.append(("", [None]*5, "spacer"))
-    rows.append(("Cash from Investing Activities", [None]*5, "section"))
+    rows.append(("", [None] * 5, "spacer"))
+    rows.append(("Cash from Investing Activities", [None] * 5, "section"))
     rows.append(("  Capital Expenditures", capex_neg, "indent"))
     rows.append(("Cash from Investing", cfi, "bold"))
-    rows.append(("", [None]*5, "spacer"))
-    rows.append(("Cash from Financing Activities", [None]*5, "section"))
+    rows.append(("", [None] * 5, "spacer"))
+    rows.append(("Cash from Financing Activities", [None] * 5, "section"))
     rows.append(("  Debt Repayment", debt_repay, "indent"))
     rows.append(("Cash from Financing", cff, "bold"))
-    rows.append(("", [None]*5, "spacer"))
+    rows.append(("", [None] * 5, "spacer"))
     rows.append(("Net Change in Cash", net_change, "bold"))
     rows.append(("Beginning Cash", beg_cash, "normal"))
     rows.append(("Ending Cash", end_cash, "bold"))
-    rows.append(("", [None]*5, "spacer"))
+    rows.append(("", [None] * 5, "spacer"))
     rows.append(("Free Cash Flow", fcf, "bold"))
 
     return rows
@@ -349,25 +378,25 @@ def _build_debt_schedule():
     total_debt = [tla_end[i] + revolver_end[i] + senior_end[i] for i in range(5)]
 
     rows = []
-    rows.append(("Term Loan A", [None]*5, "section"))
+    rows.append(("Term Loan A", [None] * 5, "section"))
     rows.append(("  Beginning Balance", tla_beg, "indent"))
     rows.append(("  Mandatory Repayment", tla_repay, "indent"))
     rows.append(("  Ending Balance", tla_end, "bold"))
-    rows.append(("", [None]*5, "spacer"))
-    rows.append(("Revolver", [None]*5, "section"))
+    rows.append(("", [None] * 5, "spacer"))
+    rows.append(("Revolver", [None] * 5, "section"))
     rows.append(("  Beginning Balance", revolver_beg, "indent"))
     rows.append(("  Draws / (Repayments)", revolver_draw, "indent"))
     rows.append(("  Ending Balance", revolver_end, "bold"))
-    rows.append(("", [None]*5, "spacer"))
-    rows.append(("Senior Notes", [None]*5, "section"))
+    rows.append(("", [None] * 5, "spacer"))
+    rows.append(("Senior Notes", [None] * 5, "section"))
     rows.append(("  Beginning Balance", senior_beg, "indent"))
     rows.append(("  Ending Balance", senior_end, "bold"))
-    rows.append(("", [None]*5, "spacer"))
-    rows.append(("Interest Expense", [None]*5, "subsection"))
+    rows.append(("", [None] * 5, "spacer"))
+    rows.append(("Interest Expense", [None] * 5, "subsection"))
     rows.append(("  Term Loan A Interest", tla_interest, "indent"))
     rows.append(("  Senior Notes Interest", sr_interest, "indent"))
     rows.append(("  Total Interest Expense", total_interest, "bold"))
-    rows.append(("", [None]*5, "spacer"))
+    rows.append(("", [None] * 5, "spacer"))
     rows.append(("Total Debt Outstanding", total_debt, "bold"))
 
     return rows
@@ -379,21 +408,18 @@ def _build_working_capital(is_data, bs_data):
     dio = ASSUMPTIONS["DIO (days)"]
     dpo = ASSUMPTIONS["DPO (days)"]
 
-    nwc = [
-        bs_data["ar"][i] + bs_data["inventory"][i] - bs_data["ap"][i]
-        for i in range(5)
-    ]
-    chg_nwc = [0] + [nwc[i] - nwc[i-1] for i in range(1, 5)]
+    nwc = [bs_data["ar"][i] + bs_data["inventory"][i] - bs_data["ap"][i] for i in range(5)]
+    chg_nwc = [0] + [nwc[i] - nwc[i - 1] for i in range(1, 5)]
 
     rows = []
     rows.append(("Days Sales Outstanding", dso, "normal"))
     rows.append(("Days Inventory Outstanding", dio, "normal"))
     rows.append(("Days Payable Outstanding", dpo, "normal"))
-    rows.append(("", [None]*5, "spacer"))
+    rows.append(("", [None] * 5, "spacer"))
     rows.append(("Accounts Receivable", bs_data["ar"], "normal"))
     rows.append(("Inventory", bs_data["inventory"], "normal"))
     rows.append(("Accounts Payable", bs_data["ap"], "normal"))
-    rows.append(("", [None]*5, "spacer"))
+    rows.append(("", [None] * 5, "spacer"))
     rows.append(("Net Working Capital", nwc, "bold"))
     rows.append(("Change in Net Working Capital", chg_nwc, "bold"))
 
@@ -431,8 +457,10 @@ def _build_da_schedule():
     rows.append(("  Depreciation - Existing Assets", existing_da, "indent"))
     rows.append(("New Capital Expenditures", capex, "normal"))
     rows.append(("  Depreciation - New Capex", new_da, "indent"))
-    rows.append(("Total Depreciation", [existing_da[i] + new_da[i] - amort[i] for i in range(5)], "bold"))
-    rows.append(("", [None]*5, "spacer"))
+    rows.append(
+        ("Total Depreciation", [existing_da[i] + new_da[i] - amort[i] for i in range(5)], "bold")
+    )
+    rows.append(("", [None] * 5, "spacer"))
     rows.append(("Intangible Amortization", amort, "normal"))
     rows.append(("Total D&A", total_da, "bold"))
 
@@ -463,23 +491,21 @@ NORMAL_FONT = Font(name="Calibri", size=11)
 INDENT_FONT = Font(name="Calibri", size=11)
 TITLE_FONT = Font(name="Calibri", size=14, bold=True, color="1F4E79")
 
-THIN_BORDER = Border(
-    bottom=Side(style="thin", color="CCCCCC")
-)
+THIN_BORDER = Border(bottom=Side(style="thin", color="CCCCCC"))
 TOTAL_BORDER = Border(
     top=Side(style="thin", color="000000"),
     bottom=Side(style="double", color="000000"),
 )
 
-NUMBER_FMT = '#,##0'
-PCT_FMT = '0.0%'
-DECIMAL_FMT = '0.0'
+NUMBER_FMT = "#,##0"
+PCT_FMT = "0.0%"
+DECIMAL_FMT = "0.0"
 
 
 def _write_sheet(ws, title, rows, is_numeric=True, is_pct_sheet=False):
     """Write a standard financial sheet with headers and data."""
     # Title row (merged)
-    ws.merge_cells('A1:F1')
+    ws.merge_cells("A1:F1")
     title_cell = ws.cell(row=1, column=1, value=title)
     title_cell.font = TITLE_FONT
     title_cell.alignment = Alignment(horizontal="left")
@@ -494,7 +520,7 @@ def _write_sheet(ws, title, rows, is_numeric=True, is_pct_sheet=False):
         cell.alignment = Alignment(horizontal="center")
         ws.column_dimensions[get_column_letter(col_idx)].width = 14
 
-    ws.column_dimensions['A'].width = 38
+    ws.column_dimensions["A"].width = 38
 
     # Data rows
     start_row = 4
@@ -545,7 +571,7 @@ def _write_sheet(ws, title, rows, is_numeric=True, is_pct_sheet=False):
 
 def _write_scratch_sheet(ws, title, items):
     """Write the scratch/notes sheet (simple text, no financial data)."""
-    ws.merge_cells('A1:D1')
+    ws.merge_cells("A1:D1")
     title_cell = ws.cell(row=1, column=1, value=title)
     title_cell.font = TITLE_FONT
 
@@ -553,12 +579,13 @@ def _write_scratch_sheet(ws, title, items):
         text = item[0]
         ws.cell(row=row_idx, column=1, value=text).font = NORMAL_FONT
 
-    ws.column_dimensions['A'].width = 55
+    ws.column_dimensions["A"].width = 55
 
 
 # =============================================================================
 # Main
 # =============================================================================
+
 
 def create_realistic_model():
     """Create the realistic financial model workbook."""

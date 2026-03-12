@@ -4,7 +4,6 @@ from decimal import Decimal
 
 from src.validation.accounting_validator import AccountingValidator
 
-
 D = Decimal
 
 
@@ -19,7 +18,11 @@ def _make_taxonomy():
         {"canonical_name": "long_term_debt", "typical_sign": "positive", "validation_rules": {}},
         {"canonical_name": "short_term_debt", "typical_sign": "positive", "validation_rules": {}},
         {"canonical_name": "senior_debt", "typical_sign": "positive", "validation_rules": {}},
-        {"canonical_name": "depreciation_and_amortization", "typical_sign": "negative", "validation_rules": {}},
+        {
+            "canonical_name": "depreciation_and_amortization",
+            "typical_sign": "negative",
+            "validation_rules": {},
+        },
         {"canonical_name": "depreciation_cf", "typical_sign": "positive", "validation_rules": {}},
         {"canonical_name": "capex", "typical_sign": "negative", "validation_rules": {}},
         {"canonical_name": "ppe", "typical_sign": "positive", "validation_rules": {}},

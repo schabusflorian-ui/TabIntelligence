@@ -9,13 +9,14 @@ Provides structured logging with:
 - Module-specific loggers
 - Suppression of noisy libraries
 """
+
 import logging
 import sys
+from contextvars import ContextVar
 from pathlib import Path
 from typing import Optional
-from contextvars import ContextVar
-from pythonjsonlogger import jsonlogger
 
+from pythonjsonlogger import jsonlogger
 
 # Context variables for request tracking
 request_id_ctx = ContextVar("request_id", default="no-request")
@@ -41,27 +42,29 @@ class CustomJsonFormatter(jsonlogger.JsonFormatter):
         super().add_fields(log_record, record, message_dict)
 
         # Add standard fields
-        log_record['timestamp'] = record.created
-        log_record['level'] = record.levelname
-        log_record['logger'] = record.name
-        log_record['service'] = 'debtfund'
+        log_record["timestamp"] = record.created
+        log_record["level"] = record.levelname
+        log_record["logger"] = record.name
+        log_record["service"] = "debtfund"
 
         # Add trace context
         try:
             from src.core.tracing import get_current_trace_id
-            log_record['trace_id'] = get_current_trace_id()
-        except Exception:
-            log_record['trace_id'] = 'no-trace'
 
-        log_record['request_id'] = request_id_ctx.get()
+            log_record["trace_id"] = get_current_trace_id()
+        except Exception:
+            log_record["trace_id"] = "no-trace"
+
+        log_record["request_id"] = request_id_ctx.get()
 
         # Add environment
         try:
             from src.core.config import get_settings
+
             settings = get_settings()
-            log_record['environment'] = 'production' if not settings.debug else 'development'
+            log_record["environment"] = "production" if not settings.debug else "development"
         except Exception:
-            log_record['environment'] = 'unknown'
+            log_record["environment"] = "unknown"
 
 
 def setup_logging(
@@ -96,11 +99,11 @@ def setup_logging(
     if use_json:
         # JSON formatter for production
         formatter = CustomJsonFormatter(
-            '%(timestamp)s %(level)s %(name)s %(message)s',
+            "%(timestamp)s %(level)s %(name)s %(message)s",
             rename_fields={
-                'levelname': 'level',
-                'name': 'logger',
-            }
+                "levelname": "level",
+                "name": "logger",
+            },
         )
     else:
         # Plain text formatter for development
@@ -213,7 +216,9 @@ def log_exception(logger: logging.Logger, exc: Exception, context: Optional[dict
     logger.exception(error_msg)
 
 
-def log_performance(logger: logging.Logger, operation: str, duration: float, details: Optional[dict] = None):
+def log_performance(
+    logger: logging.Logger, operation: str, duration: float, details: Optional[dict] = None
+):
     """
     Log performance metrics for operations.
 

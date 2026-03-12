@@ -13,8 +13,6 @@ Usage:
 """
 
 import json
-from typing import Dict, List
-
 
 # Industry-specific metrics to add
 INDUSTRY_METRICS = {
@@ -24,7 +22,12 @@ INDUSTRY_METRICS = {
             "canonical_name": "arr",
             "category": "metrics",
             "display_name": "Annual Recurring Revenue",
-            "aliases": ["ARR", "Annualized Recurring Revenue", "Annual Contract Value", "Recurring Revenue ARR"],
+            "aliases": [
+                "ARR",
+                "Annualized Recurring Revenue",
+                "Annual Contract Value",
+                "Recurring Revenue ARR",
+            ],
             "definition": "Annualized value of active recurring revenue contracts",
             "typical_sign": "positive",
             "parent_canonical": None,
@@ -37,12 +40,12 @@ INDUSTRY_METRICS = {
                     "relationships": [
                         {"rule": "arr == mrr * 12", "tolerance": 0.02, "optional": True}
                     ]
-                }
+                },
             },
             "format_examples": [
                 {"value": "12,000,000", "context": "ARR in dollars"},
-                {"value": "$12M ARR", "context": "Abbreviated format"}
-            ]
+                {"value": "$12M ARR", "context": "Abbreviated format"},
+            ],
         },
         {
             "canonical_name": "mrr",
@@ -53,10 +56,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["saas", "subscription", "technology"],
-            "validation_rules": {
-                "type": "currency",
-                "min_value": 0
-            }
+            "validation_rules": {"type": "currency", "min_value": 0},
         },
         {
             "canonical_name": "cac",
@@ -70,8 +70,8 @@ INDUSTRY_METRICS = {
             "validation_rules": {
                 "type": "currency",
                 "min_value": 0,
-                "derivation": "sales_marketing_expense / new_customers_acquired"
-            }
+                "derivation": "sales_marketing_expense / new_customers_acquired",
+            },
         },
         {
             "canonical_name": "ltv",
@@ -85,8 +85,8 @@ INDUSTRY_METRICS = {
             "validation_rules": {
                 "type": "currency",
                 "min_value": 0,
-                "derivation": "arpu / churn_rate"
-            }
+                "derivation": "arpu / churn_rate",
+            },
         },
         {
             "canonical_name": "ltv_cac_ratio",
@@ -97,11 +97,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["saas", "subscription"],
-            "validation_rules": {
-                "type": "ratio",
-                "min_value": 0,
-                "derivation": "ltv / cac"
-            }
+            "validation_rules": {"type": "ratio", "min_value": 0, "derivation": "ltv / cac"},
         },
         {
             "canonical_name": "churn_rate",
@@ -112,11 +108,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["saas", "subscription"],
-            "validation_rules": {
-                "type": "percentage",
-                "min_value": 0,
-                "max_value": 1
-            }
+            "validation_rules": {"type": "percentage", "min_value": 0, "max_value": 1},
         },
         {
             "canonical_name": "net_revenue_retention",
@@ -127,10 +119,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["saas", "subscription"],
-            "validation_rules": {
-                "type": "percentage",
-                "min_value": 0
-            }
+            "validation_rules": {"type": "percentage", "min_value": 0},
         },
         {
             "canonical_name": "magic_number",
@@ -141,10 +130,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["saas"],
-            "validation_rules": {
-                "type": "ratio",
-                "min_value": 0
-            }
+            "validation_rules": {"type": "ratio", "min_value": 0},
         },
         {
             "canonical_name": "rule_of_40",
@@ -157,8 +143,8 @@ INDUSTRY_METRICS = {
             "industry_tags": ["saas"],
             "validation_rules": {
                 "type": "percentage",
-                "derivation": "revenue_growth_rate + ebitda_margin"
-            }
+                "derivation": "revenue_growth_rate + ebitda_margin",
+            },
         },
         {
             "canonical_name": "arpu",
@@ -172,8 +158,8 @@ INDUSTRY_METRICS = {
             "validation_rules": {
                 "type": "currency",
                 "min_value": 0,
-                "derivation": "mrr / active_customers"
-            }
+                "derivation": "mrr / active_customers",
+            },
         },
         {
             "canonical_name": "gross_retention",
@@ -184,11 +170,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["saas", "subscription"],
-            "validation_rules": {
-                "type": "percentage",
-                "min_value": 0,
-                "max_value": 1
-            }
+            "validation_rules": {"type": "percentage", "min_value": 0, "max_value": 1},
         },
         {
             "canonical_name": "cac_payback_period",
@@ -199,10 +181,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["saas", "subscription"],
-            "validation_rules": {
-                "type": "months",
-                "min_value": 0
-            }
+            "validation_rules": {"type": "months", "min_value": 0},
         },
         {
             "canonical_name": "expansion_revenue",
@@ -213,10 +192,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["saas", "subscription"],
-            "validation_rules": {
-                "type": "currency",
-                "min_value": 0
-            }
+            "validation_rules": {"type": "currency", "min_value": 0},
         },
         {
             "canonical_name": "quick_ratio_saas",
@@ -227,10 +203,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["saas"],
-            "validation_rules": {
-                "type": "ratio",
-                "min_value": 0
-            }
+            "validation_rules": {"type": "ratio", "min_value": 0},
         },
         {
             "canonical_name": "burn_multiple",
@@ -241,13 +214,9 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["saas", "venture"],
-            "validation_rules": {
-                "type": "ratio",
-                "min_value": 0
-            }
-        }
+            "validation_rules": {"type": "ratio", "min_value": 0},
+        },
     ],
-
     # RETAIL METRICS (10+ items)
     "retail": [
         {
@@ -259,10 +228,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["retail"],
-            "validation_rules": {
-                "type": "currency",
-                "min_value": 0
-            }
+            "validation_rules": {"type": "currency", "min_value": 0},
         },
         {
             "canonical_name": "inventory_turnover",
@@ -276,8 +242,8 @@ INDUSTRY_METRICS = {
             "validation_rules": {
                 "type": "ratio",
                 "min_value": 0,
-                "derivation": "cogs / average_inventory"
-            }
+                "derivation": "cogs / average_inventory",
+            },
         },
         {
             "canonical_name": "gmroi",
@@ -291,8 +257,8 @@ INDUSTRY_METRICS = {
             "validation_rules": {
                 "type": "ratio",
                 "min_value": 0,
-                "derivation": "gross_profit / average_inventory_cost"
-            }
+                "derivation": "gross_profit / average_inventory_cost",
+            },
         },
         {
             "canonical_name": "sell_through_rate",
@@ -303,11 +269,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["retail", "ecommerce"],
-            "validation_rules": {
-                "type": "percentage",
-                "min_value": 0,
-                "max_value": 1
-            }
+            "validation_rules": {"type": "percentage", "min_value": 0, "max_value": 1},
         },
         {
             "canonical_name": "sales_per_square_foot",
@@ -318,10 +280,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["retail"],
-            "validation_rules": {
-                "type": "currency",
-                "min_value": 0
-            }
+            "validation_rules": {"type": "currency", "min_value": 0},
         },
         {
             "canonical_name": "basket_size",
@@ -332,10 +291,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["retail", "ecommerce"],
-            "validation_rules": {
-                "type": "currency",
-                "min_value": 0
-            }
+            "validation_rules": {"type": "currency", "min_value": 0},
         },
         {
             "canonical_name": "conversion_rate",
@@ -346,11 +302,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["retail", "ecommerce"],
-            "validation_rules": {
-                "type": "percentage",
-                "min_value": 0,
-                "max_value": 1
-            }
+            "validation_rules": {"type": "percentage", "min_value": 0, "max_value": 1},
         },
         {
             "canonical_name": "shrinkage_rate",
@@ -361,10 +313,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["retail"],
-            "validation_rules": {
-                "type": "percentage",
-                "min_value": 0
-            }
+            "validation_rules": {"type": "percentage", "min_value": 0},
         },
         {
             "canonical_name": "days_inventory_outstanding",
@@ -378,8 +327,8 @@ INDUSTRY_METRICS = {
             "validation_rules": {
                 "type": "days",
                 "min_value": 0,
-                "derivation": "(average_inventory / cogs) * 365"
-            }
+                "derivation": "(average_inventory / cogs) * 365",
+            },
         },
         {
             "canonical_name": "markdown_rate",
@@ -390,13 +339,9 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["retail"],
-            "validation_rules": {
-                "type": "percentage",
-                "min_value": 0
-            }
-        }
+            "validation_rules": {"type": "percentage", "min_value": 0},
+        },
     ],
-
     # MANUFACTURING METRICS (10+ items)
     "manufacturing": [
         {
@@ -408,11 +353,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["manufacturing", "capital_intensive"],
-            "validation_rules": {
-                "type": "percentage",
-                "min_value": 0,
-                "max_value": 1
-            }
+            "validation_rules": {"type": "percentage", "min_value": 0, "max_value": 1},
         },
         {
             "canonical_name": "oee",
@@ -423,11 +364,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["manufacturing"],
-            "validation_rules": {
-                "type": "percentage",
-                "min_value": 0,
-                "max_value": 1
-            }
+            "validation_rules": {"type": "percentage", "min_value": 0, "max_value": 1},
         },
         {
             "canonical_name": "cycle_time",
@@ -438,10 +375,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["manufacturing"],
-            "validation_rules": {
-                "type": "time",
-                "min_value": 0
-            }
+            "validation_rules": {"type": "time", "min_value": 0},
         },
         {
             "canonical_name": "scrap_rate",
@@ -452,10 +386,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["manufacturing"],
-            "validation_rules": {
-                "type": "percentage",
-                "min_value": 0
-            }
+            "validation_rules": {"type": "percentage", "min_value": 0},
         },
         {
             "canonical_name": "first_pass_yield",
@@ -466,11 +397,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["manufacturing"],
-            "validation_rules": {
-                "type": "percentage",
-                "min_value": 0,
-                "max_value": 1
-            }
+            "validation_rules": {"type": "percentage", "min_value": 0, "max_value": 1},
         },
         {
             "canonical_name": "direct_labor_efficiency",
@@ -481,10 +408,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["manufacturing"],
-            "validation_rules": {
-                "type": "percentage",
-                "min_value": 0
-            }
+            "validation_rules": {"type": "percentage", "min_value": 0},
         },
         {
             "canonical_name": "material_yield",
@@ -495,11 +419,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["manufacturing"],
-            "validation_rules": {
-                "type": "percentage",
-                "min_value": 0,
-                "max_value": 1
-            }
+            "validation_rules": {"type": "percentage", "min_value": 0, "max_value": 1},
         },
         {
             "canonical_name": "production_volume",
@@ -510,10 +430,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["manufacturing"],
-            "validation_rules": {
-                "type": "units",
-                "min_value": 0
-            }
+            "validation_rules": {"type": "units", "min_value": 0},
         },
         {
             "canonical_name": "cost_per_unit",
@@ -527,8 +444,8 @@ INDUSTRY_METRICS = {
             "validation_rules": {
                 "type": "currency",
                 "min_value": 0,
-                "derivation": "total_production_cost / production_volume"
-            }
+                "derivation": "total_production_cost / production_volume",
+            },
         },
         {
             "canonical_name": "wip_inventory",
@@ -539,13 +456,9 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": "inventory",
             "industry_tags": ["manufacturing"],
-            "validation_rules": {
-                "type": "currency",
-                "min_value": 0
-            }
-        }
+            "validation_rules": {"type": "currency", "min_value": 0},
+        },
     ],
-
     # REAL ESTATE METRICS (10+ items)
     "real_estate": [
         {
@@ -559,8 +472,8 @@ INDUSTRY_METRICS = {
             "industry_tags": ["real_estate"],
             "validation_rules": {
                 "type": "currency",
-                "derivation": "rental_income - operating_expenses"
-            }
+                "derivation": "rental_income - operating_expenses",
+            },
         },
         {
             "canonical_name": "cap_rate",
@@ -574,8 +487,8 @@ INDUSTRY_METRICS = {
             "validation_rules": {
                 "type": "percentage",
                 "min_value": 0,
-                "derivation": "noi / property_value"
-            }
+                "derivation": "noi / property_value",
+            },
         },
         {
             "canonical_name": "occupancy_rate",
@@ -586,11 +499,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["real_estate"],
-            "validation_rules": {
-                "type": "percentage",
-                "min_value": 0,
-                "max_value": 1
-            }
+            "validation_rules": {"type": "percentage", "min_value": 0, "max_value": 1},
         },
         {
             "canonical_name": "ffo",
@@ -603,8 +512,8 @@ INDUSTRY_METRICS = {
             "industry_tags": ["real_estate", "reit"],
             "validation_rules": {
                 "type": "currency",
-                "derivation": "net_income + depreciation + amortization - gains_on_property_sales"
-            }
+                "derivation": "net_income + depreciation + amortization - gains_on_property_sales",
+            },
         },
         {
             "canonical_name": "affo",
@@ -615,10 +524,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["real_estate", "reit"],
-            "validation_rules": {
-                "type": "currency",
-                "derivation": "ffo - maintenance_capex"
-            }
+            "validation_rules": {"type": "currency", "derivation": "ffo - maintenance_capex"},
         },
         {
             "canonical_name": "dscr_real_estate",
@@ -632,8 +538,8 @@ INDUSTRY_METRICS = {
             "validation_rules": {
                 "type": "ratio",
                 "min_value": 0,
-                "derivation": "noi / debt_service"
-            }
+                "derivation": "noi / debt_service",
+            },
         },
         {
             "canonical_name": "ltv_real_estate",
@@ -648,8 +554,8 @@ INDUSTRY_METRICS = {
                 "type": "percentage",
                 "min_value": 0,
                 "max_value": 1.5,
-                "derivation": "loan_balance / property_value"
-            }
+                "derivation": "loan_balance / property_value",
+            },
         },
         {
             "canonical_name": "rent_per_square_foot",
@@ -660,10 +566,7 @@ INDUSTRY_METRICS = {
             "typical_sign": "positive",
             "parent_canonical": None,
             "industry_tags": ["real_estate"],
-            "validation_rules": {
-                "type": "currency",
-                "min_value": 0
-            }
+            "validation_rules": {"type": "currency", "min_value": 0},
         },
         {
             "canonical_name": "operating_expense_ratio",
@@ -678,8 +581,8 @@ INDUSTRY_METRICS = {
                 "type": "percentage",
                 "min_value": 0,
                 "max_value": 1,
-                "derivation": "operating_expenses / gross_operating_income"
-            }
+                "derivation": "operating_expenses / gross_operating_income",
+            },
         },
         {
             "canonical_name": "cash_on_cash_return",
@@ -693,10 +596,10 @@ INDUSTRY_METRICS = {
             "validation_rules": {
                 "type": "percentage",
                 "min_value": -1,
-                "derivation": "annual_cash_flow / cash_invested"
-            }
-        }
-    ]
+                "derivation": "annual_cash_flow / cash_invested",
+            },
+        },
+    ],
 }
 
 
@@ -707,70 +610,70 @@ GAAP_IFRS_DISTINCTIONS = {
             "guidance": "ASC 606 - Revenue from Contracts with Customers",
             "key_principles": [
                 "Five-step model for revenue recognition",
-                "Performance obligations must be distinct"
-            ]
+                "Performance obligations must be distinct",
+            ],
         },
         "ifrs": {
             "guidance": "IFRS 15 - Revenue from Contracts with Customers",
             "key_principles": [
                 "Converged with US GAAP in 2018",
-                "Minor differences in implementation"
+                "Minor differences in implementation",
             ],
-            "differences": "Largely aligned with US GAAP; minor differences in disclosure requirements"
-        }
+            "differences": "Largely aligned with US GAAP; minor differences in disclosure requirements",
+        },
     },
     "goodwill": {
         "us_gaap": {
             "guidance": "ASC 350-20 - Goodwill",
             "treatment": "Impairment testing only (no amortization)",
-            "testing_frequency": "Annual or when triggering event occurs"
+            "testing_frequency": "Annual or when triggering event occurs",
         },
         "ifrs": {
             "guidance": "IAS 36 - Impairment of Assets",
             "treatment": "Impairment testing only (no amortization)",
             "testing_frequency": "Annual",
-            "differences": "IFRS prohibits reversal of goodwill impairment; US GAAP also prohibits reversal"
-        }
+            "differences": "IFRS prohibits reversal of goodwill impairment; US GAAP also prohibits reversal",
+        },
     },
     "inventory": {
         "us_gaap": {
             "guidance": "ASC 330 - Inventory",
             "valuation_methods": ["FIFO", "LIFO", "Weighted Average"],
-            "lower_of": "cost or market (NRV after 2015)"
+            "lower_of": "cost or market (NRV after 2015)",
         },
         "ifrs": {
             "guidance": "IAS 2 - Inventories",
             "valuation_methods": ["FIFO", "Weighted Average"],
             "lower_of": "cost or net realizable value",
-            "differences": "IFRS prohibits LIFO; US GAAP allows LIFO"
-        }
+            "differences": "IFRS prohibits LIFO; US GAAP allows LIFO",
+        },
     },
     "depreciation": {
         "us_gaap": {
             "guidance": "ASC 360 - Property, Plant, and Equipment",
             "methods": ["Straight-line", "Declining balance", "Units of production"],
-            "component_depreciation": "Optional"
+            "component_depreciation": "Optional",
         },
         "ifrs": {
             "guidance": "IAS 16 - Property, Plant and Equipment",
             "methods": ["Straight-line", "Declining balance", "Units of production"],
             "component_depreciation": "Required",
-            "differences": "IFRS requires component depreciation; US GAAP is optional"
-        }
+            "differences": "IFRS requires component depreciation; US GAAP is optional",
+        },
     },
     "lease_expense": {
         "us_gaap": {
             "guidance": "ASC 842 - Leases",
             "operating_leases": "On balance sheet as ROU asset + liability",
-            "effective_date": "2019 for public companies"
+            "effective_date": "2019 for public companies",
         },
         "ifrs": {
             "guidance": "IFRS 16 - Leases",
             "operating_leases": "On balance sheet (similar to finance lease)",
             "effective_date": "2019",
-            "differences": "Minor differences in exemptions and measurement"
-        }
-    }
+            "differences": "Minor differences in exemptions and measurement",
+        },
+    },
 }
 
 
@@ -784,8 +687,8 @@ REGULATORY_CONTEXT = {
         "footnote_triggers": [
             "Revenue recognition policy changes",
             "Multiple performance obligations",
-            "Variable consideration"
-        ]
+            "Variable consideration",
+        ],
     },
     "net_income": {
         "sec_forms": ["10-K", "10-Q"],
@@ -793,7 +696,7 @@ REGULATORY_CONTEXT = {
         "audit_sensitivity": "critical",
         "reconciliation_requirements": {
             "gaap_to_non_gaap": "Must reconcile adjusted net income to GAAP net income in MD&A"
-        }
+        },
     },
     "ebitda": {
         "sec_forms": ["8-K", "10-K (MD&A)"],
@@ -802,8 +705,8 @@ REGULATORY_CONTEXT = {
         "disclosure_requirements": [
             "Must reconcile to GAAP net income",
             "Must explain why management uses this metric",
-            "Cannot be more prominent than GAAP measures"
-        ]
+            "Cannot be more prominent than GAAP measures",
+        ],
     },
     "goodwill": {
         "sec_forms": ["10-K"],
@@ -812,18 +715,19 @@ REGULATORY_CONTEXT = {
         "footnote_triggers": [
             "Goodwill impairment",
             "Acquisitions",
-            "Annual impairment testing results"
-        ]
-    }
+            "Annual impairment testing results",
+        ],
+    },
 }
 
 
-def enhance_taxonomy_phase3(input_path: str = "data/taxonomy_seed.json",
-                             output_path: str = "data/taxonomy_seed.json"):
+def enhance_taxonomy_phase3(
+    input_path: str = "data/taxonomy_seed.json", output_path: str = "data/taxonomy_seed.json"
+):
     """Add Phase 3 domain expansion enhancements."""
 
     # Load existing taxonomy
-    with open(input_path, 'r') as f:
+    with open(input_path, "r") as f:
         data = json.load(f)
 
     # Track additions
@@ -835,32 +739,34 @@ def enhance_taxonomy_phase3(input_path: str = "data/taxonomy_seed.json",
     for industry, metrics in INDUSTRY_METRICS.items():
         for metric in metrics:
             # Check if already exists
-            if not any(item['canonical_name'] == metric['canonical_name'] for item in data['items']):
-                data['items'].append(metric)
+            if not any(
+                item["canonical_name"] == metric["canonical_name"] for item in data["items"]
+            ):
+                data["items"].append(metric)
                 items_added += 1
 
     # Add GAAP/IFRS distinctions to existing items
     for canonical_name, distinctions in GAAP_IFRS_DISTINCTIONS.items():
-        for item in data['items']:
-            if item['canonical_name'] == canonical_name:
-                item['accounting_standards'] = distinctions
+        for item in data["items"]:
+            if item["canonical_name"] == canonical_name:
+                item["accounting_standards"] = distinctions
                 gaap_ifrs_added += 1
                 break
 
     # Add regulatory context to existing items
     for canonical_name, context in REGULATORY_CONTEXT.items():
-        for item in data['items']:
-            if item['canonical_name'] == canonical_name:
-                item['regulatory_context'] = context
+        for item in data["items"]:
+            if item["canonical_name"] == canonical_name:
+                item["regulatory_context"] = context
                 regulatory_added += 1
                 break
 
     # Update version
-    data['version'] = "1.5.0"
-    data['last_updated'] = "2026-02-24"
+    data["version"] = "1.5.0"
+    data["last_updated"] = "2026-02-24"
 
     # Write enhanced taxonomy
-    with open(output_path, 'w') as f:
+    with open(output_path, "w") as f:
         json.dump(data, f, indent=2)
 
     print(f"✅ Added {items_added} industry-specific metrics")
@@ -875,10 +781,10 @@ def enhance_taxonomy_phase3(input_path: str = "data/taxonomy_seed.json",
     print(f"✅ Saved to {output_path}")
 
     return {
-        'items_added': items_added,
-        'gaap_ifrs_added': gaap_ifrs_added,
-        'regulatory_added': regulatory_added,
-        'total_items': len(data['items'])
+        "items_added": items_added,
+        "gaap_ifrs_added": gaap_ifrs_added,
+        "regulatory_added": regulatory_added,
+        "total_items": len(data["items"]),
     }
 
 

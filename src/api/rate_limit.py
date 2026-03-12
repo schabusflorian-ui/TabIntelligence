@@ -1,12 +1,13 @@
 """Shared rate limiter instance for all API endpoints."""
 
-import os
 import logging
+import os
 
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 logger = logging.getLogger("debtfund.api.rate_limit")
+
 
 def _create_limiter() -> Limiter:
     """Create rate limiter with Redis backend if available, else in-memory."""
@@ -18,12 +19,13 @@ def _create_limiter() -> Limiter:
                 key_func=get_remote_address,
                 storage_uri=storage_uri,
             )
-            logger.info(f"Rate limiter using Redis backend")
+            logger.info("Rate limiter using Redis backend")
             return limiter
         except Exception as e:
             logger.warning(f"Redis rate limiter init failed, using in-memory: {e}")
 
     logger.info("Rate limiter using in-memory backend")
     return Limiter(key_func=get_remote_address)
+
 
 limiter = _create_limiter()

@@ -4,6 +4,7 @@ Database session management with both async and sync support.
 This is the canonical session management per Week 2 strategy.
 Provides session factories for both FastAPI (async) and Alembic (sync).
 """
+
 from contextlib import asynccontextmanager, contextmanager
 from typing import AsyncGenerator, Generator, Optional
 
@@ -27,9 +28,9 @@ async_engine = create_async_engine(
     settings.database_url.replace("postgresql://", "postgresql+asyncpg://"),
     echo=settings.is_development,
     pool_pre_ping=True,
-    pool_size=20,           # Increased from 10 for production load
-    max_overflow=40,        # Increased from 20 (total 60 connections)
-    pool_recycle=3600,      # Recycle connections after 1 hour
+    pool_size=20,  # Increased from 10 for production load
+    max_overflow=40,  # Increased from 20 (total 60 connections)
+    pool_recycle=3600,  # Recycle connections after 1 hour
 )
 
 # Async session factory
@@ -97,6 +98,7 @@ async def get_db_dependency() -> AsyncGenerator[AsyncSession, None]:
 # SYNC SESSION (for Alembic migrations and tests)
 # ============================================================================
 
+
 def get_sync_engine(database_url: Optional[str] = None):
     """
     Get synchronous SQLAlchemy engine for Alembic migrations.
@@ -112,9 +114,9 @@ def get_sync_engine(database_url: Optional[str] = None):
         url,
         echo=settings.is_development,
         pool_pre_ping=True,
-        pool_size=20,           # Match async engine config
-        max_overflow=40,        # Match async engine config (total 60 connections)
-        pool_recycle=3600,      # Recycle connections after 1 hour
+        pool_size=20,  # Match async engine config
+        max_overflow=40,  # Match async engine config (total 60 connections)
+        pool_recycle=3600,  # Recycle connections after 1 hour
     )
 
 

@@ -1,11 +1,12 @@
 """Tests for the entity learning loop: decay, conflicts, validation feedback, aliases, industry."""
+
 import time
-import pytest
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
+import pytest
 
 # ============================================================================
 # Confidence Decay Tests
@@ -93,11 +94,16 @@ class TestPatternConflictResolution:
 
             # Create two patterns for same label
             crud.upsert_entity_pattern(
-                session, entity_id, "Net Sales", "other_revenue",
-                confidence=0.95, created_by="claude",
+                session,
+                entity_id,
+                "Net Sales",
+                "other_revenue",
+                confidence=0.95,
+                created_by="claude",
             )
             # Create a second pattern by manually inserting
             from src.db.models import EntityPattern
+
             p2 = EntityPattern(
                 entity_id=entity_id,
                 original_label="Net Sales",
@@ -113,9 +119,7 @@ class TestPatternConflictResolution:
             assert deactivated == 1
 
             # Verify user_correction is active, claude is not
-            all_patterns = crud.get_entity_patterns(
-                session, entity_id, active_only=False
-            )
+            all_patterns = crud.get_entity_patterns(session, entity_id, active_only=False)
             for p in all_patterns:
                 if p.created_by == "user_correction":
                     assert p.is_active is True
@@ -174,12 +178,20 @@ class TestPatternConflictResolution:
             entity_id = entity.id
 
             crud.upsert_entity_pattern(
-                session, entity_id, "Revenue", "revenue",
-                confidence=0.95, created_by="claude",
+                session,
+                entity_id,
+                "Revenue",
+                "revenue",
+                confidence=0.95,
+                created_by="claude",
             )
             crud.upsert_entity_pattern(
-                session, entity_id, "COGS", "cogs",
-                confidence=0.90, created_by="claude",
+                session,
+                entity_id,
+                "COGS",
+                "cogs",
+                confidence=0.90,
+                created_by="claude",
             )
 
             deactivated = crud.resolve_pattern_conflicts(session, entity_id)
@@ -206,12 +218,17 @@ class TestValidationFeedback:
             entity_id = entity.id
 
             crud.upsert_entity_pattern(
-                session, entity_id, "Revenue", "revenue",
-                confidence=0.95, created_by="claude",
+                session,
+                entity_id,
+                "Revenue",
+                "revenue",
+                confidence=0.95,
+                created_by="claude",
             )
 
             result = crud.update_pattern_confidence_from_validation(
-                session, entity_id,
+                session,
+                entity_id,
                 failed_canonicals={"revenue"},
                 passed_canonicals=set(),
             )
@@ -233,12 +250,17 @@ class TestValidationFeedback:
             entity_id = entity.id
 
             crud.upsert_entity_pattern(
-                session, entity_id, "Revenue", "revenue",
-                confidence=0.90, created_by="claude",
+                session,
+                entity_id,
+                "Revenue",
+                "revenue",
+                confidence=0.90,
+                created_by="claude",
             )
 
             result = crud.update_pattern_confidence_from_validation(
-                session, entity_id,
+                session,
+                entity_id,
                 failed_canonicals=set(),
                 passed_canonicals={"revenue"},
             )
@@ -260,12 +282,17 @@ class TestValidationFeedback:
             entity_id = entity.id
 
             crud.upsert_entity_pattern(
-                session, entity_id, "Revenue", "revenue",
-                confidence=1.0, created_by="user_correction",
+                session,
+                entity_id,
+                "Revenue",
+                "revenue",
+                confidence=1.0,
+                created_by="user_correction",
             )
 
             result = crud.update_pattern_confidence_from_validation(
-                session, entity_id,
+                session,
+                entity_id,
                 failed_canonicals={"revenue"},
                 passed_canonicals=set(),
             )
@@ -287,19 +314,22 @@ class TestValidationFeedback:
             entity_id = entity.id
 
             crud.upsert_entity_pattern(
-                session, entity_id, "Revenue", "revenue",
-                confidence=0.15, created_by="claude",
+                session,
+                entity_id,
+                "Revenue",
+                "revenue",
+                confidence=0.15,
+                created_by="claude",
             )
 
             crud.update_pattern_confidence_from_validation(
-                session, entity_id,
+                session,
+                entity_id,
                 failed_canonicals={"revenue"},
                 passed_canonicals=set(),
             )
 
-            patterns = crud.get_entity_patterns(
-                session, entity_id, min_confidence=0.0
-            )
+            patterns = crud.get_entity_patterns(session, entity_id, min_confidence=0.0)
             assert float(patterns[0].confidence) >= 0.1
         finally:
             session.close()
@@ -314,12 +344,17 @@ class TestValidationFeedback:
             entity_id = entity.id
 
             crud.upsert_entity_pattern(
-                session, entity_id, "Revenue", "revenue",
-                confidence=0.99, created_by="claude",
+                session,
+                entity_id,
+                "Revenue",
+                "revenue",
+                confidence=0.99,
+                created_by="claude",
             )
 
             crud.update_pattern_confidence_from_validation(
-                session, entity_id,
+                session,
+                entity_id,
                 failed_canonicals=set(),
                 passed_canonicals={"revenue"},
             )
@@ -344,9 +379,7 @@ class TestLearnedAliases:
 
         session = test_db()
         try:
-            alias = crud.record_learned_alias(
-                session, "revenue", "Total Net Sales", "entity-1"
-            )
+            alias = crud.record_learned_alias(session, "revenue", "Total Net Sales", "entity-1")
             assert alias.canonical_name == "revenue"
             assert alias.alias_text == "Total Net Sales"
             assert alias.occurrence_count == 1
@@ -362,9 +395,7 @@ class TestLearnedAliases:
         session = test_db()
         try:
             crud.record_learned_alias(session, "revenue", "Total Net Sales", "entity-1")
-            alias = crud.record_learned_alias(
-                session, "revenue", "Total Net Sales", "entity-2"
-            )
+            alias = crud.record_learned_alias(session, "revenue", "Total Net Sales", "entity-2")
             assert alias.occurrence_count == 2
             assert "entity-1" in alias.source_entities
             assert "entity-2" in alias.source_entities
@@ -378,9 +409,7 @@ class TestLearnedAliases:
         session = test_db()
         try:
             crud.record_learned_alias(session, "revenue", "Total Net Sales", "entity-1")
-            alias = crud.record_learned_alias(
-                session, "revenue", "Total Net Sales", "entity-1"
-            )
+            alias = crud.record_learned_alias(session, "revenue", "Total Net Sales", "entity-1")
             assert alias.occurrence_count == 2
             assert alias.source_entities.count("entity-1") == 1
         finally:
@@ -392,9 +421,7 @@ class TestLearnedAliases:
 
         session = test_db()
         try:
-            alias = crud.record_learned_alias(
-                session, "revenue", "Net Sales Figure", "entity-1"
-            )
+            alias = crud.record_learned_alias(session, "revenue", "Net Sales Figure", "entity-1")
             promoted = crud.promote_learned_alias(session, alias.id)
             assert promoted is not None
             assert promoted.promoted is True
@@ -427,9 +454,7 @@ class TestLearnedAliases:
 
         session = test_db()
         try:
-            alias = crud.record_learned_alias(
-                session, "revenue", "Net Sales", "e1"
-            )
+            alias = crud.record_learned_alias(session, "revenue", "Net Sales", "e1")
             crud.promote_learned_alias(session, alias.id)
 
             crud.record_learned_alias(session, "cogs", "Material Cost", "e1")
@@ -470,9 +495,7 @@ class TestIndustryPatterns:
             )
 
             # Request industry patterns for e2 — should only get e1's patterns
-            patterns = crud.get_industry_patterns(
-                session, "SaaS", e2.id, min_confidence=0.8
-            )
+            patterns = crud.get_industry_patterns(session, "SaaS", e2.id, min_confidence=0.8)
             assert len(patterns) == 1
             assert patterns[0].original_label == "MRR"
         finally:
@@ -487,16 +510,10 @@ class TestIndustryPatterns:
             e1 = crud.create_entity(session, name="Fin Co 1", industry="Finance")
             e2 = crud.create_entity(session, name="Fin Co 2", industry="Finance")
 
-            crud.upsert_entity_pattern(
-                session, e1.id, "Revenue", "revenue", confidence=0.95
-            )
-            crud.upsert_entity_pattern(
-                session, e1.id, "Misc Item", "opex", confidence=0.60
-            )
+            crud.upsert_entity_pattern(session, e1.id, "Revenue", "revenue", confidence=0.95)
+            crud.upsert_entity_pattern(session, e1.id, "Misc Item", "opex", confidence=0.60)
 
-            patterns = crud.get_industry_patterns(
-                session, "Finance", e2.id, min_confidence=0.8
-            )
+            patterns = crud.get_industry_patterns(session, "Finance", e2.id, min_confidence=0.8)
             assert len(patterns) == 1
             assert patterns[0].canonical_name == "revenue"
         finally:
@@ -511,13 +528,9 @@ class TestIndustryPatterns:
             e1 = crud.create_entity(session, name="SaaS Co", industry="SaaS")
             e2 = crud.create_entity(session, name="Bank Co", industry="Banking")
 
-            crud.upsert_entity_pattern(
-                session, e1.id, "MRR", "mrr", confidence=0.95
-            )
+            crud.upsert_entity_pattern(session, e1.id, "MRR", "mrr", confidence=0.95)
 
-            patterns = crud.get_industry_patterns(
-                session, "Banking", e2.id, min_confidence=0.8
-            )
+            patterns = crud.get_industry_patterns(session, "Banking", e2.id, min_confidence=0.8)
             assert len(patterns) == 0
         finally:
             session.close()
@@ -541,19 +554,25 @@ class TestPatternStatsAPI:
             entity_id = str(entity.id)
 
             crud.upsert_entity_pattern(
-                session, entity.id, "Revenue", "revenue",
-                confidence=0.95, created_by="claude",
+                session,
+                entity.id,
+                "Revenue",
+                "revenue",
+                confidence=0.95,
+                created_by="claude",
             )
             crud.upsert_entity_pattern(
-                session, entity.id, "COGS", "cogs",
-                confidence=0.90, created_by="user_correction",
+                session,
+                entity.id,
+                "COGS",
+                "cogs",
+                confidence=0.90,
+                created_by="user_correction",
             )
         finally:
             session.close()
 
-        resp = test_client_with_db.get(
-            f"/api/v1/entities/{entity_id}/pattern-stats"
-        )
+        resp = test_client_with_db.get(f"/api/v1/entities/{entity_id}/pattern-stats")
         assert resp.status_code == 200
         data = resp.json()
 
@@ -579,9 +598,7 @@ class TestPatternStatsAPI:
         finally:
             session.close()
 
-        resp = test_client_with_db.get(
-            f"/api/v1/entities/{entity_id}/pattern-stats"
-        )
+        resp = test_client_with_db.get(f"/api/v1/entities/{entity_id}/pattern-stats")
         assert resp.status_code == 200
         data = resp.json()
         assert data["total_patterns"] == 0
@@ -623,16 +640,12 @@ class TestLearnedAliasAPI:
 
         session = test_db()
         try:
-            alias = crud.record_learned_alias(
-                session, "revenue", "Net Sales", "e1"
-            )
+            alias = crud.record_learned_alias(session, "revenue", "Net Sales", "e1")
             alias_id = str(alias.id)
         finally:
             session.close()
 
-        resp = test_client_with_db.post(
-            f"/api/v1/learned-aliases/{alias_id}/promote"
-        )
+        resp = test_client_with_db.post(f"/api/v1/learned-aliases/{alias_id}/promote")
         assert resp.status_code == 200
         data = resp.json()
         assert data["promoted"] is True
@@ -640,9 +653,7 @@ class TestLearnedAliasAPI:
     def test_promote_nonexistent_alias_404(self, test_client_with_db):
         """Promoting a nonexistent alias returns 404."""
         fake_id = str(uuid4())
-        resp = test_client_with_db.post(
-            f"/api/v1/learned-aliases/{fake_id}/promote"
-        )
+        resp = test_client_with_db.post(f"/api/v1/learned-aliases/{fake_id}/promote")
         assert resp.status_code == 404
 
 
@@ -657,15 +668,18 @@ class TestActiveOnlyFiltering:
     def test_active_only_default(self, test_client_with_db, test_db):
         """Default get_entity_patterns returns only active patterns."""
         from src.db import crud
-        from src.db.models import EntityPattern
 
         session = test_db()
         try:
             entity = crud.create_entity(session, name="Active Corp")
 
             p1 = crud.upsert_entity_pattern(
-                session, entity.id, "Revenue", "revenue",
-                confidence=0.95, created_by="claude",
+                session,
+                entity.id,
+                "Revenue",
+                "revenue",
+                confidence=0.95,
+                created_by="claude",
             )
 
             # Manually deactivate
@@ -673,17 +687,19 @@ class TestActiveOnlyFiltering:
             session.commit()
 
             crud.upsert_entity_pattern(
-                session, entity.id, "COGS", "cogs",
-                confidence=0.90, created_by="claude",
+                session,
+                entity.id,
+                "COGS",
+                "cogs",
+                confidence=0.90,
+                created_by="claude",
             )
 
             active = crud.get_entity_patterns(session, entity.id)
             assert len(active) == 1
             assert active[0].canonical_name == "cogs"
 
-            all_patterns = crud.get_entity_patterns(
-                session, entity.id, active_only=False
-            )
+            all_patterns = crud.get_entity_patterns(session, entity.id, active_only=False)
             assert len(all_patterns) == 2
         finally:
             session.close()
@@ -713,18 +729,28 @@ class TestOrchestratorValidationFeedback:
             },
             "mapping": {
                 "mappings": [
-                    {"original_label": "Revenue", "canonical_name": "revenue",
-                     "method": "entity_pattern", "confidence": 0.95},
-                    {"original_label": "COGS", "canonical_name": "cogs",
-                     "method": "entity_pattern", "confidence": 0.90},
+                    {
+                        "original_label": "Revenue",
+                        "canonical_name": "revenue",
+                        "method": "entity_pattern",
+                        "confidence": 0.95,
+                    },
+                    {
+                        "original_label": "COGS",
+                        "canonical_name": "cogs",
+                        "method": "entity_pattern",
+                        "confidence": 0.90,
+                    },
                 ],
             },
         }[name]
 
         mock_result = {"reduced": 1, "boosted": 1}
 
-        with patch("src.db.session.get_db_sync") as mock_db, \
-             patch("src.db.crud.update_pattern_confidence_from_validation") as mock_update:
+        with (
+            patch("src.db.session.get_db_sync"),
+            patch("src.db.crud.update_pattern_confidence_from_validation") as mock_update,
+        ):
             mock_update.return_value = mock_result
 
             _apply_validation_feedback(context)
@@ -792,13 +818,12 @@ class TestMappingDecayIntegration:
             self._make_pattern("Revenue", "revenue", 0.98, two_years_ago),
         ]
 
-        with patch("src.db.session.get_db_sync") as mock_db_ctx, \
-             patch("src.db.crud.get_entity_patterns", return_value=patterns), \
-             patch("src.db.crud.compute_effective_confidence", return_value=0.49):
-
-            pre_mapped, remaining = stage._lookup_patterns(
-                context, {"Revenue"}
-            )
+        with (
+            patch("src.db.session.get_db_sync"),
+            patch("src.db.crud.get_entity_patterns", return_value=patterns),
+            patch("src.db.crud.compute_effective_confidence", return_value=0.49),
+        ):
+            pre_mapped, remaining = stage._lookup_patterns(context, {"Revenue"})
 
             assert len(pre_mapped) == 0
             assert "Revenue" in remaining
@@ -817,13 +842,12 @@ class TestMappingDecayIntegration:
             self._make_pattern("Revenue", "revenue", 0.98, now),
         ]
 
-        with patch("src.db.session.get_db_sync") as mock_db_ctx, \
-             patch("src.db.crud.get_entity_patterns", return_value=patterns), \
-             patch("src.db.crud.compute_effective_confidence", return_value=0.98):
-
-            pre_mapped, remaining = stage._lookup_patterns(
-                context, {"Revenue"}
-            )
+        with (
+            patch("src.db.session.get_db_sync"),
+            patch("src.db.crud.get_entity_patterns", return_value=patterns),
+            patch("src.db.crud.compute_effective_confidence", return_value=0.98),
+        ):
+            pre_mapped, remaining = stage._lookup_patterns(context, {"Revenue"})
 
             assert len(pre_mapped) == 1
             assert "Revenue" in pre_mapped
@@ -840,6 +864,7 @@ class TestPromotedAliasMerge:
 
     def setup_method(self):
         import src.extraction.taxonomy_loader as tl
+
         self._tl = tl
         # Reset cache before each test
         tl._promoted_cache = {}
@@ -875,8 +900,10 @@ class TestPromotedAliasMerge:
         mock_ctx = MagicMock()
         mock_ctx.__enter__ = MagicMock(return_value=mock_db)
         mock_ctx.__exit__ = MagicMock(return_value=False)
-        with patch("src.db.session.get_db_sync", return_value=mock_ctx), \
-             patch("src.db.crud.get_promoted_aliases_for_lookup", return_value=mock_aliases):
+        with (
+            patch("src.db.session.get_db_sync", return_value=mock_ctx),
+            patch("src.db.crud.get_promoted_aliases_for_lookup", return_value=mock_aliases),
+        ):
             result = self._tl._load_promoted_aliases()
 
         assert "total rev" in result

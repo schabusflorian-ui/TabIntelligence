@@ -6,12 +6,15 @@ Provides:
 - DLQ message processing and storage
 - Retry mechanism with exponential backoff
 """
+
 from uuid import UUID
+
 from celery import Task
-from src.jobs.celery_app import celery_app
-from src.db.session import get_db_context
-from src.db import crud
+
 from src.core.logging import api_logger as logger
+from src.db import crud
+from src.db.session import get_db_context
+from src.jobs.celery_app import celery_app
 
 
 class DLQTask(Task):
@@ -43,16 +46,16 @@ class DLQTask(Task):
         # Send to DLQ for inspection
         try:
             celery_app.send_task(
-                'src.jobs.dlq.process_dlq_message',
-                queue='extraction.dlq',
+                "src.jobs.dlq.process_dlq_message",
+                queue="extraction.dlq",
                 kwargs={
-                    'original_task_id': task_id,
-                    'original_task_name': self.name,
-                    'original_args': args,
-                    'original_kwargs': kwargs,
-                    'error': str(exc),
-                    'traceback': str(einfo),
-                }
+                    "original_task_id": task_id,
+                    "original_task_name": self.name,
+                    "original_args": args,
+                    "original_kwargs": kwargs,
+                    "error": str(exc),
+                    "traceback": str(einfo),
+                },
             )
             logger.info(f"Task {task_id} sent to DLQ")
         except Exception as e:
@@ -82,19 +85,17 @@ class DLQTask(Task):
             einfo: Exception info
         """
         retry_count = self.request.retries
-        logger.warning(
-            f"Task {task_id} retry {retry_count}/{self.max_retries}: {exc}"
-        )
+        logger.warning(f"Task {task_id} retry {retry_count}/{self.max_retries}: {exc}")
 
 
-@celery_app.task(name='src.jobs.dlq.process_dlq_message')
+@celery_app.task(name="src.jobs.dlq.process_dlq_message")
 def process_dlq_message(
     original_task_id: str,
     original_task_name: str,
     original_args: list,
     original_kwargs: dict,
     error: str,
-    traceback: str
+    traceback: str,
 ):
     """
     Process and store DLQ message.
@@ -129,7 +130,7 @@ def process_dlq_message(
         # Don't raise - we don't want DLQ processing to fail
 
 
-@celery_app.task(name='src.jobs.dlq.replay_dlq_entry')
+@celery_app.task(name="src.jobs.dlq.replay_dlq_entry")
 def replay_dlq_entry(dlq_entry_id: str):
     """
     Replay a failed task from the DLQ.
@@ -162,7 +163,7 @@ def replay_dlq_entry(dlq_entry_id: str):
                 dlq_entry.task_name,
                 args=dlq_entry.task_args,
                 kwargs=dlq_entry.task_kwargs,
-                queue='extraction'
+                queue="extraction",
             )
 
             # Mark as replayed
@@ -170,11 +171,7 @@ def replay_dlq_entry(dlq_entry_id: str):
 
             logger.info(f"DLQ entry {dlq_entry_id} replayed as task {task.id}")
 
-            return {
-                "success": True,
-                "new_task_id": task.id,
-                "original_task_id": dlq_entry.task_id
-            }
+            return {"success": True, "new_task_id": task.id, "original_task_id": dlq_entry.task_id}
 
     except Exception as e:
         logger.error(f"Failed to replay DLQ entry {dlq_entry_id}: {e}")

@@ -1,9 +1,8 @@
 """Tests for job management API endpoints (lineage, retry)."""
-import pytest
+
 from uuid import uuid4
 
 from src.db import crud
-from src.db.models import JobStatusEnum
 
 
 class TestJobLineage:

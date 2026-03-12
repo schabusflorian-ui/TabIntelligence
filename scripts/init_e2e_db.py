@@ -7,6 +7,7 @@ runner knows the key without parsing logs.
 Usage:
     python scripts/init_e2e_db.py
 """
+
 import hashlib
 import os
 import sys
@@ -16,11 +17,10 @@ from uuid import uuid4
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.db.base import create_tables
-from src.db.session import get_db_sync
-from src.db.models import Entity
 from src.auth.models import APIKey
-
+from src.db.base import create_tables
+from src.db.models import Entity
+from src.db.session import get_db_sync
 
 # Deterministic key for E2E testing
 E2E_API_KEY = os.getenv("E2E_API_KEY", "emi_e2e_test_key_for_integration_testing")

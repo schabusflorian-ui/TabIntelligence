@@ -7,12 +7,14 @@ Tests the actual LineageTracker in src/lineage/tracker.py which uses:
 - Synchronous save_to_db() via src.db CRUD
 - validate_completeness() raising LineageIncompleteError
 """
-import pytest
-import uuid
-from unittest.mock import patch, MagicMock
 
-from src.lineage.tracker import LineageTracker
+import uuid
+from unittest.mock import MagicMock, patch
+
+import pytest
+
 from src.core.exceptions import LineageError, LineageIncompleteError
+from src.lineage.tracker import LineageTracker
 
 
 @pytest.fixture
@@ -24,6 +26,7 @@ def job_id():
 # ============================================================================
 # Initialization Tests
 # ============================================================================
+
 
 def test_tracker_initialization(job_id):
     """Test LineageTracker initializes with empty state."""
@@ -45,6 +48,7 @@ def test_tracker_stores_job_id_as_string(job_id):
 # Emit Tests
 # ============================================================================
 
+
 def test_emit_stage_1_no_input(job_id):
     """Test Stage 1 emission with no input lineage."""
     tracker = LineageTracker(job_id=job_id)
@@ -53,7 +57,7 @@ def test_emit_stage_1_no_input(job_id):
         stage=1,
         event_type="parse",
         input_lineage_id=None,
-        metadata={"sheets_count": 5, "tokens": 1000}
+        metadata={"sheets_count": 5, "tokens": 1000},
     )
 
     assert len(tracker.events) == 1
@@ -109,6 +113,7 @@ def test_emit_with_default_metadata(job_id):
 # Chain Integrity Tests
 # ============================================================================
 
+
 def test_full_pipeline_chain(job_id):
     """Test complete 3-stage pipeline builds correct lineage chain."""
     tracker = LineageTracker(job_id=job_id)
@@ -121,8 +126,8 @@ def test_full_pipeline_chain(job_id):
 
     # Verify lineage_chain dict: maps each lineage_id -> parent
     assert tracker.lineage_chain[l1] is None  # Stage 1 has no parent
-    assert tracker.lineage_chain[l2] == l1    # Stage 2 parent = Stage 1
-    assert tracker.lineage_chain[l3] == l2    # Stage 3 parent = Stage 2
+    assert tracker.lineage_chain[l2] == l1  # Stage 2 parent = Stage 1
+    assert tracker.lineage_chain[l3] == l2  # Stage 3 parent = Stage 2
 
 
 def test_chain_can_be_traced_backwards(job_id):
@@ -147,6 +152,7 @@ def test_chain_can_be_traced_backwards(job_id):
 # ============================================================================
 # Validate Completeness Tests
 # ============================================================================
+
 
 def test_validate_completeness_success(job_id):
     """Validation passes when all required stages have events."""
@@ -201,6 +207,7 @@ def test_validate_completeness_partial_pipeline(job_id):
 # get_summary() Tests
 # ============================================================================
 
+
 def test_get_summary_empty(job_id):
     """Summary of empty tracker."""
     tracker = LineageTracker(job_id=job_id)
@@ -245,6 +252,7 @@ def test_get_summary_multiple_events_per_stage(job_id):
 # save_to_db() Tests (mocked database)
 # ============================================================================
 
+
 def test_save_to_db_empty_events(job_id):
     """save_to_db() is a no-op when no events exist."""
     tracker = LineageTracker(job_id=job_id)
@@ -277,8 +285,7 @@ def test_save_to_db_calls_crud(job_id):
 
             # Verify stage names
             calls = mock_crud.create_lineage_event.call_args_list
-            stage_names = [c.kwargs.get("stage_name") or c[1].get("stage_name")
-                           for c in calls]
+            stage_names = [c.kwargs.get("stage_name") or c[1].get("stage_name") for c in calls]
             assert "stage_1_parse" in stage_names
             assert "stage_2_triage" in stage_names
             assert "stage_3_map" in stage_names

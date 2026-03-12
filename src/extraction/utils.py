@@ -1,10 +1,11 @@
 """Shared utilities for extraction pipeline."""
+
 import json
 import re
 from typing import List, Union
 
-from src.core.logging import extraction_logger as logger
 from src.core.exceptions import ExtractionError
+from src.core.logging import extraction_logger as logger
 
 
 def validate_canonical_names(mappings: List[dict], stage: str) -> List[dict]:
@@ -67,15 +68,15 @@ def extract_json(content: str) -> Union[dict, list]:
             pass
 
     # Strategy 3: Find first JSON object or array in the text
-    for match in re.finditer(r'[\[{]', content):
+    for match in re.finditer(r"[\[{]", content):
         try:
-            return json.loads(content[match.start():])
+            return json.loads(content[match.start() :])
         except json.JSONDecodeError:
             continue
 
-    logger.error(f"Failed to parse Claude response as JSON")
+    logger.error("Failed to parse Claude response as JSON")
     logger.error(f"Response content preview (first 500 chars): {content[:500]}")
     raise ExtractionError(
-        f"Claude returned invalid JSON. This will trigger a retry.",
+        "Claude returned invalid JSON. This will trigger a retry.",
         stage="json_parsing",
     )

@@ -1,6 +1,6 @@
 """Tests for job retry endpoint (POST /api/v1/jobs/{job_id}/retry)."""
-import pytest
-from unittest.mock import patch, MagicMock
+
+from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 
@@ -41,8 +41,9 @@ class TestRetryEndpoint:
         # Verify task was called with s3_key, not file_bytes
         mock_task.delay.assert_called_once()
         call_kwargs = mock_task.delay.call_args
-        assert call_kwargs.kwargs.get("s3_key") == "uploads/test.xlsx" or \
-               (call_kwargs.args and len(call_kwargs.args) > 1 and "uploads" in str(call_kwargs))
+        assert call_kwargs.kwargs.get("s3_key") == "uploads/test.xlsx" or (
+            call_kwargs.args and len(call_kwargs.args) > 1 and "uploads" in str(call_kwargs)
+        )
 
     def test_retry_pending_job_rejected(self, test_client_with_db, test_db):
         """Cannot retry a job that isn't failed."""
@@ -68,7 +69,9 @@ class TestRetryEndpoint:
         try:
             file = crud.create_file(session, filename="test.xlsx", file_size=1024)
             job = crud.create_extraction_job(session, file_id=file.file_id)
-            crud.complete_job(session, job.job_id, result={"data": "test"}, tokens_used=100, cost_usd=0.01)
+            crud.complete_job(
+                session, job.job_id, result={"data": "test"}, tokens_used=100, cost_usd=0.01
+            )
             job_id = str(job.job_id)
         finally:
             session.close()
@@ -201,6 +204,7 @@ class TestRetryEndpoint:
         session2 = test_db()
         try:
             from uuid import UUID
+
             new_job = crud.get_job(session2, UUID(new_job_id))
             assert new_job.result is not None
             assert "parsing" in new_job.result.get("_stage_results", {})

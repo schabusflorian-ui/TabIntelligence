@@ -2,8 +2,7 @@
 
 from decimal import Decimal
 
-from src.validation.lifecycle_detector import LifecycleDetector, LifecycleResult
-
+from src.validation.lifecycle_detector import LifecycleDetector
 
 D = Decimal
 
@@ -137,8 +136,13 @@ class TestPhaseDetection:
     def test_pre_construction_detected(self):
         """Drawdown without capex = pre_construction."""
         data = {
-            "1.0": {"revenue": D("0"), "capex": D("0"), "debt_drawdown": D("5000000"),
-                     "cfads": D("0"), "dscr": D("0")},
+            "1.0": {
+                "revenue": D("0"),
+                "capex": D("0"),
+                "debt_drawdown": D("5000000"),
+                "cfads": D("0"),
+                "dscr": D("0"),
+            },
             "2.0": {"revenue": D("0"), "capex": D("-20000000"), "cfads": D("0"), "dscr": D("0")},
             "3.0": {"revenue": D("10000000"), "cfads": D("8000000"), "dscr": D("1.5")},
         }
@@ -150,7 +154,11 @@ class TestPhaseDetection:
         """First revenue periods below 50% median = ramp_up."""
         data = {
             "1.0": {"revenue": D("0"), "capex": D("-10000000"), "cfads": D("0"), "dscr": D("0")},
-            "2.0": {"revenue": D("3000000"), "cfads": D("2000000"), "dscr": D("1.1")},  # < 50% of 20M
+            "2.0": {
+                "revenue": D("3000000"),
+                "cfads": D("2000000"),
+                "dscr": D("1.1"),
+            },  # < 50% of 20M
             "3.0": {"revenue": D("20000000"), "cfads": D("15000000"), "dscr": D("1.5")},
             "4.0": {"revenue": D("20000000"), "cfads": D("15000000"), "dscr": D("1.5")},
             "5.0": {"revenue": D("20000000"), "cfads": D("15000000"), "dscr": D("1.5")},
@@ -251,7 +259,7 @@ class TestBackwardCompatibility:
         """Corporate models should NOT get ramp_up phase."""
         data = {
             "1.0": {"revenue": D("0")},
-            "2.0": {"revenue": D("100")},   # low revenue
+            "2.0": {"revenue": D("100")},  # low revenue
             "3.0": {"revenue": D("1000")},
             "4.0": {"revenue": D("1000")},
         }
@@ -278,10 +286,13 @@ class TestConfidence:
 
         # Revenue + capex + dscr
         data_high = {
-            "1.0": {"revenue": D("0"), "capex": D("-10000000"),
-                     "cfads": D("0"), "dscr": D("0")},
-            "2.0": {"revenue": D("1000"), "capex": D("-500000"),
-                     "cfads": D("800"), "dscr": D("1.5")},
+            "1.0": {"revenue": D("0"), "capex": D("-10000000"), "cfads": D("0"), "dscr": D("0")},
+            "2.0": {
+                "revenue": D("1000"),
+                "capex": D("-500000"),
+                "cfads": D("800"),
+                "dscr": D("1.5"),
+            },
         }
         result_high = self.detector.detect(data_high)
 

@@ -44,6 +44,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # Load .env if python-dotenv is available
 try:
     from dotenv import load_dotenv
+
     load_dotenv(PROJECT_ROOT / ".env")
 except ImportError:
     pass
@@ -77,8 +78,10 @@ def _read_file(path: str) -> tuple:
 def _count_sheets_and_rows(file_bytes: bytes) -> tuple:
     """Quick count of sheets and rows for display."""
     try:
-        import openpyxl
         import io
+
+        import openpyxl
+
         wb = openpyxl.load_workbook(io.BytesIO(file_bytes), read_only=True, data_only=True)
         sheet_count = len(wb.sheetnames)
         total_rows = 0
@@ -113,13 +116,15 @@ def _calculate_stage_metrics(result: dict) -> list:
     """
     # Placeholder -- the orchestrator aggregates tokens but doesn't break
     # them down by stage in the result. Return a summary row.
-    return [{
-        "stage": "total",
-        "tokens_in": 0,
-        "tokens_out": 0,
-        "tokens_total": result.get("tokens_used", 0),
-        "cost_usd": result.get("cost_usd", 0),
-    }]
+    return [
+        {
+            "stage": "total",
+            "tokens_in": 0,
+            "tokens_out": 0,
+            "tokens_total": result.get("tokens_used", 0),
+            "cost_usd": result.get("cost_usd", 0),
+        }
+    ]
 
 
 def _evaluate_triage_accuracy(result: dict, expected: dict) -> dict:
@@ -141,12 +146,14 @@ def _evaluate_triage_accuracy(result: dict, expected: dict) -> dict:
         if is_correct:
             correct += 1
 
-        details.append({
-            "sheet_name": sheet,
-            "expected_tier": exp_tier,
-            "actual_tier": act_tier,
-            "correct": is_correct,
-        })
+        details.append(
+            {
+                "sheet_name": sheet,
+                "expected_tier": exp_tier,
+                "actual_tier": act_tier,
+                "correct": is_correct,
+            }
+        )
 
     return {
         "correct": correct,
@@ -196,12 +203,14 @@ def _evaluate_mapping_accuracy(result: dict, expected: dict) -> dict:
         if act_canonical in alts:
             correct += 1
         else:
-            mismatches.append({
-                "label": label,
-                "expected": exp_canonical,
-                "actual": act_canonical,
-                "acceptable": alts,
-            })
+            mismatches.append(
+                {
+                    "label": label,
+                    "expected": exp_canonical,
+                    "actual": act_canonical,
+                    "acceptable": alts,
+                }
+            )
 
     matched_total = total - unmapped
 
@@ -223,11 +232,13 @@ def _evaluate_mapping_accuracy(result: dict, expected: dict) -> dict:
         if act_canonical in alts:
             per_statement[sheet]["correct"] += 1
         else:
-            per_statement[sheet]["mismatches"].append({
-                "label": label,
-                "expected": exp_canonical,
-                "actual": act_canonical,
-            })
+            per_statement[sheet]["mismatches"].append(
+                {
+                    "label": label,
+                    "expected": exp_canonical,
+                    "actual": act_canonical,
+                }
+            )
 
     for sheet, data in per_statement.items():
         data["accuracy"] = data["correct"] / max(data["total"], 1)
@@ -287,7 +298,9 @@ def _print_result_summary(result: dict, duration: float):
 
     quality = validation.get("quality", {})
     if quality:
-        print(f"  Quality grade: {quality.get('letter_grade', '?')} ({quality.get('numeric_score', 0):.2f})")
+        print(
+            f"  Quality grade: {quality.get('letter_grade', '?')} ({quality.get('numeric_score', 0):.2f})"
+        )
 
     lineage = result.get("lineage_summary", {})
     if lineage:
@@ -342,14 +355,14 @@ def _print_accuracy(triage_acc: dict, mapping_acc: dict):
     if mapping_acc["mismatches"]:
         print("Mapping Mismatches:")
         for m in mapping_acc["mismatches"]:
-            print(f"  - \"{m['label']}\": expected {m['expected']}, got {m['actual']}")
+            print(f'  - "{m["label"]}": expected {m["expected"]}, got {m["actual"]}')
         print()
 
     # Show unmapped labels
     if mapping_acc["unmapped_labels"]:
         print("Unmapped Labels:")
         for label in mapping_acc["unmapped_labels"]:
-            print(f"  - \"{label}\"")
+            print(f'  - "{label}"')
         print()
 
     # Per-statement breakdown
@@ -357,15 +370,13 @@ def _print_accuracy(triage_acc: dict, mapping_acc: dict):
     if per_stmt:
         print("Per-Statement Mapping Accuracy:")
         for sheet, data in sorted(per_stmt.items()):
-            print(
-                f"  {sheet:<30s} {data['correct']}/{data['total']} "
-                f"({data['accuracy']:.1%})"
-            )
+            print(f"  {sheet:<30s} {data['correct']}/{data['total']} ({data['accuracy']:.1%})")
         print()
 
 
-def _save_results(result: dict, duration: float, filename: str,
-                  triage_acc: dict = None, mapping_acc: dict = None):
+def _save_results(
+    result: dict, duration: float, filename: str, triage_acc: dict = None, mapping_acc: dict = None
+):
     """Save detailed results to data/benchmark_results/."""
     results_dir = PROJECT_ROOT / "data" / "benchmark_results"
     results_dir.mkdir(parents=True, exist_ok=True)
@@ -534,7 +545,9 @@ def _print_comparison(diff: dict):
         print(f"  Completeness:     {_fmt(diff['completeness_score_delta'])}")
     if "duration_delta" in diff:
         d = diff["duration_delta"]
-        print(f"  Duration:         {d:+.1f}s {'(faster)' if d < 0 else '(slower)' if d > 0 else ''}")
+        print(
+            f"  Duration:         {d:+.1f}s {'(faster)' if d < 0 else '(slower)' if d > 0 else ''}"
+        )
     if "token_delta" in diff:
         t = diff["token_delta"]
         print(f"  Tokens:           {t:+,}")
@@ -542,11 +555,11 @@ def _print_comparison(diff: dict):
     if diff.get("new_mismatches"):
         print(f"\n  New mismatches ({len(diff['new_mismatches'])}):")
         for label in diff["new_mismatches"]:
-            print(f"    - \"{label}\"")
+            print(f'    - "{label}"')
     if diff.get("resolved_mismatches"):
         print(f"\n  Resolved mismatches ({len(diff['resolved_mismatches'])}):")
         for label in diff["resolved_mismatches"]:
-            print(f"    + \"{label}\"")
+            print(f'    + "{label}"')
 
     print()
 
@@ -570,8 +583,7 @@ def _discover_fixtures(fixture_dir: str) -> list:
     return pairs
 
 
-def _run_single_fixture(xlsx_path: Path, expected_path: Path,
-                        save: bool, quiet: bool) -> dict:
+def _run_single_fixture(xlsx_path: Path, expected_path: Path, save: bool, quiet: bool) -> dict:
     """Run extraction on a single fixture and return results dict.
 
     Returns a dict with keys: fixture_name, duration, result, triage_acc,
@@ -583,6 +595,7 @@ def _run_single_fixture(xlsx_path: Path, expected_path: Path,
 
     if quiet:
         import logging
+
         logging.getLogger("src").setLevel(logging.WARNING)
 
     print("Running extraction pipeline...")
@@ -617,9 +630,8 @@ def _run_single_fixture(xlsx_path: Path, expected_path: Path,
     mapping_acc = _evaluate_mapping_accuracy(result, expected)
     _print_accuracy(triage_acc, mapping_acc)
 
-    saved_path = None
     if save:
-        saved_path = _save_results(result, duration, filename, triage_acc, mapping_acc)
+        _save_results(result, duration, filename, triage_acc, mapping_acc)
 
     return {
         "fixture_name": xlsx_path.stem,
@@ -654,8 +666,10 @@ def _print_aggregate_summary(results: list):
         return
 
     # Per-fixture table
-    print(f"\n{'Fixture':<25s} {'Triage':>8s} {'Mapping':>8s} {'Items':>6s} "
-          f"{'Tokens':>8s} {'Cost':>8s} {'Time':>6s}")
+    print(
+        f"\n{'Fixture':<25s} {'Triage':>8s} {'Mapping':>8s} {'Items':>6s} "
+        f"{'Tokens':>8s} {'Cost':>8s} {'Time':>6s}"
+    )
     print("-" * 70)
 
     total_mapping_correct = 0
@@ -672,9 +686,11 @@ def _print_aggregate_summary(results: list):
         t_pct = f"{t_acc.get('accuracy', 0):.0%}" if t_acc else "N/A"
         m_pct = f"{m_acc.get('accuracy', 0):.0%}" if m_acc else "N/A"
 
-        print(f"  {r['fixture_name']:<23s} {t_pct:>8s} {m_pct:>8s} "
-              f"{r['line_items_count']:>6d} {r['tokens_used']:>8,} "
-              f"${r['cost_usd']:>6.2f} {r['duration']:>5.0f}s")
+        print(
+            f"  {r['fixture_name']:<23s} {t_pct:>8s} {m_pct:>8s} "
+            f"{r['line_items_count']:>6d} {r['tokens_used']:>8,} "
+            f"${r['cost_usd']:>6.2f} {r['duration']:>5.0f}s"
+        )
 
         total_mapping_correct += m_acc.get("correct", 0)
         total_mapping_items += m_acc.get("total", 0)
@@ -689,14 +705,20 @@ def _print_aggregate_summary(results: list):
     overall_triage = total_triage_correct / max(total_triage_items, 1)
     overall_mapping = total_mapping_correct / max(total_mapping_items, 1)
 
-    print(f"  {'TOTAL':<23s} {overall_triage:>7.0%} {overall_mapping:>7.0%} "
-          f"{'':>6s} {total_tokens:>8,} "
-          f"${total_cost:>6.2f} {total_duration:>5.0f}s")
+    print(
+        f"  {'TOTAL':<23s} {overall_triage:>7.0%} {overall_mapping:>7.0%} "
+        f"{'':>6s} {total_tokens:>8,} "
+        f"${total_cost:>6.2f} {total_duration:>5.0f}s"
+    )
     print()
-    print(f"Overall triage accuracy:  {total_triage_correct}/{total_triage_items} "
-          f"({overall_triage:.1%})")
-    print(f"Overall mapping accuracy: {total_mapping_correct}/{total_mapping_items} "
-          f"({overall_mapping:.1%})")
+    print(
+        f"Overall triage accuracy:  {total_triage_correct}/{total_triage_items} "
+        f"({overall_triage:.1%})"
+    )
+    print(
+        f"Overall mapping accuracy: {total_mapping_correct}/{total_mapping_items} "
+        f"({overall_mapping:.1%})"
+    )
     print(f"Total fixtures: {len(successful)} passed, {len(failed)} failed")
     print()
 
@@ -787,6 +809,7 @@ def main():
     # Optionally suppress logging
     if args.quiet:
         import logging
+
         logging.getLogger("src").setLevel(logging.WARNING)
 
     # Run extraction
@@ -850,15 +873,13 @@ def main():
             _print_comparison(diff)
 
     # Print canonical names found (useful for debugging)
-    canonical_names = sorted(set(
-        item.get("canonical_name", "unmapped")
-        for item in result.get("line_items", [])
-    ))
+    canonical_names = sorted(
+        set(item.get("canonical_name", "unmapped") for item in result.get("line_items", []))
+    )
     print(f"Canonical names extracted ({len(canonical_names)}):")
     for name in canonical_names:
         count = sum(
-            1 for item in result.get("line_items", [])
-            if item.get("canonical_name") == name
+            1 for item in result.get("line_items", []) if item.get("canonical_name") == name
         )
         print(f"  {name}: {count} items")
     print()

@@ -3,10 +3,11 @@ Application configuration using Pydantic Settings.
 
 Loads configuration from environment variables with validation and type checking.
 """
-from pydantic_settings import BaseSettings
-from pydantic import Field, field_validator
+
 from typing import Optional
-import os
+
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -22,7 +23,7 @@ class Settings(BaseSettings):
     # =========================================================================
     database_url: str = Field(
         default="postgresql://emi:emi_dev@localhost:5432/emi",
-        description="PostgreSQL database connection URL"
+        description="PostgreSQL database connection URL",
     )
 
     # =========================================================================
@@ -30,35 +31,28 @@ class Settings(BaseSettings):
     # =========================================================================
     redis_url: str = Field(
         default="redis://localhost:6379/0",
-        description="Redis connection URL for caching and queues"
+        description="Redis connection URL for caching and queues",
     )
 
     # =========================================================================
     # S3/MinIO Configuration
     # =========================================================================
     s3_endpoint: str = Field(
-        default="http://localhost:9000",
-        description="S3 or MinIO endpoint URL"
+        default="http://localhost:9000", description="S3 or MinIO endpoint URL"
     )
-    s3_access_key: str = Field(
-        default="minioadmin",
-        description="S3/MinIO access key"
-    )
-    s3_secret_key: str = Field(
-        default="minioadmin",
-        description="S3/MinIO secret key"
-    )
+    s3_access_key: str = Field(default="minioadmin", description="S3/MinIO access key")
+    s3_secret_key: str = Field(default="minioadmin", description="S3/MinIO secret key")
     s3_bucket: str = Field(
-        default="financial-models",
-        description="S3 bucket name for file storage"
+        default="financial-models", description="S3 bucket name for file storage"
     )
-    s3_region: Optional[str] = Field(
-        default="us-east-1",
-        description="S3 region (for AWS S3)"
-    )
+    s3_region: Optional[str] = Field(default="us-east-1", description="S3 region (for AWS S3)")
     s3_verify_ssl: bool = Field(
         default=True,
-        description="Verify SSL certificates for S3 connections (set to false ONLY for local MinIO with self-signed certs)"
+        description=(
+            "Verify SSL certificates for S3 connections"
+            " (set to false ONLY for local MinIO"
+            " with self-signed certs)"
+        ),
     )
 
     # =========================================================================
@@ -66,77 +60,53 @@ class Settings(BaseSettings):
     # =========================================================================
     anthropic_api_key: str = Field(
         ...,  # Required field
-        description="Anthropic API key for Claude"
+        description="Anthropic API key for Claude",
     )
 
     # =========================================================================
     # Application Configuration
     # =========================================================================
-    app_name: str = Field(
-        default="DebtFund",
-        description="Application name"
-    )
+    app_name: str = Field(default="DebtFund", description="Application name")
 
-    app_version: str = Field(
-        default="0.1.0",
-        description="Application version"
-    )
+    app_version: str = Field(default="0.1.0", description="Application version")
 
-    debug: bool = Field(
-        default=False,
-        description="Enable debug mode"
-    )
+    debug: bool = Field(default=False, description="Enable debug mode")
 
     log_level: str = Field(
-        default="INFO",
-        description="Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)"
+        default="INFO", description="Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)"
     )
 
     # =========================================================================
     # API Configuration
     # =========================================================================
-    api_host: str = Field(
-        default="0.0.0.0",
-        description="API server host"
-    )
+    api_host: str = Field(default="0.0.0.0", description="API server host")
 
-    api_port: int = Field(
-        default=8000,
-        description="API server port"
-    )
+    api_port: int = Field(default=8000, description="API server port")
 
     cors_origins: list = Field(
         default=["http://localhost:3000"],
-        description="CORS allowed origins (comma-separated list for security)"
+        description="CORS allowed origins (comma-separated list for security)",
     )
 
     # =========================================================================
     # Extraction Configuration
     # =========================================================================
-    max_file_size_mb: int = Field(
-        default=50,
-        description="Maximum file upload size in MB"
-    )
+    max_file_size_mb: int = Field(default=50, description="Maximum file upload size in MB")
 
     extraction_timeout_seconds: int = Field(
-        default=300,
-        description="Maximum time for extraction in seconds"
+        default=300, description="Maximum time for extraction in seconds"
     )
 
-    claude_max_retries: int = Field(
-        default=3,
-        description="Maximum retries for Claude API calls"
-    )
+    claude_max_retries: int = Field(default=3, description="Maximum retries for Claude API calls")
 
     claude_model: str = Field(
-        default="claude-sonnet-4-20250514",
-        description="Claude model to use for extraction"
+        default="claude-sonnet-4-20250514", description="Claude model to use for extraction"
     )
 
     quality_gate_min_grade: str = Field(
         default="F",
         description="Minimum passing quality grade. Jobs at or below this grade "
-                    "are flagged NEEDS_REVIEW. One of: A, B, C, D, F."
+        "are flagged NEEDS_REVIEW. One of: A, B, C, D, F.",
     )
 
     # =========================================================================
@@ -150,10 +120,7 @@ class Settings(BaseSettings):
         if not v:
             raise ValueError("ANTHROPIC_API_KEY is required")
         if not v.startswith("sk-ant-"):
-            raise ValueError(
-                "Invalid Anthropic API key format. "
-                "Must start with 'sk-ant-'"
-            )
+            raise ValueError("Invalid Anthropic API key format. Must start with 'sk-ant-'")
         return v
 
     @field_validator("log_level")
@@ -163,10 +130,7 @@ class Settings(BaseSettings):
         valid_levels = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
         v_upper = v.upper()
         if v_upper not in valid_levels:
-            raise ValueError(
-                f"Invalid log level: {v}. "
-                f"Must be one of {valid_levels}"
-            )
+            raise ValueError(f"Invalid log level: {v}. Must be one of {valid_levels}")
         return v_upper
 
     @field_validator("database_url")
@@ -174,9 +138,7 @@ class Settings(BaseSettings):
     def validate_database_url(cls, v: str) -> str:
         """Validate database URL format."""
         if not v.startswith("postgresql://"):
-            raise ValueError(
-                "Invalid database URL. Must start with 'postgresql://'"
-            )
+            raise ValueError("Invalid database URL. Must start with 'postgresql://'")
         return v
 
     @field_validator("max_file_size_mb")
@@ -184,9 +146,7 @@ class Settings(BaseSettings):
     def validate_max_file_size(cls, v: int) -> int:
         """Validate max file size."""
         if v <= 0 or v > 1000:
-            raise ValueError(
-                "Max file size must be between 1 and 1000 MB"
-            )
+            raise ValueError("Max file size must be between 1 and 1000 MB")
         return v
 
     @field_validator("quality_gate_min_grade")
@@ -245,6 +205,7 @@ except Exception as e:
 # ============================================================================
 # Helper Functions
 # ============================================================================
+
 
 def get_settings() -> Settings:
     """

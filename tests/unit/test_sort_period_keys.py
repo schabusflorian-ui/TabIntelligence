@@ -7,9 +7,7 @@ class TestNumericPeriods:
     """Numeric string periods sort identically to the old naive sort."""
 
     def test_simple_floats(self):
-        assert sort_period_keys(["3.0", "1.0", "2.0", "10.0"]) == [
-            "1.0", "2.0", "3.0", "10.0"
-        ]
+        assert sort_period_keys(["3.0", "1.0", "2.0", "10.0"]) == ["1.0", "2.0", "3.0", "10.0"]
 
     def test_integers_as_strings(self):
         assert sort_period_keys(["5", "1", "3"]) == ["1", "3", "5"]
@@ -25,9 +23,7 @@ class TestFiscalYears:
     """Fiscal year formats sort chronologically."""
 
     def test_fy_prefix(self):
-        assert sort_period_keys(["FY2024", "FY2022", "FY2023"]) == [
-            "FY2022", "FY2023", "FY2024"
-        ]
+        assert sort_period_keys(["FY2024", "FY2022", "FY2023"]) == ["FY2022", "FY2023", "FY2024"]
 
     def test_fy_with_suffixes(self):
         result = sort_period_keys(["FY2024E", "FY2022A", "FY2023A"])
@@ -38,9 +34,7 @@ class TestFiscalYears:
         assert result == ["FY2024A", "FY2024E"]
 
     def test_standalone_years(self):
-        assert sort_period_keys(["2025", "2023", "2024"]) == [
-            "2023", "2024", "2025"
-        ]
+        assert sort_period_keys(["2025", "2023", "2024"]) == ["2023", "2024", "2025"]
 
     def test_fy_with_space(self):
         """Claude sometimes outputs 'FY 2024A' with a space."""
@@ -154,19 +148,15 @@ class TestProjectFinancePeriods:
 
     def test_cod_relative_order(self):
         """Pre-COD < COD-2 < COD < COD+1 < COD+5 < Post-COD."""
-        result = sort_period_keys([
-            "COD+5", "Pre-COD", "COD", "Post-COD", "COD-2", "COD+1"
-        ])
+        result = sort_period_keys(["COD+5", "Pre-COD", "COD", "Post-COD", "COD-2", "COD+1"])
         assert result == ["Pre-COD", "COD-2", "COD", "COD+1", "COD+5", "Post-COD"]
 
     def test_phase_years_construction_before_operations(self):
         """Construction years sort before operations years."""
-        result = sort_period_keys([
-            "Ops Yr 1", "Construction Year 2", "Construction Year 1", "Ops Yr 2"
-        ])
-        assert result == [
-            "Construction Year 1", "Construction Year 2", "Ops Yr 1", "Ops Yr 2"
-        ]
+        result = sort_period_keys(
+            ["Ops Yr 1", "Construction Year 2", "Construction Year 1", "Ops Yr 2"]
+        )
+        assert result == ["Construction Year 1", "Construction Year 2", "Ops Yr 1", "Ops Yr 2"]
 
     def test_stub_sorts_after_cod(self):
         """Stub periods sort after COD-relative periods."""

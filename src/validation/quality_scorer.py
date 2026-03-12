@@ -4,6 +4,7 @@ Combines multiple quality signals (mapping confidence, validation success,
 completeness, time-series consistency) into a single trustworthiness score
 with letter grade and label.
 """
+
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
@@ -11,18 +12,20 @@ from typing import Dict, List, Optional
 @dataclass
 class DimensionScore:
     """Score for a single quality dimension."""
+
     name: str
-    score: float         # 0.0 to 1.0
-    weight: float        # relative weight in composite
+    score: float  # 0.0 to 1.0
+    weight: float  # relative weight in composite
     details: Optional[str] = None
 
 
 @dataclass
 class QualityResult:
     """Composite quality scoring result."""
-    numeric_score: float          # 0.0 to 1.0
-    letter_grade: str             # A, B, C, D, F
-    label: str                    # "trustworthy", "needs_review", "unreliable"
+
+    numeric_score: float  # 0.0 to 1.0
+    letter_grade: str  # A, B, C, D, F
+    label: str  # "trustworthy", "needs_review", "unreliable"
     dimensions: List[DimensionScore] = field(default_factory=list)
     model_type: Optional[str] = None
 
@@ -176,9 +179,7 @@ class QualityScorer:
         total_weight = sum(self.weights.get(k, 0.0) for k in scores)
         if total_weight == 0:
             return 0.0
-        weighted_sum = sum(
-            scores[k] * self.weights.get(k, 0.0) for k in scores
-        )
+        weighted_sum = sum(scores[k] * self.weights.get(k, 0.0) for k in scores)
         return weighted_sum / total_weight
 
     def _assign_grade(self, score: float) -> str:

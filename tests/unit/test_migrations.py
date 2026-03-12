@@ -10,16 +10,14 @@ Validates that:
 Note: These tests do NOT run actual migrations against PostgreSQL.
 They validate the migration file structure using SQLite.
 """
-import pytest
-import importlib
-import os
+
 from pathlib import Path
 
+import pytest
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.pool import StaticPool
 
 from src.db.base import Base
-
 
 ALEMBIC_VERSIONS_DIR = Path(__file__).parent.parent.parent / "alembic" / "versions"
 
@@ -37,7 +35,9 @@ class TestMigrationFileStructure:
         migration_files = list(ALEMBIC_VERSIONS_DIR.glob("*.py"))
         # Filter out __pycache__ and __init__.py
         migration_files = [f for f in migration_files if not f.name.startswith("__")]
-        assert len(migration_files) >= 6, f"Expected at least 6 migrations, found {len(migration_files)}"
+        assert len(migration_files) >= 6, (
+            f"Expected at least 6 migrations, found {len(migration_files)}"
+        )
 
     def test_initial_migration_exists(self):
         """Initial migration file should exist."""
@@ -127,8 +127,19 @@ class TestModelTableCompleteness:
         inspector = inspect(engine)
         columns = {col["name"] for col in inspector.get_columns("extraction_jobs")}
 
-        expected = {"job_id", "file_id", "status", "current_stage", "progress_percent",
-                    "result", "error", "tokens_used", "cost_usd", "created_at", "updated_at"}
+        expected = {
+            "job_id",
+            "file_id",
+            "status",
+            "current_stage",
+            "progress_percent",
+            "result",
+            "error",
+            "tokens_used",
+            "cost_usd",
+            "created_at",
+            "updated_at",
+        }
         missing = expected - columns
         assert not missing, f"Missing columns in extraction_jobs: {missing}"
 
@@ -142,8 +153,17 @@ class TestModelTableCompleteness:
         inspector = inspect(engine)
         columns = {col["name"] for col in inspector.get_columns("taxonomy")}
 
-        expected = {"id", "canonical_name", "category", "display_name", "aliases",
-                    "definition", "typical_sign", "parent_canonical", "created_at"}
+        expected = {
+            "id",
+            "canonical_name",
+            "category",
+            "display_name",
+            "aliases",
+            "definition",
+            "typical_sign",
+            "parent_canonical",
+            "created_at",
+        }
         missing = expected - columns
         assert not missing, f"Missing columns in taxonomy: {missing}"
 
@@ -157,8 +177,18 @@ class TestModelTableCompleteness:
         inspector = inspect(engine)
         columns = {col["name"] for col in inspector.get_columns("audit_logs")}
 
-        expected = {"id", "timestamp", "action", "resource_type", "resource_id",
-                    "api_key_id", "ip_address", "user_agent", "details", "status_code"}
+        expected = {
+            "id",
+            "timestamp",
+            "action",
+            "resource_type",
+            "resource_id",
+            "api_key_id",
+            "ip_address",
+            "user_agent",
+            "details",
+            "status_code",
+        }
         missing = expected - columns
         assert not missing, f"Missing columns in audit_logs: {missing}"
 
@@ -179,7 +209,9 @@ class TestModelTableCompleteness:
         # lineage_events -> extraction_jobs
         lineage_fks = inspector.get_foreign_keys("lineage_events")
         lineage_fk_tables = {fk["referred_table"] for fk in lineage_fks}
-        assert "extraction_jobs" in lineage_fk_tables, "lineage_events should reference extraction_jobs"
+        assert "extraction_jobs" in lineage_fk_tables, (
+            "lineage_events should reference extraction_jobs"
+        )
 
         # entity_patterns -> entities
         pattern_fks = inspector.get_foreign_keys("entity_patterns")

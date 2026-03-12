@@ -1,45 +1,49 @@
 """
 DebtFund - API Server
 """
+
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Depends
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy.orm import Session
-
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from sqlalchemy.orm import Session
 
 from src.api.rate_limit import limiter
-from src.core.logging import setup_logging, api_logger as logger
-from src.core.exceptions import FileStorageError
 from src.core.config import get_settings
+from src.core.exceptions import FileStorageError
+from src.core.logging import api_logger as logger
+from src.core.logging import setup_logging
+
 # Tracing is optional (Week 3 feature) - don't block if not installed
 try:
-    from src.core.tracing import setup_tracing, instrument_fastapi
+    from src.core.tracing import instrument_fastapi, setup_tracing
+
     TRACING_AVAILABLE = True
 except ImportError:
     TRACING_AVAILABLE = False
     logger.warning("OpenTelemetry not installed - tracing disabled (install for Week 3)")
-from src.api.middleware import RequestIDMiddleware
-from src.api.metrics import MetricsMiddleware, metrics_endpoint
-from src.api.health import router as health_router
-from src.api.taxonomy import router as taxonomy_router
-from src.api.entities import router as entities_router
-from src.api.files import router as files_router
-from src.api.jobs import router as jobs_router
-from src.api.dlq import router as dlq_router
-from src.api.corrections import router as corrections_router
-from src.api.analytics import router as analytics_router
-from src.db.session import get_db
-from src.storage.s3 import get_s3_client
-
 # Initialize logging
 # Use JSON format in production for machine-parseable logs
 import os
+
+from src.api.analytics import router as analytics_router
+from src.api.corrections import router as corrections_router
+from src.api.dlq import router as dlq_router
+from src.api.entities import router as entities_router
+from src.api.files import router as files_router
+from src.api.health import router as health_router
+from src.api.jobs import router as jobs_router
+from src.api.metrics import MetricsMiddleware, metrics_endpoint
+from src.api.middleware import RequestIDMiddleware
+from src.api.taxonomy import router as taxonomy_router
+from src.db.session import get_db
+from src.storage.s3 import get_s3_client
+
 use_json_logging = os.getenv("LOG_FORMAT", "plain").lower() == "json"
 setup_logging(level="INFO", use_json=use_json_logging)
 
@@ -47,6 +51,7 @@ setup_logging(level="INFO", use_json=use_json_logging)
 # ============================================================================
 # Lifespan context manager (replaces deprecated @app.on_event)
 # ============================================================================
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -67,8 +72,9 @@ async def lifespan(app: FastAPI):
     logger.info("Database initialized successfully")
 
     # Attach slow query logging to sync engine
-    from src.db.slow_query_log import attach_slow_query_logging
     from src.db.session import get_sync_engine
+    from src.db.slow_query_log import attach_slow_query_logging
+
     attach_slow_query_logging(get_sync_engine(), threshold_ms=100)
     logger.info("Slow query logging enabled (threshold: 100ms)")
 
@@ -88,6 +94,7 @@ async def lifespan(app: FastAPI):
     # --- SHUTDOWN ---
     logger.info("DebtFund API server shutting down...")
     from src.db.session import async_engine, get_sync_engine
+
     try:
         await async_engine.dispose()
         get_sync_engine().dispose()
@@ -161,7 +168,6 @@ if _static_dir.is_dir():
     app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
 
 
-
 @app.get("/")
 async def root():
     """Root endpoint — serves frontend UI if available, otherwise returns service info."""
@@ -171,7 +177,7 @@ async def root():
     return {
         "service": "DebtFund - Excel Model Intelligence",
         "version": _settings.app_version,
-        "status": "operational"
+        "status": "operational",
     }
 
 
@@ -184,7 +190,9 @@ async def health(db: Session = Depends(get_db)):
     Returns 200 if healthy, 503 if any critical component is down.
     """
     import time
-    from datetime import datetime, timezone as tz
+    from datetime import datetime
+    from datetime import timezone as tz
+
     from fastapi.responses import JSONResponse
     from sqlalchemy import text
 
@@ -192,7 +200,7 @@ async def health(db: Session = Depends(get_db)):
         "status": "healthy",
         "version": _settings.app_version,
         "timestamp": datetime.now(tz.utc).isoformat(),
-        "components": {}
+        "components": {},
     }
 
     # Database check
@@ -220,4 +228,5 @@ async def health(db: Session = Depends(get_db)):
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

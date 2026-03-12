@@ -7,14 +7,15 @@ Provides end-to-end request tracing across:
 - Database queries
 - Redis operations
 """
+
 from opentelemetry import trace
+from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+from opentelemetry.instrumentation.celery import CeleryInstrumentor
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.jaeger.thrift import JaegerExporter
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from opentelemetry.instrumentation.celery import CeleryInstrumentor
-from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
-from opentelemetry.sdk.resources import Resource, SERVICE_NAME
 
 
 def setup_tracing(service_name: str = "debtfund-api"):
@@ -36,6 +37,7 @@ def setup_tracing(service_name: str = "debtfund-api"):
     # Configure Jaeger exporter
     # Use environment variable for flexibility (defaults to localhost for local dev)
     import os
+
     jaeger_host = os.getenv("JAEGER_AGENT_HOST", "localhost")
     jaeger_exporter = JaegerExporter(
         agent_host_name=jaeger_host,
@@ -74,5 +76,5 @@ def get_current_trace_id() -> str:
     """
     span = trace.get_current_span()
     if span.get_span_context().is_valid:
-        return format(span.get_span_context().trace_id, '032x')
+        return format(span.get_span_context().trace_id, "032x")
     return "no-trace"

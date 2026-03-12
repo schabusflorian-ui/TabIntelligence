@@ -4,19 +4,18 @@ Unit tests for Stage 5: Enhanced Mapping.
 Tests the remapping candidate selection, entity/hierarchy context builders,
 taxonomy helpers, and full stage execution with mocked Claude.
 """
-import json
-import pytest
-from decimal import Decimal
-from unittest.mock import MagicMock, patch
-from pathlib import Path
 
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from src.extraction.base import PipelineContext
 from src.extraction.stages.enhanced_mapping import (
     EnhancedMappingStage,
-    _load_taxonomy,
     _format_taxonomy_for_prompt,
+    _load_taxonomy,
 )
-from src.extraction.base import PipelineContext
-
 
 # ============================================================================
 # REMAPPING CANDIDATE SELECTION
@@ -54,7 +53,11 @@ class TestFindRemappingCandidates:
         mappings = [
             {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95},
             {"original_label": "COGS", "canonical_name": "cogs", "confidence": 0.85},
-            {"original_label": "Gross Profit", "canonical_name": "gross_profit", "confidence": 0.70},
+            {
+                "original_label": "Gross Profit",
+                "canonical_name": "gross_profit",
+                "confidence": 0.70,
+            },
         ]
         candidates = self.stage._find_remapping_candidates(mappings)
         assert len(candidates) == 0
@@ -117,7 +120,11 @@ class TestBuildEntityContext:
         mappings = [
             {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95},
             {"original_label": "COGS", "canonical_name": "cogs", "confidence": 0.90},
-            {"original_label": "Gross Profit", "canonical_name": "gross_profit", "confidence": 0.88},
+            {
+                "original_label": "Gross Profit",
+                "canonical_name": "gross_profit",
+                "confidence": 0.88,
+            },
         ]
         result = self.stage._build_entity_context(context, mappings)
         assert "Revenue" in result
@@ -173,16 +180,18 @@ class TestBuildHierarchyContext:
     def test_basic_context(self):
         """Should return nearby labels for candidate items."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "Income Statement",
-                "rows": [
-                    {"label": "Revenue", "hierarchy_level": 1},
-                    {"label": "COGS", "hierarchy_level": 1},
-                    {"label": "Mystery Item", "hierarchy_level": 2},
-                    {"label": "Gross Profit", "hierarchy_level": 1},
-                    {"label": "SGA", "hierarchy_level": 1},
-                ],
-            }]
+            "sheets": [
+                {
+                    "sheet_name": "Income Statement",
+                    "rows": [
+                        {"label": "Revenue", "hierarchy_level": 1},
+                        {"label": "COGS", "hierarchy_level": 1},
+                        {"label": "Mystery Item", "hierarchy_level": 2},
+                        {"label": "Gross Profit", "hierarchy_level": 1},
+                        {"label": "SGA", "hierarchy_level": 1},
+                    ],
+                }
+            ]
         }
         candidates = [{"original_label": "Mystery Item"}]
         result = self.stage._build_hierarchy_context(parsed, candidates)
@@ -197,14 +206,16 @@ class TestBuildHierarchyContext:
     def test_first_row_context(self):
         """First row should only have subsequent neighbors."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "IS",
-                "rows": [
-                    {"label": "Unknown", "hierarchy_level": 1},
-                    {"label": "Revenue", "hierarchy_level": 1},
-                    {"label": "COGS", "hierarchy_level": 1},
-                ],
-            }]
+            "sheets": [
+                {
+                    "sheet_name": "IS",
+                    "rows": [
+                        {"label": "Unknown", "hierarchy_level": 1},
+                        {"label": "Revenue", "hierarchy_level": 1},
+                        {"label": "COGS", "hierarchy_level": 1},
+                    ],
+                }
+            ]
         }
         candidates = [{"original_label": "Unknown"}]
         result = self.stage._build_hierarchy_context(parsed, candidates)
@@ -216,14 +227,16 @@ class TestBuildHierarchyContext:
     def test_last_row_context(self):
         """Last row should only have preceding neighbors."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "IS",
-                "rows": [
-                    {"label": "Revenue", "hierarchy_level": 1},
-                    {"label": "COGS", "hierarchy_level": 1},
-                    {"label": "Unknown", "hierarchy_level": 1},
-                ],
-            }]
+            "sheets": [
+                {
+                    "sheet_name": "IS",
+                    "rows": [
+                        {"label": "Revenue", "hierarchy_level": 1},
+                        {"label": "COGS", "hierarchy_level": 1},
+                        {"label": "Unknown", "hierarchy_level": 1},
+                    ],
+                }
+            ]
         }
         candidates = [{"original_label": "Unknown"}]
         result = self.stage._build_hierarchy_context(parsed, candidates)
@@ -235,13 +248,15 @@ class TestBuildHierarchyContext:
     def test_includes_sheet_name(self):
         """Context should include the sheet name."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "Income Statement",
-                "rows": [
-                    {"label": "Unknown", "hierarchy_level": 1},
-                    {"label": "Revenue", "hierarchy_level": 1},
-                ],
-            }]
+            "sheets": [
+                {
+                    "sheet_name": "Income Statement",
+                    "rows": [
+                        {"label": "Unknown", "hierarchy_level": 1},
+                        {"label": "Revenue", "hierarchy_level": 1},
+                    ],
+                }
+            ]
         }
         candidates = [{"original_label": "Unknown"}]
         result = self.stage._build_hierarchy_context(parsed, candidates)
@@ -250,13 +265,20 @@ class TestBuildHierarchyContext:
     def test_includes_metadata(self):
         """Context should include hierarchy level and subtotal/formula flags."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "IS",
-                "rows": [
-                    {"label": "Unknown", "hierarchy_level": 2, "is_subtotal": True, "is_formula": True},
-                    {"label": "Revenue", "hierarchy_level": 1},
-                ],
-            }]
+            "sheets": [
+                {
+                    "sheet_name": "IS",
+                    "rows": [
+                        {
+                            "label": "Unknown",
+                            "hierarchy_level": 2,
+                            "is_subtotal": True,
+                            "is_formula": True,
+                        },
+                        {"label": "Revenue", "hierarchy_level": 1},
+                    ],
+                }
+            ]
         }
         candidates = [{"original_label": "Unknown"}]
         result = self.stage._build_hierarchy_context(parsed, candidates)
@@ -267,10 +289,12 @@ class TestBuildHierarchyContext:
     def test_no_match_returns_empty(self):
         """Should return empty list when candidates not found in parsed data."""
         parsed = {
-            "sheets": [{
-                "sheet_name": "IS",
-                "rows": [{"label": "Revenue", "hierarchy_level": 1}],
-            }]
+            "sheets": [
+                {
+                    "sheet_name": "IS",
+                    "rows": [{"label": "Revenue", "hierarchy_level": 1}],
+                }
+            ]
         }
         candidates = [{"original_label": "Nonexistent"}]
         result = self.stage._build_hierarchy_context(parsed, candidates)
@@ -388,7 +412,11 @@ class TestTaxonomyHelpers:
                     {"canonical_name": "revenue", "display_name": "Revenue", "aliases": []},
                 ],
                 "balance_sheet": [
-                    {"canonical_name": "total_assets", "display_name": "Total Assets", "aliases": []},
+                    {
+                        "canonical_name": "total_assets",
+                        "display_name": "Total Assets",
+                        "aliases": [],
+                    },
                 ],
             }
         }
@@ -398,8 +426,10 @@ class TestTaxonomyHelpers:
 
     def test_load_taxonomy_missing_file(self):
         """Should return empty categories when file doesn't exist."""
-        with patch("src.extraction.taxonomy_loader.TAXONOMY_PATH", Path("/nonexistent/path.json")), \
-             patch("src.extraction.taxonomy_loader._taxonomy_cache", {}):
+        with (
+            patch("src.extraction.taxonomy_loader.TAXONOMY_PATH", Path("/nonexistent/path.json")),
+            patch("src.extraction.taxonomy_loader._taxonomy_cache", {}),
+        ):
             result = _load_taxonomy()
             assert result == {"categories": {}}
 

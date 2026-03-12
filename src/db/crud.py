@@ -4,26 +4,35 @@ CRUD (Create, Read, Update, Delete) operations for DebtFund database.
 All operations use explicit transaction management and proper error handling.
 This is the canonical location per Week 2 strategy.
 """
-import copy
 
+import copy
+from datetime import datetime, timezone
+from typing import List, Optional
+from uuid import UUID
+
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.orm.attributes import flag_modified
-from sqlalchemy.exc import SQLAlchemyError
-from typing import Optional, List
-from uuid import UUID
-from datetime import datetime, timezone
 
-from src.db.models import (
-    Entity, File, ExtractionJob, ExtractionFact, JobStatusEnum, LineageEvent,
-    DLQEntry, EntityPattern, LearnedAlias, CorrectionHistory,
-)
-from src.core.logging import database_logger as logger
 from src.core.exceptions import DatabaseError
-
+from src.core.logging import database_logger as logger
+from src.db.models import (
+    CorrectionHistory,
+    DLQEntry,
+    Entity,
+    EntityPattern,
+    ExtractionFact,
+    ExtractionJob,
+    File,
+    JobStatusEnum,
+    LearnedAlias,
+    LineageEvent,
+)
 
 # ============================================================================
 # ENTITY OPERATIONS
 # ============================================================================
+
 
 def create_entity(
     db: Session,
@@ -52,9 +61,7 @@ def create_entity(
         db.rollback()
         logger.error(f"Failed to create entity: {str(e)}")
         raise DatabaseError(
-            f"Failed to create entity: {str(e)}",
-            operation="create",
-            table="entities"
+            f"Failed to create entity: {str(e)}", operation="create", table="entities"
         )
 
 
@@ -64,11 +71,7 @@ def get_entity(db: Session, entity_id: UUID) -> Optional[Entity]:
         return db.query(Entity).filter(Entity.id == entity_id).first()
     except SQLAlchemyError as e:
         logger.error(f"Failed to get entity {entity_id}: {str(e)}")
-        raise DatabaseError(
-            f"Failed to get entity: {str(e)}",
-            operation="read",
-            table="entities"
-        )
+        raise DatabaseError(f"Failed to get entity: {str(e)}", operation="read", table="entities")
 
 
 def list_entities(
@@ -78,19 +81,11 @@ def list_entities(
 ) -> List[Entity]:
     """List entities with pagination."""
     try:
-        return (
-            db.query(Entity)
-            .order_by(Entity.created_at.desc())
-            .offset(offset)
-            .limit(limit)
-            .all()
-        )
+        return db.query(Entity).order_by(Entity.created_at.desc()).offset(offset).limit(limit).all()
     except SQLAlchemyError as e:
         logger.error(f"Failed to list entities: {str(e)}")
         raise DatabaseError(
-            f"Failed to list entities: {str(e)}",
-            operation="read",
-            table="entities"
+            f"Failed to list entities: {str(e)}", operation="read", table="entities"
         )
 
 
@@ -105,9 +100,7 @@ def update_entity(
         entity = db.query(Entity).filter(Entity.id == entity_id).first()
         if not entity:
             raise DatabaseError(
-                f"Entity {entity_id} not found",
-                operation="update",
-                table="entities"
+                f"Entity {entity_id} not found", operation="update", table="entities"
             )
         if name is not None:
             entity.name = name
@@ -121,9 +114,7 @@ def update_entity(
         db.rollback()
         logger.error(f"Failed to update entity {entity_id}: {str(e)}")
         raise DatabaseError(
-            f"Failed to update entity: {str(e)}",
-            operation="update",
-            table="entities"
+            f"Failed to update entity: {str(e)}", operation="update", table="entities"
         )
 
 
@@ -141,15 +132,14 @@ def delete_entity(db: Session, entity_id: UUID) -> bool:
         db.rollback()
         logger.error(f"Failed to delete entity {entity_id}: {str(e)}")
         raise DatabaseError(
-            f"Failed to delete entity: {str(e)}",
-            operation="delete",
-            table="entities"
+            f"Failed to delete entity: {str(e)}", operation="delete", table="entities"
         )
 
 
 # ============================================================================
 # FILE OPERATIONS
 # ============================================================================
+
 
 def get_file_by_hash(db: Session, content_hash: str) -> Optional[File]:
     """
@@ -166,11 +156,7 @@ def get_file_by_hash(db: Session, content_hash: str) -> Optional[File]:
         return db.query(File).filter(File.content_hash == content_hash).first()
     except SQLAlchemyError as e:
         logger.error(f"Failed to look up file by hash: {str(e)}")
-        raise DatabaseError(
-            f"Failed to look up file: {str(e)}",
-            operation="read",
-            table="files"
-        )
+        raise DatabaseError(f"Failed to look up file: {str(e)}", operation="read", table="files")
 
 
 def create_file(
@@ -214,11 +200,7 @@ def create_file(
     except SQLAlchemyError as e:
         db.rollback()
         logger.error(f"Failed to create file: {str(e)}")
-        raise DatabaseError(
-            f"Failed to create file: {str(e)}",
-            operation="create",
-            table="files"
-        )
+        raise DatabaseError(f"Failed to create file: {str(e)}", operation="create", table="files")
 
 
 def get_file(db: Session, file_id: UUID) -> Optional[File]:
@@ -239,11 +221,7 @@ def get_file(db: Session, file_id: UUID) -> Optional[File]:
         return db.query(File).filter(File.file_id == file_id).first()
     except SQLAlchemyError as e:
         logger.error(f"Failed to get file {file_id}: {str(e)}")
-        raise DatabaseError(
-            f"Failed to get file: {str(e)}",
-            operation="read",
-            table="files"
-        )
+        raise DatabaseError(f"Failed to get file: {str(e)}", operation="read", table="files")
 
 
 def list_files(
@@ -263,27 +241,13 @@ def list_files(
         List[File]: List of file records
     """
     try:
-        return (
-            db.query(File)
-            .order_by(File.uploaded_at.desc())
-            .offset(offset)
-            .limit(limit)
-            .all()
-        )
+        return db.query(File).order_by(File.uploaded_at.desc()).offset(offset).limit(limit).all()
     except SQLAlchemyError as e:
         logger.error(f"Failed to list files: {str(e)}")
-        raise DatabaseError(
-            f"Failed to list files: {str(e)}",
-            operation="read",
-            table="files"
-        )
+        raise DatabaseError(f"Failed to list files: {str(e)}", operation="read", table="files")
 
 
-def update_file_s3_key(
-    db: Session,
-    file_id: UUID,
-    s3_key: str
-) -> File:
+def update_file_s3_key(db: Session, file_id: UUID, s3_key: str) -> File:
     """
     Update file record with S3 key after upload.
 
@@ -301,11 +265,7 @@ def update_file_s3_key(
     try:
         file = db.query(File).filter(File.file_id == file_id).first()
         if not file:
-            raise DatabaseError(
-                f"File {file_id} not found",
-                operation="update",
-                table="files"
-            )
+            raise DatabaseError(f"File {file_id} not found", operation="update", table="files")
 
         file.s3_key = s3_key
         db.commit()
@@ -316,16 +276,13 @@ def update_file_s3_key(
     except SQLAlchemyError as e:
         db.rollback()
         logger.error(f"Failed to update file {file_id} with s3_key: {str(e)}")
-        raise DatabaseError(
-            f"Failed to update file: {str(e)}",
-            operation="update",
-            table="files"
-        )
+        raise DatabaseError(f"Failed to update file: {str(e)}", operation="update", table="files")
 
 
 # ============================================================================
 # EXTRACTION JOB OPERATIONS
 # ============================================================================
+
 
 def create_extraction_job(
     db: Session,
@@ -362,9 +319,7 @@ def create_extraction_job(
         db.rollback()
         logger.error(f"Failed to create extraction job: {str(e)}")
         raise DatabaseError(
-            f"Failed to create job: {str(e)}",
-            operation="create",
-            table="extraction_jobs"
+            f"Failed to create job: {str(e)}", operation="create", table="extraction_jobs"
         )
 
 
@@ -394,9 +349,7 @@ def get_job(db: Session, job_id: UUID) -> Optional[ExtractionJob]:
     except SQLAlchemyError as e:
         logger.error(f"Failed to get job {job_id}: {str(e)}")
         raise DatabaseError(
-            f"Failed to get job: {str(e)}",
-            operation="read",
-            table="extraction_jobs"
+            f"Failed to get job: {str(e)}", operation="read", table="extraction_jobs"
         )
 
 
@@ -429,9 +382,7 @@ def update_job_status(
         job = db.query(ExtractionJob).filter(ExtractionJob.job_id == job_id).first()
         if not job:
             raise DatabaseError(
-                f"Job {job_id} not found",
-                operation="update",
-                table="extraction_jobs"
+                f"Job {job_id} not found", operation="update", table="extraction_jobs"
             )
 
         job.status = status
@@ -452,9 +403,7 @@ def update_job_status(
         db.rollback()
         logger.error(f"Failed to update job {job_id}: {str(e)}")
         raise DatabaseError(
-            f"Failed to update job: {str(e)}",
-            operation="update",
-            table="extraction_jobs"
+            f"Failed to update job: {str(e)}", operation="update", table="extraction_jobs"
         )
 
 
@@ -487,9 +436,7 @@ def complete_job(
         job = db.query(ExtractionJob).filter(ExtractionJob.job_id == job_id).first()
         if not job:
             raise DatabaseError(
-                f"Job {job_id} not found",
-                operation="update",
-                table="extraction_jobs"
+                f"Job {job_id} not found", operation="update", table="extraction_jobs"
             )
 
         # Quality gate: F grade -> NEEDS_REVIEW instead of COMPLETED
@@ -518,9 +465,7 @@ def complete_job(
         db.rollback()
         logger.error(f"Failed to complete job {job_id}: {str(e)}")
         raise DatabaseError(
-            f"Failed to complete job: {str(e)}",
-            operation="update",
-            table="extraction_jobs"
+            f"Failed to complete job: {str(e)}", operation="update", table="extraction_jobs"
         )
 
 
@@ -598,9 +543,7 @@ def fail_job(
         job = db.query(ExtractionJob).filter(ExtractionJob.job_id == job_id).first()
         if not job:
             raise DatabaseError(
-                f"Job {job_id} not found",
-                operation="update",
-                table="extraction_jobs"
+                f"Job {job_id} not found", operation="update", table="extraction_jobs"
             )
 
         job.status = JobStatusEnum.FAILED
@@ -616,9 +559,7 @@ def fail_job(
         db.rollback()
         logger.error(f"Failed to mark job {job_id} as failed: {str(e)}")
         raise DatabaseError(
-            f"Failed to update job: {str(e)}",
-            operation="update",
-            table="extraction_jobs"
+            f"Failed to update job: {str(e)}", operation="update", table="extraction_jobs"
         )
 
 
@@ -697,15 +638,14 @@ def list_jobs(
     except SQLAlchemyError as e:
         logger.error(f"Failed to list jobs: {str(e)}")
         raise DatabaseError(
-            f"Failed to list jobs: {str(e)}",
-            operation="read",
-            table="extraction_jobs"
+            f"Failed to list jobs: {str(e)}", operation="read", table="extraction_jobs"
         )
 
 
 # ============================================================================
 # LINEAGE EVENT OPERATIONS
 # ============================================================================
+
 
 def create_lineage_event(
     db: Session,
@@ -743,9 +683,7 @@ def create_lineage_event(
         db.rollback()
         logger.error(f"Failed to create lineage event: {str(e)}")
         raise DatabaseError(
-            f"Failed to create lineage event: {str(e)}",
-            operation="create",
-            table="lineage_events"
+            f"Failed to create lineage event: {str(e)}", operation="create", table="lineage_events"
         )
 
 
@@ -773,15 +711,14 @@ def get_job_lineage(db: Session, job_id: UUID) -> List[LineageEvent]:
     except SQLAlchemyError as e:
         logger.error(f"Failed to get lineage for job {job_id}: {str(e)}")
         raise DatabaseError(
-            f"Failed to get lineage: {str(e)}",
-            operation="read",
-            table="lineage_events"
+            f"Failed to get lineage: {str(e)}", operation="read", table="lineage_events"
         )
 
 
 # ============================================================================
 # ENTITY PATTERN OPERATIONS
 # ============================================================================
+
 
 def get_entity_patterns(
     db: Session,
@@ -816,9 +753,7 @@ def get_entity_patterns(
     except SQLAlchemyError as e:
         logger.error(f"Failed to get entity patterns for {entity_id}: {str(e)}")
         raise DatabaseError(
-            f"Failed to get entity patterns: {str(e)}",
-            operation="read",
-            table="entity_patterns"
+            f"Failed to get entity patterns: {str(e)}", operation="read", table="entity_patterns"
         )
 
 
@@ -907,7 +842,7 @@ def upsert_entity_pattern(
         raise DatabaseError(
             f"Failed to upsert entity pattern: {str(e)}",
             operation="upsert",
-            table="entity_patterns"
+            table="entity_patterns",
         )
 
 
@@ -945,9 +880,7 @@ def bulk_upsert_entity_patterns(
         if confidence < min_confidence or canonical == "unmapped" or not label:
             continue
         if canonical not in valid_names:
-            logger.warning(
-                f"Skipping invalid canonical '{canonical}' for entity {entity_id}"
-            )
+            logger.warning(f"Skipping invalid canonical '{canonical}' for entity {entity_id}")
             continue
 
         upsert_entity_pattern(
@@ -980,13 +913,14 @@ def delete_entity_pattern(db: Session, pattern_id: UUID) -> bool:
         raise DatabaseError(
             f"Failed to delete entity pattern: {str(e)}",
             operation="delete",
-            table="entity_patterns"
+            table="entity_patterns",
         )
 
 
 # ============================================================================
 # DLQ OPERATIONS
 # ============================================================================
+
 
 def create_dlq_entry(
     db: Session,
@@ -1032,9 +966,7 @@ def create_dlq_entry(
         db.rollback()
         logger.error(f"Failed to create DLQ entry for task {task_id}: {str(e)}")
         raise DatabaseError(
-            f"Failed to create DLQ entry: {str(e)}",
-            operation="create",
-            table="dlq_entries"
+            f"Failed to create DLQ entry: {str(e)}", operation="create", table="dlq_entries"
         )
 
 
@@ -1045,17 +977,12 @@ def get_dlq_entry(db: Session, dlq_id: UUID) -> Optional[DLQEntry]:
     except SQLAlchemyError as e:
         logger.error(f"Failed to get DLQ entry {dlq_id}: {str(e)}")
         raise DatabaseError(
-            f"Failed to get DLQ entry: {str(e)}",
-            operation="read",
-            table="dlq_entries"
+            f"Failed to get DLQ entry: {str(e)}", operation="read", table="dlq_entries"
         )
 
 
 def list_dlq_entries(
-    db: Session,
-    limit: int = 100,
-    offset: int = 0,
-    only_unreplayed: bool = False
+    db: Session, limit: int = 100, offset: int = 0, only_unreplayed: bool = False
 ) -> List[DLQEntry]:
     """List DLQ entries with pagination."""
     try:
@@ -1066,25 +993,17 @@ def list_dlq_entries(
     except SQLAlchemyError as e:
         logger.error(f"Failed to list DLQ entries: {str(e)}")
         raise DatabaseError(
-            f"Failed to list DLQ entries: {str(e)}",
-            operation="read",
-            table="dlq_entries"
+            f"Failed to list DLQ entries: {str(e)}", operation="read", table="dlq_entries"
         )
 
 
-def mark_dlq_entry_replayed(
-    db: Session,
-    dlq_id: UUID,
-    new_task_id: str
-) -> DLQEntry:
+def mark_dlq_entry_replayed(db: Session, dlq_id: UUID, new_task_id: str) -> DLQEntry:
     """Mark a DLQ entry as replayed with the new task ID."""
     try:
         dlq_entry = db.query(DLQEntry).filter(DLQEntry.dlq_id == dlq_id).first()
         if not dlq_entry:
             raise DatabaseError(
-                f"DLQ entry {dlq_id} not found",
-                operation="update",
-                table="dlq_entries"
+                f"DLQ entry {dlq_id} not found", operation="update", table="dlq_entries"
             )
         dlq_entry.replayed += 1
         dlq_entry.replayed_at = datetime.now(timezone.utc)
@@ -1097,9 +1016,7 @@ def mark_dlq_entry_replayed(
         db.rollback()
         logger.error(f"Failed to mark DLQ entry {dlq_id} as replayed: {str(e)}")
         raise DatabaseError(
-            f"Failed to update DLQ entry: {str(e)}",
-            operation="update",
-            table="dlq_entries"
+            f"Failed to update DLQ entry: {str(e)}", operation="update", table="dlq_entries"
         )
 
 
@@ -1117,9 +1034,7 @@ def delete_dlq_entry(db: Session, dlq_id: UUID) -> bool:
         db.rollback()
         logger.error(f"Failed to delete DLQ entry {dlq_id}: {str(e)}")
         raise DatabaseError(
-            f"Failed to delete DLQ entry: {str(e)}",
-            operation="delete",
-            table="dlq_entries"
+            f"Failed to delete DLQ entry: {str(e)}", operation="delete", table="dlq_entries"
         )
 
 
@@ -1190,6 +1105,7 @@ def resolve_pattern_conflicts(db: Session, entity_id: UUID) -> int:
 
         # Group by original_label
         from collections import defaultdict
+
         label_groups: dict[str, list[EntityPattern]] = defaultdict(list)
         for p in patterns:
             label_groups[p.original_label].append(p)
@@ -1230,7 +1146,7 @@ def resolve_pattern_conflicts(db: Session, entity_id: UUID) -> int:
         raise DatabaseError(
             f"Failed to resolve pattern conflicts: {str(e)}",
             operation="update",
-            table="entity_patterns"
+            table="entity_patterns",
         )
 
 
@@ -1283,8 +1199,7 @@ def update_pattern_confidence_from_validation(
         if reduced or boosted:
             db.commit()
             logger.info(
-                f"Validation feedback for entity {entity_id}: "
-                f"{reduced} reduced, {boosted} boosted"
+                f"Validation feedback for entity {entity_id}: {reduced} reduced, {boosted} boosted"
             )
 
         return {"reduced": reduced, "boosted": boosted}
@@ -1295,7 +1210,7 @@ def update_pattern_confidence_from_validation(
         raise DatabaseError(
             f"Failed to update pattern confidence: {str(e)}",
             operation="update",
-            table="entity_patterns"
+            table="entity_patterns",
         )
 
 
@@ -1339,9 +1254,7 @@ def get_industry_patterns(
     except SQLAlchemyError as e:
         logger.error(f"Failed to get industry patterns for {industry}: {str(e)}")
         raise DatabaseError(
-            f"Failed to get industry patterns: {str(e)}",
-            operation="read",
-            table="entity_patterns"
+            f"Failed to get industry patterns: {str(e)}", operation="read", table="entity_patterns"
         )
 
 
@@ -1374,9 +1287,7 @@ def record_learned_alias(
     from src.extraction.taxonomy_loader import get_all_canonical_names
 
     if canonical_name not in get_all_canonical_names():
-        logger.warning(
-            f"Skipping learned alias for invalid canonical '{canonical_name}'"
-        )
+        logger.warning(f"Skipping learned alias for invalid canonical '{canonical_name}'")
         return None
 
     try:
@@ -1415,9 +1326,7 @@ def record_learned_alias(
         db.rollback()
         logger.error(f"Failed to record learned alias: {str(e)}")
         raise DatabaseError(
-            f"Failed to record learned alias: {str(e)}",
-            operation="upsert",
-            table="learned_aliases"
+            f"Failed to record learned alias: {str(e)}", operation="upsert", table="learned_aliases"
         )
 
 
@@ -1440,24 +1349,14 @@ def get_learned_aliases(
         List of LearnedAlias records
     """
     try:
-        query = (
-            db.query(LearnedAlias)
-            .filter(LearnedAlias.occurrence_count >= min_occurrences)
-        )
+        query = db.query(LearnedAlias).filter(LearnedAlias.occurrence_count >= min_occurrences)
         if promoted is not None:
             query = query.filter(LearnedAlias.promoted == promoted)
-        return (
-            query
-            .order_by(LearnedAlias.occurrence_count.desc())
-            .limit(limit)
-            .all()
-        )
+        return query.order_by(LearnedAlias.occurrence_count.desc()).limit(limit).all()
     except SQLAlchemyError as e:
         logger.error(f"Failed to get learned aliases: {str(e)}")
         raise DatabaseError(
-            f"Failed to get learned aliases: {str(e)}",
-            operation="read",
-            table="learned_aliases"
+            f"Failed to get learned aliases: {str(e)}", operation="read", table="learned_aliases"
         )
 
 
@@ -1482,6 +1381,7 @@ def promote_learned_alias(db: Session, alias_id: UUID) -> Optional[LearnedAlias]
         logger.info(f"Learned alias promoted: '{alias.alias_text}' -> {alias.canonical_name}")
         try:
             from src.extraction.taxonomy_loader import invalidate_promoted_cache
+
             invalidate_promoted_cache()
         except ImportError:
             pass
@@ -1492,7 +1392,7 @@ def promote_learned_alias(db: Session, alias_id: UUID) -> Optional[LearnedAlias]
         raise DatabaseError(
             f"Failed to promote learned alias: {str(e)}",
             operation="update",
-            table="learned_aliases"
+            table="learned_aliases",
         )
 
 
@@ -1503,15 +1403,8 @@ def get_promoted_aliases_for_lookup(db: Session) -> List[dict]:
     Returns empty list on failure (graceful degradation).
     """
     try:
-        aliases = (
-            db.query(LearnedAlias)
-            .filter(LearnedAlias.promoted == True)
-            .all()
-        )
-        return [
-            {"alias_text": a.alias_text, "canonical_name": a.canonical_name}
-            for a in aliases
-        ]
+        aliases = db.query(LearnedAlias).filter(LearnedAlias.promoted == True).all()
+        return [{"alias_text": a.alias_text, "canonical_name": a.canonical_name} for a in aliases]
     except SQLAlchemyError as e:
         logger.error(f"Failed to get promoted aliases for lookup: {str(e)}")
         return []
@@ -1547,9 +1440,7 @@ def get_promotable_aliases(
     except SQLAlchemyError as e:
         logger.error(f"Failed to get promotable aliases: {str(e)}")
         raise DatabaseError(
-            f"Failed to get promotable aliases: {str(e)}",
-            operation="read",
-            table="learned_aliases"
+            f"Failed to get promotable aliases: {str(e)}", operation="read", table="learned_aliases"
         )
 
 
@@ -1602,22 +1493,26 @@ def persist_extraction_facts(
             if validation_lookup and canonical in validation_lookup:
                 validation_passed = validation_lookup[canonical].get("passed")
 
-            facts.append(ExtractionFact(
-                job_id=job_id,
-                entity_id=entity_id,
-                canonical_name=canonical,
-                original_label=item.get("original_label"),
-                period=str(period),
-                period_normalized=item.get("period_normalized", {}).get(str(period)) if isinstance(item.get("period_normalized"), dict) else None,
-                value=dec_value,
-                confidence=item.get("confidence"),
-                sheet_name=item.get("sheet_name"),
-                row_index=item.get("row_index"),
-                hierarchy_level=item.get("hierarchy_level"),
-                mapping_method=item.get("method"),
-                taxonomy_category=item.get("taxonomy_category"),
-                validation_passed=validation_passed,
-            ))
+            facts.append(
+                ExtractionFact(
+                    job_id=job_id,
+                    entity_id=entity_id,
+                    canonical_name=canonical,
+                    original_label=item.get("original_label"),
+                    period=str(period),
+                    period_normalized=item.get("period_normalized", {}).get(str(period))
+                    if isinstance(item.get("period_normalized"), dict)
+                    else None,
+                    value=dec_value,
+                    confidence=item.get("confidence"),
+                    sheet_name=item.get("sheet_name"),
+                    row_index=item.get("row_index"),
+                    hierarchy_level=item.get("hierarchy_level"),
+                    mapping_method=item.get("method"),
+                    taxonomy_category=item.get("taxonomy_category"),
+                    validation_passed=validation_passed,
+                )
+            )
 
     if not facts:
         return 0
@@ -1633,7 +1528,7 @@ def persist_extraction_facts(
         raise DatabaseError(
             f"Failed to persist extraction facts: {str(e)}",
             operation="create",
-            table="extraction_facts"
+            table="extraction_facts",
         )
 
 
@@ -1676,19 +1571,13 @@ def query_extraction_facts(
         if min_confidence is not None:
             query = query.filter(ExtractionFact.confidence >= min_confidence)
 
-        return (
-            query
-            .order_by(ExtractionFact.created_at.desc())
-            .offset(offset)
-            .limit(limit)
-            .all()
-        )
+        return query.order_by(ExtractionFact.created_at.desc()).offset(offset).limit(limit).all()
     except SQLAlchemyError as e:
         logger.error(f"Failed to query extraction facts: {str(e)}")
         raise DatabaseError(
             f"Failed to query extraction facts: {str(e)}",
             operation="read",
-            table="extraction_facts"
+            table="extraction_facts",
         )
 
 
@@ -1703,6 +1592,7 @@ def _build_line_item_index(line_items: list) -> dict:
     Returns dict mapping original_label -> list of (index, item) tuples.
     """
     from collections import defaultdict
+
     index = defaultdict(list)
     for idx, item in enumerate(line_items):
         label = item.get("original_label")
@@ -1729,7 +1619,8 @@ def _find_matching_line_items(
         candidates = _index.get(original_label, [])
     else:
         candidates = [
-            (idx, item) for idx, item in enumerate(line_items)
+            (idx, item)
+            for idx, item in enumerate(line_items)
             if item.get("original_label") == original_label
         ]
 
@@ -1809,11 +1700,15 @@ def apply_correction_to_result(
         raise DatabaseError("Job not found", operation="read", table="extraction_jobs")
 
     if not job.result or "line_items" not in job.result:
-        raise DatabaseError("Job has no result to correct", operation="update", table="extraction_jobs")
+        raise DatabaseError(
+            "Job has no result to correct", operation="update", table="extraction_jobs"
+        )
 
     entity_id = job.file.entity_id if job.file else None
     if not entity_id:
-        raise DatabaseError("Corrections require an entity association", operation="update", table="extraction_jobs")
+        raise DatabaseError(
+            "Corrections require an entity association", operation="update", table="extraction_jobs"
+        )
 
     # Deep copy the result so mutations are isolated from the ORM instance
     modified_result = copy.deepcopy(job.result)
@@ -1831,7 +1726,9 @@ def apply_correction_to_result(
             new_canonical = correction["new_canonical_name"]
             sheet = correction.get("sheet")
 
-            matches = _find_matching_line_items(line_items, original_label, sheet, _index=line_item_index)
+            matches = _find_matching_line_items(
+                line_items, original_label, sheet, _index=line_item_index
+            )
 
             if not matches:
                 warnings.append(f"Label '{original_label}' not found in job result")
@@ -1842,7 +1739,9 @@ def apply_correction_to_result(
                 old_confidence = item.get("confidence", 0.0)
 
                 if old_canonical == new_canonical:
-                    warnings.append(f"No change needed for '{original_label}' (already '{new_canonical}')")
+                    warnings.append(
+                        f"No change needed for '{original_label}' (already '{new_canonical}')"
+                    )
                     continue
 
                 # Snapshot before mutation
@@ -1856,7 +1755,9 @@ def apply_correction_to_result(
                 item["provenance"]["mapping"] = {
                     "method": created_by,
                     "stage": "correction",
-                    "taxonomy_category": item.get("provenance", {}).get("mapping", {}).get("taxonomy_category", "unknown"),
+                    "taxonomy_category": item.get("provenance", {})
+                    .get("mapping", {})
+                    .get("taxonomy_category", "unknown"),
                     "reasoning": f"User correction: {old_canonical} -> {new_canonical}",
                 }
 
@@ -1904,15 +1805,17 @@ def apply_correction_to_result(
                     db, job_id, original_label, old_canonical, new_canonical
                 )
 
-                diffs.append({
-                    "original_label": original_label,
-                    "sheet": item.get("sheet"),
-                    "row": item.get("row"),
-                    "old_canonical_name": old_canonical,
-                    "new_canonical_name": new_canonical,
-                    "old_confidence": old_confidence,
-                    "new_confidence": 1.0,
-                })
+                diffs.append(
+                    {
+                        "original_label": original_label,
+                        "sheet": item.get("sheet"),
+                        "row": item.get("row"),
+                        "old_canonical_name": old_canonical,
+                        "new_canonical_name": new_canonical,
+                        "old_confidence": old_confidence,
+                        "new_confidence": 1.0,
+                    }
+                )
 
         # Assign the modified result back to the job
         job.result = modified_result
@@ -1956,7 +1859,9 @@ def preview_corrections(
         raise DatabaseError("Job not found", operation="read", table="extraction_jobs")
 
     if not job.result or "line_items" not in job.result:
-        raise DatabaseError("Job has no result to preview", operation="read", table="extraction_jobs")
+        raise DatabaseError(
+            "Job has no result to preview", operation="read", table="extraction_jobs"
+        )
 
     line_items = job.result["line_items"]
     line_item_index = _build_line_item_index(line_items)
@@ -1968,7 +1873,9 @@ def preview_corrections(
         new_canonical = correction["new_canonical_name"]
         sheet = correction.get("sheet")
 
-        matches = _find_matching_line_items(line_items, original_label, sheet, _index=line_item_index)
+        matches = _find_matching_line_items(
+            line_items, original_label, sheet, _index=line_item_index
+        )
 
         if not matches:
             warnings.append(f"Label '{original_label}' not found in job result")
@@ -1979,18 +1886,22 @@ def preview_corrections(
             old_confidence = item.get("confidence", 0.0)
 
             if old_canonical == new_canonical:
-                warnings.append(f"No change needed for '{original_label}' (already '{new_canonical}')")
+                warnings.append(
+                    f"No change needed for '{original_label}' (already '{new_canonical}')"
+                )
                 continue
 
-            diffs.append({
-                "original_label": original_label,
-                "sheet": item.get("sheet"),
-                "row": item.get("row"),
-                "old_canonical_name": old_canonical,
-                "new_canonical_name": new_canonical,
-                "old_confidence": old_confidence,
-                "new_confidence": 1.0,
-            })
+            diffs.append(
+                {
+                    "original_label": original_label,
+                    "sheet": item.get("sheet"),
+                    "row": item.get("row"),
+                    "old_canonical_name": old_canonical,
+                    "new_canonical_name": new_canonical,
+                    "old_confidence": old_confidence,
+                    "new_confidence": 1.0,
+                }
+            )
 
     return {"diffs": diffs, "warnings": warnings}
 
@@ -2008,18 +1919,20 @@ def undo_correction(
     """
     try:
         correction = (
-            db.query(CorrectionHistory)
-            .filter(CorrectionHistory.id == correction_id)
-            .first()
+            db.query(CorrectionHistory).filter(CorrectionHistory.id == correction_id).first()
         )
     except SQLAlchemyError as e:
-        raise DatabaseError(f"Failed to load correction: {e}", operation="read", table="correction_history")
+        raise DatabaseError(
+            f"Failed to load correction: {e}", operation="read", table="correction_history"
+        )
 
     if not correction:
         raise DatabaseError("Correction not found", operation="read", table="correction_history")
 
     if correction.reverted:
-        raise DatabaseError("Correction already reverted", operation="update", table="correction_history")
+        raise DatabaseError(
+            "Correction already reverted", operation="update", table="correction_history"
+        )
 
     # Reject undo if another non-reverted correction exists for the same
     # label+sheet on this job. Restoring this snapshot would silently
@@ -2059,7 +1972,9 @@ def undo_correction(
     try:
         job = db.query(ExtractionJob).filter(ExtractionJob.job_id == correction.job_id).first()
         if not job or not job.result or "line_items" not in job.result:
-            raise DatabaseError("Job result not available for undo", operation="update", table="extraction_jobs")
+            raise DatabaseError(
+                "Job result not available for undo", operation="update", table="extraction_jobs"
+            )
 
         line_items = job.result["line_items"]
         snapshot = correction.old_line_item_snapshot
@@ -2112,7 +2027,7 @@ def undo_correction(
             correction.new_canonical_name,
             correction.old_canonical_name,
             confidence=correction.old_confidence,
-            mapping_method=old_method,
+            mapping_method=old_method,  # type: ignore[arg-type]
         )
 
         correction.reverted = True
@@ -2151,7 +2066,9 @@ def get_correction_history(
         if not include_reverted:
             query = query.filter(CorrectionHistory.reverted == False)  # noqa: E712
         total = query.count()
-        items = query.order_by(CorrectionHistory.created_at.desc()).offset(offset).limit(limit).all()
+        items = (
+            query.order_by(CorrectionHistory.created_at.desc()).offset(offset).limit(limit).all()
+        )
         return items, total
     except SQLAlchemyError as e:
         raise DatabaseError(
@@ -2165,7 +2082,8 @@ def get_correction_history(
 # ANALYTICS QUERY OPERATIONS
 # ============================================================================
 
-from sqlalchemy import func as sa_func, cast, Date
+from sqlalchemy import Date, cast
+from sqlalchemy import func as sa_func
 
 
 def get_entity_financials(
@@ -2183,9 +2101,7 @@ def get_entity_financials(
     most recent job's value.
     """
     try:
-        query = db.query(ExtractionFact).filter(
-            ExtractionFact.entity_id == entity_id
-        )
+        query = db.query(ExtractionFact).filter(ExtractionFact.entity_id == entity_id)
         if canonical_names:
             query = query.filter(ExtractionFact.canonical_name.in_(canonical_names))
         if period_start:
@@ -2256,9 +2172,8 @@ def get_portfolio_summary(
         # Total jobs and quality distribution
         job_query = db.query(ExtractionJob)
         if entity_ids:
-            job_query = (
-                job_query.join(File, ExtractionJob.file_id == File.file_id)
-                .filter(File.entity_id.in_(entity_ids))
+            job_query = job_query.join(File, ExtractionJob.file_id == File.file_id).filter(
+                File.entity_id.in_(entity_ids)
             )
         total_jobs = job_query.count()
 
@@ -2272,10 +2187,7 @@ def get_portfolio_summary(
             .group_by(ExtractionJob.quality_grade)
             .all()
         )
-        quality_distribution = [
-            {"grade": grade, "count": count}
-            for grade, count in quality_rows
-        ]
+        quality_distribution = [{"grade": grade, "count": count} for grade, count in quality_rows]
 
         # Facts stats
         facts_query = db.query(ExtractionFact)
@@ -2285,9 +2197,8 @@ def get_portfolio_summary(
             facts_query = facts_query.filter(ExtractionFact.period == period)
 
         total_facts = facts_query.count()
-        avg_confidence = (
-            db.query(sa_func.avg(ExtractionFact.confidence))
-            .filter(ExtractionFact.confidence.isnot(None))
+        avg_confidence = db.query(sa_func.avg(ExtractionFact.confidence)).filter(
+            ExtractionFact.confidence.isnot(None)
         )
         if entity_ids:
             avg_confidence = avg_confidence.filter(ExtractionFact.entity_id.in_(entity_ids))
@@ -2352,11 +2263,7 @@ def get_taxonomy_coverage(db: Session) -> dict:
         total_taxonomy = db.query(sa_func.count(Taxonomy.id)).scalar() or 0
 
         # Distinct canonical names ever mapped in facts
-        mapped_names_query = (
-            db.query(ExtractionFact.canonical_name)
-            .distinct()
-            .all()
-        )
+        mapped_names_query = db.query(ExtractionFact.canonical_name).distinct().all()
         mapped_names = {row[0] for row in mapped_names_query}
 
         # Most common mapped items (top 20)
@@ -2384,15 +2291,11 @@ def get_taxonomy_coverage(db: Session) -> dict:
         ]
 
         # Never-mapped taxonomy items
-        all_taxonomy_names = {
-            row[0] for row in db.query(Taxonomy.canonical_name).all()
-        }
+        all_taxonomy_names = {row[0] for row in db.query(Taxonomy.canonical_name).all()}
         never_mapped = sorted(all_taxonomy_names - mapped_names)
 
         coverage_pct = (
-            round(len(mapped_names) / total_taxonomy * 100, 2)
-            if total_taxonomy > 0
-            else 0.0
+            round(len(mapped_names) / total_taxonomy * 100, 2) if total_taxonomy > 0 else 0.0
         )
 
         return {
@@ -2426,13 +2329,9 @@ def get_cost_analytics(
         # Build shared filter conditions
         base_filters = [ExtractionJob.cost_usd.isnot(None)]
         if date_from:
-            base_filters.append(
-                ExtractionJob.created_at >= datetime.fromisoformat(date_from)
-            )
+            base_filters.append(ExtractionJob.created_at >= datetime.fromisoformat(date_from))  # type: ignore[arg-type]
         if date_to:
-            base_filters.append(
-                ExtractionJob.created_at <= datetime.fromisoformat(date_to)
-            )
+            base_filters.append(ExtractionJob.created_at <= datetime.fromisoformat(date_to))  # type: ignore[arg-type]
 
         # --- Totals query ---
         totals_query = db.query(
@@ -2441,9 +2340,9 @@ def get_cost_analytics(
             sa_func.coalesce(sa_func.avg(ExtractionJob.cost_usd), 0.0),
         ).filter(*base_filters)
         if entity_id:
-            totals_query = totals_query.join(
-                File, ExtractionJob.file_id == File.file_id
-            ).filter(File.entity_id == entity_id)
+            totals_query = totals_query.join(File, ExtractionJob.file_id == File.file_id).filter(
+                File.entity_id == entity_id
+            )
         totals_row = totals_query.one()
         total_cost = float(totals_row[0])
         total_jobs = int(totals_row[1])
@@ -2477,18 +2376,15 @@ def get_cost_analytics(
         ]
 
         # --- Daily trend query ---
-        daily_query = (
-            db.query(
-                cast(ExtractionJob.created_at, Date).label("day"),
-                sa_func.sum(ExtractionJob.cost_usd),
-                sa_func.count(ExtractionJob.job_id),
-            )
-            .filter(*base_filters)
-        )
+        daily_query = db.query(
+            cast(ExtractionJob.created_at, Date).label("day"),
+            sa_func.sum(ExtractionJob.cost_usd),
+            sa_func.count(ExtractionJob.job_id),
+        ).filter(*base_filters)
         if entity_id:
-            daily_query = daily_query.join(
-                File, ExtractionJob.file_id == File.file_id
-            ).filter(File.entity_id == entity_id)
+            daily_query = daily_query.join(File, ExtractionJob.file_id == File.file_id).filter(
+                File.entity_id == entity_id
+            )
         daily_query = daily_query.group_by("day").order_by("day")
 
         cost_trend_daily = [

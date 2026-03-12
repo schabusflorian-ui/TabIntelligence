@@ -7,40 +7,49 @@ Job failure handling strategy:
 - SoftTimeLimitExceeded: marked FAILED immediately (not retryable)
 - Code bugs (KeyError, TypeError, ValueError, AttributeError) fail immediately to DLQ
 """
+
 import asyncio
 from typing import Optional
 from uuid import UUID
 
 from celery.exceptions import SoftTimeLimitExceeded
 
-from src.jobs.celery_app import celery_app
-from src.jobs.dlq import DLQTask
-from src.db.session import get_db_context
+from src.core.exceptions import ClaudeAPIError, RateLimitError
+from src.core.logging import api_logger as logger
+from src.core.logging import log_exception
 from src.db import crud
 from src.db.models import JobStatusEnum
-from src.core.logging import api_logger as logger, log_exception
-from src.core.exceptions import ClaudeAPIError, RateLimitError
+from src.db.session import get_db_context
+from src.jobs.celery_app import celery_app
+from src.jobs.dlq import DLQTask
 
 # Import anthropic exceptions with fallback for test environments where
 # anthropic may be mocked at module level.
 try:
-    from anthropic import APIStatusError, APIConnectionError, APITimeoutError
+    from anthropic import APIConnectionError, APIStatusError, APITimeoutError
+
     _TRANSIENT_EXCEPTIONS: tuple = (
-        ClaudeAPIError, RateLimitError,
-        APIConnectionError, APITimeoutError, APIStatusError,
-        ConnectionError, TimeoutError,
+        ClaudeAPIError,
+        RateLimitError,
+        APIConnectionError,
+        APITimeoutError,
+        APIStatusError,
+        ConnectionError,
+        TimeoutError,
     )
 except (ImportError, AttributeError):
     _TRANSIENT_EXCEPTIONS = (
-        ClaudeAPIError, RateLimitError,
-        ConnectionError, TimeoutError,
+        ClaudeAPIError,
+        RateLimitError,
+        ConnectionError,
+        TimeoutError,
     )
 
 
 @celery_app.task(
     bind=True,
     base=DLQTask,
-    name='debtfund.extraction.run',
+    name="debtfund.extraction.run",
     autoretry_for=_TRANSIENT_EXCEPTIONS,
     max_retries=3,
     acks_late=True,
@@ -68,7 +77,9 @@ def run_extraction_task(
     try:
         result = asyncio.run(
             async_extraction_wrapper(
-                job_id, s3_key, entity_id,
+                job_id,
+                s3_key,
+                entity_id,
                 file_bytes=file_bytes,
                 resume_from_stage=resume_from_stage,
             )
@@ -80,11 +91,7 @@ def run_extraction_task(
         # Timeouts are not retryable - mark FAILED immediately
         logger.warning(f"Task soft time limit exceeded: job_id={job_id}")
         with get_db_context() as db:
-            crud.fail_job(
-                db,
-                UUID(job_id),
-                "Extraction timeout: exceeded 5 minute soft limit"
-            )
+            crud.fail_job(db, UUID(job_id), "Extraction timeout: exceeded 5 minute soft limit")
         raise
 
     except Exception as e:
@@ -123,8 +130,8 @@ async def async_extraction_wrapper(
     Returns:
         Extraction result dictionary
     """
+    from src.core.exceptions import ClaudeAPIError, ExtractionError, LineageIncompleteError
     from src.extraction.orchestrator import extract
-    from src.core.exceptions import ExtractionError, ClaudeAPIError, LineageIncompleteError
 
     job_uuid = UUID(job_id)
 
@@ -133,6 +140,7 @@ async def async_extraction_wrapper(
         if s3_key is None:
             raise ValueError(f"Job {job_id}: neither s3_key nor file_bytes provided")
         from src.storage.s3 import get_s3_client
+
         s3_client = get_s3_client()
         file_bytes = s3_client.download_file(s3_key)
 
@@ -141,9 +149,11 @@ async def async_extraction_wrapper(
         try:
             with get_db_context() as db:
                 crud.update_job_status(
-                    db, job_uuid, JobStatusEnum.PROCESSING,
+                    db,
+                    job_uuid,
+                    JobStatusEnum.PROCESSING,
                     current_stage=stage_name,
-                    progress_percent=progress_percent
+                    progress_percent=progress_percent,
                 )
         except Exception as e:
             logger.warning(f"Could not update progress for job {job_id}: {e}")
@@ -157,19 +167,18 @@ async def async_extraction_wrapper(
             file_id_str = str(job.file_id)
 
             crud.update_job_status(
-                db,
-                job_uuid,
-                JobStatusEnum.PROCESSING,
-                current_stage="parsing",
-                progress_percent=10
+                db, job_uuid, JobStatusEnum.PROCESSING, current_stage="parsing", progress_percent=10
             )
 
         logger.info(f"Starting extraction for job: {job_id}")
 
         # Run extraction pipeline with progress callback
         result = await extract(
-            file_bytes, file_id_str, entity_id,
-            job_id=job_id, progress_callback=update_progress,
+            file_bytes,
+            file_id_str,
+            entity_id,
+            job_id=job_id,
+            progress_callback=update_progress,
             resume_from_stage=resume_from_stage,
         )
 
@@ -190,9 +199,7 @@ async def async_extraction_wrapper(
         cost_usd = result.get("cost_usd", 0.0)
         duration_s = result.get("duration_seconds", 0)
         if cost_usd > 5.0:
-            logger.critical(
-                f"COST ALERT: job {job_id} cost ${cost_usd:.2f} (threshold: $5.00)"
-            )
+            logger.critical(f"COST ALERT: job {job_id} cost ${cost_usd:.2f} (threshold: $5.00)")
         if duration_s > 600:
             logger.critical(
                 f"DURATION ALERT: job {job_id} took {duration_s:.0f}s (threshold: 600s)"

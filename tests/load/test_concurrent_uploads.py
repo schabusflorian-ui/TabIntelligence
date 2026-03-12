@@ -1,8 +1,10 @@
 """Load tests for concurrent API usage."""
-import pytest
-import time
+
 import io
+import time
 from concurrent.futures import ThreadPoolExecutor
+
+import pytest
 
 
 @pytest.mark.load
@@ -19,12 +21,15 @@ def test_10_concurrent_users(test_client):
             "file": (
                 f"user_{user_id}_test.xlsx",
                 io.BytesIO(b"PK\x03\x04" + bytes([user_id]) * 1000),
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
         }
         try:
             response = test_client.post("/api/v1/files/upload", files=files)
-            return response.status_code, response.json() if response.status_code in [200, 202] else {}
+            return response.status_code, response.json() if response.status_code in [
+                200,
+                202,
+            ] else {}
         except Exception as e:
             return 500, {"error": str(e)}
 
@@ -102,7 +107,7 @@ def test_rapid_sequential_uploads(test_client):
             "file": (
                 f"seq_{i}.xlsx",
                 io.BytesIO(b"PK\x03\x04" + bytes([i]) * 500),
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
         }
         try:
@@ -123,7 +128,7 @@ def test_concurrent_read_operations(test_client):
         "file": (
             "read_test.xlsx",
             io.BytesIO(b"PK\x03\x04" + b"\x00" * 1000),
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
     }
     upload_response = test_client.post("/api/v1/files/upload", files=files)
@@ -154,7 +159,7 @@ def test_database_pool_configuration():
     engine = get_engine()
     pool = engine.pool
 
-    assert hasattr(pool, 'size'), "Pool doesn't have size attribute"
+    assert hasattr(pool, "size"), "Pool doesn't have size attribute"
     pool_size = pool.size()
 
     assert pool_size >= 5, f"Pool size too small: {pool_size}"

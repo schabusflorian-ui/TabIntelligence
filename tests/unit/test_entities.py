@@ -1,5 +1,5 @@
 """Tests for entity CRUD endpoints (GET/POST/PATCH/DELETE /api/v1/entities)."""
-import pytest
+
 from uuid import uuid4
 
 
@@ -249,4 +249,5 @@ class TestEntityCRUD:
 
     def test_delete_nonexistent(self, db_session):
         from src.db import crud
+
         assert crud.delete_entity(db_session, uuid4()) is False

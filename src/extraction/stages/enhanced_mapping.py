@@ -1,4 +1,5 @@
 """Stage 5: Enhanced Mapping - Re-map with full taxonomy context and entity patterns."""
+
 import json
 import time
 from typing import Any, Dict, List, Optional
@@ -6,16 +7,17 @@ from typing import Any, Dict, List, Optional
 import anthropic
 
 from src.core.exceptions import ClaudeAPIError, ExtractionError, RateLimitError
-from src.core.logging import extraction_logger as logger, log_performance
+from src.core.logging import extraction_logger as logger
+from src.core.logging import log_performance
 from src.extraction.base import ExtractionStage, PipelineContext
 from src.extraction.claude_client import get_claude_client
 from src.extraction.prompts import get_prompt
-from src.extraction.utils import extract_json, validate_canonical_names
 from src.extraction.taxonomy_loader import (
-    load_taxonomy_json,
-    format_taxonomy_detailed,
     TAXONOMY_PATH,  # Re-exported for backward compat with tests that patch it
+    format_taxonomy_detailed,
+    load_taxonomy_json,
 )
+from src.extraction.utils import extract_json, validate_canonical_names
 
 
 # Backward-compatible aliases for tests
@@ -23,6 +25,7 @@ def _load_taxonomy() -> Dict:
     """Load the full taxonomy JSON file."""
     # Check module-level TAXONOMY_PATH to support test patching
     import src.extraction.stages.enhanced_mapping as _self
+
     path = getattr(_self, "TAXONOMY_PATH", TAXONOMY_PATH)
     if not path.exists():
         return {"categories": {}}
@@ -43,7 +46,9 @@ def _format_taxonomy_for_prompt(taxonomy: Dict) -> str:
             aliases_str = ""
             if item.get("aliases"):
                 aliases_str = f" (aliases: {', '.join(item['aliases'][:5])})"
-            names.append(f"  - {item['canonical_name']}: {item.get('display_name', '')}{aliases_str}")
+            names.append(
+                f"  - {item['canonical_name']}: {item.get('display_name', '')}{aliases_str}"
+            )
         lines.append(f"{category_display}:")
         lines.extend(names)
     return "\n".join(lines)
@@ -123,23 +128,24 @@ class EnhancedMappingStage(ExtractionStage):
                 vc = item_copy.pop("validation_context", None)
                 if vc and vc.get("validation_failed"):
                     item_copy["original_label"] = (
-                        f"{item_copy['original_label']} "
-                        f"[VALIDATION FAILED: {vc['failed_rule']}]"
+                        f"{item_copy['original_label']} [VALIDATION FAILED: {vc['failed_rule']}]"
                     )
                 items_for_prompt.append(item_copy)
 
             response = get_claude_client().messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=8192,
-                messages=[{
-                    "role": "user",
-                    "content": get_prompt("enhanced_mapping").render(
-                        items_to_remap=json.dumps(items_for_prompt, indent=2),
-                        taxonomy=taxonomy_str,
-                        entity_context=entity_context,
-                        hierarchy_context=json.dumps(hierarchy_context, indent=2),
-                    ),
-                }],
+                messages=[
+                    {
+                        "role": "user",
+                        "content": get_prompt("enhanced_mapping").render(
+                            items_to_remap=json.dumps(items_for_prompt, indent=2),
+                            taxonomy=taxonomy_str,
+                            entity_context=entity_context,
+                            hierarchy_context=json.dumps(hierarchy_context, indent=2),
+                        ),
+                    }
+                ],
             )
 
             # Check for truncation — incomplete JSON causes silent data loss
@@ -224,10 +230,14 @@ class EnhancedMappingStage(ExtractionStage):
                     "candidates": len(items_to_remap),
                     "remapped": remapped_count,
                     "avg_confidence_before": round(
-                        sum(m.get("confidence", 0) for m in items_to_remap) / max(len(items_to_remap), 1), 3
+                        sum(m.get("confidence", 0) for m in items_to_remap)
+                        / max(len(items_to_remap), 1),
+                        3,
                     ),
                     "avg_confidence_after": round(
-                        sum(m.get("confidence", 0) for m in final_mappings) / max(len(final_mappings), 1), 3
+                        sum(m.get("confidence", 0) for m in final_mappings)
+                        / max(len(final_mappings), 1),
+                        3,
                     ),
                 },
             }
@@ -236,14 +246,16 @@ class EnhancedMappingStage(ExtractionStage):
             retry_after = getattr(e.response, "headers", {}).get("retry-after")
             logger.warning(f"Stage 5: Rate limit hit (retry-after={retry_after})")
             raise RateLimitError(
-                "Rate limit exceeded", stage="enhanced_mapping",
+                "Rate limit exceeded",
+                stage="enhanced_mapping",
                 retry_after=int(retry_after) if retry_after else None,
             )
 
         except anthropic.APIError as e:
             logger.error(f"Stage 5: Claude API error - {str(e)}")
             raise ClaudeAPIError(
-                str(e), stage="enhanced_mapping",
+                str(e),
+                stage="enhanced_mapping",
                 status_code=getattr(e, "status_code", None),
             )
 
@@ -297,9 +309,7 @@ class EnhancedMappingStage(ExtractionStage):
                     seen_labels.add(label)
         return candidates
 
-    def _build_entity_context(
-        self, context: PipelineContext, mappings: List[Dict]
-    ) -> str:
+    def _build_entity_context(self, context: PipelineContext, mappings: List[Dict]) -> str:
         """Build entity context string from DB patterns + current high-confidence mappings."""
         patterns = []
 
@@ -307,9 +317,10 @@ class EnhancedMappingStage(ExtractionStage):
         entity_id = getattr(context, "entity_id", None)
         if entity_id:
             try:
-                from src.db.session import get_db_sync
-                from src.db import crud
                 from uuid import UUID
+
+                from src.db import crud
+                from src.db.session import get_db_sync
 
                 with get_db_sync() as db:
                     db_patterns = crud.get_entity_patterns(
@@ -338,14 +349,11 @@ class EnhancedMappingStage(ExtractionStage):
         if not patterns:
             return "No entity-specific patterns available."
 
-        return (
-            f"Known patterns from this entity (high-confidence mappings):\n"
-            + "\n".join(patterns[:20])
+        return "Known patterns from this entity (high-confidence mappings):\n" + "\n".join(
+            patterns[:20]
         )
 
-    def _persist_entity_patterns(
-        self, context: PipelineContext, final_mappings: List[Dict]
-    ) -> int:
+    def _persist_entity_patterns(self, context: PipelineContext, final_mappings: List[Dict]) -> int:
         """Persist high-confidence mappings as entity patterns for future use.
 
         Also resolves pattern conflicts (deactivates losing patterns) and
@@ -356,9 +364,10 @@ class EnhancedMappingStage(ExtractionStage):
             return 0
 
         try:
-            from src.db.session import get_db_sync
-            from src.db import crud
             from uuid import UUID
+
+            from src.db import crud
+            from src.db.session import get_db_sync
 
             entity_uuid = UUID(context.entity_id)
 
@@ -374,9 +383,7 @@ class EnhancedMappingStage(ExtractionStage):
                 # Resolve any conflicting patterns
                 deactivated = crud.resolve_pattern_conflicts(db, entity_uuid)
                 if deactivated:
-                    logger.info(
-                        f"Stage 5: Resolved {deactivated} conflicting patterns"
-                    )
+                    logger.info(f"Stage 5: Resolved {deactivated} conflicting patterns")
 
             # Record learned aliases (separate DB session for isolation)
             self._record_learned_aliases(context, final_mappings)
@@ -387,9 +394,7 @@ class EnhancedMappingStage(ExtractionStage):
             logger.warning(f"Stage 5: Could not persist entity patterns: {e}")
             return 0
 
-    def _record_learned_aliases(
-        self, context: PipelineContext, mappings: List[Dict]
-    ) -> int:
+    def _record_learned_aliases(self, context: PipelineContext, mappings: List[Dict]) -> int:
         """Record high-confidence mappings as learned aliases if not in taxonomy.
 
         When Claude maps a label to a canonical name with >= 0.9 confidence
@@ -401,8 +406,8 @@ class EnhancedMappingStage(ExtractionStage):
             return 0
 
         try:
-            from src.db.session import get_db_sync
             from src.db import crud
+            from src.db.session import get_db_sync
 
             # Load taxonomy aliases for lookup
             taxonomy = load_taxonomy_json()
@@ -442,9 +447,7 @@ class EnhancedMappingStage(ExtractionStage):
             logger.warning(f"Stage 5: Could not record learned aliases: {e}")
             return 0
 
-    def _build_hierarchy_context(
-        self, parsed: Dict, candidates: List[Dict]
-    ) -> List[Dict]:
+    def _build_hierarchy_context(self, parsed: Dict, candidates: List[Dict]) -> List[Dict]:
         """Build hierarchy context for unmapped items (surrounding rows)."""
         candidate_labels = {c["original_label"] for c in candidates}
         context_items = []
@@ -462,24 +465,29 @@ class EnhancedMappingStage(ExtractionStage):
                             neighbors.append(neighbor.get("label", ""))
                             # Detect section headers (rows above with
                             # hierarchy_level 0 that aren't subtotals)
-                            if (j < i
-                                    and neighbor.get("hierarchy_level", 1) == 0
-                                    and not neighbor.get("is_subtotal", False)):
+                            if (
+                                j < i
+                                and neighbor.get("hierarchy_level", 1) == 0
+                                and not neighbor.get("is_subtotal", False)
+                            ):
                                 section_header = neighbor.get("label", "")
 
-                    context_items.append({
-                        "label": row.get("label"),
-                        "sheet": sheet.get("sheet_name"),
-                        "hierarchy_level": row.get("hierarchy_level", 1),
-                        "is_subtotal": row.get("is_subtotal", False),
-                        "is_formula": row.get("is_formula", False),
-                        "nearby_labels": neighbors,
-                        "section_header": section_header,
-                    })
+                    context_items.append(
+                        {
+                            "label": row.get("label"),
+                            "sheet": sheet.get("sheet_name"),
+                            "hierarchy_level": row.get("hierarchy_level", 1),
+                            "is_subtotal": row.get("is_subtotal", False),
+                            "is_formula": row.get("is_formula", False),
+                            "nearby_labels": neighbors,
+                            "section_header": section_header,
+                        }
+                    )
 
         return context_items
 
 
 # Self-register at import time
 from src.extraction.registry import registry  # noqa: E402
+
 registry.register(EnhancedMappingStage())

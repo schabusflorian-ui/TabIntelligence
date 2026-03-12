@@ -18,9 +18,8 @@ Usage:
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Any, Set
 from decimal import Decimal
-import re
+from typing import Any, Dict, List, Optional, Set
 
 from src.validation.utils import sort_periods
 
@@ -28,6 +27,7 @@ from src.validation.utils import sort_periods
 @dataclass
 class ValidationResult:
     """Result of validation check."""
+
     passed: bool
     item_name: str
     rule: str
@@ -40,6 +40,7 @@ class ValidationResult:
 @dataclass
 class ValidationSummary:
     """Summary of all validation results."""
+
     total_checks: int
     passed: int
     failed: int
@@ -81,7 +82,7 @@ class AccountingValidator:
         Args:
             taxonomy_items: List of taxonomy item dicts with validation rules
         """
-        self.taxonomy = {item['canonical_name']: item for item in taxonomy_items}
+        self.taxonomy = {item["canonical_name"]: item for item in taxonomy_items}
 
     def _normalize_percentages(self, data: Dict[str, Decimal]) -> Dict[str, Decimal]:
         """Normalize percentage fields from 0-100 scale to 0-1 decimal scale.
@@ -119,21 +120,17 @@ class AccountingValidator:
                 continue  # Skip items not in extracted data
 
             value = data[canonical_name]
-            validation_rules = item.get('validation_rules', {})
-            cross_val = validation_rules.get('cross_item_validation', {})
+            validation_rules = item.get("validation_rules", {})
+            cross_val = validation_rules.get("cross_item_validation", {})
 
             # Check must_be_positive
-            if cross_val.get('must_be_positive'):
+            if cross_val.get("must_be_positive"):
                 result = self._check_positive(canonical_name, value)
                 results.append(result)
 
             # Check cross-item relationships
-            for relationship in cross_val.get('relationships', []):
-                rel_result = self._check_relationship(
-                    canonical_name,
-                    relationship,
-                    data
-                )
+            for relationship in cross_val.get("relationships", []):
+                rel_result = self._check_relationship(canonical_name, relationship, data)
                 if rel_result:
                     results.append(rel_result)
 
@@ -141,8 +138,8 @@ class AccountingValidator:
             # TODO: Implement when historical data is available
 
         # Compile summary
-        errors = [r for r in results if r.severity == 'error' and not r.passed]
-        warnings = [r for r in results if r.severity == 'warning' and not r.passed]
+        errors = [r for r in results if r.severity == "error" and not r.passed]
+        warnings = [r for r in results if r.severity == "warning" and not r.passed]
         passed_count = sum(1 for r in results if r.passed)
 
         return ValidationSummary(
@@ -152,7 +149,7 @@ class AccountingValidator:
             warnings=len(warnings),
             errors=errors,
             warnings_list=warnings,
-            all_results=results
+            all_results=results,
         )
 
     def _check_positive(self, item_name: str, value: Decimal) -> ValidationResult:
@@ -163,16 +160,13 @@ class AccountingValidator:
             item_name=item_name,
             rule="must_be_positive",
             message=f"{item_name} must be positive, got {value}",
-            severity='error',
+            severity="error",
             actual_value=value,
-            expected_value="positive"
+            expected_value="positive",
         )
 
     def _check_relationship(
-        self,
-        item_name: str,
-        relationship: Dict,
-        data: Dict[str, Decimal]
+        self, item_name: str, relationship: Dict, data: Dict[str, Decimal]
     ) -> Optional[ValidationResult]:
         """
         Check cross-item relationship.
@@ -185,12 +179,12 @@ class AccountingValidator:
         Returns:
             ValidationResult or None if check can't be performed
         """
-        rule_str = relationship['rule']
-        tolerance = relationship.get('tolerance', 0.0)
-        error_message = relationship.get('error_message', f"Violated: {rule_str}")
-        is_warning = relationship.get('warning_only', False)
-        is_optional = relationship.get('optional', False)
-        is_critical = relationship.get('critical', False)
+        rule_str = relationship["rule"]
+        tolerance = relationship.get("tolerance", 0.0)
+        error_message = relationship.get("error_message", f"Violated: {rule_str}")
+        is_warning = relationship.get("warning_only", False)
+        is_optional = relationship.get("optional", False)
+        is_critical = relationship.get("critical", False)
 
         # Parse rule and evaluate
         try:
@@ -200,11 +194,11 @@ class AccountingValidator:
             if is_optional and actual is None:
                 return None
 
-            severity = 'error'
+            severity = "error"
             if is_warning:
-                severity = 'warning'
+                severity = "warning"
             elif is_critical:
-                severity = 'error'
+                severity = "error"
 
             return ValidationResult(
                 passed=passed,
@@ -213,7 +207,7 @@ class AccountingValidator:
                 message=error_message if not passed else f"✓ {rule_str}",
                 severity=severity,
                 actual_value=actual,
-                expected_value=expected
+                expected_value=expected,
             )
 
         except Exception as e:
@@ -226,16 +220,13 @@ class AccountingValidator:
                 item_name=item_name,
                 rule=rule_str,
                 message=f"Could not evaluate rule: {str(e)}",
-                severity='warning',
+                severity="warning",
                 actual_value=None,
-                expected_value=None
+                expected_value=None,
             )
 
     def _evaluate_rule(
-        self,
-        rule_str: str,
-        data: Dict[str, Decimal],
-        tolerance: float = 0.0
+        self, rule_str: str, data: Dict[str, Decimal], tolerance: float = 0.0
     ) -> tuple[bool, Optional[Decimal], Optional[Decimal]]:
         """
         Evaluate a validation rule.
@@ -249,8 +240,8 @@ class AccountingValidator:
             (passed, actual_value, expected_value)
         """
         # Handle equality checks with derivations
-        if '==' in rule_str:
-            left, right = rule_str.split('==')
+        if "==" in rule_str:
+            left, right = rule_str.split("==")
             left_name = left.strip()
             left_val = self._eval_expression(left_name, data)
             right_val = self._eval_expression(right.strip(), data)
@@ -260,9 +251,7 @@ class AccountingValidator:
 
             # Percentage items use absolute difference; others use relative
             item_meta = self.taxonomy.get(left_name, {})
-            is_percentage = (
-                item_meta.get("validation_rules", {}).get("type") == "percentage"
-            )
+            is_percentage = item_meta.get("validation_rules", {}).get("type") == "percentage"
 
             if is_percentage:
                 diff = abs(float(left_val - right_val))
@@ -275,8 +264,8 @@ class AccountingValidator:
             return (passed, left_val, right_val)
 
         # Handle >= comparisons
-        elif '>=' in rule_str:
-            left, right = rule_str.split('>=')
+        elif ">=" in rule_str:
+            left, right = rule_str.split(">=")
             left_val = self._eval_expression(left.strip(), data)
             right_val = self._eval_expression(right.strip(), data)
 
@@ -288,8 +277,8 @@ class AccountingValidator:
 
         # Handle range checks FIRST (e.g., "0 <= gross_margin <= 1")
         # Must come before simple <= to avoid misparse on 3-part split
-        elif rule_str.count('<=') == 2:
-            parts = rule_str.split('<=')
+        elif rule_str.count("<=") == 2:
+            parts = rule_str.split("<=")
             if len(parts) == 3:
                 lower = self._eval_expression(parts[0].strip(), data)
                 value = self._eval_expression(parts[1].strip(), data)
@@ -298,12 +287,14 @@ class AccountingValidator:
                 if value is None:
                     return (True, None, None)
 
-                passed = lower <= value <= upper if lower is not None and upper is not None else True
+                passed = (
+                    lower <= value <= upper if lower is not None and upper is not None else True
+                )
                 return (passed, value, f"{lower} to {upper}")  # type: ignore[return-value]
 
         # Handle simple <= comparisons (single operator)
-        elif '<=' in rule_str:
-            left, right = rule_str.split('<=')
+        elif "<=" in rule_str:
+            left, right = rule_str.split("<=")
             left_val = self._eval_expression(left.strip(), data)
             right_val = self._eval_expression(right.strip(), data)
 
@@ -315,11 +306,7 @@ class AccountingValidator:
 
         raise ValueError(f"Unsupported rule format: {rule_str}")
 
-    def _eval_expression(
-        self,
-        expr: str,
-        data: Dict[str, Decimal]
-    ) -> Optional[Decimal]:
+    def _eval_expression(self, expr: str, data: Dict[str, Decimal]) -> Optional[Decimal]:
         """
         Evaluate a simple mathematical expression.
 
@@ -349,15 +336,15 @@ class AccountingValidator:
             return data[expr]
 
         # Addition/subtraction
-        if '+' in expr or '-' in expr:
+        if "+" in expr or "-" in expr:
             # Parse left and right (simple case, no nested operations)
-            if '+' in expr:
-                parts = expr.split('+')
-                operator = '+'
+            if "+" in expr:
+                parts = expr.split("+")
+                operator = "+"
             else:
                 # Handle subtraction (be careful with negative numbers)
-                parts = expr.split('-')
-                operator = '-'
+                parts = expr.split("-")
+                operator = "-"
 
             if len(parts) == 2:
                 left = self._eval_expression(parts[0].strip(), data)
@@ -366,14 +353,14 @@ class AccountingValidator:
                 if left is None or right is None:
                     return None
 
-                if operator == '+':
+                if operator == "+":
                     return left + right
                 else:
                     return left - right
 
         # Multiplication/division
-        if '*' in expr:
-            parts = expr.split('*')
+        if "*" in expr:
+            parts = expr.split("*")
             if len(parts) == 2:
                 left = self._eval_expression(parts[0].strip(), data)
                 right = self._eval_expression(parts[1].strip(), data)
@@ -381,8 +368,8 @@ class AccountingValidator:
                     return None
                 return left * right
 
-        if '/' in expr:
-            parts = expr.split('/')
+        if "/" in expr:
+            parts = expr.split("/")
             if len(parts) == 2:
                 left = self._eval_expression(parts[0].strip(), data)
                 right = self._eval_expression(parts[1].strip(), data)
@@ -398,7 +385,8 @@ class AccountingValidator:
     # ------------------------------------------------------------------
 
     def validate_sign_conventions(
-        self, data: Dict[str, Decimal],
+        self,
+        data: Dict[str, Decimal],
     ) -> List[ValidationResult]:
         """Check extracted values against typical_sign from taxonomy.
 
@@ -427,15 +415,17 @@ class AccountingValidator:
                 violation = True
                 msg = f"{canonical_name} is positive ({value}) but typically negative"
 
-            results.append(ValidationResult(
-                passed=not violation,
-                item_name=canonical_name,
-                rule="sign_convention",
-                message=msg if violation else f"✓ {canonical_name} sign OK",
-                severity="warning",
-                actual_value=value,
-                expected_value=typical_sign,
-            ))
+            results.append(
+                ValidationResult(
+                    passed=not violation,
+                    item_name=canonical_name,
+                    rule="sign_convention",
+                    message=msg if violation else f"✓ {canonical_name} sign OK",
+                    severity="warning",
+                    actual_value=value,
+                    expected_value=typical_sign,
+                )
+            )
 
         return results
 
@@ -447,9 +437,16 @@ class AccountingValidator:
 
     # Debt components to sum for total_debt reconciliation
     _DEBT_COMPONENTS: Set[str] = {
-        "senior_debt", "subordinated_debt", "term_loan_a", "term_loan_b",
-        "bonds_payable", "notes_payable", "revolver_balance",
-        "revolving_credit", "long_term_debt", "short_term_debt",
+        "senior_debt",
+        "subordinated_debt",
+        "term_loan_a",
+        "term_loan_b",
+        "bonds_payable",
+        "notes_payable",
+        "revolver_balance",
+        "revolving_credit",
+        "long_term_debt",
+        "short_term_debt",
     }
 
     def validate_cross_statement(
@@ -466,10 +463,7 @@ class AccountingValidator:
 
         for idx, period in enumerate(sorted_periods):
             data = multi_period_data.get(period, {})
-            prev_data = (
-                multi_period_data.get(sorted_periods[idx - 1], {})
-                if idx > 0 else {}
-            )
+            prev_data = multi_period_data.get(sorted_periods[idx - 1], {}) if idx > 0 else {}
 
             # 1. cash (BS) ≈ ending_cash (CF)
             r = self._check_cash_bs_cf(period, data)
@@ -499,7 +493,9 @@ class AccountingValidator:
         return results
 
     def _check_cash_bs_cf(
-        self, period: str, data: Dict[str, Decimal],
+        self,
+        period: str,
+        data: Dict[str, Decimal],
     ) -> Optional[ValidationResult]:
         """cash (BS) ≈ ending_cash (CF)."""
         cash = data.get("cash")
@@ -507,7 +503,7 @@ class AccountingValidator:
         if cash is None or ending_cash is None:
             return None
 
-        divisor = float(max(abs(cash), abs(ending_cash), 1))
+        divisor = float(max(abs(cash), abs(ending_cash), 1))  # type: ignore[arg-type]
         diff_pct = abs(float(cash - ending_cash)) / divisor
         passed = diff_pct <= self.CROSS_STATEMENT_TOLERANCE
 
@@ -516,8 +512,11 @@ class AccountingValidator:
             item_name="cash",
             rule="cross_statement:cash_bs_cf",
             message=(
-                f"✓ cash (BS) matches ending_cash (CF)" if passed
-                else f"cash (BS) = {cash} differs from ending_cash (CF) = {ending_cash} in period {period}"
+                "✓ cash (BS) matches ending_cash (CF)"
+                if passed
+                else f"cash (BS) = {cash} differs from"
+                f" ending_cash (CF) = {ending_cash}"
+                f" in period {period}"
             ),
             severity="warning",
             actual_value=cash,
@@ -539,7 +538,7 @@ class AccountingValidator:
             return None
 
         re_change = re_curr - re_prev
-        divisor = float(max(abs(re_change), abs(net_income), 1))
+        divisor = float(max(abs(re_change), abs(net_income), 1))  # type: ignore[arg-type]
         diff_pct = abs(float(re_change - net_income)) / divisor
         passed = diff_pct <= self.CROSS_STATEMENT_TOLERANCE
 
@@ -548,8 +547,11 @@ class AccountingValidator:
             item_name="retained_earnings",
             rule="cross_statement:retained_earnings_ni",
             message=(
-                f"✓ retained_earnings change matches net_income" if passed
-                else f"retained_earnings change ({re_change}) differs from net_income ({net_income}) in period {period}"
+                "✓ retained_earnings change matches net_income"
+                if passed
+                else f"retained_earnings change ({re_change})"
+                f" differs from net_income ({net_income})"
+                f" in period {period}"
             ),
             severity="warning",
             actual_value=re_change,
@@ -557,7 +559,9 @@ class AccountingValidator:
         )
 
     def _check_total_debt_schedule(
-        self, period: str, data: Dict[str, Decimal],
+        self,
+        period: str,
+        data: Dict[str, Decimal],
     ) -> Optional[ValidationResult]:
         """total_debt (BS) ≈ sum of debt schedule components."""
         total_debt = data.get("total_debt")
@@ -577,7 +581,7 @@ class AccountingValidator:
         if len(components_found) < 2:
             return None
 
-        divisor = float(max(abs(total_debt), abs(debt_sum), 1))
+        divisor = float(max(abs(total_debt), abs(debt_sum), 1))  # type: ignore[arg-type]
         diff_pct = abs(float(total_debt - debt_sum)) / divisor
         passed = diff_pct <= self.CROSS_STATEMENT_TOLERANCE
 
@@ -586,8 +590,11 @@ class AccountingValidator:
             item_name="total_debt",
             rule="cross_statement:total_debt_schedule",
             message=(
-                f"✓ total_debt matches sum of debt components" if passed
-                else f"total_debt ({total_debt}) differs from sum of components ({debt_sum}) in period {period}"
+                "✓ total_debt matches sum of debt components"
+                if passed
+                else f"total_debt ({total_debt}) differs from"
+                f" sum of components ({debt_sum})"
+                f" in period {period}"
             ),
             severity="warning",
             actual_value=total_debt,
@@ -595,7 +602,9 @@ class AccountingValidator:
         )
 
     def _check_depreciation_is_cf(
-        self, period: str, data: Dict[str, Decimal],
+        self,
+        period: str,
+        data: Dict[str, Decimal],
     ) -> Optional[ValidationResult]:
         """depreciation_and_amortization (IS) ≈ depreciation_cf (CF)."""
         da_is = data.get("depreciation_and_amortization")
@@ -607,7 +616,7 @@ class AccountingValidator:
         # Compare absolute values (signs may differ between IS and CF)
         abs_is = abs(da_is)
         abs_cf = abs(da_cf)
-        divisor = float(max(abs_is, abs_cf, 1))
+        divisor = float(max(abs_is, abs_cf, 1))  # type: ignore[arg-type]
         diff_pct = abs(float(abs_is - abs_cf)) / divisor
         passed = diff_pct <= self.CROSS_STATEMENT_TOLERANCE
 
@@ -616,8 +625,11 @@ class AccountingValidator:
             item_name="depreciation_and_amortization",
             rule="cross_statement:depreciation_is_cf",
             message=(
-                f"✓ D&A (IS) matches depreciation_cf (CF)" if passed
-                else f"D&A (IS) = {da_is} differs from depreciation_cf (CF) = {da_cf} in period {period}"
+                "✓ D&A (IS) matches depreciation_cf (CF)"
+                if passed
+                else f"D&A (IS) = {da_is} differs from"
+                f" depreciation_cf (CF) = {da_cf}"
+                f" in period {period}"
             ),
             severity="warning",
             actual_value=da_is,
@@ -649,7 +661,7 @@ class AccountingValidator:
         implied_capex = ppe_change + abs(depreciation)
         actual_capex = abs(capex)
 
-        divisor = float(max(actual_capex, abs(implied_capex), 1))
+        divisor = float(max(actual_capex, abs(implied_capex), 1))  # type: ignore[arg-type]
         diff_pct = abs(float(actual_capex - implied_capex)) / divisor
         wider_tolerance = 0.10  # 10% for capex/PPE reconciliation
         passed = diff_pct <= wider_tolerance
@@ -659,11 +671,13 @@ class AccountingValidator:
             item_name="capex",
             rule="cross_statement:capex_ppe_change",
             message=(
-                f"✓ capex correlates with PPE change" if passed
-                else f"capex ({capex}) inconsistent with PPE change + depreciation ({implied_capex}) in period {period}"
+                "✓ capex correlates with PPE change"
+                if passed
+                else f"capex ({capex}) inconsistent with"
+                f" PPE change + depreciation"
+                f" ({implied_capex}) in period {period}"
             ),
             severity="warning",
             actual_value=capex,
             expected_value=implied_capex,
         )
-
