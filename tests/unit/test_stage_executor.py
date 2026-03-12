@@ -1,17 +1,18 @@
 """Tests for StageExecutor and ResilientProgressCallback."""
+
 import asyncio
+from unittest.mock import MagicMock, patch
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 from src.core.exceptions import ClaudeAPIError, ExtractionError, RateLimitError
 from src.extraction.base import ExtractionStage, PipelineContext
 from src.extraction.stage_executor import ResilientProgressCallback, StageExecutor
 
-
 # ---------------------------------------------------------------------------
 # Helpers: concrete stage subclass for testing
 # ---------------------------------------------------------------------------
+
 
 class FakeStage(ExtractionStage):
     """Minimal concrete stage for testing."""
@@ -95,6 +96,7 @@ class TestStageExecutor:
 
         assert result is cached
 
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_retries_on_extraction_error(self):
         """Should retry on ExtractionError and succeed on later attempt."""
@@ -117,6 +119,7 @@ class TestStageExecutor:
         assert call_count == 3
         assert result["tokens"] == 0
 
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_retries_on_claude_api_error(self):
         """Should retry on ClaudeAPIError."""
@@ -134,10 +137,11 @@ class TestStageExecutor:
         ctx = _make_context()
         executor = StageExecutor()
 
-        result = await executor.execute(stage, ctx)
+        await executor.execute(stage, ctx)
 
         assert call_count == 2
 
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_retries_on_rate_limit_error(self):
         """Should retry on RateLimitError."""
@@ -155,7 +159,7 @@ class TestStageExecutor:
         ctx = _make_context()
         executor = StageExecutor()
 
-        result = await executor.execute(stage, ctx)
+        await executor.execute(stage, ctx)
 
         assert call_count == 2
 
@@ -179,6 +183,7 @@ class TestStageExecutor:
 
         assert call_count == 1
 
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_raises_after_max_retries(self):
         """Should raise after exhausting all retries."""
@@ -194,6 +199,7 @@ class TestStageExecutor:
         with pytest.raises(ExtractionError, match="permanent"):
             await executor.execute(stage, ctx)
 
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_timeout_triggers_retry(self):
         """Should retry when stage times out."""
@@ -216,6 +222,7 @@ class TestStageExecutor:
         assert call_count == 2
         assert result["tokens"] == 0
 
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_timeout_raises_extraction_error_after_retries(self):
         """Should raise ExtractionError after all timeout retries exhausted."""
@@ -481,15 +488,16 @@ class TestBackoffJitter:
         executor = StageExecutor()
 
         sleep_args = []
-        original_sleep = asyncio.sleep
 
         async def mock_sleep(seconds):
             sleep_args.append(seconds)
             # Don't actually sleep
 
-        with patch("src.extraction.stage_executor.asyncio.sleep", mock_sleep), \
-             patch("src.extraction.stage_executor.random.uniform", return_value=0.42):
-            result = await executor.execute(stage, ctx)
+        with (
+            patch("src.extraction.stage_executor.asyncio.sleep", mock_sleep),
+            patch("src.extraction.stage_executor.random.uniform", return_value=0.42),
+        ):
+            await executor.execute(stage, ctx)
 
         assert call_count == 2
         # Backoff = 2^(1-1) + 0.42 = 1.42
@@ -518,9 +526,11 @@ class TestBackoffJitter:
                 raise asyncio.TimeoutError()
             return await original_wait_for(coro, timeout=timeout)
 
-        with patch("src.extraction.stage_executor.asyncio.wait_for", mock_wait_for), \
-             patch("src.extraction.stage_executor.asyncio.sleep", mock_sleep), \
-             patch("src.extraction.stage_executor.random.uniform", return_value=0.77):
+        with (
+            patch("src.extraction.stage_executor.asyncio.wait_for", mock_wait_for),
+            patch("src.extraction.stage_executor.asyncio.sleep", mock_sleep),
+            patch("src.extraction.stage_executor.random.uniform", return_value=0.77),
+        ):
             result = await executor.execute(stage, ctx)
 
         assert result["tokens"] == 100
@@ -540,6 +550,7 @@ class TestOutputValidation:
     @pytest.mark.asyncio
     async def test_valid_output_passes(self):
         """Stage with passing validate_output should succeed normally."""
+
         class ValidStage(FakeStage):
             def validate_output(self, result):
                 return None  # Valid
@@ -550,6 +561,7 @@ class TestOutputValidation:
         result = await executor.execute(stage, ctx)
         assert result["tokens"] == 100
 
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_invalid_output_triggers_retry(self):
         """Stage with failing validate_output should retry."""
@@ -577,6 +589,7 @@ class TestOutputValidation:
         assert call_count == 2
         assert result["parsed"]["sheets"]
 
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_invalid_output_exhausts_retries(self):
         """Always-invalid output should exhaust retries and raise."""
@@ -658,9 +671,7 @@ class TestRetryAfterBackoff:
                 nonlocal call_count
                 call_count += 1
                 if call_count < 2:
-                    raise RateLimitError(
-                        "Rate limit", stage="fake", retry_after=30
-                    )
+                    raise RateLimitError("Rate limit", stage="fake", retry_after=30)
                 return {"tokens": 0}
 
         stage = RateLimitStage(max_retries=2)
@@ -672,8 +683,10 @@ class TestRetryAfterBackoff:
         async def mock_sleep(seconds):
             sleep_args.append(seconds)
 
-        with patch("src.extraction.stage_executor.asyncio.sleep", mock_sleep), \
-             patch("src.extraction.stage_executor.random.uniform", return_value=0.5):
+        with (
+            patch("src.extraction.stage_executor.asyncio.sleep", mock_sleep),
+            patch("src.extraction.stage_executor.random.uniform", return_value=0.5),
+        ):
             await executor.execute(stage, ctx)
 
         # Should use retry_after (30) + jitter (0.5) = 30.5
@@ -702,8 +715,10 @@ class TestRetryAfterBackoff:
         async def mock_sleep(seconds):
             sleep_args.append(seconds)
 
-        with patch("src.extraction.stage_executor.asyncio.sleep", mock_sleep), \
-             patch("src.extraction.stage_executor.random.uniform", return_value=0.42):
+        with (
+            patch("src.extraction.stage_executor.asyncio.sleep", mock_sleep),
+            patch("src.extraction.stage_executor.random.uniform", return_value=0.42),
+        ):
             await executor.execute(stage, ctx)
 
         # Should use 2^0 + 0.42 = 1.42 (exponential backoff)

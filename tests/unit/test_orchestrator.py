@@ -2,16 +2,17 @@
 Unit tests for the extraction orchestrator.
 Tests the 3-stage pipeline: Parse, Triage, Map.
 """
+
+from unittest.mock import MagicMock, patch
+
 import pytest
-import json
-from unittest.mock import MagicMock, patch, AsyncMock
 
 from src.extraction.orchestrator import (
-    extract,
     ExtractionResult,
-    _compute_ts_consistency,
     _compute_quality,
+    _compute_ts_consistency,
     _post_stage5_revalidation,
+    extract,
 )
 from src.extraction.registry import registry
 from src.extraction.utils import extract_json
@@ -116,12 +117,12 @@ def test_extract_json_handles_plain_json():
 
 def test_extract_json_handles_markdown_code_blocks():
     """Test JSON extraction from markdown code blocks."""
-    markdown_json = '''```json
+    markdown_json = """```json
 {
     "key": "value",
     "number": 42
 }
-```'''
+```"""
     result = extract_json(markdown_json)
 
     assert result == {"key": "value", "number": 42}
@@ -129,9 +130,9 @@ def test_extract_json_handles_markdown_code_blocks():
 
 def test_extract_json_handles_generic_code_blocks():
     """Test JSON extraction from generic code blocks."""
-    generic_code = '''```
+    generic_code = """```
 {"key": "value"}
-```'''
+```"""
     result = extract_json(generic_code)
 
     assert result == {"key": "value"}
@@ -172,8 +173,9 @@ async def test_progress_callback_called_after_each_stage(mock_anthropic, sample_
     """Test that progress_callback is called after each stage completes."""
     callback = MagicMock()
 
-    result = await extract(
-        sample_xlsx, file_id="test-progress",
+    await extract(
+        sample_xlsx,
+        file_id="test-progress",
         progress_callback=callback,
     )
 
@@ -201,7 +203,8 @@ async def test_progress_callback_failure_does_not_abort_pipeline(mock_anthropic,
 
     # Pipeline should still complete even though callback raises
     result = await extract(
-        sample_xlsx, file_id="test-callback-fail",
+        sample_xlsx,
+        file_id="test-callback-fail",
         progress_callback=callback,
     )
 
@@ -219,11 +222,12 @@ async def test_no_progress_callback_by_default(mock_anthropic, sample_xlsx):
     assert result["file_id"] == "test-no-callback"
 
 
+@pytest.mark.slow
 @pytest.mark.asyncio
 async def test_partial_lineage_saved_on_stage_failure(mock_anthropic, sample_xlsx):
     """Test that lineage events from completed stages are saved when a later stage fails."""
-    from src.lineage.tracker import LineageTracker
     from src.core.exceptions import ExtractionError
+    from src.lineage.tracker import LineageTracker
 
     # Track whether save_to_db was called and with how many events
     save_calls = []
@@ -315,7 +319,7 @@ async def test_validation_skipped_when_no_tier_1_2(mock_anthropic, sample_xlsx):
 
     with patch.object(TriageStage, "execute", triage_all_tier_3):
         with patch.object(ValidationStage, "execute", track_validation):
-            result = await extract(sample_xlsx, file_id="test-skip-validation")
+            await extract(sample_xlsx, file_id="test-skip-validation")
 
     # Validation should_skip returns True when no tier 1-2 sheets
     assert not validation_called
@@ -324,8 +328,8 @@ async def test_validation_skipped_when_no_tier_1_2(mock_anthropic, sample_xlsx):
 @pytest.mark.asyncio
 async def test_pipeline_aborts_early_when_all_tier_4(mock_anthropic, sample_xlsx):
     """Pipeline should abort after triage when all sheets are tier 4."""
-    from src.extraction.stages.triage import TriageStage
     from src.extraction.stages.mapping import MappingStage
+    from src.extraction.stages.triage import TriageStage
 
     original_triage_execute = TriageStage.execute
 
@@ -491,8 +495,16 @@ class TestComputeQuality:
     def test_high_quality_result(self):
         """Well-mapped items with good validation -> grade A."""
         line_items = [
-            {"canonical_name": "revenue", "confidence": 0.95, "values": {"FY2023": 100, "FY2024": 110}},
-            {"canonical_name": "ebitda", "confidence": 0.90, "values": {"FY2023": 40, "FY2024": 45}},
+            {
+                "canonical_name": "revenue",
+                "confidence": 0.95,
+                "values": {"FY2023": 100, "FY2024": 110},
+            },
+            {
+                "canonical_name": "ebitda",
+                "confidence": 0.90,
+                "values": {"FY2023": 40, "FY2024": 45},
+            },
         ]
         validation_result = {
             "validation": {"overall_confidence": 0.95, "flags": []},
@@ -587,8 +599,16 @@ class TestQualityGate:
     def test_quality_gate_pass_grade_b(self):
         """Grade B extraction should pass the quality gate."""
         line_items = [
-            {"canonical_name": "revenue", "confidence": 0.85, "values": {"FY2023": 100, "FY2024": 110}},
-            {"canonical_name": "ebitda", "confidence": 0.80, "values": {"FY2023": 40, "FY2024": 45}},
+            {
+                "canonical_name": "revenue",
+                "confidence": 0.85,
+                "values": {"FY2023": 100, "FY2024": 110},
+            },
+            {
+                "canonical_name": "ebitda",
+                "confidence": 0.80,
+                "values": {"FY2023": 40, "FY2024": 45},
+            },
         ]
         validation_result = {
             "validation": {"overall_confidence": 0.80, "flags": []},
@@ -644,38 +664,55 @@ class TestPostStage5Revalidation:
             job_id="test-job",
         )
         # Set up minimal stage results
-        context.set_result("parsing", {
-            "parsed": {
-                "sheets": [{
-                    "sheet_name": "IS",
-                    "rows": [
-                        {"label": "Revenue", "values": {"FY2023": "1000"}},
-                        {"label": "COGS", "values": {"FY2023": "400"}},
-                        {"label": "GP", "values": {"FY2023": "600"}},
+        context.set_result(
+            "parsing",
+            {
+                "parsed": {
+                    "sheets": [
+                        {
+                            "sheet_name": "IS",
+                            "rows": [
+                                {"label": "Revenue", "values": {"FY2023": "1000"}},
+                                {"label": "COGS", "values": {"FY2023": "400"}},
+                                {"label": "GP", "values": {"FY2023": "600"}},
+                            ],
+                        }
                     ],
-                }],
+                },
             },
-        })
-        context.set_result("triage", {
-            "triage": [{"sheet_name": "IS", "tier": 1}],
-        })
-        context.set_result("validation", {
-            "validation": {"overall_confidence": 0.7, "flags": []},
-        })
-        context.set_result("mapping", {
-            "mappings": [
-                {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.9},
-                {"original_label": "COGS", "canonical_name": "cogs", "confidence": 0.85},
-                {"original_label": "GP", "canonical_name": "gross_profit", "confidence": 0.8},
-            ],
-        })
-        context.set_result("enhanced_mapping", {
-            "enhanced_mappings": [
-                {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95},
-                {"original_label": "COGS", "canonical_name": "cogs", "confidence": 0.9},
-                {"original_label": "GP", "canonical_name": "gross_profit", "confidence": 0.85},
-            ],
-        })
+        )
+        context.set_result(
+            "triage",
+            {
+                "triage": [{"sheet_name": "IS", "tier": 1}],
+            },
+        )
+        context.set_result(
+            "validation",
+            {
+                "validation": {"overall_confidence": 0.7, "flags": []},
+            },
+        )
+        context.set_result(
+            "mapping",
+            {
+                "mappings": [
+                    {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.9},
+                    {"original_label": "COGS", "canonical_name": "cogs", "confidence": 0.85},
+                    {"original_label": "GP", "canonical_name": "gross_profit", "confidence": 0.8},
+                ],
+            },
+        )
+        context.set_result(
+            "enhanced_mapping",
+            {
+                "enhanced_mappings": [
+                    {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95},
+                    {"original_label": "COGS", "canonical_name": "cogs", "confidence": 0.9},
+                    {"original_label": "GP", "canonical_name": "gross_profit", "confidence": 0.85},
+                ],
+            },
+        )
 
         delta = _post_stage5_revalidation(context)
         assert delta is not None
@@ -694,13 +731,19 @@ class TestPostStage5Revalidation:
             file_id="test-file",
             job_id="test-job",
         )
-        context.set_result("parsing", {
-            "parsed": {"sheets": []},
-        })
+        context.set_result(
+            "parsing",
+            {
+                "parsed": {"sheets": []},
+            },
+        )
         context.set_result("triage", {"triage": []})
-        context.set_result("validation", {
-            "validation": {"overall_confidence": 0.5},
-        })
+        context.set_result(
+            "validation",
+            {
+                "validation": {"overall_confidence": 0.5},
+            },
+        )
         context.set_result("mapping", {"mappings": []})
         context.set_result("enhanced_mapping", {"enhanced_mappings": []})
 
@@ -783,13 +826,19 @@ class TestPostStage5EdgeCases:
             file_id="test-file",
             job_id="test-job",
         )
-        context.set_result("parsing", {
-            "parsed": {"sheets": sheets},
-        })
+        context.set_result(
+            "parsing",
+            {
+                "parsed": {"sheets": sheets},
+            },
+        )
         context.set_result("triage", {"triage": triage})
-        context.set_result("validation", {
-            "validation": {"overall_confidence": validation_conf, "flags": []},
-        })
+        context.set_result(
+            "validation",
+            {
+                "validation": {"overall_confidence": validation_conf, "flags": []},
+            },
+        )
         context.set_result("mapping", {"mappings": mappings})
         context.set_result("enhanced_mapping", {"enhanced_mappings": mappings})
         return context
@@ -797,12 +846,14 @@ class TestPostStage5EdgeCases:
     def test_revalidation_logs_non_numeric(self):
         """Non-numeric values should be logged at debug level, not silently dropped."""
         context = self._make_context(
-            sheets=[{
-                "sheet_name": "IS",
-                "rows": [
-                    {"label": "Revenue", "values": {"FY2023": "not-a-number"}},
-                ],
-            }],
+            sheets=[
+                {
+                    "sheet_name": "IS",
+                    "rows": [
+                        {"label": "Revenue", "values": {"FY2023": "not-a-number"}},
+                    ],
+                }
+            ],
             triage=[{"sheet_name": "IS", "tier": 1}],
             mappings=[
                 {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.9},
@@ -895,6 +946,7 @@ class TestQualityGateThreshold:
     def test_custom_threshold_blocks_d_and_below(self):
         """When threshold is D, grades D and F should fail the gate."""
         from src.extraction.orchestrator import _GRADE_RANKS
+
         min_grade = "D"
         min_grade_rank = _GRADE_RANKS.get(min_grade, 1)
         # D(2) <= D(2) → gate fails
@@ -905,6 +957,7 @@ class TestQualityGateThreshold:
     def test_grade_above_threshold_passes(self):
         """When threshold is D, grade C should pass the gate."""
         from src.extraction.orchestrator import _GRADE_RANKS
+
         min_grade = "D"
         min_grade_rank = _GRADE_RANKS.get(min_grade, 1)
         # C(3) > D(2) → gate passes
@@ -915,6 +968,7 @@ class TestQualityGateThreshold:
     def test_default_threshold_only_blocks_f(self):
         """Default threshold F should only block grade F."""
         from src.extraction.orchestrator import _GRADE_RANKS
+
         min_grade = "F"
         min_grade_rank = _GRADE_RANKS.get(min_grade, 1)
         # F fails

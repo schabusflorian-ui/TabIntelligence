@@ -1,4 +1,5 @@
 """Stage 3: Guided Mapping - Map line items to canonical taxonomy."""
+
 import json
 import time
 from typing import Any, Dict, List
@@ -6,18 +7,18 @@ from typing import Any, Dict, List
 import anthropic
 
 from src.core.exceptions import ClaudeAPIError, ExtractionError, RateLimitError
-from src.core.logging import extraction_logger as logger, log_performance
+from src.core.logging import extraction_logger as logger
+from src.core.logging import log_performance
 from src.extraction.base import ExtractionStage, PipelineContext
 from src.extraction.claude_client import get_claude_client
 from src.extraction.prompts import get_prompt
-from src.extraction.utils import extract_json, validate_canonical_names
 from src.extraction.taxonomy_loader import (
+    TAXONOMY_PATH,
     format_taxonomy_for_prompt,
-    get_alias_to_canonicals,
     get_alias_to_canonicals_with_promoted,
     get_canonical_to_category,
-    TAXONOMY_PATH,
 )
+from src.extraction.utils import extract_json, validate_canonical_names
 
 
 # Backward-compatible alias for tests that import this directly
@@ -69,8 +70,7 @@ def _disambiguate_by_sheet_category(
     """
     label_to_sheet = {item["label"]: item["sheet"] for item in grouped_items}
     label_to_section_category = {
-        item["label"]: item.get("section_category")
-        for item in grouped_items
+        item["label"]: item.get("section_category") for item in grouped_items
     }
 
     overrides = 0
@@ -114,18 +114,13 @@ def _disambiguate_by_sheet_category(
                 overrides += 1
         elif len(matching) > 1:
             # Multiple matches in expected category — prefer closest canonical name
-            label_normalized = (
-                label.lower().replace("&", "and").replace("-", " ").strip()
-            )
+            label_normalized = label.lower().replace("&", "and").replace("-", " ").strip()
             best, best_score = None, -1
             for canonical, category in matching:
                 canonical_words = canonical.replace("_", " ")
                 if canonical_words == label_normalized:
                     score = 100
-                elif (
-                    canonical_words in label_normalized
-                    or label_normalized in canonical_words
-                ):
+                elif canonical_words in label_normalized or label_normalized in canonical_words:
                     score = 50 + len(canonical_words)
                 else:
                     score = 0
@@ -247,9 +242,7 @@ class MappingStage(ExtractionStage):
 
         for sheet in parsed_result.get("sheets", []):
             sheet_name = sheet.get("sheet_name", "Unknown")
-            sheet_sections = (
-                section_lookup.get(sheet_name, []) if section_lookup else []
-            )
+            sheet_sections = section_lookup.get(sheet_name, []) if section_lookup else []
 
             for row in sheet.get("rows", []):
                 label = row.get("label")
@@ -297,14 +290,18 @@ class MappingStage(ExtractionStage):
             return pre_mapped, labels
 
         try:
-            from src.db.session import get_db_sync
-            from src.db import crud
             from uuid import UUID
+
+            from src.db import crud
+            from src.db.session import get_db_sync
 
             with get_db_sync() as db:
                 # Query with stored confidence >= 0.8 (decay could bring it below 0.95)
                 patterns = crud.get_entity_patterns(
-                    db, UUID(entity_id), min_confidence=0.8, limit=500,
+                    db,
+                    UUID(entity_id),
+                    min_confidence=0.8,
+                    limit=500,
                     active_only=True,
                 )
                 pattern_lookup = {p.original_label: p for p in patterns}
@@ -314,7 +311,9 @@ class MappingStage(ExtractionStage):
                 match = pattern_lookup.get(label)
                 if match:
                     eff_conf = crud.compute_effective_confidence(
-                        float(match.confidence), match.last_seen, match.created_by,
+                        float(match.confidence),
+                        match.last_seen,
+                        match.created_by,
                     )
                     if eff_conf >= 0.95:
                         pre_mapped[label] = {
@@ -343,9 +342,7 @@ class MappingStage(ExtractionStage):
         """Scale timeout with label count: 60s base + 0.2s per label."""
         try:
             parsed = context.get_result("parsing").get("parsed", {})
-            total_rows = sum(
-                len(s.get("rows", [])) for s in parsed.get("sheets", [])
-            )
+            total_rows = sum(len(s.get("rows", [])) for s in parsed.get("sheets", []))
             return max(60.0, 60.0 + total_rows * 0.2)
         except KeyError:
             return self.timeout_seconds
@@ -377,7 +374,8 @@ class MappingStage(ExtractionStage):
 
         # Build grouped line items with hierarchy and section context
         grouped_items = self._build_grouped_line_items(
-            parsed_result, section_lookup,
+            parsed_result,
+            section_lookup,
         )
 
         # Extract unique labels for counting
@@ -385,7 +383,13 @@ class MappingStage(ExtractionStage):
 
         if not labels:
             logger.warning("Stage 3: No labels found to map")
-            return {"mappings": [], "tokens": 0, "input_tokens": 0, "output_tokens": 0, "lineage_metadata": {}}
+            return {
+                "mappings": [],
+                "tokens": 0,
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "lineage_metadata": {},
+            }
 
         # --- Pattern-based shortcircuit ---
         # Check entity patterns BEFORE calling Claude to save tokens
@@ -393,7 +397,8 @@ class MappingStage(ExtractionStage):
 
         if pre_mapped:
             logger.info(
-                f"Stage 3: {len(pre_mapped)} of {len(labels)} labels resolved from entity patterns, "
+                f"Stage 3: {len(pre_mapped)} of {len(labels)}"
+                " labels resolved from entity patterns, "
                 f"sending {len(remaining_labels)} to Claude"
             )
 
@@ -404,9 +409,7 @@ class MappingStage(ExtractionStage):
             # Attach taxonomy_category for provenance
             cat_lookup = get_canonical_to_category()
             for m in mappings_list:
-                m["taxonomy_category"] = cat_lookup.get(
-                    m.get("canonical_name", ""), "unknown"
-                )
+                m["taxonomy_category"] = cat_lookup.get(m.get("canonical_name", ""), "unknown")
             return {
                 "mappings": mappings_list,
                 "tokens": 0,
@@ -435,20 +438,20 @@ class MappingStage(ExtractionStage):
             taxonomy_str = taxonomy_str + "\n\n" + entity_hints
 
         try:
-            logger.debug(
-                f"Calling Claude API for mapping {len(remaining_labels)} items"
-            )
+            logger.debug(f"Calling Claude API for mapping {len(remaining_labels)} items")
 
             response = get_claude_client().messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=8192,
-                messages=[{
-                    "role": "user",
-                    "content": get_prompt("mapping").render(
-                        line_items=json.dumps(remaining_grouped_items, indent=2),
-                        taxonomy=taxonomy_str,
-                    ),
-                }],
+                messages=[
+                    {
+                        "role": "user",
+                        "content": get_prompt("mapping").render(
+                            line_items=json.dumps(remaining_grouped_items, indent=2),
+                            taxonomy=taxonomy_str,
+                        ),
+                    }
+                ],
             )
 
             # Check for truncation — incomplete JSON causes silent data loss
@@ -480,7 +483,9 @@ class MappingStage(ExtractionStage):
             # Deterministic sheet-category disambiguation (includes promoted learned aliases)
             alias_lookup = get_alias_to_canonicals_with_promoted()
             override_count = _disambiguate_by_sheet_category(
-                claude_mappings_list, remaining_grouped_items, alias_lookup,
+                claude_mappings_list,
+                remaining_grouped_items,
+                alias_lookup,
             )
             if override_count:
                 logger.info(
@@ -498,13 +503,9 @@ class MappingStage(ExtractionStage):
             # Attach taxonomy_category to each mapping for provenance
             cat_lookup = get_canonical_to_category()
             for m in final_mappings:
-                m["taxonomy_category"] = cat_lookup.get(
-                    m.get("canonical_name", ""), "unknown"
-                )
+                m["taxonomy_category"] = cat_lookup.get(m.get("canonical_name", ""), "unknown")
 
-            unmapped = sum(
-                1 for m in final_mappings if m.get("canonical_name") == "unmapped"
-            )
+            unmapped = sum(1 for m in final_mappings if m.get("canonical_name") == "unmapped")
             avg_conf = (
                 sum(m.get("confidence", 0) for m in final_mappings) / len(final_mappings)
                 if final_mappings
@@ -547,7 +548,8 @@ class MappingStage(ExtractionStage):
             retry_after = getattr(e.response, "headers", {}).get("retry-after")
             logger.warning(f"Stage 3: Rate limit hit (retry-after={retry_after})")
             raise RateLimitError(
-                "Rate limit exceeded", stage="mapping",
+                "Rate limit exceeded",
+                stage="mapping",
                 retry_after=int(retry_after) if retry_after else None,
             )
 
@@ -578,15 +580,19 @@ class MappingStage(ExtractionStage):
             return ""
 
         try:
-            from src.db.session import get_db_sync
-            from src.db import crud
             from uuid import UUID
+
+            from src.db import crud
+            from src.db.session import get_db_sync
 
             entity_uuid = UUID(entity_id)
 
             with get_db_sync() as db:
                 patterns = crud.get_entity_patterns(
-                    db, entity_uuid, min_confidence=0.8, limit=15,
+                    db,
+                    entity_uuid,
+                    min_confidence=0.8,
+                    limit=15,
                     active_only=True,
                 )
 
@@ -596,14 +602,19 @@ class MappingStage(ExtractionStage):
                     entity = crud.get_entity(db, entity_uuid)
                     if entity and entity.industry:
                         industry_patterns = crud.get_industry_patterns(
-                            db, entity.industry, entity_uuid,
-                            min_confidence=0.8, limit=10,
+                            db,
+                            entity.industry,
+                            entity_uuid,
+                            min_confidence=0.8,
+                            limit=10,
                         )
 
             lines = []
             for p in patterns:
                 eff_conf = crud.compute_effective_confidence(
-                    float(p.confidence), p.last_seen, p.created_by,
+                    float(p.confidence),
+                    p.last_seen,
+                    p.created_by,
                 )
                 lines.append(
                     f"  '{p.original_label}' -> {p.canonical_name} "
@@ -613,7 +624,9 @@ class MappingStage(ExtractionStage):
             # Add industry patterns with reduced confidence
             for p in industry_patterns:
                 eff_conf = crud.compute_effective_confidence(
-                    float(p.confidence), p.last_seen, p.created_by,
+                    float(p.confidence),
+                    p.last_seen,
+                    p.created_by,
                 )
                 reduced_conf = eff_conf * 0.7
                 lines.append(
@@ -628,10 +641,7 @@ class MappingStage(ExtractionStage):
                 f"Stage 3: Loaded {len(patterns)} entity + "
                 f"{len(industry_patterns)} industry pattern hints"
             )
-            return (
-                "Known patterns from prior extractions for this entity:\n"
-                + "\n".join(lines)
-            )
+            return "Known patterns from prior extractions for this entity:\n" + "\n".join(lines)
 
         except Exception as e:
             logger.warning(f"Stage 3: Could not load entity patterns: {e}")
@@ -640,4 +650,5 @@ class MappingStage(ExtractionStage):
 
 # Self-register at import time
 from src.extraction.registry import registry  # noqa: E402
+
 registry.register(MappingStage())

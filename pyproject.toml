@@ -53,6 +53,18 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W"]
+ignore = [
+    "E741",  # ambiguous variable name 'l' — clear in list comprehensions
+    "E712",  # == True comparisons — required by SQLAlchemy filter expressions
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/conftest.py" = ["E402"]  # late imports after module-level mocks
+"tests/unit/test_benchmark.py" = ["E402"]
+"tests/unit/test_regression_tracker.py" = ["E402"]
+"src/db/crud.py" = ["E402"]  # late conditional imports
+"tests/**" = ["N802", "N806"]  # test functions/mock classes may use uppercase
+"scripts/**" = ["E501"]  # scripts have long string literals
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -66,6 +78,10 @@ addopts = [
     "--cov-report=html",
     "--cov-report=term-missing",
     "--ignore=tests/e2e",
+]
+markers = [
+    "slow: marks tests as slow (>2s, deselect with -m 'not slow')",
+    "integration: marks integration tests requiring external services",
 ]
 
 [tool.mypy]
