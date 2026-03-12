@@ -12,11 +12,11 @@ from unittest.mock import MagicMock, patch
 _FAKE_XLSX = b"PK\x03\x04" + b"\x00" * 100
 
 
-class TestUploadS3FailureNoOrphanedRecords:
-    """Fix 1: If S3 upload fails, no DB records should be created."""
+class TestUploadS3FailureGracefulDegradation:
+    """Fix 1: If S3 upload fails, upload proceeds without storage (graceful degradation)."""
 
-    def test_s3_failure_returns_500_no_orphan_db_records(self, test_client_with_db, test_db):
-        """When S3 upload fails, endpoint returns 500 and no File/Job records exist."""
+    def test_s3_failure_proceeds_without_storage(self, test_client_with_db, test_db):
+        """When S3 upload fails, endpoint returns 200 with s3_key=None."""
         from src.core.exceptions import FileStorageError
 
         mock_s3 = MagicMock()
@@ -29,16 +29,18 @@ class TestUploadS3FailureNoOrphanedRecords:
                 files={"file": ("test.xlsx", _FAKE_XLSX, "application/vnd.ms-excel")},
             )
 
-        assert response.status_code == 500
-        assert "Storage error" in response.json()["detail"]
+        assert response.status_code == 200
+        data = response.json()
+        assert data["s3_key"] is None  # Graceful degradation: no S3 key
 
-        # Verify no orphaned DB records were created
+        # File and job records should still be created
         from src.db import crud
 
         session = test_db()
         try:
             files = crud.list_files(session, limit=100)
-            assert len(files) == 0, "No File records should exist after S3 failure"
+            assert len(files) == 1, "File record should exist despite S3 failure"
+            assert files[0].s3_key is None
         finally:
             session.close()
 
