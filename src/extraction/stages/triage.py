@@ -2,7 +2,7 @@
 
 import json
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import anthropic
 
@@ -14,6 +14,104 @@ from src.extraction.claude_client import get_claude_client
 from src.extraction.prompts import get_prompt
 from src.extraction.section_detector import SectionDetector
 from src.extraction.utils import extract_json
+
+
+# Deterministic sheet classification rules (skip Claude when confident)
+_TIER_1_PATTERNS = [
+    "income statement", "p&l", "profit and loss", "profit & loss",
+    "balance sheet", "statement of financial position",
+    "cash flow", "cash flows", "cf statement",
+]
+_TIER_2_PATTERNS = [
+    "debt schedule", "debt service", "debt summary", "debt_dsra",
+    "depreciation", "d&a", "amortization", "amortisation",
+    "working capital", "capex", "tax schedule", "tax provision",
+    "revenue build", "opex build", "revenue_grants",
+    "cfads", "waterfall", "debt tranche",
+]
+_TIER_3_PATTERNS = [
+    "assumptions", "inputs", "sensitivity", "scenario",
+    "cap table", "returns", "irr", "macro", "techspec",
+    "commodity", "curves",
+]
+_TIER_4_PATTERNS = [
+    "scratch", "draft", "old", "backup", "chart", "notes",
+    "instructions", "template", "readme", "cover",
+    "table of contents", "toc", "changelog",
+]
+
+
+def _rule_based_triage(sheet_summary: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Attempt deterministic triage from sheet name and structural signals.
+
+    Returns a triage entry dict if confident, None if ambiguous (defer to Claude).
+    """
+    name = sheet_summary.get("name", "").lower().strip()
+    row_count = sheet_summary.get("row_count", 0)
+    has_numeric = any(
+        isinstance(r, (int, float)) for r in sheet_summary.get("sample_labels", [])
+    )
+
+    # Very few rows or no data → skip
+    if row_count < 3:
+        return {
+            "sheet_name": sheet_summary["name"],
+            "tier": 4,
+            "decision": "SKIP",
+            "reasoning": "Too few rows for meaningful content",
+        }
+
+    # Check patterns in priority order
+    for pattern in _TIER_1_PATTERNS:
+        if pattern in name:
+            category = None
+            if any(p in name for p in ["income", "p&l", "profit"]):
+                category = "income_statement"
+            elif "balance" in name or "financial position" in name:
+                category = "balance_sheet"
+            elif "cash flow" in name or "cf " in name:
+                category = "cash_flow"
+            return {
+                "sheet_name": sheet_summary["name"],
+                "tier": 1,
+                "decision": "PROCESS",
+                "reasoning": f"Rule-based: sheet name matches '{pattern}'",
+                "category_hint": category,
+            }
+
+    for pattern in _TIER_2_PATTERNS:
+        if pattern in name:
+            category = None
+            if any(p in name for p in ["debt", "dsra", "tranche"]):
+                category = "debt_schedule"
+            return {
+                "sheet_name": sheet_summary["name"],
+                "tier": 2,
+                "decision": "PROCESS",
+                "reasoning": f"Rule-based: sheet name matches '{pattern}'",
+                "category_hint": category,
+            }
+
+    for pattern in _TIER_3_PATTERNS:
+        if pattern in name:
+            return {
+                "sheet_name": sheet_summary["name"],
+                "tier": 3,
+                "decision": "PROCESS",
+                "reasoning": f"Rule-based: sheet name matches '{pattern}'",
+            }
+
+    for pattern in _TIER_4_PATTERNS:
+        if pattern in name:
+            return {
+                "sheet_name": sheet_summary["name"],
+                "tier": 4,
+                "decision": "SKIP",
+                "reasoning": f"Rule-based: sheet name matches '{pattern}'",
+            }
+
+    # Ambiguous — defer to Claude
+    return None
 
 
 class TriageStage(ExtractionStage):

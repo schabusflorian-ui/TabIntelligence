@@ -24,14 +24,14 @@ REAL_DATA_DIR = Path(__file__).parent.parent / "real data"
 
 FILES = {
     1: "01_electrolyser_FOAK_singlesheet.xlsx",
-    2: "02_biochar_NOAK_transposed_german.xlsx",
+    2: "02_biochar_NOAK_transposed_DE.xlsx",
     3: "03_heat_pump_HaaS_monthly.xlsx",
-    4: "04_DAC_pre_revenue_9tabs.xlsx",
+    4: "04_DAC_prerevenue_multitab.xlsx",
     5: "05_pyrolysis_W2E_inline_scenarios.xlsx",
-    6: "06_LDES_hidden_saas_metrics.xlsx",
-    7: "07_green_ammonia_3scenarios_curves.xlsx",
-    8: "08_geothermal_EGS_holdco_spv.xlsx",
-    9: "09_CCUS_cement_hardcoded_fiscalyear.xlsx",
+    6: "06_LDES_hidden_rows_SaaS.xlsx",
+    7: "07_green_ammonia_3scenario_curves.xlsx",
+    8: "08_geothermal_EGS_HoldCo_SPV.xlsx",
+    9: "09_CCUS_cement_hardcoded_FY.xlsx",
     10: "10_wind_nacelle_manufacturing_quarterly.xlsx",
 }
 

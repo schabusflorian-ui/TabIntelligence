@@ -51,6 +51,37 @@ _SHEET_TO_CATEGORY = {
 }
 
 
+def _normalize_label(label: str) -> str:
+    """Normalize a financial label for alias lookup.
+
+    Strips whitespace, removes leading numbering/bullets/dashes, trailing
+    colons, and unit parentheticals like '($M)' or '(EUR)'.  Keeps
+    meaningful parentheticals like '(Adjusted)'.
+    """
+    import re
+
+    s = label.strip()
+    # Remove leading bullets, dashes, or numbering: "- Revenue", "1. Revenue", "1) Revenue"
+    s = re.sub(r"^[\-\u2022\u2013\u2014]\s*", "", s)
+    s = re.sub(r"^\d{1,3}[.)]\s*", "", s)
+    # Remove trailing colon
+    s = re.sub(r"\s*:\s*$", "", s)
+    # Remove unit parentheticals at end: ($M), (EUR), (€M), (in thousands), (£m)
+    # But keep meaningful ones like (Adjusted), (Net), (Gross)
+    s = re.sub(
+        r"\s*\((?:in\s+)?"
+        r"(?:\$|€|£|USD|EUR|GBP|CHF|JPY|AUD|CAD|NOK|SEK|DKK|ISK)?"
+        r"\s*(?:M|m|MM|mm|k|K|000s?|thousands?|millions?|billions?|mn|bn)?"
+        r"\s*\)\s*$",
+        "",
+        s,
+        flags=re.IGNORECASE,
+    )
+    # Collapse multiple spaces
+    s = re.sub(r"\s{2,}", " ", s)
+    return s.strip()
+
+
 def _disambiguate_by_sheet_category(
     mappings: list,
     grouped_items: list,

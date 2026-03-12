@@ -1257,6 +1257,18 @@ class ParsingStage(ExtractionStage):
 
         return regions
 
+    # Additional patterns for transposition detection (broader than header patterns)
+    _TRANSPOSED_PERIOD_RE = re.compile(
+        r"^(?:"
+        r"(?:FY|CY)'?\s*\d{2,4}(?:/\d{2,4})?"  # FY2024, FY26/27
+        r"|(?:19|20)\d{2}\s*[EFPBA]?"  # 2024, 2024E
+        r"|[QH][1-4]\s"  # Q1 2025, H1 2024
+        r"|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*[\s/-]"  # Jan-24
+        r"|Year\s+\d"  # Year 1, Year 2
+        r")\s*",
+        re.IGNORECASE,
+    )
+
     @staticmethod
     def _detect_transposed(
         rows: List[Dict[str, Any]],
@@ -1264,8 +1276,10 @@ class ParsingStage(ExtractionStage):
     ) -> bool:
         """Detect transposed layouts where periods run down a column.
 
-        Returns True only if >60% of the label column values match
-        period patterns (minimum 3 matches). Conservative default: False.
+        Returns True if >60% of column A (or label_column) values match
+        period patterns (minimum 3 matches), OR if the first data row has
+        period-like values going across AND column A has sequential years
+        going down. Conservative default: False.
         """
         from datetime import datetime
 
@@ -1288,9 +1302,14 @@ class ParsingStage(ExtractionStage):
                 total_values += 1
                 if isinstance(val, datetime):
                     period_matches += 1
+                elif isinstance(val, (int, float)):
+                    # Bare numeric years (2024, 2025.0)
+                    n = int(val) if isinstance(val, float) and val == int(val) else val
+                    if isinstance(n, int) and 1990 <= n <= 2100:
+                        period_matches += 1
                 else:
                     s = str(val).strip()
-                    if _YEAR_PATTERN.match(s) or _QUARTERLY_PATTERN.match(s):
+                    if ParsingStage._TRANSPOSED_PERIOD_RE.match(s):
                         period_matches += 1
                 break  # only check one cell per row for the target column
 

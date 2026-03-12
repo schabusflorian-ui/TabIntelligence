@@ -571,13 +571,18 @@ def _build_result(
     line_items = []
 
     for sheet in parsed_data.get("sheets", []):
-        sheet_triage = next(
-            (t for t in triage_list if t.get("sheet_name") == sheet.get("sheet_name")),
-            {"tier": 4, "decision": "SKIP"},
-        )
+        # With section-level triage, multiple entries may share the same sheet_name.
+        # Use the best (lowest) tier among all matching entries so that a single
+        # tier-4 header row doesn't suppress the whole sheet.
+        matching_triage = [
+            t for t in triage_list if t.get("sheet_name") == sheet.get("sheet_name")
+        ]
+        if matching_triage:
+            best_tier: int = min(t.get("tier", 4) for t in matching_triage)
+        else:
+            best_tier = 4
 
-        tier: int = sheet_triage.get("tier", 4)  # type: ignore[assignment]
-        if tier <= 3:  # Process tiers 1-3
+        if best_tier <= 3:  # Process tiers 1-3
             for row in sheet.get("rows", []):
                 mapping = mapping_lookup.get(row.get("label", ""), {})
                 canonical = mapping.get("canonical_name", "unmapped")

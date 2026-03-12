@@ -36,13 +36,9 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-
-class Base(DeclarativeBase):
-    """Base class for all SQLAlchemy models."""
-
-    pass
+from src.db.base import Base  # noqa: F401 — re-exported for backward compat
 
 
 # ============================================================================
@@ -514,5 +510,3 @@ class CorrectionHistory(Base):
         )
 
 
-# Late import to register APIKey with Base metadata (avoids circular imports)
-from src.auth.models import APIKey  # noqa: E402, F401

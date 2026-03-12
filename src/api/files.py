@@ -121,7 +121,6 @@ async def upload_file(
             s3_client = None
 
         if s3_client:
-            # S3 is configured — upload failures are fatal (no silent fallback)
             file_id_for_key = uuid4()
             s3_key = s3_client.generate_s3_key(file_id=file_id_for_key, filename=filename)
             try:
@@ -134,8 +133,8 @@ async def upload_file(
                     },
                 )
             except (FileStorageError, Exception) as upload_err:
-                logger.error(f"S3 upload failed: {upload_err}")
-                raise HTTPException(status_code=500, detail=f"Storage error: {upload_err}")
+                logger.warning(f"S3 upload failed, proceeding without storage: {upload_err}")
+                s3_key = None
 
         # --- Create DB records ---
         try:

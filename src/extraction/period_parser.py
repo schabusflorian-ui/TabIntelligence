@@ -17,8 +17,8 @@ from typing import Any, Dict, List, Optional, Tuple
 # Compiled regex patterns (matched in priority order)
 # ---------------------------------------------------------------------------
 
-# Fiscal year: "FY2024", "FY24", "FY 2024", "FY2024E", "FY'24"
-_RE_FISCAL_YEAR = re.compile(r"^FY\s*'?(\d{2,4})\s*([AEFP])?$", re.IGNORECASE)
+# Fiscal year: "FY2024", "FY24", "FY 2024", "FY2024E", "FY'24", "FY26/27"
+_RE_FISCAL_YEAR = re.compile(r"^FY\s*'?(\d{2,4})(?:/(\d{2,4}))?\s*([AEFP])?$", re.IGNORECASE)
 
 # Calendar year: "CY2024", "CY24", "CY2024E"
 _RE_CALENDAR_YEAR = re.compile(r"^CY\s*'?(\d{2,4})\s*([AEFP])?$", re.IGNORECASE)
@@ -451,9 +451,19 @@ class PeriodParser:
         if not m:
             return None
         year = _expand_year(m.group(1))
-        is_actual, is_forecast = _suffix_flags(m.group(2))
-        suffix = m.group(2).upper() if m.group(2) else ""
-        normalized = f"FY{year}{suffix}"
+        end_year_str = m.group(2)  # e.g. "27" from "FY26/27"
+        suffix_group = m.group(3)
+        is_actual, is_forecast = _suffix_flags(suffix_group)
+        suffix = suffix_group.upper() if suffix_group else ""
+        if end_year_str:
+            # Slash-format: FY26/27 → use the START year for sorting,
+            # normalize as FY2026/27
+            end_year = _expand_year(end_year_str)
+            # Use short end year in normalized form if original was short
+            end_short = end_year_str if len(end_year_str) <= 2 else str(end_year)
+            normalized = f"FY{year}/{end_short}{suffix}"
+        else:
+            normalized = f"FY{year}{suffix}"
         conf = 0.9 if len(m.group(1)) == 2 else 1.0
         return NormalizedPeriod(
             raw_value=text,

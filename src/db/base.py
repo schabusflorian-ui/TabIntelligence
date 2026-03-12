@@ -5,9 +5,16 @@ Provides Base class and utility functions for database operations.
 This is the canonical location per Week 2 strategy.
 """
 
+from sqlalchemy.orm import DeclarativeBase
+
 from src.core.logging import database_logger as logger
-from src.db.models import Base
 from src.db.session import get_sync_engine
+
+
+class Base(DeclarativeBase):
+    """Base class for all SQLAlchemy models."""
+
+    pass
 
 
 def get_engine():
