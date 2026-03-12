@@ -31,11 +31,23 @@ _SHEET_TO_CATEGORY = {
     "income statement": "income_statement",
     "p&l": "income_statement",
     "profit and loss": "income_statement",
+    "profit & loss": "income_statement",
+    "monthly p&l": "income_statement",
     "balance sheet": "balance_sheet",
+    "statement of financial position": "balance_sheet",
     "cash flow": "cash_flow",
     "cash flow statement": "cash_flow",
     "debt schedule": "debt_schedule",
     "debt": "debt_schedule",
+    "working capital": "balance_sheet",
+    "d&a schedule": "income_statement",
+    "depreciation": "income_statement",
+    "tax schedule": "income_statement",
+    "tax provision": "income_statement",
+    "revenue build": "income_statement",
+    "opex build": "income_statement",
+    "assumptions": "metrics",
+    "returns analysis": "metrics",
 }
 
 
@@ -100,6 +112,86 @@ def _disambiguate_by_sheet_category(
                     "reason": f"exact alias match in {correct_category} category",
                 }
                 overrides += 1
+        elif len(matching) > 1:
+            # Multiple matches in expected category — prefer closest canonical name
+            label_normalized = (
+                label.lower().replace("&", "and").replace("-", " ").strip()
+            )
+            best, best_score = None, -1
+            for canonical, category in matching:
+                canonical_words = canonical.replace("_", " ")
+                if canonical_words == label_normalized:
+                    score = 100
+                elif (
+                    canonical_words in label_normalized
+                    or label_normalized in canonical_words
+                ):
+                    score = 50 + len(canonical_words)
+                else:
+                    score = 0
+                if score > best_score:
+                    best_score = score
+                    best = (canonical, category)
+            if best and best_score > 0 and best[0] != current_canonical:
+                logger.info(
+                    f"Stage 3: Multi-match override: '{label}' on '{sheet}' "
+                    f"changed from {current_canonical} to {best[0]} "
+                    f"(best of {len(matching)} in {expected_category})"
+                )
+                m["canonical_name"] = best[0]
+                m["disambiguation_override"] = {
+                    "original": current_canonical,
+                    "reason": f"best of {len(matching)} candidates in {expected_category}",
+                }
+                overrides += 1
+
+    # Second pass: rescue unmapped items via exact alias match
+    for m in mappings:
+        if m.get("canonical_name", "unmapped") != "unmapped":
+            continue
+        label = m.get("original_label", "")
+        candidates = alias_lookup.get(label.lower().strip(), [])
+        if not candidates:
+            continue
+
+        # Determine expected category from sheet context
+        sheet = label_to_sheet.get(label, "")
+        expected_category = label_to_section_category.get(label)
+        if not expected_category:
+            sheet_lower = sheet.lower()
+            for pattern, cat in _SHEET_TO_CATEGORY.items():
+                if pattern in sheet_lower:
+                    expected_category = cat
+                    break
+
+        if expected_category:
+            matching = [c for c in candidates if c[1] == expected_category]
+            if len(matching) == 1:
+                logger.info(
+                    f"Stage 3: Unmapped rescue: '{label}' on '{sheet}' "
+                    f"resolved to {matching[0][0]} "
+                    f"(exact alias in {expected_category})"
+                )
+                m["canonical_name"] = matching[0][0]
+                m["disambiguation_override"] = {
+                    "original": "unmapped",
+                    "reason": f"rescued: exact alias in {expected_category}",
+                }
+                overrides += 1
+                continue
+
+        # No category context or no category match: use unique global match
+        if len(candidates) == 1:
+            logger.info(
+                f"Stage 3: Unmapped rescue: '{label}' "
+                f"resolved to {candidates[0][0]} (unique global alias)"
+            )
+            m["canonical_name"] = candidates[0][0]
+            m["disambiguation_override"] = {
+                "original": "unmapped",
+                "reason": "rescued: unique global alias match",
+            }
+            overrides += 1
 
     return overrides
 

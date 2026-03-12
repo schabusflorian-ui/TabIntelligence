@@ -42,7 +42,7 @@ def _format_taxonomy_for_prompt(taxonomy: Dict) -> str:
         for item in items:
             aliases_str = ""
             if item.get("aliases"):
-                aliases_str = f" (aliases: {', '.join(item['aliases'][:3])})"
+                aliases_str = f" (aliases: {', '.join(item['aliases'][:5])})"
             names.append(f"  - {item['canonical_name']}: {item.get('display_name', '')}{aliases_str}")
         lines.append(f"{category_display}:")
         lines.extend(names)

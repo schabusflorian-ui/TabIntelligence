@@ -384,8 +384,8 @@ class TestSheetCategoryDisambiguation:
         assert count == 0
         assert mappings[0]["canonical_name"] == "revenue"
 
-    def test_no_override_unmapped(self):
-        """Unmapped items should not be touched."""
+    def test_no_override_unmapped_no_alias(self):
+        """Unmapped items with no alias match should stay unmapped."""
         from src.extraction.stages.mapping import _disambiguate_by_sheet_category
         from src.extraction.taxonomy_loader import get_alias_to_canonicals
 
@@ -405,3 +405,79 @@ class TestSheetCategoryDisambiguation:
 
         assert count == 0
         assert mappings[0]["canonical_name"] == "unmapped"
+
+    def test_unmapped_rescued_by_exact_alias(self):
+        """Unmapped item with exact alias match should be rescued."""
+        from src.extraction.stages.mapping import _disambiguate_by_sheet_category
+        from src.extraction.taxonomy_loader import get_alias_to_canonicals
+
+        mappings = [
+            {
+                "original_label": "Depreciation & Amortization",
+                "canonical_name": "unmapped",
+                "confidence": 0.3,
+            },
+        ]
+        grouped_items = [
+            {"label": "Depreciation & Amortization", "sheet": "Income Statement"},
+        ]
+        alias_lookup = get_alias_to_canonicals()
+
+        count = _disambiguate_by_sheet_category(mappings, grouped_items, alias_lookup)
+
+        assert count == 1
+        assert mappings[0]["canonical_name"] == "depreciation_and_amortization"
+        assert mappings[0]["disambiguation_override"]["original"] == "unmapped"
+
+    def test_multi_match_picks_best_canonical(self):
+        """When multiple canonicals match in the expected category, pick the closest name."""
+        from src.extraction.stages.mapping import _disambiguate_by_sheet_category
+
+        # Both current_assets and total_current_assets have "Current Assets Total" as alias
+        alias_lookup = {
+            "total current assets": [
+                ("current_assets", "balance_sheet"),
+                ("total_current_assets", "balance_sheet"),
+            ],
+        }
+        mappings = [
+            {
+                "original_label": "Total Current Assets",
+                "canonical_name": "current_assets",
+                "confidence": 0.85,
+            },
+        ]
+        grouped_items = [
+            {"label": "Total Current Assets", "sheet": "Balance Sheet"},
+        ]
+
+        count = _disambiguate_by_sheet_category(mappings, grouped_items, alias_lookup)
+
+        assert count == 1
+        assert mappings[0]["canonical_name"] == "total_current_assets"
+
+    def test_multi_match_no_winner_skips(self):
+        """When no canonical is a substring match, no override happens."""
+        from src.extraction.stages.mapping import _disambiguate_by_sheet_category
+
+        alias_lookup = {
+            "foo bar": [
+                ("alpha_metric", "balance_sheet"),
+                ("beta_metric", "balance_sheet"),
+            ],
+        }
+        mappings = [
+            {
+                "original_label": "Foo Bar",
+                "canonical_name": "alpha_metric",
+                "confidence": 0.85,
+            },
+        ]
+        grouped_items = [
+            {"label": "Foo Bar", "sheet": "Balance Sheet"},
+        ]
+
+        count = _disambiguate_by_sheet_category(mappings, grouped_items, alias_lookup)
+
+        assert count == 0
+        assert mappings[0]["canonical_name"] == "alpha_metric"

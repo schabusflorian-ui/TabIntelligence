@@ -218,7 +218,7 @@ def format_taxonomy_for_prompt(
                 name = item["canonical_name"]
                 aliases = item.get("aliases", [])
                 learned = learned_by_canonical.get(name, [])
-                alias_parts = list(aliases[:3])
+                alias_parts = list(aliases[:5])
                 for la in learned[:2]:
                     if la not in alias_parts:
                         alias_parts.append(f"{la} [learned]")
@@ -243,7 +243,7 @@ def format_taxonomy_detailed() -> str:
         for item in items:
             aliases_str = ""
             if item.get("aliases"):
-                aliases_str = f" (aliases: {', '.join(item['aliases'][:3])})"
+                aliases_str = f" (aliases: {', '.join(item['aliases'][:5])})"
             names.append(f"  - {item['canonical_name']}: {item.get('display_name', '')}{aliases_str}")
         lines.append(f"{category_display}:")
         lines.extend(names)

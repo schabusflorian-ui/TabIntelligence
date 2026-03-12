@@ -180,7 +180,7 @@ class TestFormatTaxonomyForPrompt:
 
         result = format_taxonomy_for_prompt(include_aliases=True)
         assert "Income Statement" in result
-        assert "revenue (sales, net_sales, top_line)" in result
+        assert "revenue (sales, net_sales, top_line, extra)" in result
         assert "cogs" in result
 
     def test_formats_without_aliases(self):

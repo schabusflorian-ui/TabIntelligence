@@ -5,18 +5,24 @@ TIER 1 - PROCESS_HIGH (Core financial statements, target 90%+ accuracy):
 - Balance Sheet, Statement of Financial Position
 - Cash Flow Statement
 - Project Finance Models (integrated P&L + debt service + returns on one sheet)
+- Industry-specific KPI sheets that are core to that business type
+  (e.g., SaaS Metrics with ARR/MRR/NRR/CAC/LTV, Real Estate NOI/Cap Rate)
 
 TIER 2 - PROCESS_MEDIUM (Supporting schedules, target 80%+ accuracy):
 - Debt Schedule, Borrowings, Debt Service
 - Depreciation & Amortization, Fixed Assets
 - Working Capital
 - Reserve Accounts (DSRA, maintenance reserves)
+- Revenue Build, Revenue Detail, Revenue Breakdown (by product, geography, etc.)
+- OpEx Build, OpEx Detail, Operating Expense Detail (by department, category, etc.)
+- Tax Schedule, Tax Provision, Tax Calculation
+- Quarterly Detail, Quarterly Breakdown, Monthly Detail
 
 TIER 3 - PROCESS_LOW (Analytical, target 70%+ accuracy):
-- Revenue Build, Revenue Detail
 - Assumptions, Drivers
 - Sensitivity, Scenarios
 - Returns Analysis (IRR, NPV calculations)
+- Headcount, FTE schedules
 
 TIER 4 - SKIP:
 - Names containing: scratch, temp, old, backup, draft, chart

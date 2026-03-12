@@ -132,8 +132,8 @@ class TestMappingStageValidation:
     """Test that Stage 3 validates canonical names from Claude."""
 
     @pytest.mark.asyncio
-    async def test_hallucinated_name_fixed_before_merge(self):
-        """Claude response with hallucinated name should be fixed to 'unmapped'."""
+    async def test_hallucinated_name_rescued_by_alias(self):
+        """Claude response with hallucinated name gets fixed, then rescued if label is a valid alias."""
         from src.extraction.stages.mapping import MappingStage
 
         stage = MappingStage()
@@ -172,7 +172,53 @@ class TestMappingStageValidation:
              patch.object(stage, "_build_entity_hints", return_value=""):
             result = await stage.execute(context)
 
-        # The hallucinated name should have been reset to "unmapped"
+        # The hallucinated name is first reset to "unmapped", then rescued by
+        # disambiguation because "Revenue" is an exact alias for revenue
+        assert len(result["mappings"]) == 1
+        assert result["mappings"][0]["canonical_name"] == "revenue"
+
+    @pytest.mark.asyncio
+    async def test_hallucinated_name_stays_unmapped_no_alias(self):
+        """Claude response with hallucinated name stays unmapped when label has no alias match."""
+        from src.extraction.stages.mapping import MappingStage
+
+        stage = MappingStage()
+        context = MagicMock()
+        context.entity_id = None
+        context.get_result.return_value = {
+            "parsed": {
+                "sheets": [
+                    {
+                        "sheet_name": "IS",
+                        "rows": [
+                            {"label": "Custom Widget Metric", "hierarchy_level": 1, "is_formula": False, "is_subtotal": False},
+                        ],
+                    }
+                ]
+            }
+        }
+
+        # Claude returns a hallucinated canonical name for a label with no alias
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text=json.dumps([
+            {
+                "original_label": "Custom Widget Metric",
+                "canonical_name": "widget_hallucinated",
+                "confidence": 0.92,
+                "reasoning": "Widget metric",
+            }
+        ]))]
+        mock_response.usage = MagicMock(input_tokens=100, output_tokens=50)
+        mock_response.stop_reason = "end_turn"
+
+        mock_claude = MagicMock()
+        mock_claude.messages.create.return_value = mock_response
+
+        with patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude), \
+             patch.object(stage, "_build_entity_hints", return_value=""):
+            result = await stage.execute(context)
+
+        # No alias match for "Custom Widget Metric", so stays unmapped
         assert len(result["mappings"]) == 1
         assert result["mappings"][0]["canonical_name"] == "unmapped"
         assert result["mappings"][0]["confidence"] == 0.0

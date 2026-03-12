@@ -136,7 +136,9 @@
         "aliases": [
           "Accrued Liabilities",
           "Accruals",
-          "Accrued Expenses and Other Liabilities"
+          "Accrued Expenses and Other Liabilities",
+          "Provisions",
+          "Provisions for Liabilities"
         ],
         "definition": "Expenses incurred but not yet paid",
         "typical_sign": "positive",

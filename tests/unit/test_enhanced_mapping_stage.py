@@ -340,24 +340,23 @@ class TestTaxonomyHelpers:
         assert "cogs" in result
 
     def test_format_taxonomy_limits_aliases(self):
-        """Should only show first 3 aliases."""
+        """Should only show first 5 aliases."""
         taxonomy = {
             "categories": {
                 "test": [
                     {
                         "canonical_name": "item",
                         "display_name": "Item",
-                        "aliases": ["A1", "A2", "A3", "A4", "A5"],
+                        "aliases": ["A1", "A2", "A3", "A4", "A5", "A6", "A7"],
                     }
                 ]
             }
         }
         result = _format_taxonomy_for_prompt(taxonomy)
         assert "A1" in result
-        assert "A2" in result
-        assert "A3" in result
-        assert "A4" not in result
-        assert "A5" not in result
+        assert "A5" in result
+        assert "A6" not in result
+        assert "A7" not in result
 
     def test_format_taxonomy_no_aliases(self):
         """Should handle items with no aliases."""
