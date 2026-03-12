@@ -8,7 +8,7 @@ Extract structured financial data from Excel spreadsheets using Claude AI with f
 
 ## Overview
 
-DebtFund transforms messy Excel financial models into structured, queryable data with complete provenance tracking. It uses Claude AI guided by domain knowledge to parse, classify, and map financial line items to a canonical taxonomy.
+Transforms messy Excel financial models into structured, queryable data with complete provenance tracking. It uses Claude AI guided by domain knowledge to parse, classify, and map financial line items to a canonical taxonomy.
 
 ### Key Capabilities
 
