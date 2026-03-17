@@ -2494,7 +2494,7 @@
           "Movement in Contract Liabilities"
         ],
         "definition": "Period-over-period change in contract liabilities, reflecting timing of revenue recognition vs billing",
-        "typical_sign": "variable",
+        "typical_sign": "varies",
         "parent_canonical": "cfo",
         "validation_rules": {
           "type": "currency"
@@ -2514,7 +2514,7 @@
           "Change in Unearned Revenue"
         ],
         "definition": "Period-over-period change in deferred revenue balance, a working capital adjustment in operating cash flow",
-        "typical_sign": "variable",
+        "typical_sign": "varies",
         "parent_canonical": "cfo",
         "validation_rules": {
           "type": "currency"
@@ -3666,7 +3666,7 @@
           "Due Date"
         ],
         "definition": "Date when debt principal is due",
-        "typical_sign": null,
+        "typical_sign": "varies",
         "parent_canonical": null,
         "validation_rules": {
           "type": "date"
@@ -4143,7 +4143,7 @@
           "Deferred Tax Benefit"
         ],
         "definition": "Change in deferred tax liabilities or assets recognized in the income statement",
-        "typical_sign": "variable",
+        "typical_sign": "varies",
         "parent_canonical": "tax_expense",
         "validation_rules": {
           "type": "currency"

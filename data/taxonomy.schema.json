@@ -96,7 +96,15 @@
                 "relationships": {
                   "type": "array",
                   "items": {
-                    "type": ["object", "string"]
+                    "type": "object",
+                    "required": ["rule"],
+                    "properties": {
+                      "rule": { "type": "string" },
+                      "error_message": { "type": "string" },
+                      "warning_only": { "type": "boolean" },
+                      "optional": { "type": "boolean" },
+                      "tolerance": { "type": "number" }
+                    }
                   }
                 }
               }
@@ -123,6 +131,36 @@
           "type": "array",
           "items": { "type": "string" },
           "description": "Industries where this item is relevant"
+        },
+        "confidence_scoring": {
+          "type": "object",
+          "description": "Guidance for confidence scoring during extraction",
+          "properties": {
+            "high_confidence_signals": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "low_confidence_signals": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "accounting_standards": {
+          "type": "object",
+          "description": "Standard-specific guidance (GAAP, IFRS)",
+          "properties": {
+            "gaap": { "type": ["string", "object"] },
+            "ifrs": { "type": ["string", "object"] }
+          }
+        },
+        "regulatory_context": {
+          "type": "object",
+          "description": "Regulatory and compliance context",
+          "properties": {
+            "sec_reference": { "type": "string" },
+            "credit_agreement": { "type": "string" }
+          }
         }
       },
       "additionalProperties": false
