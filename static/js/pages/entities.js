@@ -79,6 +79,7 @@ function renderTable(entities) {
   let html = '<div class="table-wrapper"><table class="data-table"><thead><tr>';
   html += '<th style="text-align:left">Name</th>';
   html += '<th style="text-align:left">Industry</th>';
+  html += '<th style="text-align:center">Currency</th>';
   html += '<th style="text-align:right">Patterns</th>';
   html += '<th style="text-align:right">Files</th>';
   html += '<th style="text-align:right">Avg Confidence</th>';
@@ -89,6 +90,7 @@ function renderTable(entities) {
     html += `<tr class="clickable" data-entity-id="${esc(e.id)}">`;
     html += `<td style="text-align:left;font-weight:500">${esc(e.name)}</td>`;
     html += `<td style="text-align:left;color:var(--color-text-secondary)">${esc(e.industry || '\u2014')}</td>`;
+    html += `<td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px">${e.default_currency ? esc(e.default_currency) : '\u2014'}</td>`;
     html += `<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-variant-numeric:tabular-nums">${e.patterns_count != null ? e.patterns_count : '\u2014'}</td>`;
     html += `<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-variant-numeric:tabular-nums">${e.files_count != null ? e.files_count : '\u2014'}</td>`;
     html += `<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-variant-numeric:tabular-nums">${e.avg_confidence != null ? (e.avg_confidence * 100).toFixed(0) + '%' : '\u2014'}</td>`;
@@ -107,6 +109,9 @@ function renderTable(entities) {
 }
 
 function openCreateModal() {
+  const monthOptions = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    .map((name, i) => `<option value="${i + 1}">${name}</option>`).join('');
+
   const { close, el: box } = showModal(`
     <h3 style="margin:0 0 16px">Create Entity</h3>
     <form id="ent-create-form">
@@ -114,9 +119,31 @@ function openCreateModal() {
         <label style="font-size:11.5px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">Name <span style="color:#A32626">*</span></label>
         <input type="text" id="ent-name" required style="width:100%;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:12.5px;background:var(--color-background-primary);color:var(--color-text-primary)">
       </div>
-      <div style="margin-bottom:16px">
+      <div style="margin-bottom:12px">
         <label style="font-size:11.5px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">Industry</label>
         <input type="text" id="ent-industry" placeholder="e.g. Energy, Manufacturing..." style="width:100%;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:12.5px;background:var(--color-background-primary);color:var(--color-text-primary)">
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:16px">
+        <div style="flex:1">
+          <label style="font-size:11.5px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">Fiscal Year End</label>
+          <select id="ent-fye" style="width:100%;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:12.5px;background:var(--color-background-primary);color:var(--color-text-primary)">
+            <option value="">Not set</option>
+            ${monthOptions}
+          </select>
+        </div>
+        <div style="flex:1">
+          <label style="font-size:11.5px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">Currency</label>
+          <input type="text" id="ent-currency" placeholder="USD" maxlength="3" style="width:100%;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:12.5px;background:var(--color-background-primary);color:var(--color-text-primary);text-transform:uppercase;font-family:'IBM Plex Mono',monospace">
+        </div>
+        <div style="flex:1">
+          <label style="font-size:11.5px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">Reporting Standard</label>
+          <select id="ent-standard" style="width:100%;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:12.5px;background:var(--color-background-primary);color:var(--color-text-primary)">
+            <option value="">Not set</option>
+            <option value="GAAP">GAAP</option>
+            <option value="IFRS">IFRS</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px">
         <button type="button" class="modal-cancel-btn" style="background:transparent;color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:7px 16px;font-size:13px;cursor:pointer">Cancel</button>
@@ -131,6 +158,10 @@ function openCreateModal() {
     e.preventDefault();
     const name = box.querySelector('#ent-name').value.trim();
     const industry = box.querySelector('#ent-industry').value.trim() || null;
+    const fyeVal = box.querySelector('#ent-fye').value;
+    const fiscal_year_end = fyeVal ? parseInt(fyeVal) : null;
+    const default_currency = box.querySelector('#ent-currency').value.trim().toUpperCase() || null;
+    const reporting_standard = box.querySelector('#ent-standard').value || null;
 
     if (!name) {
       showToast('Entity name is required', 'error');
@@ -145,7 +176,7 @@ function openCreateModal() {
       await apiFetch('/api/v1/entities/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, industry }),
+        body: JSON.stringify({ name, industry, fiscal_year_end, default_currency, reporting_standard }),
       });
       close();
       showToast('Entity created', 'success');

@@ -592,3 +592,59 @@ class UnmappedLabelAggregate(Base):
         )
 
 
+# ============================================================================
+# FX RATE CACHE
+# ============================================================================
+
+
+class FxRateCache(Base):
+    """Cached FX exchange rates for currency normalization."""
+
+    __tablename__ = "fx_rate_cache"
+
+    __table_args__ = (
+        UniqueConstraint("from_currency", "to_currency", "rate_date", name="uq_fx_rate"),
+    )
+
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    from_currency: Mapped[str] = mapped_column(String(3), index=True)
+    to_currency: Mapped[str] = mapped_column(String(3), index=True)
+    rate_date: Mapped[str] = mapped_column(String(10), index=True)  # YYYY-MM-DD
+    rate: Mapped[Decimal] = mapped_column(Numeric(precision=18, scale=8))
+    source: Mapped[str] = mapped_column(String(50), server_default="alpha_vantage")
+    fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    def __repr__(self):
+        return f"<FxRateCache({self.from_currency}/{self.to_currency} {self.rate_date}: {self.rate})>"
+
+
+# ============================================================================
+# QUALITY SNAPSHOT
+# ============================================================================
+
+
+class QualitySnapshot(Base):
+    """Point-in-time quality grade snapshot per entity."""
+
+    __tablename__ = "quality_snapshots"
+
+    __table_args__ = (
+        Index("ix_quality_snapshot_entity_date", "entity_id", "snapshot_date"),
+    )
+
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    entity_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("entities.id", ondelete="CASCADE"), index=True
+    )
+    snapshot_date: Mapped[str] = mapped_column(String(10))  # YYYY-MM-DD
+    avg_confidence: Mapped[float] = mapped_column(Float)
+    quality_grade: Mapped[str] = mapped_column(String(2))
+    total_facts: Mapped[int] = mapped_column(Integer)
+    total_jobs: Mapped[int] = mapped_column(Integer)
+    unmapped_label_count: Mapped[int] = mapped_column(Integer, server_default="0")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    def __repr__(self):
+        return f"<QualitySnapshot(entity={self.entity_id}, date={self.snapshot_date}, grade={self.quality_grade})>"
+
+

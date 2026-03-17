@@ -19,6 +19,6 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
             "font-src 'self' https://cdn.jsdelivr.net; "
             "img-src 'self' data:; "
-            "connect-src 'self';"
+            "connect-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net;"
         )
         return response

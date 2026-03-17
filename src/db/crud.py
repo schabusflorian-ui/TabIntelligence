@@ -3082,3 +3082,65 @@ def check_auto_promotions(db: Session) -> int:
             operation="update",
             table="learned_aliases",
         )
+
+
+# ============================================================================
+# Quality Trending
+# ============================================================================
+
+
+def create_quality_snapshot(
+    db: Session,
+    entity_id: UUID,
+    snapshot_date: str,
+    avg_confidence: float,
+    quality_grade: str,
+    total_facts: int,
+    total_jobs: int,
+    unmapped_label_count: int = 0,
+) -> "QualitySnapshot":
+    """Create a quality snapshot record for an entity."""
+    from src.db.models import QualitySnapshot
+
+    snapshot = QualitySnapshot(
+        entity_id=entity_id,
+        snapshot_date=snapshot_date,
+        avg_confidence=avg_confidence,
+        quality_grade=quality_grade,
+        total_facts=total_facts,
+        total_jobs=total_jobs,
+        unmapped_label_count=unmapped_label_count,
+    )
+    db.add(snapshot)
+    db.commit()
+    db.refresh(snapshot)
+    return snapshot
+
+
+def get_quality_trend(
+    db: Session,
+    entity_id: UUID,
+    limit: int = 30,
+) -> list[dict]:
+    """Get quality snapshots for an entity, ordered by date descending."""
+    from src.db.models import QualitySnapshot
+
+    snapshots = (
+        db.query(QualitySnapshot)
+        .filter(QualitySnapshot.entity_id == entity_id)
+        .order_by(QualitySnapshot.snapshot_date.desc())
+        .limit(limit)
+        .all()
+    )
+
+    return [
+        {
+            "snapshot_date": s.snapshot_date,
+            "avg_confidence": s.avg_confidence,
+            "quality_grade": s.quality_grade,
+            "total_facts": s.total_facts,
+            "total_jobs": s.total_jobs,
+            "unmapped_label_count": s.unmapped_label_count,
+        }
+        for s in snapshots
+    ]

@@ -93,6 +93,8 @@ function renderHeader(entityId) {
   }
 }
 
+const MONTH_NAMES = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
 function renderStats() {
   const el = document.getElementById('ed-stats');
   if (!el) return;
@@ -101,6 +103,30 @@ function renderStats() {
   const filesCount = entity.files_count || 0;
   const avgConf = patternStats ? patternStats.avg_confidence : 0;
   const costSaved = patternStats ? patternStats.cost_saved_estimate : 0;
+
+  const fye = entity.fiscal_year_end ? MONTH_NAMES[entity.fiscal_year_end] : null;
+  const currency = entity.default_currency || null;
+  const standard = entity.reporting_standard || null;
+
+  let metadataBar = '';
+  if (fye || currency || standard) {
+    metadataBar = `
+      <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:10px;padding:8px 14px;background:var(--color-background-secondary);border-radius:var(--border-radius-md)">
+        <div>
+          <span style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.04em;color:var(--color-text-secondary)">Fiscal Year End</span>
+          <span style="font-size:12.5px;font-weight:500;margin-left:6px">${fye ? esc(fye) : '\u2014'}</span>
+        </div>
+        <div>
+          <span style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.04em;color:var(--color-text-secondary)">Currency</span>
+          <span style="font-size:12.5px;font-weight:500;margin-left:6px;font-family:'IBM Plex Mono',monospace">${currency ? esc(currency) : '\u2014'}</span>
+        </div>
+        <div>
+          <span style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.04em;color:var(--color-text-secondary)">Reporting Standard</span>
+          <span style="font-size:12.5px;font-weight:500;margin-left:6px">${standard ? esc(standard) : '\u2014'}</span>
+        </div>
+      </div>
+    `;
+  }
 
   el.innerHTML = `
     <div class="stats-grid">
@@ -121,6 +147,7 @@ function renderStats() {
         <div style="font-family:'DM Serif Display',Georgia,serif;font-size:1.25rem;line-height:1.1;color:#1D6B9F">${costSaved > 0 ? '$' + costSaved.toFixed(4) : '\u2014'}</div>
       </div>
     </div>
+    ${metadataBar}
   `;
 }
 
@@ -143,6 +170,11 @@ function renderTabsSection(entityId) {
       id: 'financials',
       label: 'Financials',
       render: (panel) => renderFinancialsTab(panel, entityId),
+    },
+    {
+      id: 'quality',
+      label: 'Quality',
+      render: (panel) => renderQualityTab(panel, entityId),
     },
   ], 'patterns');
 }
@@ -454,9 +486,138 @@ async function renderFinancialsTab(panel, entityId) {
   }
 }
 
+// --- Quality Tab ---
+
+const GRADE_VALUES = { A: 4, B: 3, C: 2, D: 1, F: 0 };
+const GRADE_COLORS_MAP = { A: '#1A7A4A', B: '#1D6B9F', C: '#C47D00', D: '#A32626', F: '#6B7280' };
+
+async function renderQualityTab(panel, entityId) {
+  panel.innerHTML = loadingPlaceholder('Loading quality trend...');
+  try {
+    const data = await apiGet('/api/v1/analytics/entity/' + entityId + '/quality-trend');
+    const snapshots = (data.snapshots || []).reverse(); // oldest first for chart
+
+    if (snapshots.length === 0) {
+      panel.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--color-text-secondary)">No quality data available yet. Quality snapshots are created after each extraction.</div>`;
+      return;
+    }
+
+    panel.innerHTML = `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-header"><span class="card-title">Quality Grade Trend</span></div>
+        <div style="padding:16px">
+          <div style="height:220px"><canvas id="quality-trend-chart"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Snapshot History</span></div>
+        <div id="quality-snapshot-table"></div>
+      </div>
+    `;
+
+    // Chart
+    const canvas = panel.querySelector('#quality-trend-chart');
+    if (canvas && typeof Chart !== 'undefined') {
+      const ctx = canvas.getContext('2d');
+      const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: snapshots.map(s => s.snapshot_date),
+          datasets: [
+            {
+              label: 'Quality Grade',
+              data: snapshots.map(s => GRADE_VALUES[s.quality_grade] ?? 0),
+              borderColor: '#1D6B9F',
+              backgroundColor: 'rgba(29,107,159,0.08)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 4,
+              pointBackgroundColor: snapshots.map(s => GRADE_COLORS_MAP[s.quality_grade] || '#888'),
+              borderWidth: 2,
+              yAxisID: 'y',
+            },
+            {
+              label: 'Avg Confidence',
+              data: snapshots.map(s => (s.avg_confidence * 100)),
+              borderColor: '#1A7A4A',
+              borderDash: [5, 3],
+              fill: false,
+              tension: 0.3,
+              pointRadius: 2,
+              borderWidth: 1.5,
+              yAxisID: 'y1',
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+          scales: {
+            x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 10 }, maxRotation: 45 } },
+            y: {
+              position: 'left',
+              min: 0, max: 4,
+              ticks: { stepSize: 1, callback: (v) => ['F', 'D', 'C', 'B', 'A'][v] || '', font: { size: 11 } },
+              grid: { color: 'rgba(0,0,0,0.04)' },
+              title: { display: true, text: 'Grade', font: { size: 10 } },
+            },
+            y1: {
+              position: 'right',
+              min: 0, max: 100,
+              ticks: { callback: (v) => v + '%', font: { size: 10 } },
+              grid: { display: false },
+              title: { display: true, text: 'Confidence', font: { size: 10 } },
+            },
+          },
+        },
+      });
+      sparklineCharts.push(chart);
+    }
+
+    // Snapshot table
+    const tableEl = panel.querySelector('#quality-snapshot-table');
+    let html = '<div class="table-wrapper"><table class="data-table"><thead><tr>';
+    html += '<th>Date</th><th style="text-align:center">Grade</th><th style="text-align:right">Confidence</th>';
+    html += '<th style="text-align:right">Facts</th><th style="text-align:right">Jobs</th><th style="text-align:right">Unmapped</th>';
+    html += '</tr></thead><tbody>';
+
+    for (const s of [...snapshots].reverse()) {
+      const gradeColor = GRADE_COLORS_MAP[s.quality_grade] || '#888';
+      html += '<tr>';
+      html += `<td style="font-size:11.5px">${esc(s.snapshot_date)}</td>`;
+      html += `<td style="text-align:center"><span class="badge" style="background:${gradeColor}20;color:${gradeColor};font-weight:600">${esc(s.quality_grade)}</span></td>`;
+      html += `<td class="text-mono" style="text-align:right">${(s.avg_confidence * 100).toFixed(0)}%</td>`;
+      html += `<td class="text-mono" style="text-align:right">${s.total_facts}</td>`;
+      html += `<td class="text-mono" style="text-align:right">${s.total_jobs}</td>`;
+      html += `<td class="text-mono" style="text-align:right">${s.unmapped_label_count}</td>`;
+      html += '</tr>';
+    }
+
+    html += '</tbody></table></div>';
+    tableEl.innerHTML = html;
+
+  } catch (err) {
+    panel.innerHTML = errorState('Failed to load quality trend: ' + err.message, 'Retry');
+    panel.querySelector('.error-retry-btn')?.addEventListener('click', () => renderQualityTab(panel, entityId));
+  }
+}
+
 // --- Edit Entity Modal ---
 
 function openEditModal(entityId) {
+  const fyeOptions = MONTH_NAMES.slice(1).map((name, i) => {
+    const month = i + 1;
+    const selected = entity.fiscal_year_end === month ? 'selected' : '';
+    return `<option value="${month}" ${selected}>${name}</option>`;
+  }).join('');
+
+  const standardOptions = ['GAAP', 'IFRS'].map(s => {
+    const selected = entity.reporting_standard === s ? 'selected' : '';
+    return `<option value="${s}" ${selected}>${s}</option>`;
+  }).join('');
+
   const { close, el: box } = showModal(`
     <h3 style="margin:0 0 16px">Edit Entity</h3>
     <form id="ed-edit-form">
@@ -464,9 +625,30 @@ function openEditModal(entityId) {
         <label style="font-size:11.5px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">Name <span style="color:#A32626">*</span></label>
         <input type="text" id="ed-edit-name" required value="${esc(entity.name || '')}" style="width:100%;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:12.5px;background:var(--color-background-primary);color:var(--color-text-primary)">
       </div>
-      <div style="margin-bottom:16px">
+      <div style="margin-bottom:12px">
         <label style="font-size:11.5px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">Industry</label>
         <input type="text" id="ed-edit-industry" value="${esc(entity.industry || '')}" placeholder="e.g. Energy, Manufacturing..." style="width:100%;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:12.5px;background:var(--color-background-primary);color:var(--color-text-primary)">
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:12px">
+        <div style="flex:1">
+          <label style="font-size:11.5px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">Fiscal Year End</label>
+          <select id="ed-edit-fye" style="width:100%;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:12.5px;background:var(--color-background-primary);color:var(--color-text-primary)">
+            <option value="">Not set</option>
+            ${fyeOptions}
+          </select>
+        </div>
+        <div style="flex:1">
+          <label style="font-size:11.5px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">Currency</label>
+          <input type="text" id="ed-edit-currency" value="${esc(entity.default_currency || '')}" placeholder="USD" maxlength="3" style="width:100%;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:12.5px;background:var(--color-background-primary);color:var(--color-text-primary);text-transform:uppercase;font-family:'IBM Plex Mono',monospace">
+        </div>
+        <div style="flex:1">
+          <label style="font-size:11.5px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px">Reporting Standard</label>
+          <select id="ed-edit-standard" style="width:100%;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:12.5px;background:var(--color-background-primary);color:var(--color-text-primary)">
+            <option value="">Not set</option>
+            ${standardOptions}
+            <option value="Other" ${entity.reporting_standard && !['GAAP', 'IFRS'].includes(entity.reporting_standard) ? 'selected' : ''}>Other</option>
+          </select>
+        </div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px">
         <button type="button" class="modal-cancel-btn" style="background:transparent;color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:7px 16px;font-size:13px;cursor:pointer">Cancel</button>
@@ -481,6 +663,10 @@ function openEditModal(entityId) {
     e.preventDefault();
     const name = box.querySelector('#ed-edit-name').value.trim();
     const industry = box.querySelector('#ed-edit-industry').value.trim() || null;
+    const fyeVal = box.querySelector('#ed-edit-fye').value;
+    const fiscal_year_end = fyeVal ? parseInt(fyeVal) : null;
+    const default_currency = box.querySelector('#ed-edit-currency').value.trim().toUpperCase() || null;
+    const reporting_standard = box.querySelector('#ed-edit-standard').value || null;
 
     if (!name) {
       showToast('Entity name is required', 'error');
@@ -495,13 +681,14 @@ function openEditModal(entityId) {
       const res = await apiFetch('/api/v1/entities/' + entityId, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, industry }),
+        body: JSON.stringify({ name, industry, fiscal_year_end, default_currency, reporting_standard }),
       });
       const updated = await res.json();
       entity = { ...entity, ...updated };
       close();
       showToast('Entity updated', 'success');
       renderHeader(entityId);
+      renderStats();
     } catch (err) {
       showToast('Failed to update entity: ' + err.message, 'error');
       submitBtn.disabled = false;

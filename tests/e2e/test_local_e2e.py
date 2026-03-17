@@ -93,12 +93,15 @@ def e2e_client(test_db, mock_anthropic, mock_api_key):
         return result
 
     with (
-        patch("src.api.main.run_extraction_task") as mock_task,
+        patch("src.api.files.run_extraction_task") as mock_files_task,
+        patch("src.api.jobs.run_extraction_task") as mock_jobs_task,
         patch("src.api.main.get_s3_client", return_value=mock_s3),
+        patch("src.api.files.get_s3_client", return_value=mock_s3),
         patch("src.storage.s3.get_s3_client", return_value=mock_s3),
         patch("src.jobs.tasks.get_db_context", test_db_context),
     ):
-        mock_task.delay = mock_delay
+        mock_files_task.delay = mock_delay
+        mock_jobs_task.delay = mock_delay
 
         client = TestClient(app, raise_server_exceptions=False)
         yield client

@@ -13,6 +13,8 @@ from sqlalchemy.orm import Session
 
 from src.api.rate_limit import limiter
 from src.api.schemas import (
+    AcceptSuggestionRequest,
+    AcceptSuggestionResponse,
     AnomalyDetectionResponse,
     ConfidenceCalibrationResponse,
     CostAnalyticsResponse,
@@ -21,9 +23,12 @@ from src.api.schemas import (
     EntityTrendsResponse,
     ExtractionFactResponse,
     FactsListResponse,
+    MappingSuggestion,
     MultiPeriodComparisonResponse,
     PortfolioSummaryResponse,
+    QualityTrendResponse,
     StructuredStatementResponse,
+    SuggestionResponse,
     TaxonomyCoverageResponse,
     UnmappedLabelAggregationResponse,
 )
@@ -225,6 +230,9 @@ def cross_entity_compare(
     ),
     year: Optional[int] = Query(None, description="Match by calendar year"),
     include_metadata: bool = Query(False, description="Include normalization metadata"),
+    target_currency: Optional[str] = Query(
+        None, description="Convert all values to this currency (e.g. USD)"
+    ),
     db: Session = Depends(get_db),
     _api_key=Depends(get_current_api_key),
 ):
@@ -282,6 +290,9 @@ def cross_entity_compare(
             f"Fiscal year ends differ: {details}. Period comparison may not be apples-to-apples."
         )
 
+    if target_currency:
+        normalization_notes.append(f"Values converted to {target_currency} where possible.")
+
     # Build comparison structure grouped by canonical_name
     grouped: dict = defaultdict(list)
     seen: set = set()
@@ -297,12 +308,29 @@ def cross_entity_compare(
             "amount": float(f.value),
             "confidence": f.confidence,
         }
-        if include_metadata:
+        if include_metadata or target_currency:
             ev["period_raw"] = f.period
             ev["period_normalized"] = f.period_normalized
             ev["currency_code"] = f.currency_code
             ev["source_unit"] = f.source_unit
             ev["fiscal_year_end"] = entity_obj.fiscal_year_end if entity_obj else None
+
+        # Currency conversion
+        if target_currency and f.currency_code and f.currency_code != target_currency:
+            from src.normalization.fx_service import FxService
+
+            fx = FxService()
+            result = fx.convert(float(f.value), f.currency_code, target_currency, db)
+            if result:
+                ev["original_amount"] = ev["amount"]
+                ev["amount"] = result["converted_amount"]
+                ev["converted_amount"] = result["converted_amount"]
+                ev["fx_rate_used"] = result["fx_rate_used"]
+            else:
+                ev["original_amount"] = ev["amount"]
+                ev["converted_amount"] = None
+                ev["fx_rate_used"] = None
+
         grouped[f.canonical_name].append(ev)
 
     # Build alignment warnings per comparison item
@@ -903,4 +931,168 @@ def detect_anomalies(
         summaries=summaries,  # type: ignore[arg-type]
         total_outliers=total_outliers,
         total_items=total_items,
+    )
+
+
+# ============================================================================
+# GET /unmapped-labels/{label}/suggestions — Taxonomy Gap Suggestions
+# ============================================================================
+
+
+@router.get(
+    "/unmapped-labels/{label}/suggestions",
+    response_model=SuggestionResponse,
+)
+@limiter.limit("500/hour")
+def unmapped_label_suggestions(
+    request: Request,
+    label: str,
+    limit: int = Query(5, ge=1, le=20),
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Get mapping suggestions for an unmapped label.
+
+    Uses fuzzy matching against EntityPatterns, Taxonomy aliases,
+    and LearnedAliases to suggest canonical name mappings.
+    """
+    from src.normalization.suggestion_engine import suggest_for_label
+
+    results = suggest_for_label(db, label, limit=limit)
+
+    return SuggestionResponse(
+        label=label,
+        suggestions=[MappingSuggestion(**s) for s in results],
+    )
+
+
+# ============================================================================
+# POST /unmapped-labels/{label}/accept — Accept a Suggestion
+# ============================================================================
+
+
+@router.post(
+    "/unmapped-labels/{label}/accept",
+    response_model=AcceptSuggestionResponse,
+)
+@limiter.limit("200/hour")
+def accept_unmapped_suggestion(
+    request: Request,
+    label: str,
+    body: AcceptSuggestionRequest,
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Accept a mapping suggestion: create EntityPattern and/or LearnedAlias.
+
+    If entity_id is provided, creates an EntityPattern for that entity.
+    Always creates or updates a LearnedAlias for the canonical mapping.
+    """
+    from src.db.models import EntityPattern, LearnedAlias, Taxonomy
+
+    # Validate canonical_name exists in taxonomy
+    taxonomy_item = (
+        db.query(Taxonomy)
+        .filter(Taxonomy.canonical_name == body.canonical_name)
+        .first()
+    )
+    if not taxonomy_item:
+        raise HTTPException(400, f"Unknown canonical name: {body.canonical_name}")
+
+    pattern_created = False
+    alias_created = False
+
+    # Create EntityPattern if entity_id provided
+    if body.entity_id:
+        try:
+            entity_uuid = UUID(body.entity_id)
+        except ValueError:
+            raise HTTPException(400, f"Invalid entity_id: {body.entity_id}")
+
+        existing = (
+            db.query(EntityPattern)
+            .filter(
+                EntityPattern.entity_id == entity_uuid,
+                EntityPattern.original_label == label,
+                EntityPattern.canonical_name == body.canonical_name,
+            )
+            .first()
+        )
+        if not existing:
+            from datetime import datetime, timezone
+
+            pattern = EntityPattern(
+                entity_id=entity_uuid,
+                original_label=label,
+                canonical_name=body.canonical_name,
+                confidence=0.85,
+                created_by="user_correction",
+                last_seen=datetime.now(timezone.utc),
+            )
+            db.add(pattern)
+            pattern_created = True
+
+    # Create or update LearnedAlias
+    existing_alias = (
+        db.query(LearnedAlias)
+        .filter(
+            LearnedAlias.canonical_name == body.canonical_name,
+            LearnedAlias.alias_text == label,
+        )
+        .first()
+    )
+    if existing_alias:
+        existing_alias.occurrence_count += 1
+    else:
+        alias = LearnedAlias(
+            canonical_name=body.canonical_name,
+            alias_text=label,
+            occurrence_count=1,
+        )
+        db.add(alias)
+        alias_created = True
+
+    db.commit()
+
+    return AcceptSuggestionResponse(
+        label=label,
+        canonical_name=body.canonical_name,
+        pattern_created=pattern_created,
+        alias_created=alias_created,
+    )
+
+
+# ============================================================================
+# GET /entity/{entity_id}/quality-trend — Quality Grade Trending
+# ============================================================================
+
+
+@router.get(
+    "/entity/{entity_id}/quality-trend",
+    response_model=QualityTrendResponse,
+)
+@limiter.limit("500/hour")
+def entity_quality_trend(
+    request: Request,
+    entity_id: str,
+    limit: int = Query(30, ge=1, le=365),
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Get quality grade trend over time for an entity."""
+    try:
+        entity_uuid = UUID(entity_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid entity_id format")
+
+    entity = crud.get_entity(db, entity_uuid)
+    if not entity:
+        raise HTTPException(404, "Entity not found")
+
+    snapshots = crud.get_quality_trend(db, entity_uuid, limit=limit)
+
+    return QualityTrendResponse(
+        entity_id=str(entity.id),
+        entity_name=entity.name,
+        snapshots=snapshots,
     )

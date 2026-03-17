@@ -627,6 +627,9 @@ class EntityComparisonValue(BaseModel):
     currency_code: Optional[str] = None
     source_unit: Optional[str] = None
     fiscal_year_end: Optional[int] = None
+    original_amount: Optional[float] = None
+    converted_amount: Optional[float] = None
+    fx_rate_used: Optional[float] = None
 
 
 class ComparisonItem(BaseModel):
@@ -883,3 +886,52 @@ class AnomalyDetectionResponse(BaseModel):
     summaries: List[AnomalySummary]
     total_outliers: int
     total_items: int
+
+
+# ============================================================================
+# Analytics: Taxonomy Gap Suggestions
+# ============================================================================
+
+
+class MappingSuggestion(BaseModel):
+    canonical_name: str
+    confidence: float
+    reason: str
+    source: str  # "entity_pattern", "taxonomy_alias", "learned_alias"
+
+
+class SuggestionResponse(BaseModel):
+    label: str
+    suggestions: List[MappingSuggestion]
+
+
+class AcceptSuggestionRequest(BaseModel):
+    canonical_name: str
+    entity_id: Optional[str] = None
+
+
+class AcceptSuggestionResponse(BaseModel):
+    label: str
+    canonical_name: str
+    pattern_created: bool
+    alias_created: bool
+
+
+# ============================================================================
+# Analytics: Quality Trending
+# ============================================================================
+
+
+class QualitySnapshotItem(BaseModel):
+    snapshot_date: str
+    avg_confidence: float
+    quality_grade: str
+    total_facts: int
+    total_jobs: int
+    unmapped_label_count: int
+
+
+class QualityTrendResponse(BaseModel):
+    entity_id: str
+    entity_name: Optional[str] = None
+    snapshots: List[QualitySnapshotItem]

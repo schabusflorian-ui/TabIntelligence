@@ -1,10 +1,11 @@
-// Analytics Page — Portfolio Health, Cross-Entity Compare, Cost Analysis, Taxonomy Coverage
+// Analytics Page — Portfolio Health, Cross-Entity Compare, Cost Analysis, Taxonomy Coverage, Anomalies, Taxonomy Gaps
 import { apiGet } from '../api.js';
 import { esc, formatNum, formatFinancial } from '../state.js';
 import { renderTabs } from '../components/tabs.js';
 import { skeletonStats, loadingPlaceholder, errorState } from '../components/loading.js';
 import { showToast } from '../components/toast.js';
 import { createDropdown } from '../components/dropdown.js';
+import { renderPagination } from '../components/pagination.js';
 import { CATEGORY_BADGE_CLASS } from '../constants/categories.js';
 
 let chartInstances = [];
@@ -40,6 +41,8 @@ export async function render(container) {
     { id: 'compare', label: 'Cross-Entity Compare', render: renderCompare },
     { id: 'costs', label: 'Cost Analysis', render: renderCosts },
     { id: 'taxonomy', label: 'Taxonomy Coverage', render: renderTaxonomy },
+    { id: 'anomalies', label: 'Anomalies', render: renderAnomalies },
+    { id: 'unmapped', label: 'Taxonomy Gaps', render: renderUnmapped },
   ], 'health');
 }
 
@@ -157,6 +160,8 @@ async function renderPortfolioHealth(panel) {
 
 // ========== TAB 2: Cross-Entity Compare ==========
 
+const MONTH_NAMES = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
 async function renderCompare(panel) {
   panel.innerHTML = `
     <div class="card" style="margin-bottom:20px">
@@ -172,12 +177,37 @@ async function renderCompare(panel) {
             <input type="text" id="compare-canonical-input" placeholder="e.g. total_revenue, net_income"
               style="width:100%;padding:6px 10px;border:0.5px solid rgba(0,0,0,0.08);border-radius:8px;font-size:12.5px;background:white;box-sizing:border-box">
           </div>
-          <div style="min-width:120px">
-            <label style="display:block;font-size:10.5px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;color:#888;margin-bottom:4px">Period</label>
+          <div style="min-width:200px">
+            <label style="display:block;font-size:10.5px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;color:#888;margin-bottom:4px">Period Mode</label>
+            <div style="display:flex;gap:4px;margin-bottom:6px">
+              <label style="display:flex;align-items:center;gap:3px;font-size:11.5px;cursor:pointer">
+                <input type="radio" name="compare-period-mode" value="period" checked style="margin:0"> Exact
+              </label>
+              <label style="display:flex;align-items:center;gap:3px;font-size:11.5px;cursor:pointer">
+                <input type="radio" name="compare-period-mode" value="period_normalized" style="margin:0"> Normalized
+              </label>
+              <label style="display:flex;align-items:center;gap:3px;font-size:11.5px;cursor:pointer">
+                <input type="radio" name="compare-period-mode" value="year" style="margin:0"> Year
+              </label>
+            </div>
             <input type="text" id="compare-period-input" placeholder="e.g. FY2024"
               style="width:100%;padding:6px 10px;border:0.5px solid rgba(0,0,0,0.08);border-radius:8px;font-size:12.5px;background:white;box-sizing:border-box">
           </div>
-          <div>
+          <div style="min-width:100px">
+            <label style="display:block;font-size:10.5px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;color:#888;margin-bottom:4px">Target Currency</label>
+            <select id="compare-target-currency" style="width:100%;padding:6px 10px;border:0.5px solid rgba(0,0,0,0.08);border-radius:8px;font-size:12.5px;background:white">
+              <option value="">Original</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+              <option value="JPY">JPY</option>
+              <option value="CHF">CHF</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label style="display:flex;align-items:center;gap:4px;font-size:11.5px;cursor:pointer;white-space:nowrap">
+              <input type="checkbox" id="compare-metadata-check" style="margin:0"> Include metadata
+            </label>
             <button class="btn btn-sm" id="compare-run-btn" style="background:#1D6B9F;color:white;border:none;padding:7px 18px;border-radius:8px;font-size:12.5px;cursor:pointer;white-space:nowrap">
               Compare
             </button>
@@ -191,6 +221,15 @@ async function renderCompare(panel) {
       </div>
     </div>
   `;
+
+  // Update placeholder based on period mode
+  const periodInput = panel.querySelector('#compare-period-input');
+  panel.querySelectorAll('input[name="compare-period-mode"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const mode = radio.value;
+      periodInput.placeholder = mode === 'year' ? 'e.g. 2024' : 'e.g. FY2024';
+    });
+  });
 
   // Load entities for the dropdown
   const ddContainer = panel.querySelector('#compare-entity-dropdown');
@@ -215,7 +254,10 @@ async function renderCompare(panel) {
     panel.querySelector('#compare-run-btn').addEventListener('click', async () => {
       const selectedIds = [...dd.getSelected()];
       const canonical = panel.querySelector('#compare-canonical-input').value.trim();
-      const period = panel.querySelector('#compare-period-input').value.trim();
+      const periodVal = panel.querySelector('#compare-period-input').value.trim();
+      const periodMode = panel.querySelector('input[name="compare-period-mode"]:checked')?.value || 'period';
+      const includeMetadata = panel.querySelector('#compare-metadata-check').checked;
+      const targetCurrency = panel.querySelector('#compare-target-currency').value;
       const resultsEl = panel.querySelector('#compare-results');
 
       if (selectedIds.length === 0 && !canonical) {
@@ -229,10 +271,12 @@ async function renderCompare(panel) {
         const params = new URLSearchParams();
         if (selectedIds.length > 0) params.set('entity_ids', selectedIds.join(','));
         if (canonical) params.set('canonical_names', canonical);
-        if (period) params.set('period', period);
+        if (periodVal) params.set(periodMode, periodVal);
+        if (includeMetadata) params.set('include_metadata', 'true');
+        if (targetCurrency) params.set('target_currency', targetCurrency);
 
         const cmpData = await apiGet(`/api/v1/analytics/compare?${params.toString()}`);
-        renderCompareResults(resultsEl, cmpData, entities);
+        renderCompareResults(resultsEl, cmpData, entities, includeMetadata);
       } catch (err) {
         resultsEl.innerHTML = errorState('Comparison failed: ' + (err.message || 'Unknown error'), 'Retry');
         showToast('Comparison failed', 'error');
@@ -243,34 +287,65 @@ async function renderCompare(panel) {
   }
 }
 
-function renderCompareResults(el, data, entities) {
+function renderCompareResults(el, data, entities, showMetadata) {
+  let html = '';
+
+  // Alignment warnings
+  const warnings = data.alignment_warnings || [];
+  const notes = data.normalization_notes || [];
+  if (warnings.length > 0 || notes.length > 0) {
+    html += '<div style="margin-bottom:12px">';
+    for (const w of warnings) {
+      html += `<div style="background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;padding:8px 14px;font-size:12px;color:#92400E;margin-bottom:6px">${esc(w)}</div>`;
+    }
+    for (const n of notes) {
+      html += `<div style="background:#E0F2FE;border:1px solid #0EA5E9;border-radius:8px;padding:8px 14px;font-size:12px;color:#0C4A6E;margin-bottom:6px">${esc(n)}</div>`;
+    }
+    html += '</div>';
+  }
+
   const comparisons = data.comparisons || [];
 
   if (comparisons.length === 0) {
-    el.innerHTML = `<div class="text-center text-secondary text-sm" style="padding:3rem">No comparison data found for the selected parameters.</div>`;
+    el.innerHTML = html + `<div class="text-center text-secondary text-sm" style="padding:3rem">No comparison data found for the selected parameters.</div>`;
     return;
   }
 
   // Collect all entity IDs across all comparisons to build columns
   const entityMap = new Map();
+  const entityMeta = new Map();
   for (const cmp of comparisons) {
     for (const ent of (cmp.entities || [])) {
       if (!entityMap.has(ent.entity_id)) {
         entityMap.set(ent.entity_id, ent.entity_name || `Entity ${ent.entity_id}`);
+        entityMeta.set(ent.entity_id, {
+          currency: ent.currency_code || '',
+          fye: ent.fiscal_year_end || null,
+        });
       }
     }
   }
 
   const entityIds = [...entityMap.keys()];
   if (entityIds.length === 0) {
-    el.innerHTML = `<div class="text-center text-secondary text-sm" style="padding:3rem">No entity data in comparison results.</div>`;
+    el.innerHTML = html + `<div class="text-center text-secondary text-sm" style="padding:3rem">No entity data in comparison results.</div>`;
     return;
   }
 
-  let html = '<div class="card"><div class="table-wrapper"><table class="data-table"><thead><tr>';
+  html += '<div class="card"><div class="table-wrapper"><table class="data-table"><thead><tr>';
   html += '<th>Canonical Name</th>';
   for (const eid of entityIds) {
-    html += `<th class="text-mono" style="text-align:right">${esc(entityMap.get(eid))}</th>`;
+    let colHeader = esc(entityMap.get(eid));
+    if (showMetadata) {
+      const meta = entityMeta.get(eid) || {};
+      const parts = [];
+      if (meta.currency) parts.push(meta.currency);
+      if (meta.fye) parts.push('FYE: ' + MONTH_NAMES[meta.fye]);
+      if (parts.length > 0) {
+        colHeader += `<br><span style="font-size:10px;color:#888;font-weight:normal">${esc(parts.join(' | '))}</span>`;
+      }
+    }
+    html += `<th class="text-mono" style="text-align:right">${colHeader}</th>`;
   }
   html += '</tr></thead><tbody>';
 
@@ -284,7 +359,11 @@ function renderCompareResults(el, data, entities) {
       const match = (cmp.entities || []).find(e => e.entity_id === eid);
       if (match) {
         const conf = match.confidence != null ? `Confidence: ${(match.confidence * 100).toFixed(0)}%` : '';
-        html += `<td class="text-mono" style="text-align:right" title="${esc(conf)}">${formatFinancial(match.amount)}</td>`;
+        let cellContent = formatFinancial(match.amount);
+        if (showMetadata && match.currency_code) {
+          cellContent += ` <span style="font-size:10px;color:#888">${esc(match.currency_code)}</span>`;
+        }
+        html += `<td class="text-mono" style="text-align:right" title="${esc(conf)}">${cellContent}</td>`;
       } else {
         html += '<td class="text-mono text-secondary" style="text-align:right">-</td>';
       }
@@ -515,6 +594,277 @@ async function renderTaxonomy(panel) {
     panel.querySelector('#tax-never-card').style.display = 'none';
     showToast('Failed to load taxonomy coverage', 'error');
   }
+}
+
+// ========== TAB 5: Anomaly Detection ==========
+
+async function renderAnomalies(panel) {
+  panel.innerHTML = `
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><span class="card-title">Anomaly Detection Parameters</span></div>
+      <div style="padding:16px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+          <div style="flex:1;min-width:200px">
+            <label style="display:block;font-size:10.5px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;color:#888;margin-bottom:4px">Canonical Names <span style="color:#A32626">*</span></label>
+            <input type="text" id="anomaly-canonical-input" placeholder="e.g. revenue, ebitda"
+              style="width:100%;padding:6px 10px;border:0.5px solid rgba(0,0,0,0.08);border-radius:8px;font-size:12.5px;background:white;box-sizing:border-box">
+          </div>
+          <div style="min-width:140px">
+            <label style="display:block;font-size:10.5px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;color:#888;margin-bottom:4px">Period / Year</label>
+            <input type="text" id="anomaly-period-input" placeholder="e.g. FY2024 or 2024"
+              style="width:100%;padding:6px 10px;border:0.5px solid rgba(0,0,0,0.08);border-radius:8px;font-size:12.5px;background:white;box-sizing:border-box">
+          </div>
+          <div style="min-width:100px">
+            <label style="display:block;font-size:10.5px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;color:#888;margin-bottom:4px">Method</label>
+            <select id="anomaly-method-select" style="width:100%;padding:6px 10px;border:0.5px solid rgba(0,0,0,0.08);border-radius:8px;font-size:12.5px;background:white">
+              <option value="iqr">IQR</option>
+              <option value="zscore">Z-Score</option>
+            </select>
+          </div>
+          <div style="min-width:90px">
+            <label style="display:block;font-size:10.5px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;color:#888;margin-bottom:4px">Threshold</label>
+            <input type="number" id="anomaly-threshold-input" value="1.5" step="0.1" min="0.5" max="5"
+              style="width:100%;padding:6px 10px;border:0.5px solid rgba(0,0,0,0.08);border-radius:8px;font-size:12.5px;background:white;box-sizing:border-box">
+          </div>
+          <div>
+            <button class="btn btn-sm" id="anomaly-run-btn" style="background:#1D6B9F;color:white;border:none;padding:7px 18px;border-radius:8px;font-size:12.5px;cursor:pointer;white-space:nowrap">
+              Detect
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="anomaly-results">
+      <div class="text-center text-secondary text-sm" style="padding:3rem">
+        Enter canonical names and click Detect to find outliers across entities.
+      </div>
+    </div>
+  `;
+
+  panel.querySelector('#anomaly-run-btn').addEventListener('click', async () => {
+    const canonical = panel.querySelector('#anomaly-canonical-input').value.trim();
+    const periodVal = panel.querySelector('#anomaly-period-input').value.trim();
+    const method = panel.querySelector('#anomaly-method-select').value;
+    const threshold = panel.querySelector('#anomaly-threshold-input').value;
+    const resultsEl = panel.querySelector('#anomaly-results');
+
+    if (!canonical) {
+      showToast('Canonical names are required', 'warning');
+      return;
+    }
+
+    resultsEl.innerHTML = loadingPlaceholder('Running anomaly detection...');
+
+    try {
+      const params = new URLSearchParams();
+      params.set('canonical_names', canonical);
+      params.set('method', method);
+      if (threshold) params.set('threshold', threshold);
+
+      // Detect if the period looks like a year (4 digits only)
+      if (periodVal) {
+        if (/^\d{4}$/.test(periodVal)) {
+          params.set('year', periodVal);
+        } else {
+          params.set('period_normalized', periodVal);
+        }
+      }
+
+      const data = await apiGet(`/api/v1/analytics/anomalies?${params.toString()}`);
+      renderAnomalyResults(resultsEl, data);
+    } catch (err) {
+      resultsEl.innerHTML = errorState('Anomaly detection failed: ' + (err.message || 'Unknown error'), 'Retry');
+      showToast('Anomaly detection failed', 'error');
+    }
+  });
+}
+
+function renderAnomalyResults(el, data) {
+  const summaries = data.summaries || [];
+  const totalItems = data.total_items || 0;
+  const totalOutliers = data.total_outliers || 0;
+  const outlierRate = totalItems > 0 ? ((totalOutliers / totalItems) * 100).toFixed(1) : '0.0';
+
+  let html = `
+    <div class="stats-grid" style="margin-bottom:16px">
+      ${statCard('Total Items', formatNum(totalItems))}
+      ${statCard('Total Outliers', formatNum(totalOutliers))}
+      ${statCardColored('Outlier Rate', outlierRate + '%', totalOutliers > 0 ? '#A32626' : '#1A7A4A')}
+      ${statCard('Method', esc(data.method || 'iqr').toUpperCase())}
+    </div>
+  `;
+
+  if (summaries.length === 0) {
+    el.innerHTML = html + `<div class="text-center text-secondary text-sm" style="padding:2rem">No data to analyze. Ensure entities have extraction facts for the specified period.</div>`;
+    return;
+  }
+
+  for (const summary of summaries) {
+    html += `<div class="card" style="margin-bottom:12px">`;
+    html += `<div class="card-header" style="display:flex;justify-content:space-between;align-items:center">`;
+    html += `<span class="card-title" style="font-family:'IBM Plex Mono',monospace">${esc(summary.canonical_name)}</span>`;
+    html += `<span style="font-size:11px;color:#888">${esc(summary.period || '')} | Peers: ${summary.peer_count} | Mean: ${formatFinancial(summary.peer_mean)} | Median: ${formatFinancial(summary.peer_median)}</span>`;
+    html += `</div>`;
+
+    html += '<div class="table-wrapper"><table class="data-table"><thead><tr>';
+    html += '<th style="text-align:left">Entity</th>';
+    html += '<th style="text-align:right">Value</th>';
+    html += '<th style="text-align:center">Status</th>';
+    html += '<th style="text-align:center">Direction</th>';
+    html += `<th style="text-align:right">${data.method === 'zscore' ? 'Z-Score' : 'IQR Distance'}</th>`;
+    html += '</tr></thead><tbody>';
+
+    const items = (summary.items || []).sort((a, b) => (b.is_outlier ? 1 : 0) - (a.is_outlier ? 1 : 0));
+    for (const item of items) {
+      const rowStyle = item.is_outlier ? 'background:rgba(163,38,38,0.04)' : '';
+      html += `<tr style="${rowStyle}">`;
+      html += `<td style="text-align:left">${esc(item.entity_name || item.entity_id)}</td>`;
+      html += `<td class="text-mono" style="text-align:right">${formatFinancial(item.value)}</td>`;
+      if (item.is_outlier) {
+        html += '<td style="text-align:center"><span class="badge b-bad" style="font-size:10.5px">Outlier</span></td>';
+      } else {
+        html += '<td style="text-align:center"><span class="badge b-ok" style="font-size:10.5px">Normal</span></td>';
+      }
+      const arrow = item.direction === 'high' ? '\u2191' : item.direction === 'low' ? '\u2193' : '';
+      const arrowColor = item.direction === 'high' ? '#A32626' : item.direction === 'low' ? '#1D6B9F' : '#888';
+      html += `<td style="text-align:center;color:${arrowColor};font-weight:600">${arrow} ${esc(item.direction || '-')}</td>`;
+      const score = data.method === 'zscore' ? (item.z_score != null ? item.z_score.toFixed(2) : '-') : (item.iqr_distance != null ? item.iqr_distance.toFixed(2) : '-');
+      html += `<td class="text-mono" style="text-align:right">${score}</td>`;
+      html += '</tr>';
+    }
+
+    html += '</tbody></table></div></div>';
+  }
+
+  el.innerHTML = html;
+}
+
+// ========== TAB 6: Unmapped Labels / Taxonomy Gaps ==========
+
+async function renderUnmapped(panel) {
+  panel.innerHTML = `
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><span class="card-title">Unmapped Label Filters</span></div>
+      <div style="padding:16px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+          <div style="min-width:120px">
+            <label style="display:block;font-size:10.5px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;color:#888;margin-bottom:4px">Min Occurrences</label>
+            <input type="number" id="unmapped-min-occ" value="2" min="1"
+              style="width:100%;padding:6px 10px;border:0.5px solid rgba(0,0,0,0.08);border-radius:8px;font-size:12.5px;background:white;box-sizing:border-box">
+          </div>
+          <div style="min-width:120px">
+            <label style="display:block;font-size:10.5px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;color:#888;margin-bottom:4px">Min Entities</label>
+            <input type="number" id="unmapped-min-ent" value="1" min="1"
+              style="width:100%;padding:6px 10px;border:0.5px solid rgba(0,0,0,0.08);border-radius:8px;font-size:12.5px;background:white;box-sizing:border-box">
+          </div>
+          <div>
+            <button class="btn btn-sm" id="unmapped-run-btn" style="background:#1D6B9F;color:white;border:none;padding:7px 18px;border-radius:8px;font-size:12.5px;cursor:pointer;white-space:nowrap">
+              Search
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="unmapped-results">
+      <div class="text-center text-secondary text-sm" style="padding:3rem">
+        Click Search to view unmapped labels across all entities.
+      </div>
+    </div>
+  `;
+
+  let currentOffset = 0;
+  const limit = 25;
+
+  async function loadUnmapped(offset) {
+    const resultsEl = panel.querySelector('#unmapped-results');
+    const minOcc = panel.querySelector('#unmapped-min-occ').value || '2';
+    const minEnt = panel.querySelector('#unmapped-min-ent').value || '1';
+    resultsEl.innerHTML = loadingPlaceholder('Loading unmapped labels...');
+
+    try {
+      const params = new URLSearchParams();
+      params.set('min_occurrences', minOcc);
+      params.set('min_entities', minEnt);
+      params.set('limit', String(limit));
+      params.set('offset', String(offset));
+
+      const data = await apiGet(`/api/v1/analytics/unmapped-labels?${params.toString()}`);
+      currentOffset = offset;
+      renderUnmappedResults(resultsEl, data, offset);
+    } catch (err) {
+      resultsEl.innerHTML = errorState('Failed to load unmapped labels: ' + (err.message || 'Unknown error'), 'Retry');
+      showToast('Failed to load unmapped labels', 'error');
+    }
+  }
+
+  function renderUnmappedResults(el, data, offset) {
+    const labels = data.labels || [];
+    const total = data.total || 0;
+
+    let html = `
+      <div class="stats-grid" style="margin-bottom:16px">
+        ${statCard('Total Unmapped Labels', formatNum(total))}
+        ${statCard('Showing', `${labels.length} of ${total}`)}
+      </div>
+    `;
+
+    if (labels.length === 0) {
+      el.innerHTML = html + `<div class="text-center text-secondary text-sm" style="padding:2rem">No unmapped labels found matching filters.</div>`;
+      return;
+    }
+
+    html += '<div class="card"><div class="table-wrapper"><table class="data-table"><thead><tr>';
+    html += '<th style="text-align:left">Label</th>';
+    html += '<th style="text-align:right">Occurrences</th>';
+    html += '<th style="text-align:right">Entities</th>';
+    html += '<th style="text-align:left">Variants</th>';
+    html += '<th style="text-align:left">Sheets</th>';
+    html += '<th style="text-align:left">Category Hint</th>';
+    html += '</tr></thead><tbody>';
+
+    for (const item of labels) {
+      html += '<tr>';
+      html += `<td style="text-align:left;font-weight:500;font-size:12px">${esc(item.label_normalized)}</td>`;
+      html += `<td class="text-mono" style="text-align:right">${item.total_occurrences}</td>`;
+      html += `<td class="text-mono" style="text-align:right">${item.entity_count}</td>`;
+
+      const variants = (item.original_variants || []).slice(0, 3);
+      const moreVariants = (item.original_variants || []).length - 3;
+      let variantHtml = variants.map(v => `<span class="badge b-gray" style="font-size:10px;margin:1px">${esc(v)}</span>`).join('');
+      if (moreVariants > 0) variantHtml += `<span style="font-size:10px;color:#888"> +${moreVariants}</span>`;
+      html += `<td style="text-align:left">${variantHtml}</td>`;
+
+      const sheets = (item.sheet_names || []).slice(0, 2);
+      html += `<td style="text-align:left;font-size:11px;color:#888">${sheets.map(s => esc(s)).join(', ')}</td>`;
+
+      const hint = item.taxonomy_category_hint;
+      if (hint) {
+        const badgeClass = CATEGORY_BADGE_CLASS[hint] || 'b-gray';
+        html += `<td><span class="badge ${badgeClass}" style="font-size:10px">${esc(hint.replace(/_/g, ' '))}</span></td>`;
+      } else {
+        html += '<td style="color:#888;font-size:11px">-</td>';
+      }
+      html += '</tr>';
+    }
+
+    html += '</tbody></table></div></div>';
+    html += '<div id="unmapped-pagination" style="margin-top:12px"></div>';
+
+    el.innerHTML = html;
+
+    // Pagination
+    const pagEl = el.querySelector('#unmapped-pagination');
+    if (pagEl && total > limit) {
+      renderPagination(pagEl, {
+        total,
+        limit,
+        offset,
+        onChange: (newOffset) => loadUnmapped(newOffset),
+      });
+    }
+  }
+
+  panel.querySelector('#unmapped-run-btn').addEventListener('click', () => loadUnmapped(0));
 }
 
 // ========== Shared helpers ==========
