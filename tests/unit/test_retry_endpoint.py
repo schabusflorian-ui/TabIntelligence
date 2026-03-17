@@ -59,15 +59,17 @@ class TestRetryEndpoint:
 
         response = test_client_with_db.post(f"/api/v1/jobs/{job_id}/retry")
         assert response.status_code == 409
-        assert "failed" in response.json()["detail"].lower()
+        assert "failed or completed" in response.json()["detail"].lower()
 
-    def test_retry_completed_job_rejected(self, test_client_with_db, test_db):
-        """Cannot retry a completed job."""
+    def test_retry_completed_job_allowed(self, test_client_with_db, test_db):
+        """Completed jobs can be re-extracted."""
         from src.db import crud
 
         session = test_db()
         try:
-            file = crud.create_file(session, filename="test.xlsx", file_size=1024)
+            file = crud.create_file(
+                session, filename="test.xlsx", file_size=1024, s3_key="uploads/test.xlsx"
+            )
             job = crud.create_extraction_job(session, file_id=file.file_id)
             crud.complete_job(
                 session, job.job_id, result={"data": "test"}, tokens_used=100, cost_usd=0.01
@@ -76,8 +78,17 @@ class TestRetryEndpoint:
         finally:
             session.close()
 
-        response = test_client_with_db.post(f"/api/v1/jobs/{job_id}/retry")
-        assert response.status_code == 409
+        mock_task_result = MagicMock()
+        mock_task_result.id = "reextract-task-123"
+
+        with patch("src.api.jobs.run_extraction_task") as mock_task:
+            mock_task.delay.return_value = mock_task_result
+            response = test_client_with_db.post(f"/api/v1/jobs/{job_id}/retry")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["original_job_id"] == job_id
+        assert data["new_job_id"] != job_id
 
     def test_retry_job_not_found(self, test_client_with_db):
         """Returns 404 for nonexistent job."""

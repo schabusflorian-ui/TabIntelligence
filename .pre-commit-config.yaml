@@ -38,6 +38,13 @@ repos:
         language: pygrep
         exclude: '\.md$|\.example$|\.txt$'
 
+      - id: taxonomy-validate
+        name: Validate taxonomy.json integrity
+        entry: python scripts/validate_taxonomy.py
+        language: system
+        files: 'data/taxonomy\.json$'
+        pass_filenames: false
+
       - id: pytest-smoke
         name: Run pytest smoke (fast unit tests only)
         entry: bash -c 'python -m pytest tests/unit/ -x -q --no-header --no-cov -m "not slow" --ignore=tests/load --ignore=tests/e2e 2>/dev/null || exit 1'

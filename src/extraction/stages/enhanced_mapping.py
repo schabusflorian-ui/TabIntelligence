@@ -386,7 +386,20 @@ class EnhancedMappingStage(ExtractionStage):
                     logger.info(f"Stage 5: Resolved {deactivated} conflicting patterns")
 
             # Record learned aliases (separate DB session for isolation)
-            self._record_learned_aliases(context, final_mappings)
+            aliases_recorded = self._record_learned_aliases(context, final_mappings)
+
+            # Check for auto-promotions if aliases were recorded
+            if aliases_recorded > 0:
+                try:
+                    from src.db import crud as crud_module
+                    from src.db.session import get_db_sync
+
+                    with get_db_sync() as db:
+                        promoted = crud_module.check_auto_promotions(db)
+                        if promoted:
+                            logger.info(f"Stage 5: Auto-promoted {promoted} learned aliases")
+                except Exception as e:
+                    logger.warning(f"Stage 5: Auto-promotion check failed: {e}")
 
             logger.info(f"Stage 5: Persisted {count} entity patterns to DB")
             return count

@@ -14,6 +14,7 @@ from src.api.schemas import (
     JobListResponse,
     JobStatusResponse,
     ReviewDecisionRequest,
+    ReviewSuggestionsResponse,
 )
 from src.auth.dependencies import get_current_api_key
 from src.auth.models import APIKey
@@ -67,6 +68,8 @@ async def list_jobs(
                     "progress_percent": j.progress_percent,
                     "error": j.error,
                     "filename": j.file.filename if j.file else None,
+                    "entity_id": str(j.file.entity_id) if j.file and j.file.entity_id else None,
+                    "entity_name": j.file.entity.name if j.file and j.file.entity_id and j.file.entity else None,
                     "created_at": j.created_at.isoformat() if j.created_at else None,
                     "updated_at": j.updated_at.isoformat() if j.updated_at else None,
                 }
@@ -123,6 +126,21 @@ async def get_job_status(
 
         # Convert database model to API response format
         result = job.result
+
+        # Resolve entity context through File → Entity
+        filename = job.file.filename if job.file else None
+        entity_id = None
+        entity_name = None
+        if job.file and job.file.entity_id:
+            entity_id = str(job.file.entity_id)
+            if job.file.entity:
+                entity_name = job.file.entity.name
+            else:
+                # Fallback: query entity directly
+                from src.db.models import Entity
+                entity = db.query(Entity).filter(Entity.id == job.file.entity_id).first()
+                entity_name = entity.name if entity else None
+
         return {
             "job_id": str(job.job_id),
             "file_id": str(job.file_id),
@@ -135,6 +153,12 @@ async def get_job_status(
             "quality": result.get("quality") if result else None,
             "model_type": result.get("model_type") if result else None,
             "error": job.error,
+            "filename": filename,
+            "entity_id": entity_id,
+            "entity_name": entity_name,
+            "tokens_used": job.tokens_used,
+            "cost_usd": job.cost_usd,
+            "quality_grade": job.quality_grade,
         }
 
     except DatabaseError as e:
@@ -259,10 +283,10 @@ async def retry_job(
     api_key: APIKey = Depends(get_current_api_key),
 ):
     """
-    Retry a failed extraction job.
+    Re-extract a failed or completed extraction job.
 
     Creates a new job for the same file and enqueues a new Celery task.
-    Only failed jobs can be retried.
+    Failed jobs may resume from the last checkpoint. Completed jobs start fresh.
     """
     try:
         job_uuid = UUID(job_id)
@@ -273,9 +297,10 @@ async def retry_job(
     if not job:
         raise HTTPException(404, "Job not found")
 
-    if job.status != JobStatusEnum.FAILED:
+    if job.status not in (JobStatusEnum.FAILED, JobStatusEnum.COMPLETED):
         raise HTTPException(
-            409, f"Only failed jobs can be retried (current status: {job.status.value})"
+            409,
+            f"Only failed or completed jobs can be re-extracted (current status: {job.status.value})",
         )
 
     # Look up file record to get s3_key for re-extraction
@@ -612,6 +637,98 @@ def get_item_lineage(
     except DatabaseError as e:
         logger.error(f"Database error getting item lineage: {str(e)}")
         raise HTTPException(500, "Database error getting item lineage")
+
+
+# ============================================================================
+# GET /{job_id}/review-suggestions — Intelligence Layer
+# ============================================================================
+
+
+@router.get("/{job_id}/review-suggestions", response_model=ReviewSuggestionsResponse)
+@limiter.limit("500/hour")
+def get_review_suggestions(
+    request: Request,
+    job_id: str,
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Get prioritized review suggestions for a job's line items.
+
+    Scores each item by likelihood of needing human review and returns
+    the top 10 items sorted by priority score descending.
+    """
+    try:
+        job_uuid = UUID(job_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid job_id format")
+
+    try:
+        job = crud.get_job(db, job_uuid)
+        if not job:
+            raise HTTPException(404, "Job not found")
+
+        if not job.result or "line_items" not in job.result:
+            return ReviewSuggestionsResponse(
+                job_id=job_id, suggestions=[], total_items=0
+            )
+
+        line_items = job.result["line_items"]
+        scored_items = []
+
+        for item in line_items:
+            score = 0
+            reasons = []
+            confidence = item.get("confidence", 0)
+            canonical_name = item.get("canonical_name", "")
+            mapping_method = item.get("provenance", {}).get("mapping", {}).get("method", "")
+            validation_flags = item.get("validation_flags", [])
+
+            # Score: unmapped items get highest priority
+            if canonical_name == "unmapped":
+                score += 5
+                reasons.append("unmapped")
+
+            # Score: low confidence
+            if 0.4 <= confidence <= 0.7:
+                score += 3
+                reasons.append("low confidence")
+            elif 0.7 < confidence <= 0.8:
+                score += 1
+                reasons.append("moderate confidence")
+
+            # Score: has validation flags
+            if validation_flags:
+                score += 2
+                reasons.append("validation flags")
+
+            # Score: non-pattern mapping method
+            if mapping_method and mapping_method not in ("entity_pattern", "user_correction"):
+                score += 1
+                reasons.append("non-pattern mapping")
+
+            if score > 0:
+                scored_items.append({
+                    "original_label": item.get("original_label", ""),
+                    "canonical_name": canonical_name,
+                    "sheet": item.get("sheet"),
+                    "confidence": confidence,
+                    "priority_score": score,
+                    "reasons": reasons,
+                })
+
+        # Sort by priority score descending, take top 10
+        scored_items.sort(key=lambda x: x["priority_score"], reverse=True)
+        top_items = scored_items[:10]
+
+        return ReviewSuggestionsResponse(
+            job_id=job_id,
+            suggestions=top_items,
+            total_items=len(line_items),
+        )
+
+    except DatabaseError as e:
+        logger.error(f"Database error getting review suggestions: {str(e)}")
+        raise HTTPException(500, "Database error getting review suggestions")
 
 
 def _build_csv_response(result: dict, line_items: list, job_id: str):

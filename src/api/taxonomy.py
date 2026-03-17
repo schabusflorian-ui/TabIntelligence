@@ -91,23 +91,20 @@ def taxonomy_hierarchy(
     db: Session = Depends(get_db),
     _api_key=Depends(get_current_api_key),
 ):
-    """Get taxonomy as a parent-child hierarchy."""
-    hierarchy = _manager.get_hierarchy(db, category)
-    result = {}
-    for name, data in hierarchy.items():
-        result[name] = {
-            "canonical_name": data["item"].canonical_name,
-            "display_name": data["item"].display_name,
-            "category": data["item"].category,
-            "children": [
-                {
-                    "canonical_name": child.canonical_name,
-                    "display_name": child.display_name,
-                }
-                for child in data["children"]
-            ],
+    """Get taxonomy as a recursive parent-child hierarchy."""
+
+    def _serialize_node(node):
+        item = node["item"]
+        return {
+            "canonical_name": item.canonical_name,
+            "display_name": item.display_name,
+            "category": item.category,
+            "typical_sign": item.typical_sign,
+            "children": [_serialize_node(child) for child in node["children"]],
         }
-    return result
+
+    hierarchy = _manager.get_hierarchy(db, category)
+    return {name: _serialize_node(data) for name, data in hierarchy.items()}
 
 
 @router.get("/{canonical_name}", response_model=TaxonomyItemResponse)

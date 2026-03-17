@@ -246,7 +246,7 @@ class TestTaxonomyManager:
         assert "children" in revenue_data
         assert revenue_data["item"].canonical_name == "revenue"
 
-        children_names = [child.canonical_name for child in revenue_data["children"]]
+        children_names = [child["item"].canonical_name for child in revenue_data["children"]]
         assert "product_revenue" in children_names
 
     def test_get_statistics(self, db_session, sample_taxonomy):

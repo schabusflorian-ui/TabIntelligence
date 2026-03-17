@@ -124,6 +124,12 @@ class JobStatusResponse(BaseModel):
     quality: Optional[Dict[str, Any]] = None
     model_type: Optional[str] = None
     error: Optional[str] = None
+    filename: Optional[str] = None
+    entity_id: Optional[str] = None
+    entity_name: Optional[str] = None
+    tokens_used: Optional[int] = None
+    cost_usd: Optional[float] = None
+    quality_grade: Optional[str] = None
 
 
 # ============================================================================
@@ -193,16 +199,15 @@ class TaxonomySearchResponse(BaseModel):
     items: List[TaxonomySearchItem]
 
 
-class HierarchyChild(BaseModel):
-    canonical_name: str
-    display_name: Optional[str] = None
-
-
 class HierarchyNode(BaseModel):
     canonical_name: str
     display_name: Optional[str] = None
     category: str
-    children: List[HierarchyChild]
+    typical_sign: Optional[str] = None
+    children: List["HierarchyNode"] = []
+
+
+HierarchyNode.model_rebuild()
 
 
 # ============================================================================
@@ -218,6 +223,8 @@ class JobListItem(BaseModel):
     progress_percent: Optional[int] = None
     error: Optional[str] = None
     filename: Optional[str] = None
+    entity_id: Optional[str] = None
+    entity_name: Optional[str] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
 
@@ -237,17 +244,28 @@ class JobListResponse(BaseModel):
 class EntityCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     industry: Optional[str] = Field(None, max_length=100)
+    fiscal_year_end: Optional[int] = Field(None, ge=1, le=12, description="Fiscal year end month (1-12)")
+    default_currency: Optional[str] = Field(
+        None, min_length=3, max_length=3, description="ISO 4217 currency code"
+    )
+    reporting_standard: Optional[str] = Field(None, max_length=20, description="GAAP, IFRS, etc.")
 
 
 class UpdateEntityRequest(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     industry: Optional[str] = Field(None, max_length=100)
+    fiscal_year_end: Optional[int] = Field(None, ge=1, le=12)
+    default_currency: Optional[str] = Field(None, min_length=3, max_length=3)
+    reporting_standard: Optional[str] = Field(None, max_length=20)
 
 
 class EntityResponse(BaseModel):
     id: str
     name: str
     industry: Optional[str] = None
+    fiscal_year_end: Optional[int] = None
+    default_currency: Optional[str] = None
+    reporting_standard: Optional[str] = None
     created_at: Optional[str] = None
 
 
@@ -556,6 +574,9 @@ class ExtractionFactResponse(BaseModel):
     mapping_method: Optional[str] = None
     taxonomy_category: Optional[str] = None
     validation_passed: Optional[bool] = None
+    currency_code: Optional[str] = None
+    source_unit: Optional[str] = None
+    source_scale: Optional[float] = None
     created_at: Optional[str] = None
 
 
@@ -601,18 +622,27 @@ class EntityComparisonValue(BaseModel):
     entity_name: Optional[str] = None
     amount: Optional[float] = None
     confidence: Optional[float] = None
+    period_raw: Optional[str] = None
+    period_normalized: Optional[str] = None
+    currency_code: Optional[str] = None
+    source_unit: Optional[str] = None
+    fiscal_year_end: Optional[int] = None
 
 
 class ComparisonItem(BaseModel):
     canonical_name: str
-    period: str
+    period: Optional[str] = None
     entities: List[EntityComparisonValue]
+    alignment_warnings: List[str] = []
 
 
 class CrossEntityComparisonResponse(BaseModel):
     canonical_names: List[str]
-    period: str
+    period: Optional[str] = None
+    period_normalized: Optional[str] = None
+    year: Optional[int] = None
     comparisons: List[ComparisonItem]
+    normalization_notes: List[str] = []
 
 
 # ============================================================================
@@ -695,3 +725,161 @@ class CostAnalyticsResponse(BaseModel):
     avg_cost_per_job: float
     cost_by_entity: List[CostByEntity] = []
     cost_trend_daily: List[DailyCost] = []
+
+
+# ============================================================================
+# Analytics: Structured Statement (Phase 7 — Comparison)
+# ============================================================================
+
+
+class StatementLineItem(BaseModel):
+    canonical_name: str
+    display_name: Optional[str] = None
+    hierarchy_level: int = 0
+    is_subtotal: bool = False
+    parent_canonical: Optional[str] = None
+    values: Dict[str, float] = {}  # period -> amount
+    children: List["StatementLineItem"] = []
+
+    model_config = {"from_attributes": True}
+
+
+StatementLineItem.model_rebuild()
+
+
+class StructuredStatementResponse(BaseModel):
+    entity_id: str
+    entity_name: Optional[str] = None
+    category: str
+    periods: List[str] = []
+    items: List[StatementLineItem]
+    total_items: int = 0
+
+
+# ============================================================================
+# Analytics: Multi-Period Comparison (Phase 7 — Comparison)
+# ============================================================================
+
+
+class PeriodComparisonValue(BaseModel):
+    period: str
+    value: Optional[float] = None
+
+
+class PeriodDelta(BaseModel):
+    from_period: str
+    to_period: str
+    absolute_change: Optional[float] = None
+    pct_change: Optional[float] = None
+
+
+class ComparisonLineItem(BaseModel):
+    canonical_name: str
+    display_name: Optional[str] = None
+    taxonomy_category: Optional[str] = None
+    values: List[PeriodComparisonValue]
+    deltas: List[PeriodDelta] = []
+
+
+class MultiPeriodComparisonResponse(BaseModel):
+    entity_id: str
+    entity_name: Optional[str] = None
+    canonical_names: List[str]
+    periods: List[str]
+    items: List[ComparisonLineItem]
+
+
+# ============================================================================
+# Intelligence Layer: Confidence Calibration
+# ============================================================================
+
+
+class CalibrationBucket(BaseModel):
+    bin_start: float
+    bin_end: float
+    total_predictions: int
+    correct_predictions: int
+    accuracy: Optional[float] = None
+
+
+class ConfidenceCalibrationResponse(BaseModel):
+    buckets: List[CalibrationBucket]
+    total_facts: int
+    total_corrections: int
+
+
+# ============================================================================
+# Intelligence Layer: Review Suggestions
+# ============================================================================
+
+
+class ReviewSuggestionItem(BaseModel):
+    original_label: str
+    canonical_name: str
+    sheet: Optional[str] = None
+    confidence: float
+    priority_score: int
+    reasons: List[str]
+
+
+class ReviewSuggestionsResponse(BaseModel):
+    job_id: str
+    suggestions: List[ReviewSuggestionItem]
+    total_items: int
+
+
+# ============================================================================
+# Analytics: Unmapped Labels
+# ============================================================================
+
+
+class UnmappedLabelItem(BaseModel):
+    label_normalized: str
+    original_variants: List[str]
+    total_occurrences: int
+    entity_count: int
+    entity_ids: List[str]
+    sheet_names: List[str]
+    taxonomy_category_hint: Optional[str] = None
+
+
+class UnmappedLabelAggregationResponse(BaseModel):
+    labels: List[UnmappedLabelItem]
+    total: int
+    limit: int
+    offset: int
+
+
+# ============================================================================
+# Analytics: Anomaly Detection
+# ============================================================================
+
+
+class AnomalyItem(BaseModel):
+    entity_id: str
+    entity_name: Optional[str] = None
+    canonical_name: str
+    period: str
+    value: float
+    is_outlier: bool
+    z_score: Optional[float] = None
+    iqr_distance: Optional[float] = None
+    direction: Optional[str] = None
+
+
+class AnomalySummary(BaseModel):
+    canonical_name: str
+    period: str
+    peer_count: int
+    peer_mean: float
+    peer_median: float
+    outlier_count: int
+    items: List[AnomalyItem]
+
+
+class AnomalyDetectionResponse(BaseModel):
+    method: str
+    threshold: float
+    summaries: List[AnomalySummary]
+    total_outliers: int
+    total_items: int

@@ -358,12 +358,14 @@ def get_job_statistics(db: Session) -> dict:
     Returns:
         Dict with counts by status and total jobs
     """
-    stats = {}
-    for status in JobStatusEnum:
-        result = db.execute(
-            select(func.count(ExtractionJob.job_id)).where(ExtractionJob.status == status)
+    rows = db.execute(
+        select(ExtractionJob.status, func.count(ExtractionJob.job_id)).group_by(
+            ExtractionJob.status
         )
-        stats[status.value] = result.scalar() or 0
-
-    stats["total"] = sum(stats.values())
+    ).all()
+    stats = {s.value: 0 for s in JobStatusEnum}
+    for status, count in rows:
+        key = status.value if hasattr(status, "value") else status
+        stats[key] = count
+    stats["total"] = sum(v for k, v in stats.items() if k != "total")
     return stats

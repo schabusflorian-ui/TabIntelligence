@@ -13,14 +13,19 @@ from sqlalchemy.orm import Session
 
 from src.api.rate_limit import limiter
 from src.api.schemas import (
+    AnomalyDetectionResponse,
+    ConfidenceCalibrationResponse,
     CostAnalyticsResponse,
     CrossEntityComparisonResponse,
     EntityFinancialsResponse,
     EntityTrendsResponse,
     ExtractionFactResponse,
     FactsListResponse,
+    MultiPeriodComparisonResponse,
     PortfolioSummaryResponse,
+    StructuredStatementResponse,
     TaxonomyCoverageResponse,
+    UnmappedLabelAggregationResponse,
 )
 from src.auth.dependencies import get_current_api_key
 from src.core.exceptions import DatabaseError
@@ -214,11 +219,25 @@ def cross_entity_compare(
     request: Request,
     entity_ids: str = Query(..., description="Comma-separated entity UUIDs"),
     canonical_names: str = Query(..., description="Comma-separated canonical names"),
-    period: str = Query(..., description="Period string to compare"),
+    period: Optional[str] = Query(None, description="Exact period string to compare"),
+    period_normalized: Optional[str] = Query(
+        None, description="Match on normalized period (e.g. FY2024)"
+    ),
+    year: Optional[int] = Query(None, description="Match by calendar year"),
+    include_metadata: bool = Query(False, description="Include normalization metadata"),
     db: Session = Depends(get_db),
     _api_key=Depends(get_current_api_key),
 ):
-    """Compare multiple entities on specific financial items for a given period."""
+    """Compare multiple entities on specific financial items.
+
+    Supports three period matching modes:
+    - period: exact raw period string match
+    - period_normalized: match on normalized period (e.g. FY2024)
+    - year: match any fact whose normalized period contains this year
+    """
+    if not period and not period_normalized and not year:
+        raise HTTPException(400, "One of 'period', 'period_normalized', or 'year' is required")
+
     try:
         id_list = [UUID(eid.strip()) for eid in entity_ids.split(",") if eid.strip()]
     except ValueError:
@@ -231,10 +250,11 @@ def cross_entity_compare(
     if not name_list:
         raise HTTPException(400, "At least one canonical_name is required")
 
-    # Resolve entity names
-    entities = {
-        str(e.id): e.name for e in db.query(crud.Entity).filter(crud.Entity.id.in_(id_list)).all()
+    # Resolve entity objects (for name + metadata)
+    entity_objs = {
+        str(e.id): e for e in db.query(crud.Entity).filter(crud.Entity.id.in_(id_list)).all()
     }
+    entity_names = {eid: e.name for eid, e in entity_objs.items()}
 
     try:
         facts = crud.get_cross_entity_comparison(
@@ -242,55 +262,87 @@ def cross_entity_compare(
             entity_ids=id_list,
             canonical_names=name_list,
             period=period,
+            period_normalized=period_normalized,
+            year=year,
         )
     except DatabaseError:
         raise HTTPException(500, "Database error querying comparison")
 
-    # Build comparison structure
-    # Group by canonical_name -> list of entity values
+    # Check fiscal year alignment
+    normalization_notes: list[str] = []
+    fye_values = set()
+    for e in entity_objs.values():
+        fye_values.add(e.fiscal_year_end or 12)
+    if len(fye_values) > 1:
+        details = ", ".join(
+            f"{entity_objs[eid].name}={entity_objs[eid].fiscal_year_end or 12}"
+            for eid in sorted(entity_objs.keys())
+        )
+        normalization_notes.append(
+            f"Fiscal year ends differ: {details}. Period comparison may not be apples-to-apples."
+        )
+
+    # Build comparison structure grouped by canonical_name
     grouped: dict = defaultdict(list)
     seen: set = set()
     for f in facts:
         key = (f.canonical_name, str(f.entity_id))
         if key in seen:
-            continue  # keep first (latest) only
+            continue
         seen.add(key)
-        grouped[f.canonical_name].append(
-            {
-                "entity_id": str(f.entity_id),
-                "entity_name": entities.get(str(f.entity_id)),
-                "amount": float(f.value),
-                "confidence": f.confidence,
-            }
-        )
+        entity_obj = entity_objs.get(str(f.entity_id))
+        ev = {
+            "entity_id": str(f.entity_id),
+            "entity_name": entity_names.get(str(f.entity_id)),
+            "amount": float(f.value),
+            "confidence": f.confidence,
+        }
+        if include_metadata:
+            ev["period_raw"] = f.period
+            ev["period_normalized"] = f.period_normalized
+            ev["currency_code"] = f.currency_code
+            ev["source_unit"] = f.source_unit
+            ev["fiscal_year_end"] = entity_obj.fiscal_year_end if entity_obj else None
+        grouped[f.canonical_name].append(ev)
 
-    # Ensure all entities appear even if no facts
+    # Build alignment warnings per comparison item
     comparisons = []
     for cn in name_list:
         entity_values = grouped.get(cn, [])
         seen_entity_ids = {ev["entity_id"] for ev in entity_values}
         for eid in id_list:
             if str(eid) not in seen_entity_ids:
-                entity_values.append(
-                    {
-                        "entity_id": str(eid),
-                        "entity_name": entities.get(str(eid)),
-                        "amount": None,
-                        "confidence": None,
-                    }
-                )
+                ev = {
+                    "entity_id": str(eid),
+                    "entity_name": entity_names.get(str(eid)),
+                    "amount": None,
+                    "confidence": None,
+                }
+                if include_metadata:
+                    eo = entity_objs.get(str(eid))
+                    ev["fiscal_year_end"] = eo.fiscal_year_end if eo else None
+                entity_values.append(ev)
+
+        alignment_warnings = []
+        if len(fye_values) > 1:
+            alignment_warnings.append("Fiscal year ends differ across compared entities")
+
         comparisons.append(
             {
                 "canonical_name": cn,
                 "period": period,
                 "entities": entity_values,
+                "alignment_warnings": alignment_warnings,
             }
         )
 
     return CrossEntityComparisonResponse(
         canonical_names=name_list,
         period=period,
+        period_normalized=period_normalized,
+        year=year,
         comparisons=comparisons,  # type: ignore[arg-type]
+        normalization_notes=normalization_notes,
     )
 
 
@@ -539,6 +591,9 @@ def query_facts(
                 mapping_method=f.mapping_method,
                 taxonomy_category=f.taxonomy_category,
                 validation_passed=f.validation_passed,
+                currency_code=f.currency_code,
+                source_unit=f.source_unit,
+                source_scale=f.source_scale,
                 created_at=f.created_at.isoformat() if f.created_at else None,
             )
             for f in facts
@@ -546,4 +601,306 @@ def query_facts(
         count=len(facts),
         limit=limit,
         offset=offset,
+    )
+
+
+# ============================================================================
+# GET /entity/{entity_id}/statement — Structured Statement (Phase 7)
+# ============================================================================
+
+VALID_CATEGORIES = {
+    "income_statement",
+    "balance_sheet",
+    "cash_flow",
+    "debt_schedule",
+    "metrics",
+    "project_finance",
+}
+
+
+@router.get(
+    "/entity/{entity_id}/statement",
+    response_model=StructuredStatementResponse,
+)
+@limiter.limit("500/hour")
+def entity_statement(
+    request: Request,
+    entity_id: str,
+    category: str = Query(..., description="Statement category"),
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Get a structured financial statement for an entity, organized by taxonomy hierarchy."""
+    if category not in VALID_CATEGORIES:
+        raise HTTPException(
+            400,
+            f"Invalid category '{category}'. Must be one of: {', '.join(sorted(VALID_CATEGORIES))}",
+        )
+
+    try:
+        entity_uuid = UUID(entity_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid entity_id format")
+
+    entity = crud.get_entity(db, entity_uuid)
+    if not entity:
+        raise HTTPException(404, "Entity not found")
+
+    try:
+        result = crud.get_structured_statement(db, entity_uuid, category)
+    except DatabaseError:
+        raise HTTPException(500, "Database error querying structured statement")
+
+    return StructuredStatementResponse(
+        entity_id=entity_id,
+        entity_name=result["entity_name"],
+        category=result["category"],
+        periods=result["periods"],
+        items=result["items"],
+        total_items=result["total_items"],
+    )
+
+
+# ============================================================================
+# GET /entity/{entity_id}/compare-periods — Multi-Period Comparison (Phase 7)
+# ============================================================================
+
+
+@router.get(
+    "/entity/{entity_id}/compare-periods",
+    response_model=MultiPeriodComparisonResponse,
+)
+@limiter.limit("500/hour")
+def compare_periods(
+    request: Request,
+    entity_id: str,
+    canonical_names: str = Query(..., description="Comma-separated canonical names"),
+    periods: str = Query(..., description="Comma-separated periods (e.g. FY2023,FY2024)"),
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Compare specific financial items across multiple periods with computed deltas."""
+    try:
+        entity_uuid = UUID(entity_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid entity_id format")
+
+    entity = crud.get_entity(db, entity_uuid)
+    if not entity:
+        raise HTTPException(404, "Entity not found")
+
+    name_list = [n.strip() for n in canonical_names.split(",") if n.strip()]
+    if not name_list:
+        raise HTTPException(400, "At least one canonical_name is required")
+
+    period_list = [p.strip() for p in periods.split(",") if p.strip()]
+    if not period_list:
+        raise HTTPException(400, "At least one period is required")
+
+    try:
+        result = crud.get_multi_period_comparison(
+            db,
+            entity_id=entity_uuid,
+            canonical_names=name_list,
+            periods=period_list,
+        )
+    except DatabaseError:
+        raise HTTPException(500, "Database error querying period comparison")
+
+    return MultiPeriodComparisonResponse(
+        entity_id=entity_id,
+        entity_name=result["entity_name"],
+        canonical_names=result["canonical_names"],
+        periods=result["periods"],
+        items=result["items"],
+    )
+
+
+# ============================================================================
+# GET /confidence-calibration — Intelligence Layer
+# ============================================================================
+
+
+@router.get("/confidence-calibration", response_model=ConfidenceCalibrationResponse)
+@limiter.limit("500/hour")
+def confidence_calibration(
+    request: Request,
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Confidence calibration analytics.
+
+    Returns bucketed accuracy data comparing predicted confidence
+    to actual correctness (based on whether items were subsequently corrected).
+    """
+    try:
+        result = crud.get_confidence_calibration(db)
+    except DatabaseError:
+        raise HTTPException(500, "Database error computing confidence calibration")
+
+    return ConfidenceCalibrationResponse(
+        buckets=result["buckets"],
+        total_facts=result["total_facts"],
+        total_corrections=result["total_corrections"],
+    )
+
+
+# ============================================================================
+# GET /unmapped-labels — Taxonomy Gap Analysis
+# ============================================================================
+
+
+@router.get("/unmapped-labels", response_model=UnmappedLabelAggregationResponse)
+@limiter.limit("500/hour")
+def unmapped_label_aggregation(
+    request: Request,
+    min_occurrences: int = Query(1, ge=1, description="Minimum occurrence count"),
+    min_entities: int = Query(1, ge=1, description="Min distinct entities with this label"),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Cross-entity unmapped label aggregation for taxonomy gap analysis.
+
+    Returns labels sorted by total occurrence count, showing which unmapped
+    labels appear most frequently across entities — key signal for taxonomy gaps.
+    """
+    try:
+        result = crud.get_unmapped_label_aggregation(
+            db,
+            min_occurrences=min_occurrences,
+            min_entities=min_entities,
+            limit=limit,
+            offset=offset,
+        )
+    except DatabaseError:
+        raise HTTPException(500, "Database error querying unmapped labels")
+
+    return UnmappedLabelAggregationResponse(**result)
+
+
+# ============================================================================
+# GET /anomalies — Cross-Entity Anomaly Detection
+# ============================================================================
+
+
+@router.get("/anomalies", response_model=AnomalyDetectionResponse)
+@limiter.limit("500/hour")
+def detect_anomalies(
+    request: Request,
+    canonical_names: str = Query(..., description="Comma-separated canonical names"),
+    period_normalized: Optional[str] = Query(None, description="Normalized period to analyze"),
+    year: Optional[int] = Query(None, description="Year to analyze"),
+    entity_ids: Optional[str] = Query(None, description="Scope to specific entity UUIDs"),
+    method: str = Query("iqr", description="Detection method: 'iqr' or 'zscore'"),
+    threshold: float = Query(1.5, description="IQR multiplier or Z-score threshold"),
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Detect outlier values across entities for given canonical names.
+
+    Uses IQR (interquartile range) or Z-score methods to flag
+    statistically unusual values relative to peers.
+    """
+    if method not in ("iqr", "zscore"):
+        raise HTTPException(400, "method must be 'iqr' or 'zscore'")
+
+    if not period_normalized and not year:
+        raise HTTPException(400, "One of 'period_normalized' or 'year' is required")
+
+    name_list = [n.strip() for n in canonical_names.split(",") if n.strip()]
+    if not name_list:
+        raise HTTPException(400, "At least one canonical_name is required")
+
+    # Parse optional entity_ids filter
+    eid_filter: Optional[List[UUID]] = None
+    if entity_ids:
+        try:
+            eid_filter = [UUID(eid.strip()) for eid in entity_ids.split(",") if eid.strip()]
+        except ValueError:
+            raise HTTPException(400, "Invalid entity_id in list")
+
+    # Query facts
+    try:
+        facts = crud.get_facts_for_anomaly_detection(
+            db,
+            canonical_names=name_list,
+            period_normalized=period_normalized,
+            year=year,
+            entity_ids=eid_filter,
+        )
+    except DatabaseError:
+        raise HTTPException(500, "Database error querying facts for anomaly detection")
+
+    # Resolve entity names
+    all_entity_ids = list({f.entity_id for f in facts if f.entity_id})
+    entity_names = {}
+    if all_entity_ids:
+        entities = db.query(crud.Entity).filter(crud.Entity.id.in_(all_entity_ids)).all()
+        entity_names = {str(e.id): e.name for e in entities}
+
+    # Group facts by (canonical_name, period_normalized)
+    from collections import defaultdict as dd
+
+    groups: dict[tuple, list] = dd(list)
+    for f in facts:
+        key = (f.canonical_name, f.period_normalized or f.period)
+        groups[key].append(f)
+
+    # Run anomaly detection
+    from src.normalization.anomaly_detection import detect_iqr_anomalies, detect_zscore_anomalies
+
+    detector = detect_iqr_anomalies if method == "iqr" else detect_zscore_anomalies
+    summaries = []
+    total_outliers = 0
+    total_items = 0
+
+    for (cn, pn), group_facts in sorted(groups.items()):
+        values = [
+            (str(f.entity_id), entity_names.get(str(f.entity_id)), float(f.value))
+            for f in group_facts
+            if f.value is not None
+        ]
+        if len(values) < 3:
+            continue
+
+        results = detector(values, threshold)
+        outlier_count = sum(1 for r in results if r.is_outlier)
+        total_outliers += outlier_count
+        total_items += len(results)
+
+        items = [
+            {
+                "entity_id": r.entity_id,
+                "entity_name": r.entity_name,
+                "canonical_name": cn,
+                "period": pn,
+                "value": r.value,
+                "is_outlier": r.is_outlier,
+                "z_score": r.z_score,
+                "iqr_distance": r.iqr_distance,
+                "direction": r.direction,
+            }
+            for r in results
+        ]
+
+        summaries.append(
+            {
+                "canonical_name": cn,
+                "period": pn,
+                "peer_count": results[0].peer_count if results else 0,
+                "peer_mean": results[0].peer_mean if results else 0,
+                "peer_median": results[0].peer_median if results else 0,
+                "outlier_count": outlier_count,
+                "items": items,
+            }
+        )
+
+    return AnomalyDetectionResponse(
+        method=method,
+        threshold=threshold,
+        summaries=summaries,  # type: ignore[arg-type]
+        total_outliers=total_outliers,
+        total_items=total_items,
     )

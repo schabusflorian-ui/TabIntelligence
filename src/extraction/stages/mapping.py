@@ -698,20 +698,29 @@ class MappingStage(ExtractionStage):
                     active_only=True,
                 )
 
+                # Always load entity for industry context
+                entity = crud.get_entity(db, entity_uuid)
+
                 # Load industry patterns if entity has few of its own
                 industry_patterns = []
-                if len(patterns) < 5:
-                    entity = crud.get_entity(db, entity_uuid)
-                    if entity and entity.industry:
-                        industry_patterns = crud.get_industry_patterns(
-                            db,
-                            entity.industry,
-                            entity_uuid,
-                            min_confidence=0.8,
-                            limit=10,
-                        )
+                if len(patterns) < 5 and entity and entity.industry:
+                    industry_patterns = crud.get_industry_patterns(
+                        db,
+                        entity.industry,
+                        entity_uuid,
+                        min_confidence=0.8,
+                        limit=10,
+                    )
 
             lines = []
+
+            # Prepend industry context if available
+            if entity and entity.industry:
+                lines.append(
+                    f"This entity is in the {entity.industry} industry. "
+                    f"Focus on industry-specific line items and terminology."
+                )
+
             for p in patterns:
                 eff_conf = crud.compute_effective_confidence(
                     float(p.confidence),

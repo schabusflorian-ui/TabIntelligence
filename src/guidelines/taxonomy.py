@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from src.core.logging import get_logger
 from src.db.models import Taxonomy
+from src.taxonomy_constants import CATEGORY_DISPLAY_NAMES
 
 logger = get_logger(__name__)
 
@@ -224,23 +225,13 @@ class TaxonomyManager:
 
         # Format as prompt text
         lines = []
-        category_names = {
-            "income_statement": "Income Statement",
-            "balance_sheet": "Balance Sheet",
-            "cash_flow": "Cash Flow",
-            "debt_schedule": "Debt Schedule",
-            "depreciation_amortization": "Depreciation & Amortization",
-            "working_capital": "Working Capital",
-            "assumptions": "Assumptions",
-            "metrics": "Metrics",
-        }
 
         # Sort categories for consistent output
         sorted_categories = sorted(categories.keys())
 
         for cat in sorted_categories:
             items = categories[cat]
-            display_name = category_names.get(cat, cat.replace("_", " ").title())
+            display_name = CATEGORY_DISPLAY_NAMES.get(cat, cat.replace("_", " ").title())
             canonical_names = [item.canonical_name for item in items]
             line = f"{display_name}: {', '.join(canonical_names)}"
             lines.append(line)
@@ -253,61 +244,56 @@ class TaxonomyManager:
         self, session: Session, category: Optional[str] = None
     ) -> Dict[str, Dict[str, Any]]:
         """
-        Get taxonomy with hierarchical parent-child relationships.
+        Get taxonomy with recursive parent-child relationships.
 
-        Returns nested structure showing parent-child relationships
-        using the parent_canonical field.
+        Returns a recursive tree where each node has an item and nested children.
 
         Args:
             session: Database session
             category: Optional category filter
 
         Returns:
-            Dictionary mapping top-level canonical names to their metadata
-            and children:
+            Dictionary mapping top-level canonical names to recursive nodes:
             {
                 'revenue': {
                     'item': <Taxonomy object>,
-                    'children': [<product_revenue>, <service_revenue>, ...]
-                },
-                'cogs': {
-                    'item': <Taxonomy object>,
-                    'children': [<material_costs>, <labor_costs>, ...]
+                    'children': [
+                        {
+                            'item': <product_revenue>,
+                            'children': [...]
+                        },
+                        ...
+                    ]
                 }
             }
-
-        Example:
-            with get_db_context() as db:
-                manager = TaxonomyManager()
-                hierarchy = manager.get_hierarchy(db, "income_statement")
-                for parent_name, data in hierarchy.items():
-                    print(f"{parent_name}:")
-                    for child in data['children']:
-                        print(f"  - {child.canonical_name}")
         """
         logger.debug(f"Building taxonomy hierarchy (category={category})")
 
         items = self.get_by_category(session, category) if category else self.get_all(session)
 
-        # Build hierarchy
-        hierarchy: Dict[str, Dict[str, Any]] = {}
-        {item.canonical_name: item for item in items}
+        # Build lookup and node dict
+        item_lookup = {item.canonical_name: item for item in items}
+        nodes: Dict[str, Dict[str, Any]] = {
+            item.canonical_name: {"item": item, "children": []}
+            for item in items
+        }
 
-        # First pass: identify top-level items (no parent)
+        # Attach each child to its direct parent
+        roots: Dict[str, Dict[str, Any]] = {}
         for item in items:
             if item.parent_canonical is None:
-                hierarchy[item.canonical_name] = {
-                    "item": item,
-                    "children": [],
-                }
+                roots[item.canonical_name] = nodes[item.canonical_name]
+            elif item.parent_canonical in nodes:
+                nodes[item.parent_canonical]["children"].append(nodes[item.canonical_name])
+            else:
+                logger.warning(
+                    f"Taxonomy item '{item.canonical_name}' references "
+                    f"non-existent parent '{item.parent_canonical}' — treating as root"
+                )
+                roots[item.canonical_name] = nodes[item.canonical_name]
 
-        # Second pass: attach children to parents
-        for item in items:
-            if item.parent_canonical and item.parent_canonical in hierarchy:
-                hierarchy[item.parent_canonical]["children"].append(item)
-
-        logger.info(f"Built hierarchy with {len(hierarchy)} top-level items")
-        return hierarchy
+        logger.info(f"Built hierarchy with {len(roots)} top-level items")
+        return roots
 
     def get_statistics(self, session: Session) -> Dict[str, Any]:
         """

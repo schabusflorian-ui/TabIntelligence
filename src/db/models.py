@@ -39,6 +39,7 @@ from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db.base import Base  # noqa: F401 — re-exported for backward compat
+from src.taxonomy_constants import VALID_CATEGORIES
 
 
 # ============================================================================
@@ -71,9 +72,19 @@ class Entity(Base):
 
     __tablename__ = "entities"
 
+    __table_args__ = (
+        CheckConstraint(
+            "fiscal_year_end IS NULL OR (fiscal_year_end >= 1 AND fiscal_year_end <= 12)",
+            name="ck_entity_fiscal_year_end",
+        ),
+    )
+
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     name: Mapped[str] = mapped_column(String(255), index=True)
     industry: Mapped[Optional[str]] = mapped_column(String(100))
+    fiscal_year_end: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    default_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
+    reporting_standard: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
@@ -109,9 +120,7 @@ class Taxonomy(Base):
             name="ck_taxonomy_typical_sign",
         ),
         CheckConstraint(
-            "category IN ('income_statement', 'balance_sheet', 'cash_flow', "
-            "'debt_schedule', 'depreciation_amortization', 'working_capital', "
-            "'assumptions', 'metrics')",
+            "category IN (" + ", ".join(f"'{c}'" for c in VALID_CATEGORIES) + ")",
             name="ck_taxonomy_category",
         ),
     )
@@ -148,6 +157,7 @@ class EntityPattern(Base):
         CheckConstraint(
             "created_by IN ('claude', 'user_correction')", name="ck_entity_patterns_created_by"
         ),
+        Index("ix_entity_patterns_entity_id_original_label", "entity_id", "original_label"),
     )
 
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -241,6 +251,7 @@ class File(Base):
     extraction_jobs: Mapped[List["ExtractionJob"]] = relationship(
         back_populates="file", cascade="all, delete-orphan"
     )
+    entity: Mapped[Optional["Entity"]] = relationship(foreign_keys=[entity_id])
 
     def __repr__(self):
         return f"<File(file_id={self.file_id}, filename='{self.filename}')>"
@@ -255,6 +266,11 @@ class ExtractionJob(Base):
     """
 
     __tablename__ = "extraction_jobs"
+
+    __table_args__ = (
+        Index("ix_extraction_jobs_status_created_at", "status", "created_at"),
+        Index("ix_extraction_jobs_updated_at", "updated_at"),
+    )
 
     job_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     file_id: Mapped[UUID] = mapped_column(
@@ -458,6 +474,9 @@ class ExtractionFact(Base):
     mapping_method: Mapped[Optional[str]] = mapped_column(String(50))
     taxonomy_category: Mapped[Optional[str]] = mapped_column(String(50))
     validation_passed: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    currency_code: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
+    source_unit: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    source_scale: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     def __repr__(self):
@@ -507,6 +526,69 @@ class CorrectionHistory(Base):
         return (
             f"<CorrectionHistory(id={self.id}, job_id={self.job_id}, "
             f"'{self.old_canonical_name}' -> '{self.new_canonical_name}')>"
+        )
+
+
+class TaxonomyVersion(Base):
+    """
+    Tracks taxonomy.json versions applied to the database.
+
+    Records version, item count, and content checksum for audit trail
+    and backward compatibility.
+    """
+
+    __tablename__ = "taxonomy_versions"
+
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    version: Mapped[str] = mapped_column(String(20))
+    item_count: Mapped[int] = mapped_column(Integer)
+    checksum: Mapped[str] = mapped_column(String(64))  # SHA-256
+    categories: Mapped[dict] = mapped_column(JSON)  # {"income_statement": 54, ...}
+    applied_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    applied_by: Mapped[Optional[str]] = mapped_column(String(100))
+
+    def __repr__(self):
+        return f"<TaxonomyVersion(version='{self.version}', items={self.item_count})>"
+
+
+class UnmappedLabelAggregate(Base):
+    """
+    Tracks unmapped labels across entities for taxonomy gap analysis.
+
+    Each row represents a unique (label_normalized, entity_id) pair.
+    Populated during fact persistence when canonical_name == 'unmapped'.
+    """
+
+    __tablename__ = "unmapped_label_aggregates"
+
+    __table_args__ = (
+        UniqueConstraint("label_normalized", "entity_id", name="uq_unmapped_label_entity"),
+    )
+
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    label_normalized: Mapped[str] = mapped_column(String(500), index=True)
+    original_labels: Mapped[list] = mapped_column(JSON, default=list)
+    entity_id: Mapped[Optional[UUID]] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("entities.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    occurrence_count: Mapped[int] = mapped_column(Integer, server_default="1")
+    last_seen_job_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True), nullable=True)
+    sheet_names: Mapped[list] = mapped_column(JSON, default=list)
+    taxonomy_category_hint: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    def __repr__(self):
+        return (
+            f"<UnmappedLabelAggregate(label='{self.label_normalized}', "
+            f"count={self.occurrence_count})>"
         )
 
 

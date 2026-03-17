@@ -40,6 +40,7 @@ from src.api.health import router as health_router
 from src.api.jobs import router as jobs_router
 from src.api.metrics import MetricsMiddleware, metrics_endpoint
 from src.api.middleware import RequestIDMiddleware
+from src.api.middleware.security_headers import SecurityHeadersMiddleware
 from src.api.taxonomy import router as taxonomy_router
 from src.db.session import get_db
 from src.storage.s3 import get_s3_client
@@ -106,10 +107,25 @@ async def lifespan(app: FastAPI):
 
 _settings = get_settings()
 
+_openapi_tags = [
+    {"name": "entities", "description": "Company/asset entity CRUD and pattern management."},
+    {"name": "jobs", "description": "Extraction job lifecycle: submit, poll, export, retry, review."},
+    {"name": "files", "description": "Upload Excel models (.xlsx/.xls) for extraction."},
+    {"name": "taxonomy", "description": "Browse/search the 297-item canonical financial taxonomy."},
+    {"name": "analytics", "description": "Cross-entity comparison, portfolio summary, structured statements."},
+    {"name": "corrections", "description": "User corrections that train entity-specific patterns."},
+    {"name": "admin-dlq", "description": "Dead-letter queue for failed extraction jobs."},
+    {"name": "health", "description": "Liveness/readiness probes and component health checks."},
+]
+
 app = FastAPI(
     title="DebtFund",
     version=_settings.app_version,
-    description="Excel Model Intelligence — Guided hybrid extraction platform",
+    description="**DebtFund** — Guided hybrid extraction platform for financial models. "
+    "Extracts structured line items from Excel using Claude AI, maps to canonical taxonomy.",
+    openapi_tags=_openapi_tags,
+    contact={"name": "DebtFund", "email": "support@debtfund.example.com"},
+    license_info={"name": "Proprietary"},
     lifespan=lifespan,
 )
 
@@ -123,12 +139,15 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=_settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-Request-ID"],
 )
 
 # Add request ID middleware for correlation tracking
 app.add_middleware(RequestIDMiddleware)
+
+# Add security response headers middleware
+app.add_middleware(SecurityHeadersMiddleware)
 
 # Add Prometheus metrics middleware
 app.add_middleware(MetricsMiddleware)

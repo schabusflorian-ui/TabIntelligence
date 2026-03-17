@@ -119,6 +119,21 @@ jobs:
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
 
+  validate-taxonomy:
+    name: Validate Taxonomy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Validate taxonomy.json
+        run: python scripts/validate_taxonomy.py
+
   security:
     name: Security Scan
     runs-on: ubuntu-latest

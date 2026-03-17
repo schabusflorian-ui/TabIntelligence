@@ -562,6 +562,27 @@ def _build_result(
     parsed_data = parse_result.get("parsed", {})
     triage_list = triage_result.get("triage", [])
 
+    # Build raw_value -> normalized lookup from all sheets' detected periods
+    _detected_periods = parse_result.get("detected_periods", {})
+    period_norm_lookup: dict[str, str] = {}
+    for _sn, detection in _detected_periods.items():
+        for p in detection.get("periods", []):
+            raw = p.get("raw_value", "")
+            norm = p.get("normalized", "")
+            if raw and norm:
+                period_norm_lookup[raw] = norm
+
+    # Build per-sheet unit metadata from structured parsing data
+    _structured = parse_result.get("structured", {})
+    sheet_unit_metadata: dict[str, dict] = {}
+    for s in _structured.get("sheets", []):
+        sname = s.get("sheet_name", "")
+        if sname:
+            sheet_unit_metadata[sname] = {
+                "unit_hint": s.get("unit_hint", "absolute"),
+                "unit_multiplier": s.get("unit_multiplier"),
+            }
+
     # Use enhanced mappings if available, otherwise fall back to basic mappings
     mappings = enhanced_result.get("enhanced_mappings") or mapping_result.get("mappings", [])
 
@@ -610,9 +631,20 @@ def _build_result(
                     "enhanced_mapping": mapping.get("enhanced_mapping_provenance"),
                 }
 
+                # Build per-period normalization mapping for this line item
+                item_period_norm = {}
+                for pk in row.get("values", {}).keys():
+                    norm_val = period_norm_lookup.get(str(pk))
+                    if norm_val:
+                        item_period_norm[str(pk)] = norm_val
+
+                # Get unit metadata for this sheet
+                unit_meta = sheet_unit_metadata.get(sheet["sheet_name"], {})
+
                 line_items.append(
                     {
                         "sheet": sheet["sheet_name"],
+                        "sheet_name": sheet["sheet_name"],
                         "row": row.get("row_index"),
                         "original_label": row.get("label"),
                         "canonical_name": canonical,
@@ -620,6 +652,11 @@ def _build_result(
                         "confidence": mapping.get("confidence", 0.5),
                         "hierarchy_level": row.get("hierarchy_level", 1),
                         "provenance": provenance,
+                        "period_normalized": item_period_norm,
+                        "source_unit": unit_meta.get("unit_hint"),
+                        "source_scale": unit_meta.get("unit_multiplier"),
+                        "taxonomy_category": mapping.get("taxonomy_category"),
+                        "method": mapping.get("method"),
                     }
                 )
 

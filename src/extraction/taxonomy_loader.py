@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Dict, FrozenSet, List
 
 from src.core.logging import extraction_logger as logger
+from src.taxonomy_constants import CATEGORY_DISPLAY_NAMES
 
 TAXONOMY_PATH = Path(__file__).parent.parent.parent / "data" / "taxonomy.json"
 
@@ -196,14 +197,7 @@ def format_taxonomy_for_prompt(
     if not data.get("categories"):
         return _fallback_taxonomy()
 
-    category_display = {
-        "income_statement": "Income Statement",
-        "balance_sheet": "Balance Sheet",
-        "cash_flow": "Cash Flow",
-        "debt_schedule": "Debt Schedule",
-        "project_finance": "Project Finance",
-        "metrics": "Metrics",
-    }
+    category_display = CATEGORY_DISPLAY_NAMES
 
     # Build reverse lookup: canonical -> list of promoted alias texts
     learned_by_canonical: dict[str, list[str]] = {}
@@ -254,6 +248,43 @@ def format_taxonomy_detailed() -> str:
         lines.append(f"{category_display}:")
         lines.extend(names)
     return "\n".join(lines)
+
+
+def record_taxonomy_version(session, applied_by: str = "manual") -> None:
+    """Record the current taxonomy.json version in the database.
+
+    Computes SHA-256 checksum and category distribution, then inserts
+    a row into taxonomy_versions for audit trail.
+    """
+    import hashlib
+    from uuid import uuid4
+
+    from src.db.models import TaxonomyVersion
+
+    if not TAXONOMY_PATH.exists():
+        logger.warning("taxonomy.json not found — skipping version recording")
+        return
+
+    content = TAXONOMY_PATH.read_bytes()
+    checksum = hashlib.sha256(content).hexdigest()
+
+    data = load_taxonomy_json()
+    version = data.get("version", "unknown")
+    categories_dict = data.get("categories", {})
+    category_counts = {cat: len(items) for cat, items in categories_dict.items()}
+    total = sum(category_counts.values())
+
+    tv = TaxonomyVersion(
+        id=uuid4(),
+        version=version,
+        item_count=total,
+        checksum=checksum,
+        categories=category_counts,
+        applied_by=applied_by,
+    )
+    session.add(tv)
+    session.commit()
+    logger.info(f"Recorded taxonomy version {version} ({total} items, checksum={checksum[:12]}...)")
 
 
 def _fallback_taxonomy() -> str:

@@ -11,24 +11,26 @@ The canonical financial taxonomy lives in `data/taxonomy.json` (v3.0.0). It defi
   "categories": {
     "income_statement": [...],
     "balance_sheet": [...],
-    "cash_flow_statement": [...],
+    "cash_flow": [...],
     "debt_schedule": [...],
-    "solvency_metrics": [...],
-    "supplementary": [...]
+    "metrics": [...],
+    "project_finance": [...]
   }
 }
 ```
 
 ## Categories
 
+297 items across 6 categories:
+
 | Category | Description | Examples |
 |----------|-------------|---------|
 | `income_statement` | Revenue, expenses, profit items | revenue, cost_of_goods_sold, ebitda, net_income |
 | `balance_sheet` | Assets, liabilities, equity | cash_and_equivalents, total_debt, total_equity |
-| `cash_flow_statement` | Operating, investing, financing flows | operating_cash_flow, capital_expenditures |
-| `debt_schedule` | Debt-specific items | senior_secured_debt, interest_coverage_ratio |
-| `solvency_metrics` | Financial health ratios | debt_to_equity, current_ratio |
-| `supplementary` | Non-standard items | employee_count, revenue_per_employee |
+| `cash_flow` | Operating, investing, financing flows | operating_cash_flow, capital_expenditures |
+| `debt_schedule` | Debt-specific items | senior_secured_debt, term_loan, revolving_credit |
+| `metrics` | Financial health ratios and KPIs | debt_to_equity, current_ratio, interest_coverage_ratio |
+| `project_finance` | Project finance model items | cfads, cfae, equity_contribution, dscr |
 
 ## Item Fields
 

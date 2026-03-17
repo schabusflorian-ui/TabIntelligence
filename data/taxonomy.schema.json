@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DebtFund Canonical Financial Taxonomy",
+  "description": "Schema for data/taxonomy.json — the canonical financial line items taxonomy.",
+  "type": "object",
+  "required": ["version", "categories"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of the taxonomy"
+    },
+    "description": {
+      "type": "string"
+    },
+    "categories": {
+      "type": "object",
+      "propertyNames": {
+        "enum": [
+          "income_statement",
+          "balance_sheet",
+          "cash_flow",
+          "debt_schedule",
+          "metrics",
+          "project_finance"
+        ]
+      },
+      "additionalProperties": {
+        "type": "array",
+        "items": { "$ref": "#/definitions/taxonomy_item" }
+      }
+    }
+  },
+  "definitions": {
+    "taxonomy_item": {
+      "type": "object",
+      "required": [
+        "canonical_name",
+        "category",
+        "display_name",
+        "aliases",
+        "definition",
+        "typical_sign"
+      ],
+      "properties": {
+        "canonical_name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Unique snake_case identifier"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "income_statement",
+            "balance_sheet",
+            "cash_flow",
+            "debt_schedule",
+            "metrics",
+            "project_finance"
+          ]
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aliases": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "description": "Alternative labels the pipeline should recognize"
+        },
+        "definition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "typical_sign": {
+          "type": "string",
+          "enum": ["positive", "negative", "varies"]
+        },
+        "parent_canonical": {
+          "type": ["string", "null"],
+          "description": "Parent item canonical_name for hierarchy"
+        },
+        "validation_rules": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string" },
+            "min_value": { "type": "number" },
+            "max_value": { "type": "number" },
+            "derivation": { "type": "string" },
+            "cross_item_validation": {
+              "type": "object",
+              "properties": {
+                "must_be_positive": { "type": "boolean" },
+                "must_be_negative": { "type": "boolean" },
+                "relationships": {
+                  "type": "array",
+                  "items": {
+                    "type": ["object", "string"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ocr_variants": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Common OCR misreadings"
+        },
+        "format_examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["value", "context"],
+            "properties": {
+              "value": { "type": "string" },
+              "context": { "type": "string" }
+            }
+          }
+        },
+        "industry_tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Industries where this item is relevant"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

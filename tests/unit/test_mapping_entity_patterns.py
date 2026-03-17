@@ -64,18 +64,20 @@ class TestBuildEntityHints:
         assert result == ""
 
     def test_no_patterns_returns_empty(self):
-        """Entity with no patterns returns empty string."""
+        """Entity with no patterns and no industry returns empty string."""
         ctx = MagicMock(spec=PipelineContext)
         ctx.entity_id = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
         with (
             patch("src.db.session.get_db_sync") as mock_db,
             patch("src.db.crud.get_entity_patterns") as mock_get,
+            patch("src.db.crud.get_entity") as mock_get_entity,
         ):
             mock_session = MagicMock()
             mock_db.return_value.__enter__ = MagicMock(return_value=mock_session)
             mock_db.return_value.__exit__ = MagicMock(return_value=False)
             mock_get.return_value = []
+            mock_get_entity.return_value = MagicMock(industry=None)
 
             result = self.stage._build_entity_hints(ctx)
 

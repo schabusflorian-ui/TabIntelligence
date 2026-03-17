@@ -1,0 +1,124 @@
+/* DebtFund Design Tokens — Meridian v1.0 */
+:root {
+  /* --- Backgrounds --- */
+  --color-background-primary: #FFFFFF;
+  --color-background-secondary: #F0EDE8;
+  --color-background-tertiary: #F6F4EF;
+  --color-background-info: #E3EEF8;
+  --color-background-success: #E6F4ED;
+  --color-background-warning: #FEF3CD;
+  --color-background-danger: #FDEAEA;
+
+  /* --- Text --- */
+  --color-text-primary: #1C1C1C;
+  --color-text-secondary: #6B7280;
+  --color-text-tertiary: #9CA3AF;
+  --color-text-info: #1A4D7A;
+  --color-text-success: #15652E;
+  --color-text-warning: #7A5000;
+  --color-text-danger: #8A1F1F;
+
+  /* --- Borders --- */
+  --color-border-tertiary: rgba(0,0,0,0.08);
+  --color-border-secondary: rgba(0,0,0,0.15);
+  --color-border-primary: rgba(0,0,0,0.25);
+
+  /* --- Brand / Accent --- */
+  --color-steel: #1D6B9F;
+  --color-steel-light: #E3EEF8;
+  --color-steel-text: #1A4D7A;
+
+  /* --- Semantic --- */
+  --color-ok: #1A7A4A;
+  --color-ok-bg: #E6F4ED;
+  --color-ok-text: #15652E;
+  --color-warn: #C47D00;
+  --color-warn-bg: #FEF3CD;
+  --color-warn-text: #7A5000;
+  --color-bad: #A32626;
+  --color-bad-bg: #FDEAEA;
+  --color-bad-text: #8A1F1F;
+
+  /* --- Tier colors (triage — kept for extraction UI) --- */
+  --color-tier-1-bg: #E3EEF8;
+  --color-tier-1-text: #1A4D7A;
+  --color-tier-2-bg: #E3EEF8;
+  --color-tier-2-text: #1A4D7A;
+  --color-tier-3-bg: #FEF3CD;
+  --color-tier-3-text: #7A5000;
+  --color-tier-4-bg: var(--color-background-secondary);
+  --color-tier-4-text: var(--color-text-secondary);
+
+  /* --- Typography --- */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-serif: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+  --font-mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: 2.5rem;
+
+  /* --- Spacing --- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* --- Border Radius --- */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+  --border-radius-full: 100px;
+
+  /* Legacy aliases (referenced in JS-generated HTML) */
+  --radius-sm: var(--border-radius-sm);
+  --radius-md: var(--border-radius-md);
+  --radius-lg: var(--border-radius-lg);
+  --radius-full: var(--border-radius-full);
+
+  /* --- Sidebar --- */
+  --sidebar-width: 220px;
+  --sidebar-collapsed: 56px;
+
+  /* --- Transitions --- */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+
+  /* Legacy aliases — mapped to Meridian equivalents */
+  --color-bg: var(--color-background-tertiary);
+  --color-surface: var(--color-background-primary);
+  --color-border: var(--color-border-tertiary);
+  --color-border-subtle: var(--color-border-tertiary);
+  --color-text: var(--color-text-primary);
+  --color-text-inverse: #FFFFFF;
+  --color-accent: var(--color-steel);
+  --color-accent-hover: #165A87;
+  --color-accent-light: var(--color-steel-light);
+  --color-success: var(--color-ok);
+  --color-success-bg: var(--color-ok-bg);
+  --color-success-text: var(--color-ok-text);
+  --color-warning: var(--color-warn);
+  --color-warning-bg: var(--color-warn-bg);
+  --color-warning-text: var(--color-warn-text);
+  --color-danger: var(--color-bad);
+  --color-danger-bg: var(--color-bad-bg);
+  --color-danger-text: var(--color-bad-text);
+  --color-info: var(--color-steel);
+  --color-info-bg: var(--color-steel-light);
+  --color-info-text: var(--color-steel-text);
+  --color-primary: #101210;
+  --color-primary-light: rgba(255,255,255,0.08);
+  --color-primary-lighter: rgba(255,255,255,0.12);
+
+  --line-height: 1.5;
+}

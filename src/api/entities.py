@@ -1,5 +1,6 @@
 """Entity CRUD API endpoints."""
 
+from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -11,6 +12,7 @@ from src.api.schemas import (
     EntityDetailResponse,
     EntityListResponse,
     EntityResponse,
+    JobListResponse,
     UpdateEntityRequest,
 )
 from src.auth.dependencies import get_current_api_key, require_entity_scope
@@ -41,6 +43,9 @@ def list_entities(
                     "id": str(e.id),
                     "name": e.name,
                     "industry": e.industry,
+                    "fiscal_year_end": e.fiscal_year_end,
+                    "default_currency": e.default_currency,
+                    "reporting_standard": e.reporting_standard,
                     "created_at": e.created_at.isoformat() if e.created_at else None,
                 }
                 for e in entities
@@ -61,11 +66,21 @@ def create_entity(
 ):
     """Create a new entity."""
     try:
-        entity = crud.create_entity(db, name=body.name, industry=body.industry)
+        entity = crud.create_entity(
+            db,
+            name=body.name,
+            industry=body.industry,
+            fiscal_year_end=body.fiscal_year_end,
+            default_currency=body.default_currency,
+            reporting_standard=body.reporting_standard,
+        )
         return {
             "id": str(entity.id),
             "name": entity.name,
             "industry": entity.industry,
+            "fiscal_year_end": entity.fiscal_year_end,
+            "default_currency": entity.default_currency,
+            "reporting_standard": entity.reporting_standard,
             "created_at": entity.created_at.isoformat() if entity.created_at else None,
         }
     except DatabaseError as e:
@@ -101,6 +116,9 @@ def get_entity(
             "id": str(entity.id),
             "name": entity.name,
             "industry": entity.industry,
+            "fiscal_year_end": entity.fiscal_year_end,
+            "default_currency": entity.default_currency,
+            "reporting_standard": entity.reporting_standard,
             "created_at": entity.created_at.isoformat() if entity.created_at else None,
             "patterns_count": patterns_count,
             "files_count": files_count,
@@ -123,15 +141,29 @@ def update_entity(
     except ValueError:
         raise HTTPException(400, "Invalid entity_id format")
 
-    if body.name is None and body.industry is None:
-        raise HTTPException(400, "At least one of 'name' or 'industry' must be provided")
+    update_fields = {
+        k: v for k, v in body.model_dump(exclude_unset=True).items() if v is not None
+    }
+    if not update_fields:
+        raise HTTPException(400, "At least one field must be provided")
 
     try:
-        entity = crud.update_entity(db, entity_uuid, name=body.name, industry=body.industry)
+        entity = crud.update_entity(
+            db,
+            entity_uuid,
+            name=body.name,
+            industry=body.industry,
+            fiscal_year_end=body.fiscal_year_end,
+            default_currency=body.default_currency,
+            reporting_standard=body.reporting_standard,
+        )
         return {
             "id": str(entity.id),
             "name": entity.name,
             "industry": entity.industry,
+            "fiscal_year_end": entity.fiscal_year_end,
+            "default_currency": entity.default_currency,
+            "reporting_standard": entity.reporting_standard,
             "created_at": entity.created_at.isoformat() if entity.created_at else None,
         }
     except DatabaseError as e:
@@ -139,6 +171,66 @@ def update_entity(
             raise HTTPException(404, "Entity not found")
         logger.error(f"Database error updating entity: {str(e)}")
         raise HTTPException(500, "Database error updating entity")
+
+
+@router.get("/{entity_id}/jobs", response_model=JobListResponse)
+@limiter.limit("500/hour")
+def get_entity_jobs(
+    request: Request,
+    entity_id: str,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    status: Optional[str] = None,
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """List extraction jobs for a specific entity."""
+    try:
+        entity_uuid = UUID(entity_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid entity_id format")
+
+    entity = crud.get_entity(db, entity_uuid)
+    if not entity:
+        raise HTTPException(404, "Entity not found")
+
+    status_enum = None
+    if status:
+        try:
+            from src.db.models import JobStatusEnum
+
+            status_enum = JobStatusEnum(status)
+        except ValueError:
+            raise HTTPException(400, "Invalid status")
+
+    try:
+        jobs = crud.get_entity_jobs(
+            db, entity_uuid, limit=limit, offset=offset, status=status_enum
+        )
+        return {
+            "count": len(jobs),
+            "limit": limit,
+            "offset": offset,
+            "jobs": [
+                {
+                    "job_id": str(j.job_id),
+                    "file_id": str(j.file_id),
+                    "status": j.status.value,
+                    "current_stage": j.current_stage,
+                    "progress_percent": j.progress_percent,
+                    "error": j.error,
+                    "filename": j.file.filename if j.file else None,
+                    "entity_id": entity_id,
+                    "entity_name": entity.name,
+                    "created_at": j.created_at.isoformat() if j.created_at else None,
+                    "updated_at": j.updated_at.isoformat() if j.updated_at else None,
+                }
+                for j in jobs
+            ],
+        }
+    except DatabaseError as e:
+        logger.error(f"Database error getting entity jobs: {str(e)}")
+        raise HTTPException(500, "Database error getting entity jobs")
 
 
 @router.delete("/{entity_id}", status_code=204)
