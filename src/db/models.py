@@ -648,3 +648,7 @@ class QualitySnapshot(Base):
         return f"<QualitySnapshot(entity={self.entity_id}, date={self.snapshot_date}, grade={self.quality_grade})>"
 
 
+# Late import to register APIKey with SQLAlchemy mapper (avoids circular import)
+from src.auth.models import APIKey  # noqa: E402, F401
+
+
