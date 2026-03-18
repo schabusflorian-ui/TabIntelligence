@@ -10,6 +10,7 @@ so a corporate P&L extraction is not penalized for missing project finance items
 """
 
 from dataclasses import dataclass, field
+from decimal import Decimal
 from typing import Dict, List, Optional, Set
 
 
@@ -34,6 +35,10 @@ class StatementCompleteness:
     raw_score: float  # found / expected (unweighted)
     weighted_score: float  # weighted by importance
     core_score: float  # core items only
+    # Period coverage fields (populated by score_with_periods)
+    period_coverage: Optional[float] = None  # fraction of (item x period) cells filled
+    total_periods: Optional[int] = None
+    sparse_items: Optional[List[str]] = None  # items with <50% period fill
 
 
 @dataclass
@@ -419,3 +424,80 @@ class CompletenessScorer:
             weighted_score=round(weighted_score, 4),
             core_score=round(core_score, 4),
         )
+
+    def score_with_periods(
+        self,
+        period_values: Dict[str, Dict[str, Decimal]],
+        model_type: Optional[str] = None,
+    ) -> CompletenessResult:
+        """Score completeness with period coverage dimension.
+
+        Extends score() by adding a period coverage factor: for each
+        detected statement, measures what fraction of (found_item x period)
+        cells actually have values. Items with <50% period fill are
+        flagged as sparse.
+
+        Args:
+            period_values: {period: {canonical_name: Decimal, ...}, ...}
+            model_type: Optional model type for template exclusion.
+
+        Returns:
+            CompletenessResult with period_coverage populated per statement.
+        """
+        # Extract all canonical names across all periods
+        extracted_names: Set[str] = set()
+        for vals in period_values.values():
+            extracted_names.update(vals.keys())
+
+        # Get base result from existing score()
+        base_result = self.score(extracted_names, model_type=model_type)
+
+        if not base_result.detected_statements or not period_values:
+            return base_result
+
+        total_periods = len(period_values)
+        periods = list(period_values.keys())
+
+        # Enhance each statement with period coverage
+        for stmt_name, stmt in base_result.per_statement.items():
+            stmt.total_periods = total_periods
+
+            if not stmt.found_items or total_periods == 0:
+                stmt.period_coverage = 0.0 if stmt.found_items else None
+                stmt.sparse_items = []
+                continue
+
+            filled_cells = 0
+            total_cells = len(stmt.found_items) * total_periods
+            sparse = []
+
+            for item_name in stmt.found_items:
+                item_fill = sum(
+                    1 for p in periods if item_name in period_values.get(p, {})
+                )
+                filled_cells += item_fill
+                if item_fill < total_periods * 0.5:
+                    sparse.append(item_name)
+
+            stmt.period_coverage = round(filled_cells / max(total_cells, 1), 4)
+            stmt.sparse_items = sparse
+
+            # Blend: 70% name coverage + 30% period coverage
+            stmt.weighted_score = round(
+                0.7 * stmt.weighted_score + 0.3 * stmt.period_coverage, 4
+            )
+
+        # Recompute overall score with blended weighted_scores
+        detected = base_result.detected_statements
+        total_weight = sum(len(self.templates[t]["items"]) for t in detected)
+        if total_weight > 0:
+            overall = sum(
+                base_result.per_statement[t].weighted_score
+                * len(self.templates[t]["items"])
+                for t in detected
+            ) / total_weight
+        else:
+            overall = 0.0
+
+        base_result.overall_score = round(overall, 4)
+        return base_result

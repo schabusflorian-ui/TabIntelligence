@@ -1,8 +1,8 @@
 """Composite quality scorer for extraction results.
 
 Combines multiple quality signals (mapping confidence, validation success,
-completeness, time-series consistency) into a single trustworthiness score
-with letter grade and label.
+completeness, time-series consistency, cell reconciliation) into a single
+trustworthiness score with letter grade and label.
 """
 
 from dataclasses import dataclass, field
@@ -53,45 +53,51 @@ class QualityResult:
         return d
 
 
-# Default quality dimension weights
+# Default quality dimension weights (5 dimensions)
 DEFAULT_WEIGHTS: Dict[str, float] = {
-    "mapping_confidence": 0.30,
-    "validation_success": 0.25,
-    "completeness": 0.25,
-    "time_series_consistency": 0.20,
+    "mapping_confidence": 0.25,
+    "validation_success": 0.20,
+    "completeness": 0.20,
+    "time_series_consistency": 0.15,
+    "cell_reconciliation": 0.20,
 }
 
 # Model-type-specific weight sets
 MODEL_TYPE_WEIGHTS: Dict[str, Dict[str, float]] = {
     "corporate": {
-        "mapping_confidence": 0.30,
-        "validation_success": 0.25,
-        "completeness": 0.25,
-        "time_series_consistency": 0.20,
+        "mapping_confidence": 0.25,
+        "validation_success": 0.20,
+        "completeness": 0.20,
+        "time_series_consistency": 0.15,
+        "cell_reconciliation": 0.20,
     },
     "project_finance": {
-        "mapping_confidence": 0.25,
-        "validation_success": 0.30,
-        "completeness": 0.20,
-        "time_series_consistency": 0.25,
+        "mapping_confidence": 0.20,
+        "validation_success": 0.25,
+        "completeness": 0.15,
+        "time_series_consistency": 0.20,
+        "cell_reconciliation": 0.20,
     },
     "construction_only": {
-        "mapping_confidence": 0.35,
-        "validation_success": 0.20,
-        "completeness": 0.30,
-        "time_series_consistency": 0.15,
+        "mapping_confidence": 0.30,
+        "validation_success": 0.15,
+        "completeness": 0.25,
+        "time_series_consistency": 0.10,
+        "cell_reconciliation": 0.20,
     },
     "mixed": {
-        "mapping_confidence": 0.25,
-        "validation_success": 0.25,
-        "completeness": 0.25,
-        "time_series_consistency": 0.25,
+        "mapping_confidence": 0.20,
+        "validation_success": 0.20,
+        "completeness": 0.20,
+        "time_series_consistency": 0.20,
+        "cell_reconciliation": 0.20,
     },
     "saas": {
-        "mapping_confidence": 0.25,
-        "validation_success": 0.25,
-        "completeness": 0.30,
-        "time_series_consistency": 0.20,
+        "mapping_confidence": 0.20,
+        "validation_success": 0.20,
+        "completeness": 0.25,
+        "time_series_consistency": 0.15,
+        "cell_reconciliation": 0.20,
     },
 }
 
@@ -138,10 +144,14 @@ class QualityScorer:
         validation_success_rate: float,
         completeness_score: float,
         time_series_consistency: float,
+        cell_match_rate: Optional[float] = None,
     ) -> QualityResult:
         """Compute composite quality score.
 
         All inputs must be floats in [0.0, 1.0].
+        cell_match_rate is optional for backward compatibility — when not
+        provided, its weight is redistributed proportionally among the
+        other 4 dimensions.
 
         Returns:
             QualityResult with numeric score, letter grade, and label.
@@ -153,15 +163,33 @@ class QualityScorer:
             "time_series_consistency": max(0.0, min(1.0, time_series_consistency)),
         }
 
-        numeric = self._weighted_average(scores)
+        # Handle cell_reconciliation dimension
+        effective_weights = dict(self.weights)
+        if cell_match_rate is not None:
+            scores["cell_reconciliation"] = max(0.0, min(1.0, cell_match_rate))
+        elif "cell_reconciliation" in effective_weights:
+            # Redistribute cell_reconciliation weight proportionally
+            recon_weight = effective_weights.pop("cell_reconciliation")
+            remaining = sum(effective_weights.values())
+            if remaining > 0:
+                for k in effective_weights:
+                    effective_weights[k] += recon_weight * (effective_weights[k] / remaining)
+
+        numeric = self._weighted_average(scores, effective_weights)
         grade = self._assign_grade(numeric)
         label = self._assign_label(numeric)
+
+        # Grade floor: if cell_match_rate < 0.5, cap grade at "D"
+        if cell_match_rate is not None and cell_match_rate < 0.5:
+            grade_rank = {"A": 5, "B": 4, "C": 3, "D": 2, "F": 1}
+            if grade_rank.get(grade, 0) > grade_rank["D"]:
+                grade = "D"
 
         dimensions = [
             DimensionScore(
                 name=name,
                 score=value,
-                weight=self.weights.get(name, 0.0),
+                weight=effective_weights.get(name, 0.0),
             )
             for name, value in scores.items()
         ]
@@ -174,12 +202,17 @@ class QualityScorer:
             model_type=self.model_type,
         )
 
-    def _weighted_average(self, scores: Dict[str, float]) -> float:
+    def _weighted_average(
+        self,
+        scores: Dict[str, float],
+        weights: Optional[Dict[str, float]] = None,
+    ) -> float:
         """Compute weighted average from dimension scores."""
-        total_weight = sum(self.weights.get(k, 0.0) for k in scores)
+        w = weights if weights is not None else self.weights
+        total_weight = sum(w.get(k, 0.0) for k in scores)
         if total_weight == 0:
             return 0.0
-        weighted_sum = sum(scores[k] * self.weights.get(k, 0.0) for k in scores)
+        weighted_sum = sum(scores[k] * w.get(k, 0.0) for k in scores)
         return weighted_sum / total_weight
 
     def _assign_grade(self, score: float) -> str:

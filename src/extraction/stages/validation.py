@@ -16,6 +16,8 @@ from src.extraction.prompts import get_prompt
 from src.extraction.taxonomy_loader import get_all_taxonomy_items, get_validation_rules
 from src.extraction.utils import extract_json
 from src.validation.accounting_validator import AccountingValidator
+from src.validation.cell_reconciliation import CellReconciliationValidator, ReconciliationSummary
+from src.validation.formula_verifier import FormulaVerificationSummary, FormulaVerifier
 from src.validation.completeness_scorer import CompletenessScorer
 from src.validation.lifecycle_detector import LifecycleDetector, LifecycleResult
 from src.validation.quality_scorer import QualityScorer
@@ -71,6 +73,31 @@ class ValidationStage(ExtractionStage):
         extracted_values = self._build_extracted_values(
             parse_result, mapping_result, triage_result, structured_data
         )
+
+        # --- Cell-Level Reconciliation ---
+        try:
+            cell_reconciler = CellReconciliationValidator()
+            cell_recon_summary = cell_reconciler.reconcile(
+                parse_result, mapping_result, triage_result, structured_data
+            )
+        except Exception as e:
+            logger.warning(f"Stage 4: Cell reconciliation failed: {e}")
+            cell_recon_summary = ReconciliationSummary(
+                total_cells=0, matched=0, mismatched=0, unmatched=0,
+                match_rate=1.0, mismatches=[], unmatched_items=[],
+            )
+
+        # --- Formula Verification ---
+        try:
+            formula_verifier = FormulaVerifier()
+            formula_summary = formula_verifier.verify(
+                parse_result, mapping_result, triage_result, structured_data
+            )
+        except Exception as e:
+            logger.warning(f"Stage 4: Formula verification failed: {e}")
+            formula_summary = FormulaVerificationSummary(
+                total_formulas=0, verified=0, mismatched=0, unresolvable=0, results=[],
+            )
 
         # Run deterministic checks via AccountingValidator
         # Use full taxonomy so sign convention checks can access typical_sign
@@ -204,7 +231,14 @@ class ValidationStage(ExtractionStage):
                 extracted_names,
                 is_project_finance=lifecycle_result.is_project_finance,
             )
-            completeness_result = completeness_scorer.score(extracted_names, model_type=model_type)
+            if extracted_values:
+                completeness_result = completeness_scorer.score_with_periods(
+                    extracted_values, model_type=model_type
+                )
+            else:
+                completeness_result = completeness_scorer.score(
+                    extracted_names, model_type=model_type
+                )
         except Exception as e:
             logger.warning(f"Stage 4: Completeness scoring failed: {e}")
             from src.validation.completeness_scorer import CompletenessResult
@@ -251,6 +285,9 @@ class ValidationStage(ExtractionStage):
                 validation_success_rate=total_passed / max(total_checks, 1),
                 completeness_score=completeness_result.overall_score,
                 time_series_consistency=ts_summary.consistency_score,
+                cell_match_rate=cell_recon_summary.match_rate
+                if cell_recon_summary.total_cells > 0
+                else None,
             )
         except Exception as e:
             logger.warning(f"Stage 4: Quality scoring failed: {e}")
@@ -320,6 +357,11 @@ class ValidationStage(ExtractionStage):
                             "core_score": round(stmt.core_score, 3),
                             "found": stmt.found_items,
                             "missing": [mi.canonical_name for mi in stmt.missing_items],
+                            "period_coverage": round(stmt.period_coverage, 3)
+                            if stmt.period_coverage is not None
+                            else None,
+                            "total_periods": stmt.total_periods,
+                            "sparse_items": stmt.sparse_items,
                         }
                         for name, stmt in completeness_result.per_statement.items()
                     },
@@ -331,6 +373,32 @@ class ValidationStage(ExtractionStage):
                     "signals_used": lifecycle_result.signals_used,
                     "phases": lifecycle_result.phases,
                 },
+                "cell_reconciliation": {
+                    "total_cells": cell_recon_summary.total_cells,
+                    "matched": cell_recon_summary.matched,
+                    "mismatched": cell_recon_summary.mismatched,
+                    "unmatched": cell_recon_summary.unmatched,
+                    "match_rate": round(cell_recon_summary.match_rate, 3),
+                    "mismatches": [
+                        {
+                            "canonical_name": m.canonical_name,
+                            "period": m.period,
+                            "extracted_value": str(m.extracted_value),
+                            "source_cell_ref": m.source_cell_ref,
+                            "source_raw_value": m.source_raw_value,
+                            "delta": str(m.delta),
+                            "delta_pct": m.delta_pct,
+                        }
+                        for m in cell_recon_summary.mismatches
+                    ],
+                },
+                "formula_verification": {
+                    "total_formulas": formula_summary.total_formulas,
+                    "verified": formula_summary.verified,
+                    "mismatched": formula_summary.mismatched,
+                    "unresolvable": formula_summary.unresolvable,
+                },
+                "duplicate_conflicts": getattr(self, "_duplicate_conflicts", []),
                 "unit_normalization": getattr(self, "_unit_normalization", {}),
             },
             "item_validation": item_validation,
@@ -347,6 +415,7 @@ class ValidationStage(ExtractionStage):
                 "completeness_score": round(completeness_result.overall_score, 3),
                 "quality_score": round(quality_result.numeric_score, 3),
                 "quality_grade": quality_result.letter_grade,
+                "cell_match_rate": round(cell_recon_summary.match_rate, 3),
             },
         }
 
@@ -443,6 +512,12 @@ class ValidationStage(ExtractionStage):
         period_values: Dict[str, Dict[str, Decimal]] = {}
         self._unit_normalization: Dict[str, str] = {}  # provenance tracking
 
+        # Build tier lookup for conflict resolution (lower tier = higher priority)
+        tier_lookup = {t["sheet_name"]: t.get("tier", 4) for t in triage}
+
+        # Track all candidates per (canonical, period) for conflict detection
+        all_candidates: Dict[str, Dict[str, List]] = {}  # canonical -> period -> [...]
+
         for sheet in parsed.get("sheets", []):
             sheet_name = sheet.get("sheet_name", "")
             if sheet_name not in processable:
@@ -451,6 +526,8 @@ class ValidationStage(ExtractionStage):
             sheet_multiplier = multiplier_lookup.get(sheet_name)
             if sheet_multiplier is not None:
                 self._unit_normalization[sheet_name] = str(sheet_multiplier)
+
+            sheet_tier = tier_lookup.get(sheet_name, 4)
 
             for row in sheet.get("rows", []):
                 label = row.get("label", "")
@@ -477,15 +554,60 @@ class ValidationStage(ExtractionStage):
 
                     if period not in period_values:
                         period_values[period] = {}
+
+                    # Track candidate for conflict detection
+                    if canonical not in all_candidates:
+                        all_candidates[canonical] = {}
+                    if period not in all_candidates[canonical]:
+                        all_candidates[canonical][period] = []
+                    all_candidates[canonical][period].append({
+                        "value": decimal_val,
+                        "sheet": sheet_name,
+                        "label": label,
+                        "tier": sheet_tier,
+                    })
+
                     # First-write-wins: keep the first value seen for each
                     # canonical+period (highest-tier sheet processed first)
                     if canonical not in period_values[period]:
                         period_values[period][canonical] = decimal_val
-                    else:
-                        logger.debug(
-                            f"Duplicate canonical '{canonical}' for period {period}, "
-                            f"keeping first value (label={label})"
-                        )
+
+        # Resolve conflicts and record duplicate information
+        self._duplicate_conflicts: List[Dict] = []
+        for canonical, period_candidates in all_candidates.items():
+            for period, candidates in period_candidates.items():
+                if len(candidates) <= 1:
+                    continue
+                # Check if values agree within tolerance
+                first_val = candidates[0]["value"]
+                is_conflict = any(
+                    abs(c["value"] - first_val) > Decimal("0.01")
+                    for c in candidates[1:]
+                )
+                # If conflicting, use highest-tier (lowest tier number) value
+                if is_conflict:
+                    best = min(candidates, key=lambda c: c["tier"])
+                    period_values[period][canonical] = best["value"]
+                    chosen_sheet = best["sheet"]
+                else:
+                    chosen_sheet = candidates[0]["sheet"]
+
+                self._duplicate_conflicts.append({
+                    "canonical_name": canonical,
+                    "period": period,
+                    "values": [
+                        {
+                            "value": str(c["value"]),
+                            "sheet": c["sheet"],
+                            "label": c["label"],
+                            "tier": c["tier"],
+                        }
+                        for c in candidates
+                    ],
+                    "chosen_value": str(period_values[period][canonical]),
+                    "chosen_sheet": chosen_sheet,
+                    "is_conflict": is_conflict,
+                })
 
         return period_values
 

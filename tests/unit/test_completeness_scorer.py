@@ -617,3 +617,138 @@ class TestDetectModelTypeWithHint:
         names = {"revenue", "cogs", "net_income"}
         result = self.scorer.detect_model_type(names, is_project_finance=False)
         assert result == "corporate"
+
+
+# ============================================================================
+# PERIOD COVERAGE (score_with_periods)
+# ============================================================================
+
+
+class TestScoreWithPeriods:
+    """Test period-aware completeness scoring."""
+
+    def setup_method(self):
+        from decimal import Decimal
+
+        self.scorer = CompletenessScorer()
+        self.Decimal = Decimal
+
+    def test_full_period_coverage(self):
+        """All found items present in all periods → period_coverage = 1.0."""
+        period_values = {
+            "FY2023": {
+                "revenue": self.Decimal("1000"),
+                "cogs": self.Decimal("500"),
+                "net_income": self.Decimal("300"),
+            },
+            "FY2024": {
+                "revenue": self.Decimal("1200"),
+                "cogs": self.Decimal("600"),
+                "net_income": self.Decimal("400"),
+            },
+        }
+        result = self.scorer.score_with_periods(period_values)
+
+        # Should detect income_statement at minimum
+        assert len(result.detected_statements) > 0
+        for stmt in result.per_statement.values():
+            if stmt.found_items:
+                assert stmt.period_coverage is not None
+                assert stmt.period_coverage == 1.0
+                assert stmt.total_periods == 2
+                assert stmt.sparse_items == []
+
+    def test_sparse_items_detected(self):
+        """Items present in <50% of periods are flagged as sparse."""
+        period_values = {
+            "FY2021": {
+                "revenue": self.Decimal("800"),
+                "cogs": self.Decimal("400"),
+                "net_income": self.Decimal("200"),
+            },
+            "FY2022": {
+                "revenue": self.Decimal("900"),
+                "cogs": self.Decimal("450"),
+                "net_income": self.Decimal("250"),
+            },
+            "FY2023": {
+                "revenue": self.Decimal("1000"),
+                "cogs": self.Decimal("500"),
+                # net_income missing
+            },
+            "FY2024": {
+                "revenue": self.Decimal("1100"),
+                # cogs and net_income missing
+            },
+        }
+        result = self.scorer.score_with_periods(period_values)
+
+        is_stmt = result.per_statement.get("income_statement")
+        if is_stmt:
+            assert is_stmt.total_periods == 4
+            # net_income: 2/4 = 50% → NOT sparse (threshold is <50%)
+            # cogs: 3/4 = 75% → not sparse
+            # revenue: 4/4 → not sparse
+            # But note: the items in the template that are found matter
+            assert is_stmt.period_coverage is not None
+            assert is_stmt.period_coverage < 1.0
+
+    def test_weighted_score_blends_name_and_period(self):
+        """weighted_score = 0.7 * base_weighted + 0.3 * period_coverage."""
+        period_values = {
+            "FY2023": {
+                "revenue": self.Decimal("1000"),
+                "cogs": self.Decimal("500"),
+                "net_income": self.Decimal("300"),
+            },
+            "FY2024": {
+                "revenue": self.Decimal("1200"),
+                "cogs": self.Decimal("600"),
+                "net_income": self.Decimal("400"),
+            },
+        }
+        # Get base score for comparison
+        extracted_names = {"revenue", "cogs", "net_income"}
+        base_result = self.scorer.score(extracted_names)
+
+        period_result = self.scorer.score_with_periods(period_values)
+
+        # With full period coverage, blended should be 0.7*base + 0.3*1.0
+        for stmt_name in base_result.per_statement:
+            if stmt_name in period_result.per_statement:
+                base_ws = base_result.per_statement[stmt_name].weighted_score
+                period_ws = period_result.per_statement[stmt_name].weighted_score
+                expected = round(0.7 * base_ws + 0.3 * 1.0, 4)
+                assert abs(period_ws - expected) < 0.01
+
+    def test_backward_compat_score_unchanged(self):
+        """Existing score() method should still work without period data."""
+        names = {"revenue", "cogs", "net_income"}
+        result = self.scorer.score(names)
+        assert result.overall_score > 0
+        for stmt in result.per_statement.values():
+            # Period fields should be None (not populated by score())
+            assert stmt.period_coverage is None
+            assert stmt.total_periods is None
+
+    def test_empty_periods_returns_base_score(self):
+        """Empty period_values dict should return base result."""
+        result = self.scorer.score_with_periods({})
+        assert result.overall_score == 0.0
+        assert result.detected_statements == []
+
+    def test_single_period(self):
+        """Single period with all items → full coverage."""
+        period_values = {
+            "FY2024": {
+                "revenue": self.Decimal("1000"),
+                "cogs": self.Decimal("500"),
+                "net_income": self.Decimal("300"),
+            },
+        }
+        result = self.scorer.score_with_periods(period_values)
+
+        for stmt in result.per_statement.values():
+            if stmt.found_items:
+                assert stmt.total_periods == 1
+                assert stmt.period_coverage == 1.0

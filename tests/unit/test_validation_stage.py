@@ -1160,3 +1160,176 @@ class TestFirstWriteWins:
         from decimal import Decimal
 
         assert result["FY2023"]["revenue"] == Decimal("1000")
+
+    def test_first_write_wins_records_conflict(self):
+        """Duplicate with different values is recorded as a conflict."""
+        parsed = {
+            "sheets": [
+                {
+                    "sheet_name": "IS",
+                    "rows": [
+                        {"label": "Revenue", "values": {"FY2023": "1000"}},
+                    ],
+                },
+                {
+                    "sheet_name": "Summary",
+                    "rows": [
+                        {"label": "Total Revenue", "values": {"FY2023": "9999"}},
+                    ],
+                },
+            ],
+        }
+        mappings = [
+            {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.9},
+            {"original_label": "Total Revenue", "canonical_name": "revenue", "confidence": 0.8},
+        ]
+        triage = [
+            {"sheet_name": "IS", "tier": 1},
+            {"sheet_name": "Summary", "tier": 2},
+        ]
+
+        self.stage._build_extracted_values(parsed, mappings, triage)
+        conflicts = self.stage._duplicate_conflicts
+
+        assert len(conflicts) == 1
+        assert conflicts[0]["canonical_name"] == "revenue"
+        assert conflicts[0]["is_conflict"] is True
+        assert len(conflicts[0]["values"]) == 2
+
+
+class TestDuplicateConflictDetection:
+    """Test conflict detection and resolution in _build_extracted_values."""
+
+    def setup_method(self):
+        self.stage = ValidationStage()
+
+    def test_agreeing_duplicates_no_conflict(self):
+        """Two sheets with same value for same canonical → not a conflict."""
+        from decimal import Decimal
+
+        parsed = {
+            "sheets": [
+                {
+                    "sheet_name": "IS",
+                    "rows": [
+                        {"label": "Revenue", "values": {"FY2023": "1000"}},
+                    ],
+                },
+                {
+                    "sheet_name": "Summary",
+                    "rows": [
+                        {"label": "Total Revenue", "values": {"FY2023": "1000"}},
+                    ],
+                },
+            ],
+        }
+        mappings = [
+            {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.9},
+            {"original_label": "Total Revenue", "canonical_name": "revenue", "confidence": 0.8},
+        ]
+        triage = [
+            {"sheet_name": "IS", "tier": 1},
+            {"sheet_name": "Summary", "tier": 2},
+        ]
+
+        result = self.stage._build_extracted_values(parsed, mappings, triage)
+
+        assert result["FY2023"]["revenue"] == Decimal("1000")
+        conflicts = self.stage._duplicate_conflicts
+        assert len(conflicts) == 1
+        assert conflicts[0]["is_conflict"] is False
+
+    def test_conflicting_duplicates_keeps_best_tier(self):
+        """When values disagree, the highest-tier sheet's value is used."""
+        from decimal import Decimal
+
+        parsed = {
+            "sheets": [
+                {
+                    "sheet_name": "Summary",
+                    "rows": [
+                        {"label": "Total Revenue", "values": {"FY2023": "9999"}},
+                    ],
+                },
+                {
+                    "sheet_name": "IS",
+                    "rows": [
+                        {"label": "Revenue", "values": {"FY2023": "1000"}},
+                    ],
+                },
+            ],
+        }
+        mappings = [
+            {"original_label": "Total Revenue", "canonical_name": "revenue", "confidence": 0.8},
+            {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.9},
+        ]
+        triage = [
+            {"sheet_name": "Summary", "tier": 2},
+            {"sheet_name": "IS", "tier": 1},
+        ]
+
+        result = self.stage._build_extracted_values(parsed, mappings, triage)
+
+        # Tier 1 (IS) should win even though Summary was processed first
+        assert result["FY2023"]["revenue"] == Decimal("1000")
+        conflicts = self.stage._duplicate_conflicts
+        assert len(conflicts) == 1
+        assert conflicts[0]["is_conflict"] is True
+        assert conflicts[0]["chosen_sheet"] == "IS"
+
+    def test_no_duplicates_empty_list(self):
+        """No duplicates → no conflicts recorded."""
+        parsed = {
+            "sheets": [
+                {
+                    "sheet_name": "IS",
+                    "rows": [
+                        {"label": "Revenue", "values": {"FY2023": "1000"}},
+                        {"label": "COGS", "values": {"FY2023": "500"}},
+                    ],
+                },
+            ],
+        }
+        mappings = [
+            {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.9},
+            {"original_label": "COGS", "canonical_name": "cogs", "confidence": 0.85},
+        ]
+        triage = [{"sheet_name": "IS", "tier": 1}]
+
+        self.stage._build_extracted_values(parsed, mappings, triage)
+
+        assert len(self.stage._duplicate_conflicts) == 0
+
+    def test_within_tolerance_not_conflict(self):
+        """Values differing by less than 0.01 are not conflicts."""
+        from decimal import Decimal
+
+        parsed = {
+            "sheets": [
+                {
+                    "sheet_name": "IS",
+                    "rows": [
+                        {"label": "Revenue", "values": {"FY2023": "1000.004"}},
+                    ],
+                },
+                {
+                    "sheet_name": "Summary",
+                    "rows": [
+                        {"label": "Total Revenue", "values": {"FY2023": "1000.000"}},
+                    ],
+                },
+            ],
+        }
+        mappings = [
+            {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.9},
+            {"original_label": "Total Revenue", "canonical_name": "revenue", "confidence": 0.8},
+        ]
+        triage = [
+            {"sheet_name": "IS", "tier": 1},
+            {"sheet_name": "Summary", "tier": 2},
+        ]
+
+        result = self.stage._build_extracted_values(parsed, mappings, triage)
+
+        assert result["FY2023"]["revenue"] == Decimal("1000.004")
+        assert self.stage._duplicate_conflicts[0]["is_conflict"] is False

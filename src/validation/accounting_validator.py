@@ -490,6 +490,21 @@ class AccountingValidator:
             if r is not None:
                 results.append(r)
 
+            # 6. working_capital = current_assets - current_liabilities
+            r = self._check_working_capital(period, data)
+            if r is not None:
+                results.append(r)
+
+            # 7. interest_expense (IS) ≈ total_interest (DS)
+            r = self._check_interest_is_ds(period, data)
+            if r is not None:
+                results.append(r)
+
+            # 8. equity reconciliation: equity[t] ≈ equity[t-1] + net_income - dividends
+            r = self._check_equity_reconciliation(period, data, prev_data)
+            if r is not None:
+                results.append(r)
+
         return results
 
     def _check_cash_bs_cf(
@@ -680,4 +695,109 @@ class AccountingValidator:
             severity="warning",
             actual_value=capex,
             expected_value=implied_capex,
+        )
+
+    def _check_working_capital(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """working_capital == current_assets - current_liabilities."""
+        wc = data.get("working_capital")
+        ca = data.get("current_assets")
+        cl = data.get("current_liabilities")
+
+        if wc is None or ca is None or cl is None:
+            return None
+
+        expected = ca - cl
+        divisor = float(max(abs(wc), abs(expected), 1))
+        diff_pct = abs(float(wc - expected)) / divisor
+        passed = diff_pct <= self.CROSS_STATEMENT_TOLERANCE
+
+        return ValidationResult(
+            passed=passed,
+            item_name="working_capital",
+            rule="cross_statement:working_capital",
+            message=(
+                "working_capital matches current_assets - current_liabilities"
+                if passed
+                else f"working_capital ({wc}) differs from"
+                f" current_assets - current_liabilities ({expected})"
+                f" in period {period}"
+            ),
+            severity="warning",
+            actual_value=wc,
+            expected_value=expected,
+        )
+
+    def _check_interest_is_ds(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """interest_expense (IS) ≈ total_interest (DS), 10% tolerance."""
+        ie = data.get("interest_expense")
+        ti = data.get("total_interest")
+
+        if ie is None or ti is None:
+            return None
+
+        abs_ie = abs(ie)
+        abs_ti = abs(ti)
+        divisor = float(max(abs_ie, abs_ti, 1))
+        diff_pct = abs(float(abs_ie - abs_ti)) / divisor
+        wider_tolerance = 0.10  # 10% for IS↔DS reconciliation
+        passed = diff_pct <= wider_tolerance
+
+        return ValidationResult(
+            passed=passed,
+            item_name="interest_expense",
+            rule="cross_statement:interest_is_ds",
+            message=(
+                "interest_expense (IS) matches total_interest (DS)"
+                if passed
+                else f"interest_expense (IS) = {ie} differs from"
+                f" total_interest (DS) = {ti}"
+                f" in period {period}"
+            ),
+            severity="warning",
+            actual_value=ie,
+            expected_value=ti,
+        )
+
+    def _check_equity_reconciliation(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+        prev_data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """equity[t] ≈ equity[t-1] + net_income - dividends (5% tolerance)."""
+        eq_curr = data.get("total_equity")
+        eq_prev = prev_data.get("total_equity")
+        net_income = data.get("net_income")
+
+        if eq_curr is None or eq_prev is None or net_income is None:
+            return None
+
+        dividends = data.get("dividends_paid", Decimal("0"))
+        expected = eq_prev + net_income - abs(dividends)
+        divisor = float(max(abs(eq_curr), abs(expected), 1))
+        diff_pct = abs(float(eq_curr - expected)) / divisor
+        passed = diff_pct <= self.CROSS_STATEMENT_TOLERANCE
+
+        return ValidationResult(
+            passed=passed,
+            item_name="total_equity",
+            rule="cross_statement:equity_reconciliation",
+            message=(
+                "equity reconciliation matches"
+                if passed
+                else f"total_equity ({eq_curr}) differs from"
+                f" expected ({expected} = prev_equity + net_income - dividends)"
+                f" in period {period}"
+            ),
+            severity="warning",
+            actual_value=eq_curr,
+            expected_value=expected,
         )
