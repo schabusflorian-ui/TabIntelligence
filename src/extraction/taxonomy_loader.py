@@ -374,6 +374,8 @@ def format_taxonomy_for_prompt(
         if include_aliases:
             parts = []
             for item in items:
+                if item.get("deprecated", False) if isinstance(item, dict) else getattr(item, "deprecated", False):
+                    continue
                 name = item["canonical_name"]
                 raw_aliases = item.get("aliases", [])
                 learned = learned_by_canonical.get(name, [])
@@ -389,7 +391,10 @@ def format_taxonomy_for_prompt(
                     parts.append(name)
             lines.append(f"{display}: {', '.join(parts)}")
         else:
-            names = [item["canonical_name"] for item in items]
+            names = [
+                item["canonical_name"] for item in items
+                if not (item.get("deprecated", False) if isinstance(item, dict) else getattr(item, "deprecated", False))
+            ]
             lines.append(f"{display}: {', '.join(names)}")
     return "\n".join(lines)
 
@@ -418,6 +423,8 @@ def format_taxonomy_detailed(
         category_display = category.replace("_", " ").title()
         names = []
         for item in items:
+            if item.get("deprecated", False) if isinstance(item, dict) else getattr(item, "deprecated", False):
+                continue
             aliases_str = ""
             raw_aliases = item.get("aliases", [])
             if raw_aliases:

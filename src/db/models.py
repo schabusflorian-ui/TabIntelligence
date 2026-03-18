@@ -134,6 +134,9 @@ class Taxonomy(Base):
     typical_sign: Mapped[Optional[str]] = mapped_column(String(10))
     parent_canonical: Mapped[Optional[str]] = mapped_column(String(100))
     validation_rules: Mapped[Optional[dict]] = mapped_column(JSON)
+    deprecated: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    deprecated_redirect: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    deprecated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     def __repr__(self):
@@ -653,6 +656,72 @@ class QualitySnapshot(Base):
 
     def __repr__(self):
         return f"<QualitySnapshot(entity={self.entity_id}, date={self.snapshot_date}, grade={self.quality_grade})>"
+
+
+# ============================================================================
+# TAXONOMY SUGGESTIONS
+# ============================================================================
+
+
+class TaxonomySuggestion(Base):
+    """
+    Taxonomy improvement suggestions generated from frequently unmapped labels.
+
+    Surfaces commonly unmapped labels as candidates for taxonomy updates:
+    - new_alias: label is close to an existing canonical name, suggest adding as alias
+    - new_item: label has no close match, suggest adding as new taxonomy item
+    - fix_conflict: label maps to multiple canonical names ambiguously
+    """
+
+    __tablename__ = "taxonomy_suggestions"
+
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    suggestion_type: Mapped[str] = mapped_column(String(20))  # "new_alias", "new_item", "fix_conflict"
+    canonical_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)  # null for "new_item"
+    suggested_text: Mapped[str] = mapped_column(String(500))
+    evidence_count: Mapped[int] = mapped_column(Integer, default=0)
+    evidence_jobs: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)  # list of job IDs
+    status: Mapped[str] = mapped_column(String(20), default="pending")  # "pending", "accepted", "rejected"
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
+    resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    resolved_by: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+
+    def __repr__(self):
+        return (
+            f"<TaxonomySuggestion(type='{self.suggestion_type}', "
+            f"text='{self.suggested_text}', status='{self.status}')>"
+        )
+
+
+# ============================================================================
+# TAXONOMY CHANGELOG
+# ============================================================================
+
+
+class TaxonomyChangelog(Base):
+    """
+    Changelog entry for taxonomy field changes.
+
+    Records every modification to a taxonomy item for audit trail
+    and governance. Tracks who changed what, when, and the old/new values.
+    """
+
+    __tablename__ = "taxonomy_changelog"
+
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    canonical_name: Mapped[str] = mapped_column(String(200))
+    field_name: Mapped[str] = mapped_column(String(100))
+    old_value: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    new_value: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    changed_by: Mapped[str] = mapped_column(String(100))
+    taxonomy_version: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
+
+    def __repr__(self):
+        return (
+            f"<TaxonomyChangelog(canonical='{self.canonical_name}', "
+            f"field='{self.field_name}', by='{self.changed_by}')>"
+        )
 
 
 # NOTE: APIKey (src.auth.models) is registered with Base.metadata when

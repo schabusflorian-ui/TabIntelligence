@@ -29,6 +29,9 @@ from src.db.models import (
     JobStatusEnum,
     LearnedAlias,
     LineageEvent,
+    Taxonomy,
+    TaxonomyChangelog,
+    TaxonomySuggestion,
     UnmappedLabelAggregate,
 )
 
@@ -3281,3 +3284,387 @@ def get_quality_trend(
         }
         for s in snapshots
     ]
+
+
+# ============================================================================
+# Taxonomy Suggestions
+# ============================================================================
+
+
+def _normalize_for_comparison(text: str) -> str:
+    """Normalize a string for fuzzy comparison: lowercase, strip, collapse whitespace/underscores."""
+    return text.lower().strip().replace("_", " ").replace("-", " ").split().__str__
+
+
+def _is_close_match(unmapped: str, canonical: str) -> bool:
+    """
+    Check if an unmapped label closely matches a canonical name.
+
+    Returns True if the two strings differ only by underscores, spaces, hyphens,
+    or minor whitespace variations.
+    """
+    norm_unmapped = unmapped.lower().strip().replace("_", " ").replace("-", " ")
+    norm_canonical = canonical.lower().strip().replace("_", " ").replace("-", " ")
+    # Collapse multiple spaces
+    norm_unmapped = " ".join(norm_unmapped.split())
+    norm_canonical = " ".join(norm_canonical.split())
+    return norm_unmapped == norm_canonical
+
+
+def generate_taxonomy_suggestions(db: Session, min_occurrences: int = 3) -> list:
+    """
+    Scan UnmappedLabelAggregate for frequently occurring unmapped labels
+    and create TaxonomySuggestion records for them.
+
+    Args:
+        db: Database session
+        min_occurrences: Minimum occurrence_count to consider a label
+
+    Returns:
+        List of newly created TaxonomySuggestion records
+    """
+    try:
+        aggregates = (
+            db.query(UnmappedLabelAggregate)
+            .filter(UnmappedLabelAggregate.occurrence_count >= min_occurrences)
+            .all()
+        )
+
+        if not aggregates:
+            return []
+
+        # Load all canonical names for matching
+        all_taxonomy = db.query(Taxonomy.canonical_name).all()
+        canonical_names = [t.canonical_name for t in all_taxonomy]
+
+        new_suggestions = []
+        for agg in aggregates:
+            # Check if a pending suggestion already exists for this label
+            existing = (
+                db.query(TaxonomySuggestion)
+                .filter(
+                    TaxonomySuggestion.suggested_text == agg.label_normalized,
+                    TaxonomySuggestion.status == "pending",
+                )
+                .first()
+            )
+            if existing:
+                continue
+
+            # Try to find a close match in taxonomy canonical names
+            matched_canonical = None
+            for cn in canonical_names:
+                if _is_close_match(agg.label_normalized, cn):
+                    matched_canonical = cn
+                    break
+
+            if matched_canonical:
+                suggestion_type = "new_alias"
+            else:
+                suggestion_type = "new_item"
+
+            suggestion = TaxonomySuggestion(
+                suggestion_type=suggestion_type,
+                canonical_name=matched_canonical,
+                suggested_text=agg.label_normalized,
+                evidence_count=agg.occurrence_count,
+                evidence_jobs=[str(agg.last_seen_job_id)] if agg.last_seen_job_id else [],
+                status="pending",
+            )
+            db.add(suggestion)
+            new_suggestions.append(suggestion)
+
+        if new_suggestions:
+            db.commit()
+            for s in new_suggestions:
+                db.refresh(s)
+            logger.info(f"Generated {len(new_suggestions)} taxonomy suggestions")
+
+        return new_suggestions
+
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Failed to generate taxonomy suggestions: {e}")
+        raise DatabaseError(
+            f"Failed to generate taxonomy suggestions: {e}",
+            operation="create",
+            table="taxonomy_suggestions",
+        )
+
+
+def accept_taxonomy_suggestion(
+    db: Session, suggestion_id, resolved_by: str = "api"
+) -> TaxonomySuggestion:
+    """
+    Accept a taxonomy suggestion.
+
+    For new_alias suggestions with a canonical_name, appends the suggested_text
+    to the Taxonomy row's aliases JSON array.
+
+    Args:
+        db: Database session
+        suggestion_id: UUID of the suggestion
+        resolved_by: Who resolved it
+
+    Returns:
+        The updated TaxonomySuggestion
+
+    Raises:
+        ValueError: If suggestion not found or not in pending status
+    """
+    try:
+        suggestion = (
+            db.query(TaxonomySuggestion)
+            .filter(TaxonomySuggestion.id == suggestion_id)
+            .first()
+        )
+        if not suggestion:
+            raise ValueError(f"Suggestion {suggestion_id} not found")
+        if suggestion.status != "pending":
+            raise ValueError(
+                f"Suggestion {suggestion_id} is not pending (status={suggestion.status})"
+            )
+
+        # If new_alias with a canonical_name, add to taxonomy aliases
+        if suggestion.suggestion_type == "new_alias" and suggestion.canonical_name:
+            taxonomy = (
+                db.query(Taxonomy)
+                .filter(Taxonomy.canonical_name == suggestion.canonical_name)
+                .first()
+            )
+            if taxonomy:
+                current_aliases = list(taxonomy.aliases or [])
+                if suggestion.suggested_text not in current_aliases:
+                    current_aliases.append(suggestion.suggested_text)
+                    taxonomy.aliases = current_aliases
+                    flag_modified(taxonomy, "aliases")
+
+        suggestion.status = "accepted"
+        suggestion.resolved_at = datetime.now(timezone.utc)
+        suggestion.resolved_by = resolved_by
+
+        db.commit()
+        db.refresh(suggestion)
+        logger.info(f"Accepted taxonomy suggestion {suggestion_id}")
+        return suggestion
+
+    except ValueError:
+        raise
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Failed to accept taxonomy suggestion {suggestion_id}: {e}")
+        raise DatabaseError(
+            f"Failed to accept taxonomy suggestion: {e}",
+            operation="update",
+            table="taxonomy_suggestions",
+        )
+
+
+def reject_taxonomy_suggestion(
+    db: Session, suggestion_id, resolved_by: str = "api"
+) -> TaxonomySuggestion:
+    """
+    Reject a taxonomy suggestion.
+
+    Args:
+        db: Database session
+        suggestion_id: UUID of the suggestion
+        resolved_by: Who resolved it
+
+    Returns:
+        The updated TaxonomySuggestion
+
+    Raises:
+        ValueError: If suggestion not found or not in pending status
+    """
+    try:
+        suggestion = (
+            db.query(TaxonomySuggestion)
+            .filter(TaxonomySuggestion.id == suggestion_id)
+            .first()
+        )
+        if not suggestion:
+            raise ValueError(f"Suggestion {suggestion_id} not found")
+        if suggestion.status != "pending":
+            raise ValueError(
+                f"Suggestion {suggestion_id} is not pending (status={suggestion.status})"
+            )
+
+        suggestion.status = "rejected"
+        suggestion.resolved_at = datetime.now(timezone.utc)
+        suggestion.resolved_by = resolved_by
+
+        db.commit()
+        db.refresh(suggestion)
+        logger.info(f"Rejected taxonomy suggestion {suggestion_id}")
+        return suggestion
+
+    except ValueError:
+        raise
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Failed to reject taxonomy suggestion {suggestion_id}: {e}")
+        raise DatabaseError(
+            f"Failed to reject taxonomy suggestion: {e}",
+            operation="update",
+            table="taxonomy_suggestions",
+        )
+
+
+def list_taxonomy_suggestions(
+    db: Session, status: Optional[str] = None
+) -> List[TaxonomySuggestion]:
+    """
+    List taxonomy suggestions, optionally filtered by status.
+
+    Args:
+        db: Database session
+        status: Optional status filter ("pending", "accepted", "rejected")
+
+    Returns:
+        List of TaxonomySuggestion records
+    """
+    try:
+        query = db.query(TaxonomySuggestion)
+        if status:
+            query = query.filter(TaxonomySuggestion.status == status)
+        return query.order_by(TaxonomySuggestion.created_at.desc()).all()
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to list taxonomy suggestions: {e}")
+        raise DatabaseError(
+            f"Failed to list taxonomy suggestions: {e}",
+            operation="read",
+            table="taxonomy_suggestions",
+        )
+
+
+# ============================================================================
+# Taxonomy Governance (Deprecation & Changelog)
+# ============================================================================
+
+
+def deprecate_taxonomy_item(
+    db: Session,
+    canonical_name: str,
+    redirect_to: Optional[str] = None,
+    deprecated_by: str = "api",
+) -> Taxonomy:
+    """Deprecate a taxonomy item, optionally redirecting to another.
+
+    Args:
+        db: Database session
+        canonical_name: The canonical name of the item to deprecate
+        redirect_to: Optional canonical name to redirect to
+        deprecated_by: Who initiated the deprecation
+
+    Returns:
+        The updated Taxonomy item
+
+    Raises:
+        ValueError: If item not found or redirect target is invalid
+    """
+    item = db.query(Taxonomy).filter_by(canonical_name=canonical_name).first()
+    if not item:
+        raise ValueError(f"Taxonomy item '{canonical_name}' not found")
+
+    if redirect_to:
+        target = db.query(Taxonomy).filter_by(canonical_name=redirect_to).first()
+        if not target:
+            raise ValueError(f"Redirect target '{redirect_to}' not found")
+        if target.deprecated:
+            raise ValueError(f"Cannot redirect to deprecated item '{redirect_to}'")
+
+    now = datetime.now(timezone.utc)
+    item.deprecated = True
+    item.deprecated_redirect = redirect_to
+    item.deprecated_at = now
+
+    # Record changelog entry for the deprecation
+    record_taxonomy_change(
+        db,
+        canonical_name=canonical_name,
+        field_name="deprecated",
+        old_value="false",
+        new_value="true",
+        changed_by=deprecated_by,
+        _commit=False,
+    )
+    if redirect_to:
+        record_taxonomy_change(
+            db,
+            canonical_name=canonical_name,
+            field_name="deprecated_redirect",
+            old_value=None,
+            new_value=redirect_to,
+            changed_by=deprecated_by,
+            _commit=False,
+        )
+
+    db.commit()
+    db.refresh(item)
+    logger.info(
+        f"Taxonomy item '{canonical_name}' deprecated"
+        + (f" -> '{redirect_to}'" if redirect_to else "")
+    )
+    return item
+
+
+def record_taxonomy_change(
+    db: Session,
+    canonical_name: str,
+    field_name: str,
+    old_value,
+    new_value,
+    changed_by: str,
+    taxonomy_version: Optional[str] = None,
+    _commit: bool = True,
+) -> TaxonomyChangelog:
+    """Record a changelog entry for a taxonomy field change.
+
+    Args:
+        db: Database session
+        canonical_name: Which taxonomy item changed
+        field_name: Which field changed
+        old_value: Previous value (will be str-cast)
+        new_value: New value (will be str-cast)
+        changed_by: Who made the change
+        taxonomy_version: Optional version tag
+        _commit: Whether to commit (False when called inside a transaction)
+
+    Returns:
+        The created TaxonomyChangelog entry
+    """
+    entry = TaxonomyChangelog(
+        canonical_name=canonical_name,
+        field_name=field_name,
+        old_value=str(old_value) if old_value is not None else None,
+        new_value=str(new_value) if new_value is not None else None,
+        changed_by=changed_by,
+        taxonomy_version=taxonomy_version,
+    )
+    db.add(entry)
+    if _commit:
+        db.commit()
+        db.refresh(entry)
+    return entry
+
+
+def get_taxonomy_changelog(
+    db: Session,
+    canonical_name: Optional[str] = None,
+    limit: int = 100,
+) -> list:
+    """Get changelog entries, optionally filtered by canonical_name.
+
+    Args:
+        db: Database session
+        canonical_name: Optional filter by canonical name
+        limit: Maximum entries to return
+
+    Returns:
+        List of TaxonomyChangelog entries ordered by created_at desc
+    """
+    query = db.query(TaxonomyChangelog)
+    if canonical_name:
+        query = query.filter(TaxonomyChangelog.canonical_name == canonical_name)
+    return query.order_by(TaxonomyChangelog.created_at.desc()).limit(limit).all()

@@ -782,6 +782,16 @@ def _build_result(
     except Exception as e:
         logger.warning(f"Could not persist extraction facts: {e}")
 
+    # --- Best-effort taxonomy suggestion generation ---
+    try:
+        from src.db.crud import generate_taxonomy_suggestions
+        from src.db.session import get_db_sync
+
+        with get_db_sync() as db:
+            generate_taxonomy_suggestions(db, min_occurrences=3)
+    except Exception:
+        logger.debug("Taxonomy suggestion generation skipped", exc_info=True)
+
     detected_periods = parse_result.get("detected_periods", {})
     item_lineage = context.tracker.get_all_item_lineage()
 

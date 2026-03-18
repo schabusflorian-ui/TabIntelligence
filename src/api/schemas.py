@@ -935,3 +935,35 @@ class QualityTrendResponse(BaseModel):
     entity_id: str
     entity_name: Optional[str] = None
     snapshots: List[QualitySnapshotItem]
+
+
+# ============================================================================
+# Taxonomy Governance (Deprecation & Changelog)
+# ============================================================================
+
+
+class DeprecateRequest(BaseModel):
+    redirect_to: Optional[str] = None
+
+
+class DeprecateResponse(BaseModel):
+    canonical_name: str
+    deprecated: bool
+    deprecated_redirect: Optional[str] = None
+    deprecated_at: Optional[str] = None
+
+
+class ChangelogEntry(BaseModel):
+    id: str
+    canonical_name: str
+    field_name: str
+    old_value: Optional[str] = None
+    new_value: Optional[str] = None
+    changed_by: str
+    taxonomy_version: Optional[str] = None
+    created_at: str
+
+
+class ChangelogResponse(BaseModel):
+    count: int
+    entries: List[ChangelogEntry]

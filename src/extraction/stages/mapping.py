@@ -344,6 +344,16 @@ def _disambiguate_by_sheet_category(
     return overrides
 
 
+def _handle_deprecated_redirect(canonical_name: str, db) -> str:
+    """If canonical_name is deprecated, return its redirect target."""
+    from src.db.models import Taxonomy
+
+    item = db.query(Taxonomy).filter_by(canonical_name=canonical_name, deprecated=True).first()
+    if item and item.deprecated_redirect:
+        return item.deprecated_redirect
+    return canonical_name
+
+
 class MappingStage(ExtractionStage):
     """Stage 3: Map line items to canonical taxonomy."""
 
@@ -675,6 +685,25 @@ class MappingStage(ExtractionStage):
 
             # Merge pre-mapped patterns + Claude results
             final_mappings = list(pre_mapped.values()) + claude_mappings_list
+
+            # Handle deprecated taxonomy redirects
+            try:
+                from src.db.session import get_db_sync
+
+                with get_db_sync() as db:
+                    for m in final_mappings:
+                        cn = m.get("canonical_name", "unmapped")
+                        if cn != "unmapped":
+                            redirected = _handle_deprecated_redirect(cn, db)
+                            if redirected != cn:
+                                logger.info(
+                                    f"Stage 3: Deprecated redirect: "
+                                    f"'{cn}' -> '{redirected}'"
+                                )
+                                m["canonical_name"] = redirected
+                                m["deprecated_redirect_from"] = cn
+            except Exception as e:
+                logger.warning(f"Stage 3: Deprecated redirect check failed: {e}")
 
             # Attach taxonomy_category to each mapping for provenance
             cat_lookup = get_canonical_to_category()

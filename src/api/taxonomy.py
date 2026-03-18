@@ -1,8 +1,11 @@
 """Taxonomy API endpoints for browsing and searching canonical line items."""
 
-from typing import Dict, Optional
+from datetime import datetime
+from typing import Dict, List, Optional
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from src.api.schemas import (
@@ -15,6 +18,31 @@ from src.api.schemas import (
 from src.auth.dependencies import get_current_api_key
 from src.db.session import get_db
 from src.guidelines.taxonomy import TaxonomyManager
+
+
+# ============================================================================
+# Suggestion Response Models
+# ============================================================================
+
+
+class TaxonomySuggestionResponse(BaseModel):
+    id: UUID
+    suggestion_type: str
+    canonical_name: Optional[str] = None
+    suggested_text: str
+    evidence_count: int
+    evidence_jobs: Optional[list] = None
+    status: str
+    created_at: Optional[datetime] = None
+    resolved_at: Optional[datetime] = None
+    resolved_by: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TaxonomySuggestionListResponse(BaseModel):
+    count: int
+    suggestions: List[TaxonomySuggestionResponse]
 
 router = APIRouter(prefix="/api/v1/taxonomy", tags=["taxonomy"])
 
@@ -107,6 +135,130 @@ def taxonomy_hierarchy(
     return {name: _serialize_node(data) for name, data in hierarchy.items()}
 
 
+# ============================================================================
+# Taxonomy Suggestion Endpoints
+# ============================================================================
+
+
+@router.get("/suggestions", response_model=TaxonomySuggestionListResponse)
+def list_suggestions(
+    status: Optional[str] = Query(None, description="Filter by status: pending, accepted, rejected"),
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """List taxonomy improvement suggestions, optionally filtered by status."""
+    from src.db.crud import list_taxonomy_suggestions
+
+    suggestions = list_taxonomy_suggestions(db, status=status)
+    return {
+        "count": len(suggestions),
+        "suggestions": [
+            TaxonomySuggestionResponse.model_validate(s) for s in suggestions
+        ],
+    }
+
+
+@router.post(
+    "/suggestions/{suggestion_id}/accept",
+    response_model=TaxonomySuggestionResponse,
+)
+def accept_suggestion(
+    suggestion_id: UUID,
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Accept a pending taxonomy suggestion."""
+    from src.db.crud import accept_taxonomy_suggestion
+
+    try:
+        suggestion = accept_taxonomy_suggestion(db, suggestion_id)
+        return TaxonomySuggestionResponse.model_validate(suggestion)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post(
+    "/suggestions/{suggestion_id}/reject",
+    response_model=TaxonomySuggestionResponse,
+)
+def reject_suggestion(
+    suggestion_id: UUID,
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Reject a pending taxonomy suggestion."""
+    from src.db.crud import reject_taxonomy_suggestion
+
+    try:
+        suggestion = reject_taxonomy_suggestion(db, suggestion_id)
+        return TaxonomySuggestionResponse.model_validate(suggestion)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# ============================================================================
+# Taxonomy Governance (Deprecation & Changelog)
+# ============================================================================
+
+
+@router.get("/changelog", response_model=None)
+def get_changelog(
+    canonical_name: Optional[str] = Query(None, description="Filter by canonical name"),
+    limit: int = Query(100, ge=1, le=500, description="Max entries to return"),
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Get taxonomy changelog entries, optionally filtered by canonical_name."""
+    from src.api.schemas import ChangelogEntry, ChangelogResponse
+    from src.db.crud import get_taxonomy_changelog
+
+    entries = get_taxonomy_changelog(db, canonical_name=canonical_name, limit=limit)
+    return ChangelogResponse(
+        count=len(entries),
+        entries=[
+            ChangelogEntry(
+                id=str(e.id),
+                canonical_name=e.canonical_name,
+                field_name=e.field_name,
+                old_value=e.old_value,
+                new_value=e.new_value,
+                changed_by=e.changed_by,
+                taxonomy_version=e.taxonomy_version,
+                created_at=e.created_at.isoformat() if e.created_at else "",
+            )
+            for e in entries
+        ],
+    )
+
+
+@router.post("/{canonical_name}/deprecate", response_model=None)
+def deprecate_item(
+    canonical_name: str,
+    redirect_to: Optional[str] = Query(None, description="Redirect to this canonical name"),
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Deprecate a taxonomy item, optionally redirecting to another."""
+    from src.api.schemas import DeprecateResponse
+    from src.db.crud import deprecate_taxonomy_item
+
+    try:
+        item = deprecate_taxonomy_item(
+            db,
+            canonical_name=canonical_name,
+            redirect_to=redirect_to,
+            deprecated_by="api",
+        )
+        return DeprecateResponse(
+            canonical_name=item.canonical_name,
+            deprecated=item.deprecated,
+            deprecated_redirect=item.deprecated_redirect,
+            deprecated_at=item.deprecated_at.isoformat() if item.deprecated_at else None,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.get("/{canonical_name}", response_model=TaxonomyItemResponse)
 def get_taxonomy_item(
     canonical_name: str,
@@ -116,8 +268,6 @@ def get_taxonomy_item(
     """Get a specific taxonomy item by canonical name."""
     item = _manager.get_by_canonical_name(db, canonical_name)
     if not item:
-        from fastapi import HTTPException
-
         raise HTTPException(status_code=404, detail=f"Taxonomy item '{canonical_name}' not found")
 
     return {
