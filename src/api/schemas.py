@@ -177,6 +177,9 @@ class TaxonomyItemResponse(BaseModel):
     typical_sign: Optional[str] = None
     parent_canonical: Optional[str] = None
     validation_rules: Optional[Dict[str, Any]] = None
+    deprecated: bool = False
+    deprecated_redirect: Optional[str] = None
+    deprecated_at: Optional[str] = None
 
 
 class TaxonomyListResponse(BaseModel):

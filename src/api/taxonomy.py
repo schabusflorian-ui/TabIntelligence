@@ -279,4 +279,7 @@ def get_taxonomy_item(
         "typical_sign": item.typical_sign,
         "parent_canonical": item.parent_canonical,
         "validation_rules": item.validation_rules,
+        "deprecated": getattr(item, 'deprecated', False),
+        "deprecated_redirect": getattr(item, 'deprecated_redirect', None),
+        "deprecated_at": getattr(item, 'deprecated_at', None).isoformat() if getattr(item, 'deprecated_at', None) else None,
     }
