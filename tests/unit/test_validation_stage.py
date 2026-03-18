@@ -1333,3 +1333,72 @@ class TestDuplicateConflictDetection:
 
         assert result["FY2023"]["revenue"] == Decimal("1000.004")
         assert self.stage._duplicate_conflicts[0]["is_conflict"] is False
+
+    def test_large_values_within_relative_tolerance_not_conflict(self):
+        """Large values where absolute diff > 0.01 but relative diff < 0.1%
+        should NOT be a conflict."""
+        from decimal import Decimal
+
+        parsed = {
+            "sheets": [
+                {
+                    "sheet_name": "IS",
+                    "rows": [
+                        {"label": "Revenue", "values": {"FY2023": "1000000.5"}},
+                    ],
+                },
+                {
+                    "sheet_name": "Summary",
+                    "rows": [
+                        {"label": "Total Revenue", "values": {"FY2023": "1000000.0"}},
+                    ],
+                },
+            ],
+        }
+        mappings = [
+            {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.9},
+            {"original_label": "Total Revenue", "canonical_name": "revenue", "confidence": 0.8},
+        ]
+        triage = [
+            {"sheet_name": "IS", "tier": 1},
+            {"sheet_name": "Summary", "tier": 2},
+        ]
+
+        self.stage._build_extracted_values(parsed, mappings, triage)
+
+        # Absolute diff = 0.5 > 0.01, but relative diff = 0.00005% < 0.1%
+        assert self.stage._duplicate_conflicts[0]["is_conflict"] is False
+
+    def test_small_values_relative_tolerance_catches_conflict(self):
+        """Small values where both absolute AND relative tolerance are exceeded
+        should be a conflict."""
+        from decimal import Decimal
+
+        parsed = {
+            "sheets": [
+                {
+                    "sheet_name": "IS",
+                    "rows": [
+                        {"label": "Ratio", "values": {"FY2023": "0.10"}},
+                    ],
+                },
+                {
+                    "sheet_name": "Summary",
+                    "rows": [
+                        {"label": "Ratio", "values": {"FY2023": "0.20"}},
+                    ],
+                },
+            ],
+        }
+        mappings = [
+            {"original_label": "Ratio", "canonical_name": "ratio", "confidence": 0.9},
+        ]
+        triage = [
+            {"sheet_name": "IS", "tier": 1},
+            {"sheet_name": "Summary", "tier": 2},
+        ]
+
+        self.stage._build_extracted_values(parsed, mappings, triage)
+
+        # Absolute diff = 0.10 > 0.01, relative diff = 100% > 0.1%
+        assert self.stage._duplicate_conflicts[0]["is_conflict"] is True

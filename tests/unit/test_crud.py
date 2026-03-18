@@ -174,6 +174,43 @@ def test_complete_job(db_session, sample_job):
     assert completed_job.cost_usd == 0.045
 
 
+def test_complete_job_with_taxonomy_tracking(db_session, sample_job):
+    """Test completing a job with taxonomy version and checksum persisted."""
+    result = {
+        "sheets": ["Income Statement"],
+        "line_items": [{"label": "Revenue", "value": 100}],
+    }
+
+    completed_job = crud.complete_job(
+        db_session,
+        sample_job.job_id,
+        result=result,
+        tokens_used=800,
+        cost_usd=0.02,
+        taxonomy_version="3.0.0",
+        taxonomy_checksum="abc123def456" * 4,  # 48-char hex string
+    )
+
+    assert completed_job.taxonomy_version == "3.0.0"
+    assert completed_job.taxonomy_checksum == "abc123def456" * 4
+
+    # Verify persistence by re-querying
+    refreshed_job = crud.get_job(db_session, sample_job.job_id)
+    assert refreshed_job.taxonomy_version == "3.0.0"
+    assert refreshed_job.taxonomy_checksum == "abc123def456" * 4
+
+
+def test_extraction_job_taxonomy_fields_default_null(db_session, sample_file):
+    """Test that taxonomy fields are None by default on new jobs."""
+    job = crud.create_extraction_job(
+        db_session,
+        file_id=sample_file.file_id,
+    )
+
+    assert job.taxonomy_version is None
+    assert job.taxonomy_checksum is None
+
+
 def test_complete_job_not_found(db_session):
     """Test completing non-existent job raises error."""
     with pytest.raises(DatabaseError) as exc_info:

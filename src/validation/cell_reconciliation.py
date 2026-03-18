@@ -106,10 +106,20 @@ class CellReconciliationValidator:
                 source_cells = row.get("source_cells", [])
                 values = row.get("values", {})
 
-                # source_cells[0] is the label cell, source_cells[1:] are value cells
-                # paired positionally with non-None entries from values.items()
-                value_cells = source_cells[1:] if len(source_cells) > 1 else []
-                cell_idx = 0
+                # Build period-keyed lookup from source_cells that have a
+                # "period" key (added during parsing enrichment).
+                value_cell_lookup: Dict[str, Dict] = {}
+                for sc in source_cells:
+                    sc_period = sc.get("period")
+                    if sc_period is not None:
+                        value_cell_lookup[sc_period] = sc
+
+                # Fallback: if no source_cells have period keys (backward
+                # compat with old data), use positional matching.
+                use_positional = not value_cell_lookup
+                if use_positional:
+                    value_cells = source_cells[1:] if len(source_cells) > 1 else []
+                    cell_idx = 0
 
                 for period, value in values.items():
                     if value is None:
@@ -120,62 +130,75 @@ class CellReconciliationValidator:
                     except (ValueError, ArithmeticError, InvalidOperation):
                         continue
 
-                    if cell_idx < len(value_cells):
-                        sc = value_cells[cell_idx]
-                        cell_idx += 1
-
-                        raw_value = sc.get("raw_value")
-                        if raw_value is None or not isinstance(raw_value, (int, float)):
+                    # Find the source cell for this period
+                    if use_positional:
+                        if cell_idx < len(value_cells):
+                            sc = value_cells[cell_idx]
+                            cell_idx += 1
+                        else:
                             unmatched_items.append({
                                 "canonical_name": canonical,
                                 "period": period,
                                 "extracted_value": str(extracted),
-                                "reason": "non_numeric_source_cell",
+                                "reason": "no_source_cell",
+                            })
+                            continue
+                    else:
+                        sc = value_cell_lookup.get(period)
+                        if sc is None:
+                            unmatched_items.append({
+                                "canonical_name": canonical,
+                                "period": period,
+                                "extracted_value": str(extracted),
+                                "reason": "no_source_cell",
                             })
                             continue
 
-                        try:
-                            source_decimal = Decimal(str(raw_value))
-                        except (ValueError, ArithmeticError, InvalidOperation):
-                            continue
-
-                        # Both extracted and source should be compared
-                        # at the same scale (pre-multiplier)
-                        delta = abs(extracted - source_decimal)
-
-                        # Check dual tolerance
-                        abs_ok = delta <= self.ABSOLUTE_TOLERANCE
-                        divisor = max(abs(source_decimal), Decimal("1"))
-                        rel_diff = float(delta / divisor)
-                        rel_ok = rel_diff <= self.RELATIVE_TOLERANCE
-                        matched = abs_ok or rel_ok
-
-                        delta_pct = float(delta / divisor) if source_decimal != 0 else None
-
-                        result = CellMatchResult(
-                            canonical_name=canonical,
-                            period=period,
-                            extracted_value=extracted,
-                            source_cell_ref=sc.get("cell_ref", ""),
-                            source_sheet=sc.get("sheet", sheet_name),
-                            source_raw_value=float(raw_value),
-                            matched=matched,
-                            delta=delta,
-                            delta_pct=delta_pct,
-                            unit_multiplier_applied=sheet_multiplier,
-                        )
-
-                        if matched:
-                            matches.append(result)
-                        else:
-                            mismatches.append(result)
-                    else:
+                    raw_value = sc.get("raw_value")
+                    if raw_value is None or not isinstance(raw_value, (int, float)):
                         unmatched_items.append({
                             "canonical_name": canonical,
                             "period": period,
                             "extracted_value": str(extracted),
-                            "reason": "no_source_cell",
+                            "reason": "non_numeric_source_cell",
                         })
+                        continue
+
+                    try:
+                        source_decimal = Decimal(str(raw_value))
+                    except (ValueError, ArithmeticError, InvalidOperation):
+                        continue
+
+                    # Both extracted and source should be compared
+                    # at the same scale (pre-multiplier)
+                    delta = abs(extracted - source_decimal)
+
+                    # Check dual tolerance
+                    abs_ok = delta <= self.ABSOLUTE_TOLERANCE
+                    divisor = max(abs(source_decimal), Decimal("1"))
+                    rel_diff = float(delta / divisor)
+                    rel_ok = rel_diff <= self.RELATIVE_TOLERANCE
+                    matched = abs_ok or rel_ok
+
+                    delta_pct = float(delta / divisor) if source_decimal != 0 else None
+
+                    result = CellMatchResult(
+                        canonical_name=canonical,
+                        period=period,
+                        extracted_value=extracted,
+                        source_cell_ref=sc.get("cell_ref", ""),
+                        source_sheet=sc.get("sheet", sheet_name),
+                        source_raw_value=float(raw_value),
+                        matched=matched,
+                        delta=delta,
+                        delta_pct=delta_pct,
+                        unit_multiplier_applied=sheet_multiplier,
+                    )
+
+                    if matched:
+                        matches.append(result)
+                    else:
+                        mismatches.append(result)
 
         total = len(matches) + len(mismatches)
         match_rate = len(matches) / total if total > 0 else 1.0

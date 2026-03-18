@@ -368,3 +368,88 @@ class TestCellReconciliationEdgeCases:
         assert m.source_sheet == "IS"
         assert m.delta == Decimal("500")
         assert m.matched is False
+
+
+class TestCellPairingByPeriod:
+    """Test period-based cell pairing (P0 fix)."""
+
+    def setup_method(self):
+        self.validator = CellReconciliationValidator()
+
+    def test_period_tagged_source_cells_match_correctly(self):
+        """When source_cells have period keys, match by period not position."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("Revenue", {"FY2023": 100, "FY2024": None, "FY2025": 200}, [
+                    _make_source_cell("IS", "A1", "Revenue"),
+                    {**_make_source_cell("IS", "B1", 100), "period": "FY2023"},
+                    {**_make_source_cell("IS", "D1", 200), "period": "FY2025"},
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({"Revenue": "revenue"})
+        triage = _make_triage(["IS"])
+
+        result = self.validator.reconcile(parsed, mappings, triage)
+
+        assert result.total_cells == 2
+        assert result.matched == 2
+        assert result.mismatched == 0
+
+    def test_close_values_different_periods_paired_correctly(self):
+        """Two similar values should pair with correct periods, not greedy first-fit."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("Revenue", {"FY2023": 100.5, "FY2024": 100.0}, [
+                    _make_source_cell("IS", "A1", "Revenue"),
+                    {**_make_source_cell("IS", "B1", 100.5), "period": "FY2023"},
+                    {**_make_source_cell("IS", "C1", 100.0), "period": "FY2024"},
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({"Revenue": "revenue"})
+        triage = _make_triage(["IS"])
+
+        result = self.validator.reconcile(parsed, mappings, triage)
+
+        assert result.total_cells == 2
+        assert result.matched == 2
+        assert result.mismatched == 0
+
+    def test_backward_compat_no_period_key_uses_positional(self):
+        """Source cells without 'period' key should still work (positional fallback)."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("Revenue", {"FY2023": 1000}, [
+                    _make_source_cell("IS", "A1", "Revenue"),
+                    _make_source_cell("IS", "B1", 1000),  # no "period" key
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({"Revenue": "revenue"})
+        triage = _make_triage(["IS"])
+
+        result = self.validator.reconcile(parsed, mappings, triage)
+
+        assert result.total_cells == 1
+        assert result.matched == 1
+
+    def test_period_without_source_cell_produces_unmatched(self):
+        """If a period has no matching source_cell, it goes to unmatched."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("Revenue", {"FY2023": 100, "FY2024": 200}, [
+                    _make_source_cell("IS", "A1", "Revenue"),
+                    {**_make_source_cell("IS", "B1", 100), "period": "FY2023"},
+                    # FY2024 has no source cell
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({"Revenue": "revenue"})
+        triage = _make_triage(["IS"])
+
+        result = self.validator.reconcile(parsed, mappings, triage)
+
+        assert result.total_cells == 1
+        assert result.matched == 1
+        assert result.unmatched == 1

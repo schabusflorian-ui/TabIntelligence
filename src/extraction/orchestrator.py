@@ -5,6 +5,7 @@ Uses a Stage Registry pattern so new stages can be added by simply creating
 a new ExtractionStage subclass and registering it - no orchestrator changes needed.
 """
 
+import hashlib
 import time
 import uuid
 from dataclasses import asdict, dataclass
@@ -59,6 +60,8 @@ class ExtractionResult:
     period_metadata: Optional[dict] = None
     model_type: Optional[str] = None
     item_lineage: Optional[dict] = None
+    taxonomy_version: Optional[str] = None
+    taxonomy_checksum: Optional[str] = None
 
     def to_dict(self):
         return asdict(self)
@@ -104,6 +107,21 @@ async def extract(
         job_id=job_id,
         entity_id=entity_id,
     )
+
+    # Stamp taxonomy version and checksum at pipeline start
+    try:
+        from src.extraction.taxonomy_loader import TAXONOMY_PATH, load_taxonomy_json
+
+        taxonomy_data = load_taxonomy_json()
+        context.taxonomy_version = taxonomy_data.get("version", "unknown")
+        if TAXONOMY_PATH.exists():
+            context.taxonomy_checksum = hashlib.sha256(TAXONOMY_PATH.read_bytes()).hexdigest()
+        else:
+            context.taxonomy_checksum = "unknown"
+    except Exception as e:
+        logger.warning(f"Could not stamp taxonomy version: {e}")
+        context.taxonomy_version = "unknown"
+        context.taxonomy_checksum = "unknown"
 
     # Get pipeline stages from registry (sorted by stage_number)
     pipeline = registry.get_pipeline()
@@ -783,6 +801,8 @@ def _build_result(
         period_metadata=detected_periods if detected_periods else None,
         model_type=model_type,
         item_lineage=item_lineage or None,
+        taxonomy_version=context.taxonomy_version,
+        taxonomy_checksum=context.taxonomy_checksum,
     )
 
     pipeline_duration = time.time() - pipeline_start

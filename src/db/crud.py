@@ -15,6 +15,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.orm.attributes import flag_modified
 
+from src.core.config import get_settings
 from src.core.exceptions import DatabaseError
 from src.core.logging import database_logger as logger
 from src.db.models import (
@@ -437,6 +438,8 @@ def complete_job(
     tokens_used: int,
     cost_usd: float,
     quality_grade: Optional[str] = None,
+    taxonomy_version: Optional[str] = None,
+    taxonomy_checksum: Optional[str] = None,
 ) -> ExtractionJob:
     """
     Mark job as completed (or NEEDS_REVIEW if quality gate fails).
@@ -448,6 +451,8 @@ def complete_job(
         tokens_used: Number of tokens consumed
         cost_usd: Cost in USD
         quality_grade: Letter grade from quality scorer (A/B/C/D/F)
+        taxonomy_version: Taxonomy version used during extraction
+        taxonomy_checksum: SHA-256 checksum of taxonomy.json used
 
     Returns:
         ExtractionJob: Updated job record
@@ -474,6 +479,8 @@ def complete_job(
         job.tokens_used = tokens_used
         job.cost_usd = cost_usd
         job.quality_grade = quality_grade
+        job.taxonomy_version = taxonomy_version
+        job.taxonomy_checksum = taxonomy_checksum
         job.updated_at = datetime.now(timezone.utc)
 
         db.commit()
@@ -1110,7 +1117,7 @@ def compute_effective_confidence(
     Compute effective confidence with time-based decay.
 
     User corrections are exempt from decay. Claude-generated patterns
-    lose up to 30% confidence per year since last seen, with a floor at 0.5.
+    lose confidence per year since last seen (rate and floor from config).
 
     Args:
         base_confidence: Stored confidence value (0.0-1.0)
@@ -1126,11 +1133,15 @@ def compute_effective_confidence(
     if last_seen is None:
         return float(base_confidence)
 
+    settings = get_settings()
     now = datetime.now(timezone.utc)
     if last_seen.tzinfo is None:
         last_seen = last_seen.replace(tzinfo=timezone.utc)
     days_since = (now - last_seen).days
-    decay_factor = max(0.5, 1.0 - (days_since / 365) * 0.3)
+    decay_factor = max(
+        settings.taxonomy_confidence_decay_floor,
+        1.0 - (days_since / 365) * settings.taxonomy_confidence_decay_rate,
+    )
     return float(base_confidence) * decay_factor
 
 
@@ -3039,17 +3050,19 @@ def get_confidence_calibration(db: Session) -> dict:
 def check_auto_promotions(db: Session) -> int:
     """Auto-promote learned aliases that meet promotion criteria.
 
-    Criteria: occurrence_count >= 5, len(source_entities) >= 3, not yet promoted.
+    Criteria: occurrence_count >= configured threshold,
+    len(source_entities) >= configured threshold, not yet promoted.
 
     Returns:
         Number of aliases promoted.
     """
+    settings = get_settings()
     try:
         candidates = (
             db.query(LearnedAlias)
             .filter(
                 LearnedAlias.promoted == False,  # noqa: E712
-                LearnedAlias.occurrence_count >= 5,
+                LearnedAlias.occurrence_count >= settings.taxonomy_auto_promote_occurrences,
             )
             .all()
         )
@@ -3057,7 +3070,7 @@ def check_auto_promotions(db: Session) -> int:
         promoted_count = 0
         for alias in candidates:
             source_entities = alias.source_entities or []
-            if len(source_entities) >= 3:
+            if len(source_entities) >= settings.taxonomy_auto_promote_entities:
                 alias.promoted = True
                 promoted_count += 1
 

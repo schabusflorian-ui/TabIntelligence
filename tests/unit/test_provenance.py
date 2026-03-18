@@ -402,6 +402,8 @@ class TestLineItemProvenance:
         context.total_output_tokens = 300
         context.file_id = "file-123"
         context.job_id = "job-456"
+        context.taxonomy_version = None
+        context.taxonomy_checksum = None
         context.tracker = MagicMock()
         context.tracker.get_summary.return_value = {"total_events": 5}
 

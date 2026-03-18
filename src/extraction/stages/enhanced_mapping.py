@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 
 import anthropic
 
+from src.core.config import get_settings
 from src.core.exceptions import ClaudeAPIError, ExtractionError, RateLimitError
 from src.core.logging import extraction_logger as logger
 from src.core.logging import log_performance
@@ -359,6 +360,7 @@ class EnhancedMappingStage(ExtractionStage):
         Also resolves pattern conflicts (deactivates losing patterns) and
         records learned aliases for taxonomy enrichment.
         """
+        settings = get_settings()
         entity_id = getattr(context, "entity_id", None)
         if not entity_id:
             return 0
@@ -376,7 +378,7 @@ class EnhancedMappingStage(ExtractionStage):
                     db=db,
                     entity_id=entity_uuid,
                     mappings=final_mappings,
-                    min_confidence=0.8,
+                    min_confidence=settings.taxonomy_pattern_persist_confidence,
                     created_by="claude",
                 )
 
@@ -410,10 +412,11 @@ class EnhancedMappingStage(ExtractionStage):
     def _record_learned_aliases(self, context: PipelineContext, mappings: List[Dict]) -> int:
         """Record high-confidence mappings as learned aliases if not in taxonomy.
 
-        When Claude maps a label to a canonical name with >= 0.9 confidence
+        When Claude maps a label to a canonical name with high confidence
         and the label is not already in the taxonomy's aliases, record it
         as a learned alias for potential future promotion to the taxonomy.
         """
+        settings = get_settings()
         entity_id = getattr(context, "entity_id", None)
         if not entity_id:
             return 0
@@ -441,7 +444,7 @@ class EnhancedMappingStage(ExtractionStage):
                     canonical = m.get("canonical_name", "")
                     label = m.get("original_label", "")
 
-                    if confidence < 0.9 or canonical == "unmapped" or not label:
+                    if confidence < settings.taxonomy_learned_alias_confidence or canonical == "unmapped" or not label:
                         continue
 
                     # Check if label is already a known alias

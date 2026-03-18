@@ -297,6 +297,10 @@ class ExtractionJob(Base):
     # Quality
     quality_grade: Mapped[Optional[str]] = mapped_column(String(2), nullable=True)
 
+    # Taxonomy tracking
+    taxonomy_version: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    taxonomy_checksum: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True

@@ -145,6 +145,7 @@ class QualityScorer:
         completeness_score: float,
         time_series_consistency: float,
         cell_match_rate: Optional[float] = None,
+        formula_mismatch_rate: Optional[float] = None,
     ) -> QualityResult:
         """Compute composite quality score.
 
@@ -152,6 +153,7 @@ class QualityScorer:
         cell_match_rate is optional for backward compatibility — when not
         provided, its weight is redistributed proportionally among the
         other 4 dimensions.
+        formula_mismatch_rate is optional — if > 0.3, caps grade at "C".
 
         Returns:
             QualityResult with numeric score, letter grade, and label.
@@ -180,10 +182,15 @@ class QualityScorer:
         label = self._assign_label(numeric)
 
         # Grade floor: if cell_match_rate < 0.5, cap grade at "D"
+        grade_rank = {"A": 5, "B": 4, "C": 3, "D": 2, "F": 1}
         if cell_match_rate is not None and cell_match_rate < 0.5:
-            grade_rank = {"A": 5, "B": 4, "C": 3, "D": 2, "F": 1}
             if grade_rank.get(grade, 0) > grade_rank["D"]:
                 grade = "D"
+
+        # Grade floor: if formula_mismatch_rate > 0.3, cap grade at "C"
+        if formula_mismatch_rate is not None and formula_mismatch_rate > 0.3:
+            if grade_rank.get(grade, 0) > grade_rank["C"]:
+                grade = "C"
 
         dimensions = [
             DimensionScore(

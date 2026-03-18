@@ -373,3 +373,54 @@ class TestCellReconciliationDimension:
         # cell_reconciliation clamped to 1.0 (weight 0.20), rest at 0.9
         # expected: 0.9*0.25 + 0.9*0.20 + 0.9*0.20 + 0.9*0.15 + 1.0*0.20 = 0.72 + 0.20 = 0.92
         assert abs(result.numeric_score - 0.92) < 0.01
+
+
+class TestFormulaMismatchModifier:
+    """Test formula_mismatch_rate grade modifier."""
+
+    def setup_method(self):
+        self.scorer = QualityScorer()
+
+    def test_high_formula_mismatch_caps_at_c(self):
+        """formula_mismatch_rate > 0.3 caps grade at C even if others are perfect."""
+        result = self.scorer.score(
+            1.0, 1.0, 1.0, 1.0, cell_match_rate=1.0, formula_mismatch_rate=0.5,
+        )
+        assert result.letter_grade == "C"
+
+    def test_formula_mismatch_at_boundary_no_cap(self):
+        """formula_mismatch_rate == 0.3 should NOT trigger the cap."""
+        result = self.scorer.score(
+            1.0, 1.0, 1.0, 1.0, cell_match_rate=1.0, formula_mismatch_rate=0.3,
+        )
+        assert result.letter_grade == "A"
+
+    def test_formula_mismatch_none_no_effect(self):
+        """When formula_mismatch_rate is None, no grade modifier applied."""
+        result = self.scorer.score(1.0, 1.0, 1.0, 1.0, cell_match_rate=1.0)
+        assert result.letter_grade == "A"
+
+    def test_formula_mismatch_does_not_upgrade(self):
+        """Low grade stays low even with formula_mismatch_rate > 0.3."""
+        result = self.scorer.score(0.0, 0.0, 0.0, 0.0, formula_mismatch_rate=0.5)
+        assert result.letter_grade == "F"
+
+    def test_formula_and_cell_caps_stack(self):
+        """Both cell_match_rate < 0.5 AND formula_mismatch_rate > 0.3:
+        cell cap (D) is stricter, so D wins."""
+        result = self.scorer.score(
+            1.0, 1.0, 1.0, 1.0, cell_match_rate=0.4, formula_mismatch_rate=0.5,
+        )
+        assert result.letter_grade == "D"
+
+    def test_formula_mismatch_zero_no_cap(self):
+        """formula_mismatch_rate = 0.0 should not cap anything."""
+        result = self.scorer.score(
+            0.95, 0.95, 0.95, 0.95, cell_match_rate=0.95, formula_mismatch_rate=0.0,
+        )
+        assert result.letter_grade == "A"
+
+    def test_backward_compat_without_formula_rate(self):
+        """Existing code that does not pass formula_mismatch_rate still works."""
+        result = self.scorer.score(0.9, 0.9, 0.9, 0.9, cell_match_rate=0.9)
+        assert result.letter_grade == "A"

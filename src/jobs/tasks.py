@@ -193,6 +193,8 @@ async def async_extraction_wrapper(
                 tokens_used=result.get("tokens_used", 0),
                 cost_usd=result.get("cost_usd", 0.0),
                 quality_grade=quality_grade,
+                taxonomy_version=result.get("taxonomy_version"),
+                taxonomy_checksum=result.get("taxonomy_checksum"),
             )
 
         # --- Critical condition alerting ---

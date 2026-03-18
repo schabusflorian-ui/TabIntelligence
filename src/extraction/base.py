@@ -95,6 +95,8 @@ class PipelineContext:
         self.total_output_tokens = 0
         self._result_cache: Dict[str, Dict[str, Any]] = {}
         self.completed_stages: List[str] = []
+        self.taxonomy_version: Optional[str] = None
+        self.taxonomy_checksum: Optional[str] = None
 
     def get_result(self, stage_name: str) -> Dict[str, Any]:
         """Get result from a previous stage."""

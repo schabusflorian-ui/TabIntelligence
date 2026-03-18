@@ -8,7 +8,7 @@ Also merges promoted learned aliases from the database with TTL caching.
 import json
 import time
 from pathlib import Path
-from typing import Dict, FrozenSet, List
+from typing import Dict, FrozenSet, List, Optional, Set
 
 from src.core.logging import extraction_logger as logger
 from src.taxonomy_constants import CATEGORY_DISPLAY_NAMES
@@ -185,12 +185,15 @@ def get_validation_rules() -> List[Dict]:
 def format_taxonomy_for_prompt(
     include_aliases: bool = True,
     include_learned: bool = True,
+    categories: Optional[Set[str]] = None,
 ) -> str:
     """Format taxonomy as a concise prompt string for Claude.
 
     Args:
         include_aliases: If True, include top aliases for each item.
         include_learned: If True, append promoted learned aliases tagged [learned].
+        categories: If provided, only include items from these categories plus
+            "metrics" (ratios/KPIs apply everywhere). If None or empty, include all.
     """
     data = load_taxonomy_json()
 
@@ -198,6 +201,17 @@ def format_taxonomy_for_prompt(
         return _fallback_taxonomy()
 
     category_display = CATEGORY_DISPLAY_NAMES
+
+    # Filter categories if a filter set is provided
+    all_categories = data.get("categories", {})
+    if categories:
+        # Always include "metrics" — ratios/KPIs apply to every statement type
+        filter_set = set(categories) | {"metrics"}
+        filtered_categories = {
+            k: v for k, v in all_categories.items() if k in filter_set
+        }
+    else:
+        filtered_categories = all_categories
 
     # Build reverse lookup: canonical -> list of promoted alias texts
     learned_by_canonical: dict[str, list[str]] = {}
@@ -208,7 +222,7 @@ def format_taxonomy_for_prompt(
                 learned_by_canonical.setdefault(canonical, []).append(alias_key)
 
     lines = []
-    for category, items in data.get("categories", {}).items():
+    for category, items in filtered_categories.items():
         display = category_display.get(category, category.replace("_", " ").title())
         if include_aliases:
             parts = []
@@ -231,11 +245,27 @@ def format_taxonomy_for_prompt(
     return "\n".join(lines)
 
 
-def format_taxonomy_detailed() -> str:
-    """Format taxonomy with full detail for enhanced mapping prompts."""
+def format_taxonomy_detailed(
+    categories: Optional[Set[str]] = None,
+) -> str:
+    """Format taxonomy with full detail for enhanced mapping prompts.
+
+    Args:
+        categories: If provided, only include items from these categories plus
+            "metrics". If None or empty, include all.
+    """
     data = load_taxonomy_json()
+    all_categories = data.get("categories", {})
+    if categories:
+        filter_set = set(categories) | {"metrics"}
+        filtered_categories = {
+            k: v for k, v in all_categories.items() if k in filter_set
+        }
+    else:
+        filtered_categories = all_categories
+
     lines = []
-    for category, items in data.get("categories", {}).items():
+    for category, items in filtered_categories.items():
         category_display = category.replace("_", " ").title()
         names = []
         for item in items:

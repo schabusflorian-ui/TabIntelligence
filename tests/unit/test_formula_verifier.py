@@ -403,3 +403,276 @@ class TestFormulaEdgeCases:
 
         assert result.total_formulas == 2
         assert result.verified == 2
+
+
+class TestNegatedSumFormula:
+    def setup_method(self):
+        self.verifier = FormulaVerifier()
+
+    def test_negated_sum_matches(self):
+        """=-SUM(B2:B3) where B2=100, B3=200 should verify against -300."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("A", {"FY2023": 100}, [
+                    _sc("IS", "A2", "A"), _sc("IS", "B2", 100),
+                ]),
+                _make_row("B", {"FY2023": 200}, [
+                    _sc("IS", "A3", "B"), _sc("IS", "B3", 200),
+                ]),
+                _make_row("Total", {"FY2023": -300}, [
+                    _sc("IS", "A4", "Total"),
+                    _sc("IS", "B4", -300, formula="=-SUM(B2:B3)"),
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({"A": "a", "B": "b", "Total": "total"})
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.verified == 1
+        assert result.results[0].computed_value == Decimal("-300")
+
+    def test_negated_sum_mismatch(self):
+        """=-SUM(B2:B3) = -300 but extracted says -400."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("A", {"FY2023": 100}, [
+                    _sc("IS", "A2", "A"), _sc("IS", "B2", 100),
+                ]),
+                _make_row("B", {"FY2023": 200}, [
+                    _sc("IS", "A3", "B"), _sc("IS", "B3", 200),
+                ]),
+                _make_row("Total", {"FY2023": -400}, [
+                    _sc("IS", "A4", "Total"),
+                    _sc("IS", "B4", -400, formula="=-SUM(B2:B3)"),
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({"A": "a", "B": "b", "Total": "total"})
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.mismatched == 1
+        assert result.results[0].computed_value == Decimal("-300")
+
+
+class TestNonContiguousSum:
+    def setup_method(self):
+        self.verifier = FormulaVerifier()
+
+    def test_sum_list_matches(self):
+        """=SUM(B2,B4,B6) — non-contiguous cells."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("A", {"FY2023": 100}, [
+                    _sc("IS", "A2", "A"), _sc("IS", "B2", 100),
+                ]),
+                _make_row("B", {"FY2023": 200}, [
+                    _sc("IS", "A4", "B"), _sc("IS", "B4", 200),
+                ]),
+                _make_row("C", {"FY2023": 300}, [
+                    _sc("IS", "A6", "C"), _sc("IS", "B6", 300),
+                ]),
+                _make_row("Total", {"FY2023": 600}, [
+                    _sc("IS", "A7", "Total"),
+                    _sc("IS", "B7", 600, formula="=SUM(B2,B4,B6)"),
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({"A": "a", "B": "b", "C": "c", "Total": "total"})
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.verified == 1
+        assert result.results[0].computed_value == Decimal("600")
+
+    def test_sum_list_missing_cell_unresolvable(self):
+        """Non-contiguous SUM where one cell is not in lookup."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("A", {"FY2023": 100}, [
+                    _sc("IS", "A2", "A"), _sc("IS", "B2", 100),
+                ]),
+                _make_row("Total", {"FY2023": 400}, [
+                    _sc("IS", "A3", "Total"),
+                    _sc("IS", "B3", 400, formula="=SUM(B2,B4,B6)"),
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({"A": "a", "Total": "total"})
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.unresolvable == 1
+
+
+class TestAggregateFormulas:
+    def setup_method(self):
+        self.verifier = FormulaVerifier()
+
+    def _make_range_data(self, formula, extracted):
+        """Helper: 3 cells B2=100, B3=300, B4=200 with a formula row."""
+        return _make_parsed([
+            _make_sheet("IS", [
+                _make_row("A", {"FY2023": 100}, [
+                    _sc("IS", "A2", "A"), _sc("IS", "B2", 100),
+                ]),
+                _make_row("B", {"FY2023": 300}, [
+                    _sc("IS", "A3", "B"), _sc("IS", "B3", 300),
+                ]),
+                _make_row("C", {"FY2023": 200}, [
+                    _sc("IS", "A4", "C"), _sc("IS", "B4", 200),
+                ]),
+                _make_row("Result", {"FY2023": extracted}, [
+                    _sc("IS", "A5", "Result"),
+                    _sc("IS", "B5", extracted, formula=formula),
+                ]),
+            ])
+        ])
+
+    def test_max_formula_matches(self):
+        """=MAX(B2:B4) should verify against 300."""
+        parsed = self._make_range_data("=MAX(B2:B4)", 300)
+        mappings = _make_mappings({"A": "a", "B": "b", "C": "c", "Result": "result"})
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.verified == 1
+        assert result.results[0].computed_value == Decimal("300")
+
+    def test_min_formula_matches(self):
+        """=MIN(B2:B4) should verify against 100."""
+        parsed = self._make_range_data("=MIN(B2:B4)", 100)
+        mappings = _make_mappings({"A": "a", "B": "b", "C": "c", "Result": "result"})
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.verified == 1
+        assert result.results[0].computed_value == Decimal("100")
+
+    def test_average_formula_matches(self):
+        """=AVERAGE(B2:B4) should verify against 200."""
+        parsed = self._make_range_data("=AVERAGE(B2:B4)", 200)
+        mappings = _make_mappings({"A": "a", "B": "b", "C": "c", "Result": "result"})
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.verified == 1
+        assert result.results[0].computed_value == Decimal("200")
+
+    def test_negated_max(self):
+        """=-MAX(B2:B4) should negate the result."""
+        parsed = self._make_range_data("=-MAX(B2:B4)", -300)
+        mappings = _make_mappings({"A": "a", "B": "b", "C": "c", "Result": "result"})
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.verified == 1
+        assert result.results[0].computed_value == Decimal("-300")
+
+
+class TestAbsFormula:
+    def setup_method(self):
+        self.verifier = FormulaVerifier()
+
+    def test_abs_of_cell_ref(self):
+        """=ABS(B2) where B2=-500 should verify against 500."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("Val", {"FY2023": -500}, [
+                    _sc("IS", "A2", "Val"), _sc("IS", "B2", -500),
+                ]),
+                _make_row("Result", {"FY2023": 500}, [
+                    _sc("IS", "A3", "Result"),
+                    _sc("IS", "B3", 500, formula="=ABS(B2)"),
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({"Val": "val", "Result": "result"})
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.verified == 1
+        assert result.results[0].computed_value == Decimal("500")
+
+    def test_abs_of_arithmetic(self):
+        """=ABS(B2-B3) where B2=100, B3=400 → abs(-300) = 300."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("A", {"FY2023": 100}, [
+                    _sc("IS", "A2", "A"), _sc("IS", "B2", 100),
+                ]),
+                _make_row("B", {"FY2023": 400}, [
+                    _sc("IS", "A3", "B"), _sc("IS", "B3", 400),
+                ]),
+                _make_row("Result", {"FY2023": 300}, [
+                    _sc("IS", "A4", "Result"),
+                    _sc("IS", "B4", 300, formula="=ABS(B2-B3)"),
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({"A": "a", "B": "b", "Result": "result"})
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.verified == 1
+        assert result.results[0].computed_value == Decimal("300")
+
+
+class TestRoundFormula:
+    def setup_method(self):
+        self.verifier = FormulaVerifier()
+
+    def test_round_of_cell_ref(self):
+        """=ROUND(B2,2) where B2=3.14159 should verify against 3.14."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("Val", {"FY2023": 3.14159}, [
+                    _sc("IS", "A2", "Val"), _sc("IS", "B2", 3.14159),
+                ]),
+                _make_row("Result", {"FY2023": 3.14}, [
+                    _sc("IS", "A3", "Result"),
+                    _sc("IS", "B3", 3.14, formula="=ROUND(B2,2)"),
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({"Val": "val", "Result": "result"})
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.verified == 1
+        assert result.results[0].computed_value == Decimal("3.14")
+
+    def test_round_of_arithmetic(self):
+        """=ROUND(B2+B3,0) where B2=1.7, B3=2.6 → round(4.3, 0) = 4."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("A", {"FY2023": 1.7}, [
+                    _sc("IS", "A2", "A"), _sc("IS", "B2", 1.7),
+                ]),
+                _make_row("B", {"FY2023": 2.6}, [
+                    _sc("IS", "A3", "B"), _sc("IS", "B3", 2.6),
+                ]),
+                _make_row("Result", {"FY2023": 4}, [
+                    _sc("IS", "A4", "Result"),
+                    _sc("IS", "B4", 4, formula="=ROUND(B2+B3,0)"),
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({"A": "a", "B": "b", "Result": "result"})
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.verified == 1

@@ -2,10 +2,11 @@
 
 import json
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Set
 
 import anthropic
 
+from src.core.config import get_settings
 from src.core.exceptions import ClaudeAPIError, ExtractionError, RateLimitError
 from src.core.logging import extraction_logger as logger
 from src.core.logging import log_performance
@@ -21,9 +22,14 @@ from src.extraction.utils import extract_json, validate_canonical_names
 
 
 # Backward-compatible alias for tests that import this directly
-def _load_taxonomy_for_prompt(include_aliases: bool = True) -> str:
+def _load_taxonomy_for_prompt(
+    include_aliases: bool = True,
+    categories: Optional[Set[str]] = None,
+) -> str:
     """Load taxonomy from JSON and format as a concise prompt string."""
-    return format_taxonomy_for_prompt(include_aliases=include_aliases)
+    return format_taxonomy_for_prompt(
+        include_aliases=include_aliases, categories=categories
+    )
 
 
 # Sheet name patterns -> taxonomy category
@@ -336,6 +342,7 @@ class MappingStage(ExtractionStage):
             (pre_mapped, remaining_labels): pre_mapped is a dict of label -> mapping dict,
             remaining_labels is a set of labels not matched by patterns.
         """
+        settings = get_settings()
         pre_mapped: Dict[str, Dict[str, Any]] = {}
         entity_id = getattr(context, "entity_id", None)
 
@@ -349,7 +356,7 @@ class MappingStage(ExtractionStage):
             from src.db.session import get_db_sync
 
             with get_db_sync() as db:
-                # Query with stored confidence >= 0.8 (decay could bring it below 0.95)
+                # Query with stored confidence >= 0.8 (decay could bring it below threshold)
                 patterns = crud.get_entity_patterns(
                     db,
                     UUID(entity_id),
@@ -368,7 +375,7 @@ class MappingStage(ExtractionStage):
                         match.last_seen,
                         match.created_by,
                     )
-                    if eff_conf >= 0.95:
+                    if eff_conf >= settings.taxonomy_pattern_shortcircuit_confidence:
                         pre_mapped[label] = {
                             "original_label": label,
                             "canonical_name": match.canonical_name,
@@ -482,8 +489,26 @@ class MappingStage(ExtractionStage):
             item for item in grouped_items if item["label"] in remaining_labels
         ]
 
-        # Load taxonomy dynamically from JSON
-        taxonomy_str = _load_taxonomy_for_prompt()
+        # Extract relevant categories from triage results and section context
+        # to filter taxonomy and reduce token usage
+        relevant_categories: Set[str] = set()
+        for entry in triage_list:
+            cat = entry.get("category_hint") or entry.get("category")
+            if cat:
+                relevant_categories.add(cat)
+        for item in remaining_grouped_items:
+            cat = item.get("section_category")
+            if cat:
+                relevant_categories.add(cat)
+
+        # Load taxonomy dynamically from JSON (filtered by category if available)
+        taxonomy_str = _load_taxonomy_for_prompt(
+            categories=relevant_categories if relevant_categories else None
+        )
+        if relevant_categories:
+            logger.info(
+                f"Stage 3: Filtered taxonomy to categories: {relevant_categories}"
+            )
 
         # Inject entity-specific pattern hints if available
         entity_hints = self._build_entity_hints(context)
@@ -491,7 +516,8 @@ class MappingStage(ExtractionStage):
             taxonomy_str = taxonomy_str + "\n\n" + entity_hints
 
         try:
-            BATCH_SIZE = 60  # items per batch; keeps output within 8192 tokens
+            settings = get_settings()
+            BATCH_SIZE = settings.taxonomy_mapping_batch_size
 
             if len(remaining_grouped_items) <= BATCH_SIZE:
                 # Single pass (existing behavior)

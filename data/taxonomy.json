@@ -1,5 +1,5 @@
 {
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Consolidated canonical financial taxonomy for DebtFund extraction pipeline",
   "categories": {
     "balance_sheet": [
@@ -1393,7 +1393,7 @@
         ],
         "definition": "Original cost of tangible long-term assets used in operations",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "ppe",
         "industry_tags": [
           "all",
           "corporate"
@@ -3265,7 +3265,7 @@
         ],
         "definition": "Total debt at the end of the period",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "total_debt",
         "industry_tags": [
           "all",
           "leveraged"
@@ -3312,7 +3312,7 @@
         ],
         "definition": "New debt issued during the period",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "total_debt",
         "industry_tags": [
           "all",
           "leveraged"
@@ -3328,7 +3328,7 @@
         ],
         "definition": "Contractually required principal repayment",
         "typical_sign": "negative",
-        "parent_canonical": null,
+        "parent_canonical": "principal_payment",
         "industry_tags": [
           "all",
           "leveraged"
@@ -3345,7 +3345,7 @@
         ],
         "definition": "Date when debt principal is due for full repayment",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "maturity_date",
         "industry_tags": [
           "all",
           "leveraged"
@@ -3361,7 +3361,7 @@
         ],
         "definition": "Total debt at the beginning of the period",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "total_debt",
         "industry_tags": [
           "all",
           "leveraged"
@@ -3384,7 +3384,7 @@
         ],
         "definition": "Optional principal repayment beyond mandatory requirements",
         "typical_sign": "negative",
-        "parent_canonical": null,
+        "parent_canonical": "principal_payment",
         "industry_tags": [
           "all",
           "leveraged"
@@ -3405,7 +3405,7 @@
         ],
         "definition": "Total debt payments (principal + interest) in period",
         "typical_sign": "negative",
-        "parent_canonical": null,
+        "parent_canonical": "total_debt",
         "validation_rules": {
           "type": "currency",
           "derivation": "principal_payment + interest_payment",
@@ -3457,7 +3457,7 @@
         ],
         "definition": "Ratio of cash available to debt service payments",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "debt_covenants",
         "validation_rules": {
           "type": "ratio",
           "min_value": 0,
@@ -3531,7 +3531,7 @@
         ],
         "definition": "Interest expense calculated on average debt balance",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "debt_service",
         "industry_tags": [
           "all",
           "leveraged"
@@ -3547,7 +3547,7 @@
         ],
         "definition": "Amount of interest paid on debt in period",
         "typical_sign": "negative",
-        "parent_canonical": null,
+        "parent_canonical": "debt_service",
         "validation_rules": {
           "type": "currency",
           "cross_item_validation": {
@@ -3578,7 +3578,7 @@
         ],
         "definition": "Annual interest rate charged on debt instrument",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "total_debt",
         "validation_rules": {
           "type": "percentage",
           "min_value": 0,
@@ -3667,7 +3667,7 @@
         ],
         "definition": "Date when debt principal is due",
         "typical_sign": "varies",
-        "parent_canonical": null,
+        "parent_canonical": "total_debt",
         "validation_rules": {
           "type": "date"
         },
@@ -3741,7 +3741,7 @@
         ],
         "definition": "Amount of debt principal repaid in period",
         "typical_sign": "negative",
-        "parent_canonical": null,
+        "parent_canonical": "debt_service",
         "validation_rules": {
           "type": "currency"
         },
@@ -3945,7 +3945,7 @@
         ],
         "definition": "EBITDA adjusted for non-recurring or non-cash items such as stock-based compensation and restructuring charges",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "ebitda",
         "validation_rules": {
           "type": "currency",
           "cross_item_validation": {
@@ -3977,7 +3977,7 @@
         ],
         "definition": "Systematic allocation of intangible asset costs over useful life",
         "typical_sign": "negative",
-        "parent_canonical": null,
+        "parent_canonical": "opex",
         "validation_rules": {
           "type": "currency",
           "cross_item_validation": {
@@ -4030,7 +4030,7 @@
         ],
         "definition": "Direct costs attributable to production of goods sold",
         "typical_sign": "negative",
-        "parent_canonical": null,
+        "parent_canonical": "gross_profit",
         "validation_rules": {
           "type": "currency",
           "cross_item_validation": {
@@ -4085,7 +4085,7 @@
         ],
         "definition": "Revenue minus all variable costs; measures per-unit profitability before fixed costs",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "gross_profit",
         "validation_rules": {
           "type": "currency"
         },
@@ -4164,7 +4164,7 @@
         ],
         "definition": "Systematic allocation of tangible asset costs over useful life",
         "typical_sign": "negative",
-        "parent_canonical": null,
+        "parent_canonical": "opex",
         "validation_rules": {
           "type": "currency",
           "cross_item_validation": {
@@ -4214,7 +4214,7 @@
         ],
         "definition": "Combined depreciation and amortization expense",
         "typical_sign": "negative",
-        "parent_canonical": null,
+        "parent_canonical": "opex",
         "validation_rules": {
           "type": "currency",
           "derivation": "depreciation + amortization",
@@ -4250,7 +4250,7 @@
         ],
         "definition": "Results from business units that have been sold or shut down",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "net_income",
         "industry_tags": [
           "all",
           "corporate"
@@ -4267,7 +4267,7 @@
         ],
         "definition": "Cash or stock distributions to shareholders",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "net_income",
         "industry_tags": [
           "all",
           "corporate"
@@ -4582,7 +4582,7 @@
         ],
         "definition": "Net income divided by weighted average shares outstanding",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "net_income",
         "industry_tags": [
           "all",
           "corporate"
@@ -4599,7 +4599,7 @@
         ],
         "definition": "Net income divided by fully diluted shares outstanding",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "net_income",
         "industry_tags": [
           "all",
           "corporate"
@@ -4616,7 +4616,7 @@
         ],
         "definition": "Unusual, infrequent items affecting net income",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "net_income",
         "industry_tags": [
           "all",
           "corporate"
@@ -4633,7 +4633,7 @@
         ],
         "definition": "Profit from sale of assets above book value",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "other_income",
         "validation_rules": {
           "type": "currency"
         },
@@ -4798,7 +4798,7 @@
         ],
         "definition": "Reduction in value of assets when carrying value exceeds recoverable amount",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "opex",
         "industry_tags": [
           "all",
           "corporate"
@@ -4849,7 +4849,7 @@
         ],
         "definition": "Cost of borrowed funds; interest paid on debt",
         "typical_sign": "negative",
-        "parent_canonical": null,
+        "parent_canonical": "ebt",
         "validation_rules": {
           "type": "currency",
           "typical_sign": "negative",
@@ -4897,7 +4897,7 @@
         ],
         "definition": "Income earned from interest-bearing assets and investments",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "ebt",
         "validation_rules": {
           "type": "currency"
         },
@@ -5276,7 +5276,7 @@
         ],
         "definition": "Expenses from non-operating activities",
         "typical_sign": "negative",
-        "parent_canonical": null,
+        "parent_canonical": "ebt",
         "validation_rules": {
           "type": "currency"
         },
@@ -5296,7 +5296,7 @@
         ],
         "definition": "Income from non-operating activities",
         "typical_sign": "varies",
-        "parent_canonical": null,
+        "parent_canonical": "ebt",
         "validation_rules": {
           "type": "currency"
         },
@@ -5414,7 +5414,7 @@
         ],
         "definition": "One-time costs associated with reorganizing business operations",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "opex",
         "industry_tags": [
           "all",
           "corporate"
@@ -5866,7 +5866,8 @@
         "industry_tags": [
           "project_finance",
           "infrastructure"
-        ]
+        ],
+        "parent_canonical": "cfads"
       },
       {
         "canonical_name": "equity_contribution",
@@ -5887,7 +5888,8 @@
         "industry_tags": [
           "project_finance",
           "infrastructure"
-        ]
+        ],
+        "parent_canonical": "total_investment"
       },
       {
         "canonical_name": "equity_returns",
@@ -5931,7 +5933,8 @@
         "industry_tags": [
           "project_finance",
           "infrastructure"
-        ]
+        ],
+        "parent_canonical": "total_investment"
       },
       {
         "canonical_name": "sculpted_debt_service",
@@ -5950,7 +5953,8 @@
         "industry_tags": [
           "project_finance",
           "infrastructure"
-        ]
+        ],
+        "parent_canonical": "cfads"
       },
       {
         "canonical_name": "dsra_balance",
@@ -5974,7 +5978,8 @@
         "industry_tags": [
           "project_finance",
           "infrastructure"
-        ]
+        ],
+        "parent_canonical": "cfads"
       },
       {
         "canonical_name": "llcr",
@@ -6003,7 +6008,8 @@
         "industry_tags": [
           "project_finance",
           "infrastructure"
-        ]
+        ],
+        "parent_canonical": "cfads"
       },
       {
         "canonical_name": "plcr",
@@ -6032,7 +6038,8 @@
         "industry_tags": [
           "project_finance",
           "infrastructure"
-        ]
+        ],
+        "parent_canonical": "cfads"
       },
       {
         "canonical_name": "pre_tax_irr",
@@ -6051,7 +6058,8 @@
         "industry_tags": [
           "project_finance",
           "infrastructure"
-        ]
+        ],
+        "parent_canonical": "equity_returns"
       },
       {
         "canonical_name": "post_tax_irr",
@@ -6070,7 +6078,8 @@
         "industry_tags": [
           "project_finance",
           "infrastructure"
-        ]
+        ],
+        "parent_canonical": "equity_returns"
       },
       {
         "canonical_name": "equity_irr",
@@ -6099,7 +6108,8 @@
         "industry_tags": [
           "project_finance",
           "infrastructure"
-        ]
+        ],
+        "parent_canonical": "equity_returns"
       },
       {
         "canonical_name": "total_investment",
@@ -6124,6 +6134,263 @@
     ],
     "metrics": [
       {
+        "canonical_name": "coverage_metrics",
+        "category": "metrics",
+        "display_name": "Coverage Metrics",
+        "aliases": [
+          "Coverage Ratios",
+          "Debt Coverage Metrics"
+        ],
+        "definition": "Metrics measuring a company's ability to service its debt and fixed obligations",
+        "typical_sign": "varies",
+        "parent_canonical": null,
+        "validation_rules": {},
+        "industry_tags": [
+          "all",
+          "corporate",
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "credit_metrics",
+        "category": "metrics",
+        "display_name": "Credit Metrics",
+        "aliases": [
+          "Credit Analysis Metrics",
+          "Credit Ratios"
+        ],
+        "definition": "Metrics specifically used in credit analysis and debt fund underwriting",
+        "typical_sign": "varies",
+        "parent_canonical": null,
+        "validation_rules": {},
+        "industry_tags": [
+          "all",
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "efficiency_metrics",
+        "category": "metrics",
+        "display_name": "Efficiency Metrics",
+        "aliases": [
+          "Activity Ratios",
+          "Turnover Metrics"
+        ],
+        "definition": "Metrics measuring how efficiently a company uses its assets and manages operations",
+        "typical_sign": "varies",
+        "parent_canonical": null,
+        "validation_rules": {},
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
+      },
+      {
+        "canonical_name": "growth_metrics",
+        "category": "metrics",
+        "display_name": "Growth Metrics",
+        "aliases": [
+          "Growth Rates",
+          "Growth Indicators"
+        ],
+        "definition": "Metrics measuring the rate of change in key financial measures over time",
+        "typical_sign": "varies",
+        "parent_canonical": null,
+        "validation_rules": {},
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
+      },
+      {
+        "canonical_name": "leverage_metrics",
+        "category": "metrics",
+        "display_name": "Leverage Metrics",
+        "aliases": [
+          "Leverage Ratios",
+          "Debt Metrics"
+        ],
+        "definition": "Metrics measuring a company's level of debt relative to equity, assets, or earnings",
+        "typical_sign": "varies",
+        "parent_canonical": null,
+        "validation_rules": {},
+        "industry_tags": [
+          "all",
+          "corporate",
+          "leveraged"
+        ]
+      },
+      {
+        "canonical_name": "liquidity_metrics",
+        "category": "metrics",
+        "display_name": "Liquidity Metrics",
+        "aliases": [
+          "Liquidity Ratios",
+          "Short-Term Solvency Metrics"
+        ],
+        "definition": "Metrics measuring a company's ability to meet short-term obligations",
+        "typical_sign": "varies",
+        "parent_canonical": null,
+        "validation_rules": {},
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
+      },
+      {
+        "canonical_name": "manufacturing_metrics",
+        "category": "metrics",
+        "display_name": "Manufacturing Metrics",
+        "aliases": [
+          "Production Metrics",
+          "Factory KPIs"
+        ],
+        "definition": "Key performance indicators specific to manufacturing and production operations",
+        "typical_sign": "varies",
+        "parent_canonical": null,
+        "validation_rules": {},
+        "industry_tags": [
+          "manufacturing"
+        ]
+      },
+      {
+        "canonical_name": "operational_metrics",
+        "category": "metrics",
+        "display_name": "Operational Metrics",
+        "aliases": [
+          "Operating KPIs",
+          "Business Metrics"
+        ],
+        "definition": "General operational and business performance metrics",
+        "typical_sign": "varies",
+        "parent_canonical": null,
+        "validation_rules": {},
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
+      },
+      {
+        "canonical_name": "per_share_metrics",
+        "category": "metrics",
+        "display_name": "Per Share Metrics",
+        "aliases": [
+          "Per Share Data",
+          "Share-Based Metrics"
+        ],
+        "definition": "Financial metrics expressed on a per-share basis",
+        "typical_sign": "varies",
+        "parent_canonical": null,
+        "validation_rules": {},
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
+      },
+      {
+        "canonical_name": "profitability_metrics",
+        "category": "metrics",
+        "display_name": "Profitability Metrics",
+        "aliases": [
+          "Profitability Ratios",
+          "Margin Metrics"
+        ],
+        "definition": "Metrics measuring a company's ability to generate profit relative to revenue, assets, or equity",
+        "typical_sign": "varies",
+        "parent_canonical": null,
+        "validation_rules": {},
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
+      },
+      {
+        "canonical_name": "real_estate_metrics",
+        "category": "metrics",
+        "display_name": "Real Estate Metrics",
+        "aliases": [
+          "Property Metrics",
+          "REIT Metrics"
+        ],
+        "definition": "Key performance indicators specific to real estate and REIT businesses",
+        "typical_sign": "varies",
+        "parent_canonical": null,
+        "validation_rules": {},
+        "industry_tags": [
+          "real_estate",
+          "reit"
+        ]
+      },
+      {
+        "canonical_name": "retail_metrics",
+        "category": "metrics",
+        "display_name": "Retail Metrics",
+        "aliases": [
+          "Retail KPIs",
+          "Store Metrics"
+        ],
+        "definition": "Key performance indicators specific to retail businesses",
+        "typical_sign": "varies",
+        "parent_canonical": null,
+        "validation_rules": {},
+        "industry_tags": [
+          "retail"
+        ]
+      },
+      {
+        "canonical_name": "return_metrics",
+        "category": "metrics",
+        "display_name": "Return Metrics",
+        "aliases": [
+          "Return Ratios",
+          "Return on Investment Metrics"
+        ],
+        "definition": "Metrics measuring returns generated on capital, assets, or equity",
+        "typical_sign": "varies",
+        "parent_canonical": null,
+        "validation_rules": {},
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
+      },
+      {
+        "canonical_name": "saas_metrics",
+        "category": "metrics",
+        "display_name": "SaaS Metrics",
+        "aliases": [
+          "Software Metrics",
+          "Subscription Metrics"
+        ],
+        "definition": "Key performance indicators specific to SaaS and subscription businesses",
+        "typical_sign": "varies",
+        "parent_canonical": null,
+        "validation_rules": {},
+        "industry_tags": [
+          "saas",
+          "technology"
+        ]
+      },
+      {
+        "canonical_name": "valuation_metrics",
+        "category": "metrics",
+        "display_name": "Valuation Metrics",
+        "aliases": [
+          "Valuation Ratios",
+          "Market Metrics"
+        ],
+        "definition": "Metrics used to assess company valuation relative to earnings, book value, or cash flow",
+        "typical_sign": "varies",
+        "parent_canonical": null,
+        "validation_rules": {},
+        "industry_tags": [
+          "all",
+          "corporate"
+        ]
+      },
+      {
         "canonical_name": "acv",
         "category": "metrics",
         "display_name": "Annual Contract Value",
@@ -6134,7 +6401,7 @@
         ],
         "definition": "Average annualized revenue per customer contract",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "currency",
           "min_value": 0
@@ -6155,7 +6422,7 @@
         ],
         "definition": "FFO - recurring capex; measures cash available for dividends",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "real_estate_metrics",
         "validation_rules": {
           "type": "currency",
           "derivation": "ffo - maintenance_capex"
@@ -6177,7 +6444,7 @@
         ],
         "definition": "Average monthly or annual revenue per active user/customer",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "currency",
           "min_value": 0,
@@ -6200,7 +6467,7 @@
         ],
         "definition": "Annualized value of active recurring revenue contracts",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "currency",
           "min_value": 0,
@@ -6232,7 +6499,7 @@
         ],
         "definition": "Total sales / number of transactions; average purchase amount per customer visit",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "retail_metrics",
         "validation_rules": {
           "type": "currency",
           "min_value": 0
@@ -6253,7 +6520,7 @@
         ],
         "definition": "Total value of new contracts signed in a period, regardless of revenue recognition timing",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "currency",
           "min_value": 0
@@ -6273,7 +6540,7 @@
         ],
         "definition": "Net burn / net new ARR; measures capital efficiency",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "credit_metrics",
         "validation_rules": {
           "type": "ratio",
           "min_value": 0
@@ -6294,7 +6561,7 @@
         ],
         "definition": "Rate at which a company spends cash reserves, typically measured monthly",
         "typical_sign": "negative",
-        "parent_canonical": null,
+        "parent_canonical": "credit_metrics",
         "validation_rules": {
           "type": "currency"
         },
@@ -6316,7 +6583,7 @@
         ],
         "definition": "Average cost to acquire a new customer (sales & marketing expense / new customers)",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "currency",
           "min_value": 0,
@@ -6340,7 +6607,7 @@
         ],
         "definition": "Months required to recover customer acquisition cost from gross margin",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "months",
           "min_value": 0
@@ -6361,7 +6628,7 @@
         ],
         "definition": "NOI / property value; measures return on real estate investment",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "real_estate_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": 0,
@@ -6382,7 +6649,7 @@
         ],
         "definition": "Actual output / maximum potential output; measures efficiency of production capacity",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "manufacturing_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": 0,
@@ -6403,7 +6670,7 @@
         ],
         "definition": "Days to convert inventory and receivables to cash",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "efficiency_metrics",
         "industry_tags": [
           "all",
           "corporate"
@@ -6419,7 +6686,7 @@
         ],
         "definition": "Annual pre-tax cash flow / total cash invested; measures equity return",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "return_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": -1,
@@ -6442,7 +6709,7 @@
         ],
         "definition": "Number of months until cash reserves are depleted at the current burn rate",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "liquidity_metrics",
         "validation_rules": {
           "type": "months",
           "min_value": 0,
@@ -6466,7 +6733,7 @@
         ],
         "definition": "Percentage of customers who cancel subscriptions in a period",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": 0,
@@ -6489,7 +6756,7 @@
         ],
         "definition": "Number of customers lost during a period",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "units",
           "min_value": 0
@@ -6509,7 +6776,7 @@
         ],
         "definition": "Transactions / store traffic; percentage of visitors who make a purchase",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": 0,
@@ -6531,7 +6798,7 @@
         ],
         "definition": "Total production cost / units produced",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "manufacturing_metrics",
         "validation_rules": {
           "type": "currency",
           "min_value": 0,
@@ -6554,7 +6821,7 @@
         ],
         "definition": "Current assets divided by current liabilities; measures short-term liquidity",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "liquidity_metrics",
         "validation_rules": {
           "type": "ratio",
           "min_value": 0,
@@ -6609,7 +6876,7 @@
         ],
         "definition": "Total number of active paying customers",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "units",
           "min_value": 0
@@ -6630,7 +6897,7 @@
         ],
         "definition": "Total time from start to finish of production process",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "manufacturing_metrics",
         "validation_rules": {
           "type": "time",
           "min_value": 0
@@ -6651,7 +6918,7 @@
         ],
         "definition": "(Average inventory / COGS) * 365; days to sell inventory",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "efficiency_metrics",
         "validation_rules": {
           "type": "days",
           "min_value": 0,
@@ -6672,7 +6939,7 @@
         ],
         "definition": "Average days to pay suppliers",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "efficiency_metrics",
         "industry_tags": [
           "all",
           "corporate"
@@ -6689,7 +6956,7 @@
         ],
         "definition": "Average days to collect accounts receivable",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "efficiency_metrics",
         "industry_tags": [
           "all",
           "corporate"
@@ -6712,7 +6979,7 @@
         ],
         "definition": "Total debt divided by EBITDA; measures leverage",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "leverage_metrics",
         "validation_rules": {
           "type": "ratio",
           "min_value": 0,
@@ -6799,7 +7066,7 @@
         ],
         "definition": "Total debt divided by total equity",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "leverage_metrics",
         "validation_rules": {
           "type": "ratio",
           "min_value": 0,
@@ -6831,7 +7098,7 @@
         ],
         "definition": "Standard hours / actual hours worked; measures labor productivity",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "manufacturing_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": 0
@@ -6851,7 +7118,7 @@
         ],
         "definition": "NOI / total debt service; measures ability to service property debt",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "coverage_metrics",
         "validation_rules": {
           "type": "ratio",
           "min_value": 0,
@@ -6877,7 +7144,7 @@
         ],
         "definition": "EBITDA as a percentage of revenue",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "profitability_metrics",
         "validation_rules": {
           "type": "percentage",
           "derivation": "ebitda / revenue",
@@ -6959,7 +7226,7 @@
         ],
         "definition": "Additional revenue from existing customers through upsells, cross-sells, or usage growth",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "currency",
           "min_value": 0
@@ -6979,7 +7246,7 @@
         ],
         "definition": "Net income + depreciation + amortization - gains on sales; REIT earnings metric",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "real_estate_metrics",
         "validation_rules": {
           "type": "currency",
           "derivation": "net_income + depreciation + amortization - gains_on_property_sales"
@@ -7000,7 +7267,7 @@
         ],
         "definition": "Units passing quality inspection without rework / total units produced",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "manufacturing_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": 0,
@@ -7022,7 +7289,7 @@
         ],
         "definition": "Gross margin / average inventory cost; measures profitability of inventory investment",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "retail_metrics",
         "validation_rules": {
           "type": "ratio",
           "min_value": 0,
@@ -7045,7 +7312,7 @@
         ],
         "definition": "Gross profit as a percentage of revenue",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "profitability_metrics",
         "validation_rules": {
           "type": "percentage",
           "derivation": "gross_profit / revenue",
@@ -7081,7 +7348,7 @@
         ],
         "definition": "Revenue retention from existing customers excluding expansions; measures pure retention",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": 0,
@@ -7115,7 +7382,7 @@
         ],
         "definition": "Total number of full-time equivalent employees",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "operational_metrics",
         "validation_rules": {
           "type": "units",
           "min_value": 0
@@ -7137,7 +7404,7 @@
         ],
         "definition": "EBIT divided by interest expense; ability to pay interest",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "coverage_metrics",
         "validation_rules": {
           "type": "ratio",
           "min_value": 0,
@@ -7201,7 +7468,7 @@
         ],
         "definition": "COGS / average inventory; measures how quickly inventory is sold",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "efficiency_metrics",
         "validation_rules": {
           "type": "ratio",
           "min_value": 0,
@@ -7223,7 +7490,7 @@
         ],
         "definition": "Percentage of customers lost during a period relative to total customers at the start",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": 0,
@@ -7255,7 +7522,7 @@
         ],
         "definition": "Total revenue expected from a customer over their lifetime",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "currency",
           "min_value": 0,
@@ -7278,7 +7545,7 @@
         ],
         "definition": "Ratio of customer lifetime value to acquisition cost; healthy SaaS target is 3:1",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "ratio",
           "min_value": 0,
@@ -7299,7 +7566,7 @@
         ],
         "definition": "Loan amount / property value; measures leverage",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "real_estate_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": 0,
@@ -7322,7 +7589,7 @@
         ],
         "definition": "Net new ARR / sales & marketing spend; measures sales efficiency",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "ratio",
           "min_value": 0
@@ -7343,7 +7610,7 @@
         ],
         "definition": "Value of markdowns / total sales; measures promotional intensity",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "retail_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": 0
@@ -7363,7 +7630,7 @@
         ],
         "definition": "Usable output / raw material input; measures material efficiency",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "manufacturing_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": 0,
@@ -7385,7 +7652,7 @@
         ],
         "definition": "Average monthly cash expenditure net of revenue",
         "typical_sign": "negative",
-        "parent_canonical": null,
+        "parent_canonical": "credit_metrics",
         "validation_rules": {
           "type": "currency"
         },
@@ -7406,7 +7673,7 @@
         ],
         "definition": "Monthly value of recurring revenue from active subscriptions",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "currency",
           "min_value": 0
@@ -7427,7 +7694,7 @@
         ],
         "definition": "Net debt divided by EBITDA",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "leverage_metrics",
         "validation_rules": {
           "type": "ratio",
           "min_value": -5.0,
@@ -7460,7 +7727,7 @@
         ],
         "definition": "Net income as a percentage of revenue",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "profitability_metrics",
         "validation_rules": {
           "type": "percentage",
           "derivation": "net_income / revenue",
@@ -7521,7 +7788,7 @@
         ],
         "definition": "Revenue retention from existing customers including expansions and downgrades; >100% indicates growth from existing base",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": 0
@@ -7545,7 +7812,7 @@
         ],
         "definition": "Current assets minus current liabilities; measures short-term liquidity",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "liquidity_metrics",
         "validation_rules": {
           "type": "currency",
           "derivation": "current_assets - current_liabilities",
@@ -7577,7 +7844,7 @@
         ],
         "definition": "Number of new customers acquired during a period",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "units",
           "min_value": 0
@@ -7598,7 +7865,7 @@
         ],
         "definition": "Rental income minus operating expenses; excludes financing and depreciation",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "real_estate_metrics",
         "validation_rules": {
           "type": "currency",
           "derivation": "rental_income - operating_expenses"
@@ -7618,7 +7885,7 @@
         ],
         "definition": "Occupied units / total units; measures property utilization",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "real_estate_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": 0,
@@ -7639,7 +7906,7 @@
         ],
         "definition": "Availability × Performance × Quality; measures manufacturing productivity",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "manufacturing_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": 0,
@@ -7660,7 +7927,7 @@
         ],
         "definition": "Operating expenses / gross operating income; measures efficiency",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "operational_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": 0,
@@ -7682,7 +7949,7 @@
         ],
         "definition": "Operating income (EBIT) as a percentage of revenue",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "profitability_metrics",
         "validation_rules": {
           "type": "percentage",
           "derivation": "ebit / revenue",
@@ -7714,7 +7981,7 @@
         ],
         "definition": "Total value of prospective deals in the sales pipeline",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "currency",
           "min_value": 0
@@ -7735,7 +8002,7 @@
         ],
         "definition": "Total units manufactured in a period",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "manufacturing_metrics",
         "validation_rules": {
           "type": "units",
           "min_value": 0
@@ -7754,7 +8021,7 @@
         ],
         "definition": "Liquid assets divided by current liabilities",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "liquidity_metrics",
         "industry_tags": [
           "all",
           "corporate"
@@ -7770,7 +8037,7 @@
         ],
         "definition": "(New MRR + Expansion MRR) / (Churned MRR + Contraction MRR); measures growth efficiency",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "ratio",
           "min_value": 0
@@ -7790,7 +8057,7 @@
         ],
         "definition": "Annual rent / rentable square feet; measures rental rates",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "real_estate_metrics",
         "validation_rules": {
           "type": "currency",
           "min_value": 0
@@ -7885,7 +8152,7 @@
         ],
         "definition": "Percentage of recurring revenue lost from existing customers during a period",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": 0,
@@ -7915,7 +8182,7 @@
         ],
         "definition": "Percentage change in revenue from prior period",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "growth_metrics",
         "industry_tags": [
           "all",
           "corporate"
@@ -7932,7 +8199,7 @@
         ],
         "definition": "Total revenue divided by number of full-time equivalent employees",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "efficiency_metrics",
         "validation_rules": {
           "type": "currency",
           "min_value": 0,
@@ -7957,7 +8224,7 @@
         ],
         "definition": "Net income divided by total assets",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "return_metrics",
         "validation_rules": {
           "type": "percentage",
           "derivation": "net_income / total_assets",
@@ -8003,7 +8270,7 @@
         ],
         "definition": "Net income divided by shareholders' equity",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "return_metrics",
         "validation_rules": {
           "type": "percentage",
           "derivation": "net_income / total_equity",
@@ -8052,7 +8319,7 @@
         ],
         "definition": "Net operating profit after tax divided by invested capital",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "return_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": -0.2,
@@ -8097,7 +8364,7 @@
         ],
         "definition": "Growth rate + profit margin; healthy SaaS companies should exceed 40%",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "saas_metrics",
         "validation_rules": {
           "type": "percentage",
           "derivation": "revenue_growth_rate + ebitda_margin"
@@ -8119,7 +8386,7 @@
         ],
         "definition": "Annual sales / retail square footage; measures store productivity",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "retail_metrics",
         "validation_rules": {
           "type": "currency",
           "min_value": 0
@@ -8141,7 +8408,7 @@
         ],
         "definition": "Revenue from stores open for at least one year; excludes new store growth",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "retail_metrics",
         "validation_rules": {
           "type": "currency",
           "min_value": 0
@@ -8161,7 +8428,7 @@
         ],
         "definition": "Value of scrapped materials / total production value; measures quality and waste",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "manufacturing_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": 0
@@ -8182,7 +8449,7 @@
         ],
         "definition": "Units sold / units received; measures product demand",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "retail_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": 0,
@@ -8204,7 +8471,7 @@
         ],
         "definition": "Value of inventory lost to theft, damage, or error / total inventory value",
         "typical_sign": "positive",
-        "parent_canonical": null,
+        "parent_canonical": "retail_metrics",
         "validation_rules": {
           "type": "percentage",
           "min_value": 0

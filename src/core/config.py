@@ -89,6 +89,42 @@ class Settings(BaseSettings):
     )
 
     # =========================================================================
+    # Taxonomy Thresholds
+    # =========================================================================
+    taxonomy_pattern_shortcircuit_confidence: float = Field(
+        default=0.95,
+        description="Minimum effective confidence for entity-pattern shortcircuit in Stage 3",
+    )
+    taxonomy_pattern_persist_confidence: float = Field(
+        default=0.8,
+        description="Minimum confidence for persisting entity patterns in Stage 5",
+    )
+    taxonomy_learned_alias_confidence: float = Field(
+        default=0.9,
+        description="Minimum confidence for recording learned aliases in Stage 5",
+    )
+    taxonomy_auto_promote_occurrences: int = Field(
+        default=5,
+        description="Minimum occurrence count for auto-promoting a learned alias",
+    )
+    taxonomy_auto_promote_entities: int = Field(
+        default=3,
+        description="Minimum distinct source entities for auto-promoting a learned alias",
+    )
+    taxonomy_confidence_decay_rate: float = Field(
+        default=0.3,
+        description="Annual decay rate for Claude-generated pattern confidence (0.0-1.0)",
+    )
+    taxonomy_confidence_decay_floor: float = Field(
+        default=0.5,
+        description="Minimum decay factor floor for pattern confidence",
+    )
+    taxonomy_mapping_batch_size: int = Field(
+        default=60,
+        description="Number of line items per Claude mapping batch in Stage 3",
+    )
+
+    # =========================================================================
     # Extraction Configuration
     # =========================================================================
     max_file_size_mb: int = Field(default=50, description="Maximum file upload size in MB")

@@ -32,6 +32,9 @@ ALL_TAXONOMY_ITEMS = get_all_taxonomy_items()
 class ValidationStage(ExtractionStage):
     """Stage 4: Validate extracted data against accounting rules."""
 
+    CONFLICT_ABSOLUTE_TOLERANCE = Decimal("0.01")
+    CONFLICT_RELATIVE_TOLERANCE = 0.001  # 0.1%
+
     @property
     def name(self) -> str:
         return "validation"
@@ -277,6 +280,12 @@ class ValidationStage(ExtractionStage):
         total_passed += total_cross_passed
 
         # --- Composite Quality Score ---
+        # Compute formula mismatch rate (available for quality scoring and lineage)
+        formula_mismatch_rate = None
+        resolvable_formulas = formula_summary.verified + formula_summary.mismatched
+        if resolvable_formulas > 0:
+            formula_mismatch_rate = formula_summary.mismatched / resolvable_formulas
+
         try:
             avg_confidence = self._compute_avg_confidence(context)
             quality_scorer = QualityScorer(model_type=model_type)
@@ -288,6 +297,7 @@ class ValidationStage(ExtractionStage):
                 cell_match_rate=cell_recon_summary.match_rate
                 if cell_recon_summary.total_cells > 0
                 else None,
+                formula_mismatch_rate=formula_mismatch_rate,
             )
         except Exception as e:
             logger.warning(f"Stage 4: Quality scoring failed: {e}")
@@ -416,6 +426,9 @@ class ValidationStage(ExtractionStage):
                 "quality_score": round(quality_result.numeric_score, 3),
                 "quality_grade": quality_result.letter_grade,
                 "cell_match_rate": round(cell_recon_summary.match_rate, 3),
+                "formula_mismatch_rate": round(formula_mismatch_rate, 3)
+                if formula_mismatch_rate is not None
+                else None,
             },
         }
 
@@ -578,10 +591,10 @@ class ValidationStage(ExtractionStage):
             for period, candidates in period_candidates.items():
                 if len(candidates) <= 1:
                     continue
-                # Check if values agree within tolerance
+                # Check if values agree within dual tolerance
                 first_val = candidates[0]["value"]
                 is_conflict = any(
-                    abs(c["value"] - first_val) > Decimal("0.01")
+                    not self._values_agree(first_val, c["value"])
                     for c in candidates[1:]
                 )
                 # If conflicting, use highest-tier (lowest tier number) value
@@ -610,6 +623,14 @@ class ValidationStage(ExtractionStage):
                 })
 
         return period_values
+
+    def _values_agree(self, a: Decimal, b: Decimal) -> bool:
+        """Check if two values agree within dual tolerance (absolute OR relative)."""
+        delta = abs(a - b)
+        if delta <= self.CONFLICT_ABSOLUTE_TOLERANCE:
+            return True
+        divisor = max(abs(a), Decimal("1"))
+        return float(delta / divisor) <= self.CONFLICT_RELATIVE_TOLERANCE
 
     @staticmethod
     def _filter_lifecycle_flags(

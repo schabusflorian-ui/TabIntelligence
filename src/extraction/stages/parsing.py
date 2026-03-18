@@ -625,7 +625,7 @@ class ParsingStage(ExtractionStage):
                             and c.get("value") is not None
                             and isinstance(c.get("value"), (int, float))
                         ]
-                        for _period, val in values.items():
+                        for period, val in values.items():
                             if val is None:
                                 continue
                             for nc in numeric_cells:
@@ -638,6 +638,7 @@ class ParsingStage(ExtractionStage):
                                             "sheet": sheet_name,
                                             "cell_ref": nc["ref"],
                                             "raw_value": nc_val,
+                                            "period": period,
                                         }
                                         if nc.get("formula"):
                                             entry["formula"] = nc["formula"]

@@ -43,10 +43,22 @@ class FormulaVerificationSummary:
 _SUM_PATTERN = re.compile(
     r"^=SUM\(([A-Z]+)(\d+):([A-Z]+)(\d+)\)$", re.IGNORECASE
 )
+_NEGATED_SUM_PATTERN = re.compile(
+    r"^=-SUM\(([A-Z]+)(\d+):([A-Z]+)(\d+)\)$", re.IGNORECASE
+)
+_SUM_LIST_PATTERN = re.compile(
+    r"^=-?SUM\(([A-Z]+\d+(?:,[A-Z]+\d+)+)\)$", re.IGNORECASE
+)
+_AGGREGATE_PATTERN = re.compile(
+    r"^=-?(MAX|MIN|AVERAGE)\(([A-Z]+)(\d+):([A-Z]+)(\d+)\)$", re.IGNORECASE
+)
+_ABS_PATTERN = re.compile(r"^=ABS\((.+)\)$", re.IGNORECASE)
+_ROUND_PATTERN = re.compile(r"^=ROUND\((.+),\s*(\d+)\)$", re.IGNORECASE)
+
 _CELL_REF = re.compile(r"[A-Z]+\d+", re.IGNORECASE)
 _COMPLEX_FUNCTIONS = re.compile(
     r"(VLOOKUP|HLOOKUP|INDEX|MATCH|IF|IFERROR|INDIRECT|OFFSET|SUMIF|COUNTIF|"
-    r"SUMPRODUCT|ROUND|MAX|MIN|AVERAGE|ABS|MOD|POWER|SQRT|LOG|LN|EXP|"
+    r"SUMPRODUCT|MOD|POWER|SQRT|LOG|LN|EXP|"
     r"LEFT|RIGHT|MID|LEN|CONCATENATE|TEXT|VALUE|DATE|YEAR|MONTH|DAY)",
     re.IGNORECASE,
 )
@@ -104,18 +116,33 @@ class FormulaVerifier:
 
                 source_cells = row.get("source_cells", [])
                 values = row.get("values", {})
-                value_cells = source_cells[1:] if len(source_cells) > 1 else []
-                cell_idx = 0
+
+                # Build period-keyed lookup (matches cell_reconciliation pattern)
+                value_cell_lookup: Dict[str, Dict] = {}
+                for sc in source_cells:
+                    sc_period = sc.get("period")
+                    if sc_period is not None:
+                        value_cell_lookup[sc_period] = sc
+
+                # Fallback to positional matching for old data without period keys
+                use_positional = not value_cell_lookup
+                if use_positional:
+                    value_cells = source_cells[1:] if len(source_cells) > 1 else []
+                    cell_idx = 0
 
                 for period, value in values.items():
                     if value is None:
                         continue
 
-                    if cell_idx >= len(value_cells):
-                        break
-
-                    sc = value_cells[cell_idx]
-                    cell_idx += 1
+                    if use_positional:
+                        if cell_idx >= len(value_cells):
+                            break
+                        sc = value_cells[cell_idx]
+                        cell_idx += 1
+                    else:
+                        sc = value_cell_lookup.get(period)
+                        if sc is None:
+                            continue
 
                     formula = sc.get("formula")
                     if not formula:
@@ -161,15 +188,58 @@ class FormulaVerifier:
         cell_lookup: Dict[Tuple[str, str], float],
     ) -> FormulaCheckResult:
         """Verify a single formula against the extracted value."""
+        _unresolvable = FormulaCheckResult(
+            canonical_name=canonical, period=period, cell_ref=cell_ref,
+            formula=formula, extracted_value=extracted, computed_value=None,
+            matched=False, reason="unresolvable",
+        )
+
         # Check for complex/unsupported formulas first
         if _COMPLEX_FUNCTIONS.search(formula):
-            return FormulaCheckResult(
-                canonical_name=canonical, period=period, cell_ref=cell_ref,
-                formula=formula, extracted_value=extracted, computed_value=None,
-                matched=False, reason="unresolvable",
-            )
+            return _unresolvable
 
-        # Try SUM pattern
+        # Try ABS wrapper: =ABS(...)
+        abs_match = _ABS_PATTERN.match(formula)
+        if abs_match:
+            inner = "=" + abs_match.group(1)
+            inner_result = self._verify_formula(
+                canonical, period, cell_ref, inner, extracted,
+                sheet_name, cell_lookup,
+            )
+            if inner_result.computed_value is not None:
+                computed = abs(inner_result.computed_value)
+                return self._compare(canonical, period, cell_ref, formula, extracted, computed)
+            return _unresolvable
+
+        # Try ROUND wrapper: =ROUND(expr, n)
+        round_match = _ROUND_PATTERN.match(formula)
+        if round_match:
+            inner = "=" + round_match.group(1)
+            ndigits = int(round_match.group(2))
+            inner_result = self._verify_formula(
+                canonical, period, cell_ref, inner, extracted,
+                sheet_name, cell_lookup,
+            )
+            if inner_result.computed_value is not None:
+                rounded = round(inner_result.computed_value, ndigits)
+                return self._compare(
+                    canonical, period, cell_ref, formula, extracted, Decimal(str(rounded)),
+                )
+            return _unresolvable
+
+        # Try negated SUM: =-SUM(range)
+        neg_sum = _NEGATED_SUM_PATTERN.match(formula)
+        if neg_sum:
+            computed = self._resolve_sum(
+                neg_sum.group(1), int(neg_sum.group(2)),
+                neg_sum.group(3), int(neg_sum.group(4)),
+                sheet_name, cell_lookup,
+            )
+            if computed is not None:
+                return self._compare(canonical, period, cell_ref, formula, extracted, -computed)
+            return _unresolvable
+
+        # Try standard SUM: =SUM(range)
         sum_match = _SUM_PATTERN.match(formula)
         if sum_match:
             computed = self._resolve_sum(
@@ -179,22 +249,42 @@ class FormulaVerifier:
             )
             if computed is not None:
                 return self._compare(canonical, period, cell_ref, formula, extracted, computed)
-            return FormulaCheckResult(
-                canonical_name=canonical, period=period, cell_ref=cell_ref,
-                formula=formula, extracted_value=extracted, computed_value=None,
-                matched=False, reason="unresolvable",
+            return _unresolvable
+
+        # Try non-contiguous SUM: =SUM(A1,B1,C1) or =-SUM(A1,B1,C1)
+        sum_list = _SUM_LIST_PATTERN.match(formula)
+        if sum_list:
+            computed = self._resolve_sum_list(
+                sum_list.group(1), sheet_name, cell_lookup,
             )
+            if computed is not None:
+                if formula.startswith("=-"):
+                    computed = -computed
+                return self._compare(canonical, period, cell_ref, formula, extracted, computed)
+            return _unresolvable
+
+        # Try aggregate functions: MAX, MIN, AVERAGE over a range
+        agg_match = _AGGREGATE_PATTERN.match(formula)
+        if agg_match:
+            func_name = agg_match.group(1).upper()
+            computed = self._resolve_aggregate(
+                func_name,
+                agg_match.group(2), int(agg_match.group(3)),
+                agg_match.group(4), int(agg_match.group(5)),
+                sheet_name, cell_lookup,
+            )
+            if computed is not None:
+                if formula.startswith("=-"):
+                    computed = -computed
+                return self._compare(canonical, period, cell_ref, formula, extracted, computed)
+            return _unresolvable
 
         # Try simple arithmetic: =A1+B2-C3 or =A1*B2
         computed = self._resolve_arithmetic(formula, sheet_name, cell_lookup)
         if computed is not None:
             return self._compare(canonical, period, cell_ref, formula, extracted, computed)
 
-        return FormulaCheckResult(
-            canonical_name=canonical, period=period, cell_ref=cell_ref,
-            formula=formula, extracted_value=extracted, computed_value=None,
-            matched=False, reason="unresolvable",
-        )
+        return _unresolvable
 
     def _resolve_sum(
         self,
@@ -231,6 +321,64 @@ class FormulaVerifier:
                 total += Decimal(str(val))
                 found_any = True
         return total if found_any else None
+
+    def _resolve_sum_list(
+        self,
+        cell_list_str: str,
+        sheet_name: str,
+        cell_lookup: Dict[Tuple[str, str], float],
+    ) -> Optional[Decimal]:
+        """Resolve =SUM(A1,B1,C1) by looking up each individual cell."""
+        refs = [r.strip() for r in cell_list_str.split(",")]
+        total = Decimal("0")
+        found_any = False
+        for ref in refs:
+            val = cell_lookup.get((sheet_name, ref.upper()))
+            if val is None:
+                return None  # all cells must be resolvable
+            total += Decimal(str(val))
+            found_any = True
+        return total if found_any else None
+
+    def _resolve_aggregate(
+        self,
+        func_name: str,
+        start_col: str, start_row: int,
+        end_col: str, end_row: int,
+        sheet_name: str,
+        cell_lookup: Dict[Tuple[str, str], float],
+    ) -> Optional[Decimal]:
+        """Resolve MAX/MIN/AVERAGE over a cell range."""
+        values: List[Decimal] = []
+        if start_col.upper() == end_col.upper():
+            # Column range
+            for row_num in range(start_row, end_row + 1):
+                ref = f"{start_col.upper()}{row_num}"
+                val = cell_lookup.get((sheet_name, ref))
+                if val is not None:
+                    values.append(Decimal(str(val)))
+        else:
+            if start_row != end_row:
+                return None  # 2D range unsupported
+            col_start = _col_to_num(start_col)
+            col_end = _col_to_num(end_col)
+            for col_num in range(col_start, col_end + 1):
+                col_letter = _num_to_col(col_num)
+                ref = f"{col_letter}{start_row}"
+                val = cell_lookup.get((sheet_name, ref))
+                if val is not None:
+                    values.append(Decimal(str(val)))
+
+        if not values:
+            return None
+
+        if func_name == "MAX":
+            return max(values)
+        elif func_name == "MIN":
+            return min(values)
+        elif func_name == "AVERAGE":
+            return sum(values) / len(values)
+        return None
 
     def _resolve_arithmetic(
         self,
