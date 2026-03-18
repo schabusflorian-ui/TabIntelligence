@@ -15,6 +15,7 @@ from src.extraction.claude_client import get_claude_client
 from src.extraction.prompts import get_prompt
 from src.extraction.taxonomy_loader import (
     format_taxonomy_for_prompt,
+    get_alias_to_canonicals_with_priority,
     get_alias_to_canonicals_with_promoted,
     get_canonical_to_category,
 )
@@ -102,10 +103,16 @@ def _disambiguate_by_sheet_category(
     Uses section_category from triage when available, falling back to sheet name
     pattern matching.
 
+    When multiple alias matches exist for the same category, prefers the match
+    with the lowest priority number (1 = highest priority, default for string aliases).
+
     Mutates mappings in-place. Returns count of overrides applied.
     """
     # Build multi-value lookups: same label can appear on multiple sheets
     from collections import defaultdict
+
+    # Load priority-aware lookup for multi-match tiebreaking
+    priority_lookup = get_alias_to_canonicals_with_priority()
 
     label_to_sheets: dict[str, list[str]] = defaultdict(list)
     label_to_section_categories: dict[str, list[str | None]] = defaultdict(list)
@@ -129,6 +136,54 @@ def _disambiguate_by_sheet_category(
                         results.append((sheet, cat))
                         break
         return results
+
+    def _resolve_multi_match_by_priority(
+        label_key: str,
+        matching_canonicals: list[tuple[str, str]],
+        expected_category: str,
+    ) -> tuple[str, str] | None:
+        """Resolve a multi-match conflict using alias priority.
+
+        When the same alias text maps to multiple canonicals in the expected
+        category, prefer the one with the lowest priority number (1 = highest).
+        Falls back to name-matching heuristic if priorities are equal.
+
+        Args:
+            label_key: lowercased alias text
+            matching_canonicals: list of (canonical_name, category) in expected category
+            expected_category: the target category
+
+        Returns:
+            (canonical_name, category) of the best match, or None if no resolution.
+        """
+        priority_entries = priority_lookup.get(label_key, [])
+        if not priority_entries:
+            return None
+
+        # Build priority map: canonical -> best (lowest) priority for this alias
+        canonical_priority: dict[str, int] = {}
+        for canonical, category, priority in priority_entries:
+            if category == expected_category:
+                if canonical not in canonical_priority or priority < canonical_priority[canonical]:
+                    canonical_priority[canonical] = priority
+
+        if not canonical_priority:
+            return None
+
+        # Find the minimum priority among matching canonicals
+        best_priority = min(
+            canonical_priority.get(c, 999) for c, _ in matching_canonicals
+        )
+        priority_winners = [
+            (c, cat) for c, cat in matching_canonicals
+            if canonical_priority.get(c, 999) == best_priority
+        ]
+
+        if len(priority_winners) == 1:
+            return priority_winners[0]
+
+        # Still tied — return None to fall through to name heuristic
+        return None
 
     overrides = 0
     for m in mappings:
@@ -179,7 +234,27 @@ def _disambiguate_by_sheet_category(
         for sheet, expected_category in sheet_categories:
             matching = [c for c in candidates if c[1] == expected_category]
             if len(matching) > 1:
-                # Multiple matches in expected category — prefer closest canonical name
+                label_key = label.lower().strip()
+
+                # First: try resolving by alias priority (lower number wins)
+                priority_winner = _resolve_multi_match_by_priority(
+                    label_key, matching, expected_category,
+                )
+                if priority_winner and priority_winner[0] != current_canonical:
+                    logger.info(
+                        f"Stage 3: Priority override: '{label}' on '{sheet}' "
+                        f"changed from {current_canonical} to {priority_winner[0]} "
+                        f"(highest priority alias in {expected_category})"
+                    )
+                    m["canonical_name"] = priority_winner[0]
+                    m["disambiguation_override"] = {
+                        "original": current_canonical,
+                        "reason": f"highest priority alias of {len(matching)} in {expected_category}",
+                    }
+                    overrides += 1
+                    break
+
+                # Fallback: prefer closest canonical name match
                 label_normalized = label.lower().replace("&", "and").replace("-", " ").strip()
                 best, best_score = None, -1
                 for canonical, category in matching:
@@ -233,6 +308,25 @@ def _disambiguate_by_sheet_category(
                 }
                 overrides += 1
                 break
+            elif len(matching) > 1:
+                # Multiple matches for unmapped — try priority-based resolution
+                label_key = label.lower().strip()
+                priority_winner = _resolve_multi_match_by_priority(
+                    label_key, matching, expected_category,
+                )
+                if priority_winner:
+                    logger.info(
+                        f"Stage 3: Unmapped rescue (priority): '{label}' on '{sheet}' "
+                        f"resolved to {priority_winner[0]} "
+                        f"(highest priority of {len(matching)} in {expected_category})"
+                    )
+                    m["canonical_name"] = priority_winner[0]
+                    m["disambiguation_override"] = {
+                        "original": "unmapped",
+                        "reason": f"rescued: highest priority alias in {expected_category}",
+                    }
+                    overrides += 1
+                    break
         else:
             # No category context or no category match: use unique global match
             if len(candidates) == 1:

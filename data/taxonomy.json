@@ -15,8 +15,11 @@
           "Payables",
           "Supplier Payables",
           "Trade Accounts Payable",
+          "Sundry Creditors",
           "Trade Creditors",
-          "Trade Payables"
+          "Trade Payables",
+          "accounts payble",
+          "accts payable"
         ],
         "definition": "Amounts owed to suppliers for goods or services received on credit",
         "typical_sign": "positive",
@@ -68,11 +71,13 @@
           "Receivables",
           "Receivables (Net)",
           "Trade Accounts Receivable",
+          "Sundry Debtors",
           "Trade Debtors",
           "Trade Receivables",
           "accounts recievable",
           "account receivable",
-          "accts receivable"
+          "accts receivable",
+          "recievables"
         ],
         "definition": "Amounts owed by customers for goods or services delivered on credit",
         "typical_sign": "positive",
@@ -413,6 +418,8 @@
           "Cash",
           "Cash and Cash Equiv",
           "Cash & Equiv",
+          "Cash at Bank and in Hand",
+          "Cash in Hand",
           "C&CE"
         ],
         "definition": "Cash and cash equivalents (synonym for cash)",
@@ -432,9 +439,11 @@
         "category": "balance_sheet",
         "display_name": "Common Stock",
         "aliases": [
+          "Called Up Share Capital",
+          "Common Equity",
           "Common Shares",
           "Ordinary Shares",
-          "Common Equity"
+          "Share Capital"
         ],
         "definition": "Par value of common stock issued",
         "typical_sign": "positive",
@@ -561,6 +570,7 @@
         "display_name": "Current Liabilities",
         "aliases": [
           "CL",
+          "Creditors: Amounts Falling Due Within One Year",
           "Current Liabilities Total",
           "Short Term Liabilities",
           "Short-Term Liabilities",
@@ -877,7 +887,9 @@
           "Merchandise Inventory",
           "Raw Materials",
           "Stock",
+          "Stock in Trade",
           "Stocks",
+          "Stocks and Work in Progress",
           "Total Inventory",
           "WIP",
           "Work in Process",
@@ -1030,8 +1042,10 @@
         "display_name": "Long-Term Debt",
         "aliases": [
           "Bank Debt",
+          "Creditors: Amounts Falling Due After More Than One Year",
           "Debt",
           "Debt (Long-Term)",
+          "Hire Purchase",
           "LT Debt",
           "LTD",
           "Long Term Borrowings",
@@ -1426,7 +1440,8 @@
         "aliases": [
           "Prepaid Assets",
           "Prepaids",
-          "Prepayments"
+          "Prepayments",
+          "Prepayments and Accrued Income"
         ],
         "definition": "Expenses paid in advance for future periods",
         "typical_sign": "positive",
@@ -1494,6 +1509,9 @@
           "Accumulated Profits",
           "Accumulated Retained Earnings",
           "Earnings Retained",
+          "P&L Reserve",
+          "Profit and Loss Account",
+          "Profit and Loss Reserve",
           "RE",
           "Retained Income",
           "Retained Profit",

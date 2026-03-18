@@ -2,8 +2,10 @@
 Unit tests for database CRUD operations.
 
 Tests all CRUD operations for File, ExtractionJob, and LineageEvent models.
+Also tests LearnedAlias lifecycle: last_seen_at, archival, and taxonomy persistence.
 """
 
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import pytest
@@ -414,3 +416,234 @@ def test_cascade_delete_job(db_session, sample_job):
 
     # Verify lineage events are deleted
     assert len(crud.get_job_lineage(db_session, sample_job.job_id)) == 0
+
+
+# ============================================================================
+# LEARNED ALIAS LIFECYCLE TESTS (Agent 2B)
+# ============================================================================
+
+
+class TestLearnedAliasLifecycle:
+    """Test learned alias lifecycle: last_seen_at tracking, archival, and taxonomy persistence."""
+
+    def test_last_seen_at_set_on_create(self, db_session):
+        """Recording a new alias sets last_seen_at to approximately now."""
+        alias = crud.record_learned_alias(db_session, "revenue", "Net Revenue", "entity-1")
+        assert alias.last_seen_at is not None
+        # Should be within the last few seconds
+        delta = datetime.now(timezone.utc) - alias.last_seen_at.replace(tzinfo=timezone.utc)
+        assert delta.total_seconds() < 5
+
+    def test_last_seen_at_updated_on_reoccurrence(self, db_session):
+        """Recording the same alias again updates last_seen_at."""
+        alias1 = crud.record_learned_alias(db_session, "revenue", "Net Revenue", "entity-1")
+        first_seen = alias1.last_seen_at
+
+        # Record again (same canonical + alias text)
+        alias2 = crud.record_learned_alias(db_session, "revenue", "Net Revenue", "entity-2")
+        assert alias2.last_seen_at is not None
+        assert alias2.last_seen_at >= first_seen
+        assert alias2.occurrence_count == 2
+
+    def test_archived_defaults_to_false(self, db_session):
+        """New aliases have archived=False by default."""
+        alias = crud.record_learned_alias(db_session, "revenue", "Total Sales", "entity-1")
+        assert alias.archived is False
+        assert alias.archived_reason is None
+
+    def test_archive_stale_aliases_archives_old(self, db_session):
+        """Aliases with last_seen_at older than stale_days get archived."""
+        from src.db.models import LearnedAlias
+
+        # Create an alias and manually set last_seen_at to 200 days ago
+        alias = crud.record_learned_alias(db_session, "revenue", "Old Revenue", "entity-1")
+        alias.last_seen_at = datetime.now(timezone.utc) - timedelta(days=200)
+        db_session.commit()
+
+        archived_count = crud.archive_stale_aliases(db_session, stale_days=180)
+        assert archived_count == 1
+
+        db_session.refresh(alias)
+        assert alias.archived is True
+        assert alias.archived_reason == "stale_180d"
+
+    def test_archive_stale_aliases_skips_recent(self, db_session):
+        """Aliases seen recently are not archived."""
+        alias = crud.record_learned_alias(db_session, "revenue", "Fresh Revenue", "entity-1")
+        # last_seen_at is set to now by record_learned_alias
+
+        archived_count = crud.archive_stale_aliases(db_session, stale_days=180)
+        assert archived_count == 0
+
+        db_session.refresh(alias)
+        assert alias.archived is False
+
+    def test_archive_stale_aliases_skips_promoted(self, db_session):
+        """Promoted aliases are not archived regardless of age."""
+        alias = crud.record_learned_alias(db_session, "revenue", "Promoted Revenue", "entity-1")
+        alias.promoted = True
+        alias.last_seen_at = datetime.now(timezone.utc) - timedelta(days=365)
+        db_session.commit()
+
+        archived_count = crud.archive_stale_aliases(db_session, stale_days=180)
+        assert archived_count == 0
+
+        db_session.refresh(alias)
+        assert alias.archived is False
+
+    def test_archive_stale_aliases_skips_already_archived(self, db_session):
+        """Already-archived aliases are not re-archived."""
+        alias = crud.record_learned_alias(db_session, "revenue", "Old Revenue", "entity-1")
+        alias.last_seen_at = datetime.now(timezone.utc) - timedelta(days=365)
+        alias.archived = True
+        alias.archived_reason = "stale_180d"
+        db_session.commit()
+
+        archived_count = crud.archive_stale_aliases(db_session, stale_days=180)
+        assert archived_count == 0
+
+    def test_archive_stale_with_null_last_seen_at(self, db_session):
+        """Aliases with last_seen_at=None are treated as stale."""
+        alias = crud.record_learned_alias(db_session, "revenue", "Null Seen", "entity-1")
+        # Manually set last_seen_at to None to simulate old data
+        alias.last_seen_at = None
+        db_session.commit()
+
+        archived_count = crud.archive_stale_aliases(db_session, stale_days=180)
+        assert archived_count == 1
+
+        db_session.refresh(alias)
+        assert alias.archived is True
+
+    def test_persist_promoted_to_taxonomy_adds_alias(self, db_session):
+        """Promoted alias text is added to Taxonomy.aliases JSON column."""
+        from src.db.models import Taxonomy
+
+        # Create a taxonomy entry
+        taxonomy = Taxonomy(
+            canonical_name="revenue",
+            category="income_statement",
+            aliases=["sales", "turnover"],
+        )
+        db_session.add(taxonomy)
+        db_session.commit()
+
+        # Create a promoted alias
+        alias = crud.record_learned_alias(db_session, "revenue", "Total Net Sales", "entity-1")
+        alias.promoted = True
+        db_session.commit()
+
+        added = crud.persist_promoted_to_taxonomy(db_session)
+        assert added == 1
+
+        db_session.refresh(taxonomy)
+        assert "Total Net Sales" in taxonomy.aliases
+        # Original aliases still present
+        assert "sales" in taxonomy.aliases
+        assert "turnover" in taxonomy.aliases
+
+    def test_persist_promoted_idempotent(self, db_session):
+        """If alias text already in Taxonomy.aliases, it is not duplicated."""
+        from src.db.models import Taxonomy
+
+        taxonomy = Taxonomy(
+            canonical_name="revenue",
+            category="income_statement",
+            aliases=["sales", "Total Net Sales"],
+        )
+        db_session.add(taxonomy)
+        db_session.commit()
+
+        alias = crud.record_learned_alias(db_session, "revenue", "Total Net Sales", "entity-1")
+        alias.promoted = True
+        db_session.commit()
+
+        added = crud.persist_promoted_to_taxonomy(db_session)
+        assert added == 0
+
+        db_session.refresh(taxonomy)
+        assert taxonomy.aliases.count("Total Net Sales") == 1
+
+    def test_persist_promoted_no_taxonomy_match(self, db_session):
+        """Promoted alias for nonexistent taxonomy entry is silently skipped."""
+        alias = crud.record_learned_alias(
+            db_session, "revenue", "Orphan Alias", "entity-1"
+        )
+        alias.promoted = True
+        db_session.commit()
+
+        added = crud.persist_promoted_to_taxonomy(db_session)
+        assert added == 0
+
+    def test_persist_promoted_null_aliases(self, db_session):
+        """Taxonomy with aliases=None gets alias list initialized."""
+        from src.db.models import Taxonomy
+
+        taxonomy = Taxonomy(
+            canonical_name="revenue",
+            category="income_statement",
+            aliases=None,
+        )
+        db_session.add(taxonomy)
+        db_session.commit()
+
+        alias = crud.record_learned_alias(db_session, "revenue", "New Alias", "entity-1")
+        alias.promoted = True
+        db_session.commit()
+
+        added = crud.persist_promoted_to_taxonomy(db_session)
+        assert added == 1
+
+        db_session.refresh(taxonomy)
+        assert taxonomy.aliases == ["New Alias"]
+
+    def test_check_auto_promotions_excludes_archived(self, db_session):
+        """Archived aliases are excluded from auto-promotion candidates."""
+        from unittest.mock import patch
+
+        # Create alias meeting promotion thresholds
+        alias = crud.record_learned_alias(db_session, "revenue", "Archived Revenue", "e1")
+        for i in range(2, 6):
+            crud.record_learned_alias(db_session, "revenue", "Archived Revenue", f"e{i}")
+
+        # Mark as archived
+        alias = (
+            db_session.query(crud.LearnedAlias)
+            .filter(crud.LearnedAlias.alias_text == "Archived Revenue")
+            .first()
+        )
+        alias.archived = True
+        alias.archived_reason = "stale_180d"
+        db_session.commit()
+
+        with patch("src.db.crud.archive_stale_aliases"):
+            promoted_count = crud.check_auto_promotions(db_session)
+
+        assert promoted_count == 0
+        db_session.refresh(alias)
+        assert alias.promoted is False
+
+    def test_backward_compat_record_learned_alias(self, db_session):
+        """Existing record_learned_alias calls still work (backward compat)."""
+        alias = crud.record_learned_alias(db_session, "revenue", "Net Sales", "entity-1")
+        assert alias is not None
+        assert alias.canonical_name == "revenue"
+        assert alias.alias_text == "Net Sales"
+        assert alias.occurrence_count == 1
+        assert alias.source_entities == ["entity-1"]
+        assert alias.promoted is False
+        # New fields are populated with sensible defaults
+        assert alias.last_seen_at is not None
+        assert alias.archived is False
+        assert alias.archived_reason is None
+
+    def test_backward_compat_get_learned_aliases(self, db_session):
+        """Existing get_learned_aliases still returns all aliases including new fields."""
+        crud.record_learned_alias(db_session, "revenue", "Net Sales", "entity-1")
+        aliases = crud.get_learned_aliases(db_session)
+        assert len(aliases) == 1
+        assert aliases[0].alias_text == "Net Sales"
+        # Verify new fields are accessible
+        assert hasattr(aliases[0], "last_seen_at")
+        assert hasattr(aliases[0], "archived")
+        assert hasattr(aliases[0], "archived_reason")

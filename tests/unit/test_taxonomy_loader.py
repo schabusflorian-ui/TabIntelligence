@@ -1,5 +1,11 @@
 """
 Tests for the taxonomy JSON loader used by extraction pipeline stages.
+
+Includes tests for:
+- Taxonomy loading and caching
+- Alias conflict detection
+- Priority-aware alias format support
+- UK regional variant aliases
 """
 
 import json
@@ -572,3 +578,513 @@ class TestCategoryFiltering:
         assert "ltv_ratio" in result
         assert "dscr" in result
         assert "revenue" not in result
+
+
+class TestAliasConflictDetection:
+    """Test detect_alias_conflicts() finds cross-canonical alias conflicts."""
+
+    def setup_method(self):
+        import src.extraction.taxonomy_loader as mod
+
+        mod._taxonomy_cache = {}
+        mod._alias_conflicts_cache = None
+
+    def teardown_method(self):
+        import src.extraction.taxonomy_loader as mod
+
+        mod._taxonomy_cache = {}
+        mod._alias_conflicts_cache = None
+
+    def test_detects_same_category_conflict(self):
+        """Same alias mapping to different canonicals in same category."""
+        import src.extraction.taxonomy_loader as mod
+        from src.extraction.taxonomy_loader import detect_alias_conflicts
+
+        mod._taxonomy_cache = {
+            "categories": {
+                "balance_sheet": [
+                    {"canonical_name": "inventory", "aliases": ["Stock", "Goods"]},
+                    {"canonical_name": "inventories", "aliases": ["Stock", "Total Stock"]},
+                ]
+            }
+        }
+
+        conflicts = detect_alias_conflicts()
+        assert "stock" in conflicts
+        canonicals = {c for c, _ in conflicts["stock"]}
+        assert "inventory" in canonicals
+        assert "inventories" in canonicals
+
+    def test_detects_cross_category_conflict(self):
+        """Same alias mapping to canonicals in different categories."""
+        import src.extraction.taxonomy_loader as mod
+        from src.extraction.taxonomy_loader import detect_alias_conflicts
+
+        mod._taxonomy_cache = {
+            "categories": {
+                "income_statement": [
+                    {"canonical_name": "rd_expense", "aliases": ["Development Costs"]},
+                ],
+                "project_finance": [
+                    {"canonical_name": "development_costs", "aliases": ["Development Costs"]},
+                ],
+            }
+        }
+
+        conflicts = detect_alias_conflicts()
+        assert "development costs" in conflicts
+        entries = conflicts["development costs"]
+        categories = {cat for _, cat in entries}
+        assert "income_statement" in categories
+        assert "project_finance" in categories
+
+    def test_no_conflicts_returns_empty(self):
+        """No conflicts when aliases are unique."""
+        import src.extraction.taxonomy_loader as mod
+        from src.extraction.taxonomy_loader import detect_alias_conflicts
+
+        mod._taxonomy_cache = {
+            "categories": {
+                "income_statement": [
+                    {"canonical_name": "revenue", "aliases": ["Sales", "Top Line"]},
+                    {"canonical_name": "cogs", "aliases": ["Cost of Goods"]},
+                ]
+            }
+        }
+
+        conflicts = detect_alias_conflicts()
+        assert conflicts == {}
+
+    def test_conflict_detection_cached(self):
+        """Second call returns cached result."""
+        import src.extraction.taxonomy_loader as mod
+        from src.extraction.taxonomy_loader import detect_alias_conflicts
+
+        mod._taxonomy_cache = {
+            "categories": {
+                "balance_sheet": [
+                    {"canonical_name": "cash", "aliases": ["Money"]},
+                    {"canonical_name": "cash_equiv", "aliases": ["Money"]},
+                ]
+            }
+        }
+
+        first = detect_alias_conflicts()
+        # Modify cache — should not affect result (cached)
+        mod._taxonomy_cache = {"categories": {}}
+        second = detect_alias_conflicts()
+        assert first is second
+
+    def test_invalidate_conflict_cache(self):
+        """invalidate_alias_conflicts_cache() clears the cache."""
+        import src.extraction.taxonomy_loader as mod
+        from src.extraction.taxonomy_loader import (
+            detect_alias_conflicts,
+            invalidate_alias_conflicts_cache,
+        )
+
+        mod._taxonomy_cache = {
+            "categories": {
+                "balance_sheet": [
+                    {"canonical_name": "cash", "aliases": ["Money"]},
+                    {"canonical_name": "cash_equiv", "aliases": ["Money"]},
+                ]
+            }
+        }
+        first = detect_alias_conflicts()
+        assert "money" in first
+
+        # Clear cache and re-run with no conflicts
+        invalidate_alias_conflicts_cache()
+        mod._taxonomy_cache = {
+            "categories": {
+                "balance_sheet": [
+                    {"canonical_name": "cash", "aliases": ["Cash Only"]},
+                ]
+            }
+        }
+        second = detect_alias_conflicts()
+        assert second == {}
+
+    def test_real_taxonomy_has_known_conflicts(self):
+        """The real taxonomy.json should have known alias conflicts like 'stock'."""
+        import src.extraction.taxonomy_loader as mod
+        from src.extraction.taxonomy_loader import detect_alias_conflicts
+
+        # Reset to force loading from real taxonomy file
+        mod._taxonomy_cache = {}
+        mod._alias_conflicts_cache = None
+
+        conflicts = detect_alias_conflicts()
+        # "stock" should conflict between inventory and inventories
+        assert "stock" in conflicts
+        stock_canonicals = {c for c, _ in conflicts["stock"]}
+        assert len(stock_canonicals) >= 2
+
+    def test_get_alias_conflicts_is_public_api(self):
+        """get_alias_conflicts() should return same result as detect_alias_conflicts()."""
+        import src.extraction.taxonomy_loader as mod
+        from src.extraction.taxonomy_loader import (
+            detect_alias_conflicts,
+            get_alias_conflicts,
+        )
+
+        mod._taxonomy_cache = {
+            "categories": {
+                "balance_sheet": [
+                    {"canonical_name": "a", "aliases": ["Shared"]},
+                    {"canonical_name": "b", "aliases": ["Shared"]},
+                ]
+            }
+        }
+
+        result = get_alias_conflicts()
+        assert "shared" in result
+        # Should be cached — same object
+        assert result is detect_alias_conflicts()
+
+
+class TestPriorityAwareAliases:
+    """Test priority-aware alias format support."""
+
+    def setup_method(self):
+        import src.extraction.taxonomy_loader as mod
+
+        mod._taxonomy_cache = {}
+        mod._alias_conflicts_cache = None
+
+    def teardown_method(self):
+        import src.extraction.taxonomy_loader as mod
+
+        mod._taxonomy_cache = {}
+        mod._alias_conflicts_cache = None
+
+    def test_normalize_alias_string(self):
+        """String aliases get implicit priority=1."""
+        from src.extraction.taxonomy_loader import _normalize_alias
+
+        text, priority = _normalize_alias("Revenue")
+        assert text == "Revenue"
+        assert priority == 1
+
+    def test_normalize_alias_dict(self):
+        """Dict aliases use explicit text and priority."""
+        from src.extraction.taxonomy_loader import _normalize_alias
+
+        text, priority = _normalize_alias({"text": "Sls", "priority": 3})
+        assert text == "Sls"
+        assert priority == 3
+
+    def test_normalize_alias_dict_default_priority(self):
+        """Dict aliases without priority default to 1."""
+        from src.extraction.taxonomy_loader import _normalize_alias
+
+        text, priority = _normalize_alias({"text": "Sales"})
+        assert text == "Sales"
+        assert priority == 1
+
+    def test_get_alias_text_string(self):
+        """_get_alias_text extracts text from string alias."""
+        from src.extraction.taxonomy_loader import _get_alias_text
+
+        assert _get_alias_text("Revenue") == "Revenue"
+
+    def test_get_alias_text_dict(self):
+        """_get_alias_text extracts text from dict alias."""
+        from src.extraction.taxonomy_loader import _get_alias_text
+
+        assert _get_alias_text({"text": "Sls", "priority": 3}) == "Sls"
+
+    def test_get_alias_priority_string(self):
+        """String aliases have priority 1."""
+        from src.extraction.taxonomy_loader import _get_alias_priority
+
+        assert _get_alias_priority("Revenue") == 1
+
+    def test_get_alias_priority_dict(self):
+        """Dict aliases return their explicit priority."""
+        from src.extraction.taxonomy_loader import _get_alias_priority
+
+        assert _get_alias_priority({"text": "Sls", "priority": 3}) == 3
+
+    def test_alias_lookup_handles_mixed_formats(self):
+        """get_alias_to_canonicals works with both string and dict aliases."""
+        import src.extraction.taxonomy_loader as mod
+        from src.extraction.taxonomy_loader import get_alias_to_canonicals
+
+        mod._taxonomy_cache = {
+            "categories": {
+                "income_statement": [
+                    {
+                        "canonical_name": "revenue",
+                        "display_name": "Revenue",
+                        "aliases": [
+                            "Sales",
+                            {"text": "Sls", "priority": 3},
+                            {"text": "Turnover", "priority": 2},
+                        ],
+                    }
+                ]
+            }
+        }
+
+        lookup = get_alias_to_canonicals()
+        # String alias
+        assert ("revenue", "income_statement") in lookup.get("sales", [])
+        # Dict alias
+        assert ("revenue", "income_statement") in lookup.get("sls", [])
+        assert ("revenue", "income_statement") in lookup.get("turnover", [])
+        # Display name
+        assert ("revenue", "income_statement") in lookup.get("revenue", [])
+
+    def test_priority_lookup_includes_priority_values(self):
+        """get_alias_to_canonicals_with_priority includes priority in tuples."""
+        import src.extraction.taxonomy_loader as mod
+        from src.extraction.taxonomy_loader import get_alias_to_canonicals_with_priority
+
+        mod._taxonomy_cache = {
+            "categories": {
+                "income_statement": [
+                    {
+                        "canonical_name": "revenue",
+                        "display_name": "Revenue",
+                        "aliases": [
+                            "Sales",
+                            {"text": "Sls", "priority": 3},
+                        ],
+                    }
+                ]
+            }
+        }
+
+        lookup = get_alias_to_canonicals_with_priority()
+        # String alias: priority=1
+        sales_entries = lookup.get("sales", [])
+        assert ("revenue", "income_statement", 1) in sales_entries
+        # Dict alias: priority=3
+        sls_entries = lookup.get("sls", [])
+        assert ("revenue", "income_statement", 3) in sls_entries
+        # Display name: priority=1
+        rev_entries = lookup.get("revenue", [])
+        assert ("revenue", "income_statement", 1) in rev_entries
+
+    def test_format_prompt_with_mixed_aliases(self):
+        """format_taxonomy_for_prompt extracts text from both alias formats."""
+        import src.extraction.taxonomy_loader as mod
+        from src.extraction.taxonomy_loader import format_taxonomy_for_prompt
+
+        mod._taxonomy_cache = {
+            "categories": {
+                "income_statement": [
+                    {
+                        "canonical_name": "revenue",
+                        "aliases": [
+                            "Sales",
+                            {"text": "Turnover", "priority": 2},
+                            {"text": "Sls", "priority": 3},
+                        ],
+                    }
+                ]
+            }
+        }
+
+        result = format_taxonomy_for_prompt(include_aliases=True)
+        assert "revenue (Sales, Turnover, Sls)" in result
+
+    def test_format_detailed_with_mixed_aliases(self):
+        """format_taxonomy_detailed extracts text from both alias formats."""
+        import src.extraction.taxonomy_loader as mod
+        from src.extraction.taxonomy_loader import format_taxonomy_detailed
+
+        mod._taxonomy_cache = {
+            "categories": {
+                "income_statement": [
+                    {
+                        "canonical_name": "revenue",
+                        "display_name": "Revenue",
+                        "aliases": [
+                            "Sales",
+                            {"text": "Turnover", "priority": 2},
+                        ],
+                    }
+                ]
+            }
+        }
+
+        result = format_taxonomy_detailed()
+        assert "aliases: Sales, Turnover" in result
+
+    def test_backward_compat_string_only_aliases(self):
+        """String-only aliases still work identically to before."""
+        import src.extraction.taxonomy_loader as mod
+        from src.extraction.taxonomy_loader import (
+            format_taxonomy_for_prompt,
+            get_alias_to_canonicals,
+        )
+
+        mod._taxonomy_cache = {
+            "categories": {
+                "income_statement": [
+                    {
+                        "canonical_name": "revenue",
+                        "display_name": "Revenue",
+                        "aliases": ["Sales", "Net Sales", "Top Line"],
+                    },
+                    {
+                        "canonical_name": "cogs",
+                        "display_name": "COGS",
+                        "aliases": [],
+                    },
+                ]
+            }
+        }
+
+        # Lookup should work exactly as before
+        lookup = get_alias_to_canonicals()
+        assert ("revenue", "income_statement") in lookup.get("sales", [])
+        assert ("revenue", "income_statement") in lookup.get("net sales", [])
+
+        # Prompt formatting should work exactly as before
+        result = format_taxonomy_for_prompt(include_aliases=True)
+        assert "revenue (Sales, Net Sales, Top Line)" in result
+
+    def test_conflict_detection_with_mixed_aliases(self):
+        """detect_alias_conflicts handles mixed string/dict alias formats."""
+        import src.extraction.taxonomy_loader as mod
+        from src.extraction.taxonomy_loader import detect_alias_conflicts
+
+        mod._taxonomy_cache = {
+            "categories": {
+                "balance_sheet": [
+                    {
+                        "canonical_name": "inventory",
+                        "aliases": [
+                            {"text": "Stock", "priority": 1},
+                        ],
+                    },
+                    {
+                        "canonical_name": "inventories",
+                        "aliases": ["Stock"],
+                    },
+                ]
+            }
+        }
+
+        conflicts = detect_alias_conflicts()
+        assert "stock" in conflicts
+        canonicals = {c for c, _ in conflicts["stock"]}
+        assert "inventory" in canonicals
+        assert "inventories" in canonicals
+
+
+class TestUKRegionalVariants:
+    """Test that UK regional variants are present in the taxonomy."""
+
+    def setup_method(self):
+        import src.extraction.taxonomy_loader as mod
+
+        mod._taxonomy_cache = {}
+
+    def teardown_method(self):
+        import src.extraction.taxonomy_loader as mod
+
+        mod._taxonomy_cache = {}
+
+    def test_turnover_maps_to_revenue(self):
+        """UK 'Turnover' should resolve to revenue."""
+        from src.extraction.taxonomy_loader import get_alias_to_canonicals
+
+        lookup = get_alias_to_canonicals()
+        entries = lookup.get("turnover", [])
+        canonicals = [c for c, _ in entries]
+        assert "revenue" in canonicals
+
+    def test_debtors_maps_to_accounts_receivable(self):
+        """UK 'Debtors' should resolve to accounts_receivable."""
+        from src.extraction.taxonomy_loader import get_alias_to_canonicals
+
+        lookup = get_alias_to_canonicals()
+        entries = lookup.get("debtors", [])
+        canonicals = [c for c, _ in entries]
+        assert "accounts_receivable" in canonicals
+
+    def test_creditors_maps_to_accounts_payable(self):
+        """UK 'Creditors' should resolve to accounts_payable."""
+        from src.extraction.taxonomy_loader import get_alias_to_canonicals
+
+        lookup = get_alias_to_canonicals()
+        entries = lookup.get("creditors", [])
+        canonicals = [c for c, _ in entries]
+        assert "accounts_payable" in canonicals
+
+    def test_stock_maps_to_inventory(self):
+        """UK 'Stock' should resolve to inventory."""
+        from src.extraction.taxonomy_loader import get_alias_to_canonicals
+
+        lookup = get_alias_to_canonicals()
+        entries = lookup.get("stock", [])
+        canonicals = [c for c, _ in entries]
+        assert "inventory" in canonicals
+
+    def test_sundry_debtors_maps_to_accounts_receivable(self):
+        """UK 'Sundry Debtors' should resolve to accounts_receivable."""
+        from src.extraction.taxonomy_loader import get_alias_to_canonicals
+
+        lookup = get_alias_to_canonicals()
+        entries = lookup.get("sundry debtors", [])
+        canonicals = [c for c, _ in entries]
+        assert "accounts_receivable" in canonicals
+
+    def test_sundry_creditors_maps_to_accounts_payable(self):
+        """UK 'Sundry Creditors' should resolve to accounts_payable."""
+        from src.extraction.taxonomy_loader import get_alias_to_canonicals
+
+        lookup = get_alias_to_canonicals()
+        entries = lookup.get("sundry creditors", [])
+        canonicals = [c for c, _ in entries]
+        assert "accounts_payable" in canonicals
+
+    def test_profit_and_loss_account_maps_to_retained_earnings(self):
+        """UK 'Profit and Loss Account' should resolve to retained_earnings."""
+        from src.extraction.taxonomy_loader import get_alias_to_canonicals
+
+        lookup = get_alias_to_canonicals()
+        entries = lookup.get("profit and loss account", [])
+        canonicals = [c for c, _ in entries]
+        assert "retained_earnings" in canonicals
+
+    def test_share_capital_maps_to_common_stock(self):
+        """UK 'Share Capital' should resolve to common_stock."""
+        from src.extraction.taxonomy_loader import get_alias_to_canonicals
+
+        lookup = get_alias_to_canonicals()
+        entries = lookup.get("share capital", [])
+        canonicals = [c for c, _ in entries]
+        assert "common_stock" in canonicals
+
+    def test_cash_at_bank_maps_to_cash(self):
+        """UK 'Cash at Bank and in Hand' should resolve to cash or cash_and_equivalents."""
+        from src.extraction.taxonomy_loader import get_alias_to_canonicals
+
+        lookup = get_alias_to_canonicals()
+        entries = lookup.get("cash at bank and in hand", [])
+        canonicals = [c for c, _ in entries]
+        assert any(c in canonicals for c in ["cash", "cash_and_equivalents"])
+
+    def test_uk_creditors_due_within_one_year(self):
+        """UK Companies Act format for current liabilities."""
+        from src.extraction.taxonomy_loader import get_alias_to_canonicals
+
+        lookup = get_alias_to_canonicals()
+        entries = lookup.get("creditors: amounts falling due within one year", [])
+        canonicals = [c for c, _ in entries]
+        assert "current_liabilities" in canonicals
+
+    def test_common_misspelling_recievables(self):
+        """Common misspelling 'recievables' should resolve to accounts_receivable."""
+        from src.extraction.taxonomy_loader import get_alias_to_canonicals
+
+        lookup = get_alias_to_canonicals()
+        entries = lookup.get("recievables", [])
+        canonicals = [c for c, _ in entries]
+        assert "accounts_receivable" in canonicals

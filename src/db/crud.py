@@ -6,7 +6,7 @@ This is the canonical location per Week 2 strategy.
 """
 
 import copy
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from uuid import UUID
 
@@ -1371,6 +1371,7 @@ def record_learned_alias(
 
         if existing:
             existing.occurrence_count += 1
+            existing.last_seen_at = datetime.now(timezone.utc)
             sources = list(existing.source_entities or [])
             if entity_id not in sources:
                 sources.append(entity_id)
@@ -1384,6 +1385,7 @@ def record_learned_alias(
             alias_text=alias_text,
             occurrence_count=1,
             source_entities=[entity_id],
+            last_seen_at=datetime.now(timezone.utc),
         )
         db.add(alias)
         db.commit()
@@ -3062,6 +3064,7 @@ def check_auto_promotions(db: Session) -> int:
             db.query(LearnedAlias)
             .filter(
                 LearnedAlias.promoted == False,  # noqa: E712
+                LearnedAlias.archived == False,  # noqa: E712
                 LearnedAlias.occurrence_count >= settings.taxonomy_auto_promote_occurrences,
             )
             .all()
@@ -3085,6 +3088,18 @@ def check_auto_promotions(db: Session) -> int:
             except ImportError:
                 pass
 
+            # Persist promoted aliases into Taxonomy.aliases (best-effort)
+            try:
+                persist_promoted_to_taxonomy(db)
+            except Exception as exc:
+                logger.warning(f"persist_promoted_to_taxonomy failed (best-effort): {exc}")
+
+        # Archive stale aliases (best-effort, piggyback on promotion check)
+        try:
+            archive_stale_aliases(db)
+        except Exception as exc:
+            logger.warning(f"archive_stale_aliases failed (best-effort): {exc}")
+
         return promoted_count
 
     except SQLAlchemyError as e:
@@ -3094,6 +3109,115 @@ def check_auto_promotions(db: Session) -> int:
             f"Failed to check auto-promotions: {e}",
             operation="update",
             table="learned_aliases",
+        )
+
+
+def archive_stale_aliases(db: Session, stale_days: int = 180) -> int:
+    """Archive unpromoted learned aliases not seen in the specified number of days.
+
+    Sets archived=True and archived_reason="stale_{stale_days}d" for aliases
+    whose last_seen_at is older than stale_days ago (or NULL) and that have
+    not been promoted or already archived.
+
+    Args:
+        db: Database session
+        stale_days: Number of days of inactivity before archiving (default 180)
+
+    Returns:
+        Number of aliases archived.
+    """
+    try:
+        cutoff = datetime.now(timezone.utc) - timedelta(days=stale_days)
+        candidates = (
+            db.query(LearnedAlias)
+            .filter(
+                LearnedAlias.promoted == False,  # noqa: E712
+                LearnedAlias.archived == False,  # noqa: E712
+            )
+            .all()
+        )
+
+        archived_count = 0
+        for alias in candidates:
+            # Archive if last_seen_at is None (never explicitly seen) or older than cutoff
+            last_seen = alias.last_seen_at
+            if last_seen is not None and last_seen.tzinfo is None:
+                last_seen = last_seen.replace(tzinfo=timezone.utc)
+            if last_seen is None or last_seen < cutoff:
+                alias.archived = True
+                alias.archived_reason = f"stale_{stale_days}d"
+                archived_count += 1
+
+        if archived_count > 0:
+            db.commit()
+            logger.info(f"Archived {archived_count} stale learned aliases (>{stale_days}d)")
+
+        return archived_count
+
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Failed to archive stale aliases: {e}")
+        raise DatabaseError(
+            f"Failed to archive stale aliases: {e}",
+            operation="update",
+            table="learned_aliases",
+        )
+
+
+def persist_promoted_to_taxonomy(db: Session) -> int:
+    """Sync promoted alias text into Taxonomy.aliases JSON column.
+
+    For each promoted LearnedAlias, looks up the Taxonomy row by
+    canonical_name and appends the alias_text to the aliases list
+    if not already present.
+
+    Args:
+        db: Database session
+
+    Returns:
+        Number of alias texts added to taxonomy rows.
+    """
+    from src.db.models import Taxonomy
+
+    try:
+        promoted_aliases = (
+            db.query(LearnedAlias)
+            .filter(
+                LearnedAlias.promoted == True,  # noqa: E712
+            )
+            .all()
+        )
+
+        added_count = 0
+        for alias in promoted_aliases:
+            taxonomy = (
+                db.query(Taxonomy)
+                .filter(Taxonomy.canonical_name == alias.canonical_name)
+                .first()
+            )
+            if taxonomy is None:
+                continue
+
+            current_aliases = list(taxonomy.aliases or [])
+            if alias.alias_text not in current_aliases:
+                current_aliases.append(alias.alias_text)
+                taxonomy.aliases = current_aliases
+                flag_modified(taxonomy, "aliases")
+                added_count += 1
+
+        if added_count > 0:
+            db.commit()
+            logger.info(f"Persisted {added_count} promoted alias(es) to taxonomy")
+
+        return added_count
+
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Failed to persist promoted aliases to taxonomy: {e}")
+        raise DatabaseError(
+            f"Failed to persist promoted aliases to taxonomy: {e}",
+            operation="update",
+            table="taxonomy",
         )
 
 

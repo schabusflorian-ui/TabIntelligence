@@ -20,11 +20,13 @@ def _make_row(label, values, source_cells=None):
     return row
 
 
-def _sc(sheet, ref, raw_value, formula=None):
+def _sc(sheet, ref, raw_value, formula=None, period=None):
     """Shorthand for source cell."""
     cell = {"sheet": sheet, "cell_ref": ref, "raw_value": raw_value}
     if formula:
         cell["formula"] = formula
+    if period:
+        cell["period"] = period
     return cell
 
 
@@ -676,3 +678,327 @@ class TestRoundFormula:
         result = self.verifier.verify(parsed, mappings, triage)
 
         assert result.verified == 1
+
+
+class TestAbsoluteReferences:
+    """Test $ (absolute reference) stripping."""
+
+    def setup_method(self):
+        self.verifier = FormulaVerifier()
+
+    def test_absolute_ref_arithmetic(self):
+        """=$B$2+$C$2 should resolve like =B2+C2."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("A", {"FY2023": 100}, [
+                    _sc("IS", "A2", "A"), _sc("IS", "B2", 100, period="FY2023"),
+                ]),
+                _make_row("B", {"FY2023": 200}, [
+                    _sc("IS", "A3", "B"), _sc("IS", "C2", 200, period="FY2023"),
+                ]),
+                _make_row("Total", {"FY2023": 300}, [
+                    _sc("IS", "A4", "Total"),
+                    _sc("IS", "D2", 300, formula="=$B$2+$C$2", period="FY2023"),
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({"A": "a", "B": "b", "Total": "total"})
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.verified == 1
+        assert result.results[0].reason == "verified"
+
+    def test_absolute_ref_sum(self):
+        """=SUM($B$2:$B$4) should resolve like =SUM(B2:B4)."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("A", {"FY2023": 10}, [
+                    _sc("IS", "A2", "A"), _sc("IS", "B2", 10, period="FY2023"),
+                ]),
+                _make_row("B", {"FY2023": 20}, [
+                    _sc("IS", "A3", "B"), _sc("IS", "B3", 20, period="FY2023"),
+                ]),
+                _make_row("C", {"FY2023": 30}, [
+                    _sc("IS", "A4", "C"), _sc("IS", "B4", 30, period="FY2023"),
+                ]),
+                _make_row("Total", {"FY2023": 60}, [
+                    _sc("IS", "A5", "Total"),
+                    _sc("IS", "B5", 60, formula="=SUM($B$2:$B$4)", period="FY2023"),
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({"A": "a", "B": "b", "C": "c", "Total": "total"})
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.verified == 1
+
+    def test_mixed_absolute_relative(self):
+        """=$B2*C$3 should resolve (mixed absolute/relative)."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("Val", {"FY2023": 5}, [
+                    _sc("IS", "A2", "Val"), _sc("IS", "B2", 5, period="FY2023"),
+                ]),
+                _make_row("Mult", {"FY2023": 3}, [
+                    _sc("IS", "A3", "Mult"), _sc("IS", "C3", 3, period="FY2023"),
+                ]),
+                _make_row("Result", {"FY2023": 15}, [
+                    _sc("IS", "A4", "Result"),
+                    _sc("IS", "D4", 15, formula="=$B2*C$3", period="FY2023"),
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({"Val": "val", "Mult": "mult", "Result": "result"})
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.verified == 1
+
+
+class TestPowerOperator:
+    """Test ^ (exponent) support in arithmetic."""
+
+    def setup_method(self):
+        self.verifier = FormulaVerifier()
+
+    def test_simple_power(self):
+        """=B2^2 where B2=5 should compute 25."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("Base", {"FY2023": 5}, [
+                    _sc("IS", "A2", "Base"), _sc("IS", "B2", 5, period="FY2023"),
+                ]),
+                _make_row("Squared", {"FY2023": 25}, [
+                    _sc("IS", "A3", "Squared"),
+                    _sc("IS", "B3", 25, formula="=B2^2", period="FY2023"),
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({"Base": "base", "Squared": "squared"})
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.verified == 1
+        assert result.results[0].computed_value == Decimal("25")
+
+    def test_power_in_compound_expression(self):
+        """=B2*(1+B3)^3 where B2=1000, B3=0.1 should compute 1331."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("Principal", {"FY2023": 1000}, [
+                    _sc("IS", "A2", "Principal"), _sc("IS", "B2", 1000, period="FY2023"),
+                ]),
+                _make_row("Rate", {"FY2023": 0.1}, [
+                    _sc("IS", "A3", "Rate"), _sc("IS", "B3", 0.1, period="FY2023"),
+                ]),
+                _make_row("FV", {"FY2023": 1331}, [
+                    _sc("IS", "A4", "FV"),
+                    _sc("IS", "B4", 1331, formula="=B2*(1+B3)^3", period="FY2023"),
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({"Principal": "principal", "Rate": "rate", "FV": "fv"})
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.verified == 1
+
+    def test_power_with_absolute_ref(self):
+        """=$C$10*(1-$C$12)^2 with absolute refs + power."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("Capacity", {"FY2023": 1000}, [
+                    _sc("IS", "A10", "Capacity"), _sc("IS", "C10", 1000, period="FY2023"),
+                ]),
+                _make_row("Degradation", {"FY2023": 0.02}, [
+                    _sc("IS", "A12", "Degradation"), _sc("IS", "C12", 0.02, period="FY2023"),
+                ]),
+                # 1000*(1-0.02)^2 = 1000*0.98^2 = 1000*0.9604 = 960.4
+                _make_row("YearTwo", {"FY2023": 960.4}, [
+                    _sc("IS", "A14", "YearTwo"),
+                    _sc("IS", "D14", 960.4, formula="=$C$10*(1-$C$12)^2", period="FY2023"),
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({
+            "Capacity": "capacity", "Degradation": "degradation", "YearTwo": "year_two",
+        })
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.verified == 1
+
+
+class TestInlineFunctions:
+    """Test inline SUM/MAX/MIN/AVERAGE within arithmetic expressions."""
+
+    def setup_method(self):
+        self.verifier = FormulaVerifier()
+
+    def test_sum_times_cell(self):
+        """=SUM(B2:B4)*B5 where SUM=600, B5=1.1 should compute 660."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("A", {"FY2023": 100}, [
+                    _sc("IS", "A2", "A"), _sc("IS", "B2", 100, period="FY2023"),
+                ]),
+                _make_row("B", {"FY2023": 200}, [
+                    _sc("IS", "A3", "B"), _sc("IS", "B3", 200, period="FY2023"),
+                ]),
+                _make_row("C", {"FY2023": 300}, [
+                    _sc("IS", "A4", "C"), _sc("IS", "B4", 300, period="FY2023"),
+                ]),
+                _make_row("Factor", {"FY2023": 1.1}, [
+                    _sc("IS", "A5", "Factor"), _sc("IS", "B5", 1.1, period="FY2023"),
+                ]),
+                _make_row("Result", {"FY2023": 660}, [
+                    _sc("IS", "A6", "Result"),
+                    _sc("IS", "B6", 660, formula="=SUM(B2:B4)*B5", period="FY2023"),
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({
+            "A": "a", "B": "b", "C": "c", "Factor": "factor", "Result": "result",
+        })
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.verified == 1
+
+    def test_cell_minus_sum(self):
+        """=B2-SUM(B3:B5) where B2=1000, SUM=400 should compute 600."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("Revenue", {"FY2023": 1000}, [
+                    _sc("IS", "A2", "Revenue"), _sc("IS", "B2", 1000, period="FY2023"),
+                ]),
+                _make_row("Cost1", {"FY2023": 100}, [
+                    _sc("IS", "A3", "Cost1"), _sc("IS", "B3", 100, period="FY2023"),
+                ]),
+                _make_row("Cost2", {"FY2023": 150}, [
+                    _sc("IS", "A4", "Cost2"), _sc("IS", "B4", 150, period="FY2023"),
+                ]),
+                _make_row("Cost3", {"FY2023": 150}, [
+                    _sc("IS", "A5", "Cost3"), _sc("IS", "B5", 150, period="FY2023"),
+                ]),
+                _make_row("Profit", {"FY2023": 600}, [
+                    _sc("IS", "A6", "Profit"),
+                    _sc("IS", "B6", 600, formula="=B2-SUM(B3:B5)", period="FY2023"),
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({
+            "Revenue": "revenue", "Cost1": "cost1", "Cost2": "cost2",
+            "Cost3": "cost3", "Profit": "profit",
+        })
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.verified == 1
+
+    def test_sum_times_cell_with_absolute_refs(self):
+        """=SUM(C18:C22)*$B$15 — real-world pattern from electrolyser model."""
+        parsed = _make_parsed([
+            _make_sheet("Model", [
+                _make_row("Rate", {"FY2023": 0.5}, [
+                    _sc("Model", "A15", "Rate"), _sc("Model", "B15", 0.5, period="FY2023"),
+                ]),
+                _make_row("C1", {"FY2023": 10}, [
+                    _sc("Model", "A18", "C1"), _sc("Model", "C18", 10, period="FY2023"),
+                ]),
+                _make_row("C2", {"FY2023": 20}, [
+                    _sc("Model", "A19", "C2"), _sc("Model", "C19", 20, period="FY2023"),
+                ]),
+                _make_row("C3", {"FY2023": 30}, [
+                    _sc("Model", "A20", "C3"), _sc("Model", "C20", 30, period="FY2023"),
+                ]),
+                _make_row("C4", {"FY2023": 40}, [
+                    _sc("Model", "A21", "C4"), _sc("Model", "C21", 40, period="FY2023"),
+                ]),
+                _make_row("C5", {"FY2023": 50}, [
+                    _sc("Model", "A22", "C5"), _sc("Model", "C22", 50, period="FY2023"),
+                ]),
+                # SUM(C18:C22) = 150, * B15(0.5) = 75
+                _make_row("Total", {"FY2023": 75}, [
+                    _sc("Model", "A23", "Total"),
+                    _sc("Model", "C23", 75, formula="=SUM($C$18:$C$22)*$B$15", period="FY2023"),
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({
+            "Rate": "rate", "C1": "c1", "C2": "c2", "C3": "c3",
+            "C4": "c4", "C5": "c5", "Total": "total",
+        })
+        triage = _make_triage(["Model"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.verified == 1
+        assert result.results[0].computed_value == Decimal("75.0")
+
+    def test_inline_sum_missing_cells_still_resolves(self):
+        """=SUM(B2:B4)*B5 where B3 is missing — SUM tolerates partial ranges."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("A", {"FY2023": 100}, [
+                    _sc("IS", "A2", "A"), _sc("IS", "B2", 100, period="FY2023"),
+                ]),
+                # B3 intentionally missing from cell_lookup
+                _make_row("C", {"FY2023": 300}, [
+                    _sc("IS", "A4", "C"), _sc("IS", "B4", 300, period="FY2023"),
+                ]),
+                _make_row("Factor", {"FY2023": 1.1}, [
+                    _sc("IS", "A5", "Factor"), _sc("IS", "B5", 1.1, period="FY2023"),
+                ]),
+                _make_row("Result", {"FY2023": 440}, [
+                    _sc("IS", "A6", "Result"),
+                    _sc("IS", "B6", 440, formula="=SUM(B2:B4)*B5", period="FY2023"),
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({
+            "A": "a", "C": "c", "Factor": "factor", "Result": "result",
+        })
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        # SUM(B2:B4) finds B2=100, B4=300 (B3 missing but SUM tolerates partial)
+        assert result.total_formulas == 1
+
+    def test_max_in_arithmetic(self):
+        """=MAX(B2:B4)+10 should resolve inline MAX then add."""
+        parsed = _make_parsed([
+            _make_sheet("IS", [
+                _make_row("A", {"FY2023": 5}, [
+                    _sc("IS", "A2", "A"), _sc("IS", "B2", 5, period="FY2023"),
+                ]),
+                _make_row("B", {"FY2023": 15}, [
+                    _sc("IS", "A3", "B"), _sc("IS", "B3", 15, period="FY2023"),
+                ]),
+                _make_row("C", {"FY2023": 10}, [
+                    _sc("IS", "A4", "C"), _sc("IS", "B4", 10, period="FY2023"),
+                ]),
+                _make_row("Result", {"FY2023": 25}, [
+                    _sc("IS", "A5", "Result"),
+                    _sc("IS", "B5", 25, formula="=MAX(B2:B4)+10", period="FY2023"),
+                ]),
+            ])
+        ])
+        mappings = _make_mappings({"A": "a", "B": "b", "C": "c", "Result": "result"})
+        triage = _make_triage(["IS"])
+
+        result = self.verifier.verify(parsed, mappings, triage)
+
+        assert result.verified == 1
+        assert result.results[0].computed_value == Decimal("25")

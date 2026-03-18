@@ -3,12 +3,14 @@
 Provides a single source for loading taxonomy data from the JSON file,
 used by Stage 3 (Mapping), Stage 4 (Validation), and Stage 5 (Enhanced Mapping).
 Also merges promoted learned aliases from the database with TTL caching.
+Supports priority-aware alias format and cross-canonical conflict detection.
 """
 
 import json
 import time
+from collections import defaultdict
 from pathlib import Path
-from typing import Dict, FrozenSet, List, Optional, Set
+from typing import Dict, FrozenSet, List, Optional, Set, Tuple, Union
 
 from src.core.logging import extraction_logger as logger
 from src.taxonomy_constants import CATEGORY_DISPLAY_NAMES
@@ -18,6 +20,40 @@ TAXONOMY_PATH = Path(__file__).parent.parent.parent / "data" / "taxonomy.json"
 # Module-level caches (loaded once per process)
 _taxonomy_cache: Dict = {}
 _canonical_names_cache: FrozenSet[str] = frozenset()
+_alias_conflicts_cache: Optional[Dict[str, List[Tuple[str, str]]]] = None
+
+
+def _normalize_alias(alias: Union[str, Dict]) -> Tuple[str, int]:
+    """Normalize an alias entry to (text, priority).
+
+    Supports two formats:
+    - String: "Revenue" -> ("Revenue", 1)   (implicit priority=1, highest)
+    - Dict:   {"text": "Sls", "priority": 3} -> ("Sls", 3)
+
+    Lower priority number = higher priority (1 is best).
+    """
+    if isinstance(alias, str):
+        return (alias, 1)
+    if isinstance(alias, dict):
+        return (alias.get("text", ""), alias.get("priority", 1))
+    # Fallback for unexpected types
+    return (str(alias), 1)
+
+
+def _get_alias_text(alias: Union[str, Dict]) -> str:
+    """Extract the text portion of an alias entry (string or dict)."""
+    if isinstance(alias, str):
+        return alias
+    if isinstance(alias, dict):
+        return alias.get("text", "")
+    return str(alias)
+
+
+def _get_alias_priority(alias: Union[str, Dict]) -> int:
+    """Extract the priority of an alias entry (1 = highest, default)."""
+    if isinstance(alias, dict):
+        return alias.get("priority", 1)
+    return 1
 
 
 def load_taxonomy_json() -> Dict:
@@ -81,6 +117,9 @@ def get_alias_to_canonicals() -> Dict[str, List[tuple]]:
     """Reverse alias lookup: lowercased alias -> [(canonical_name, category), ...].
 
     Indexes aliases, display_name, and canonical_name for each taxonomy item.
+    Supports both string aliases and priority-aware dict aliases:
+      - "Revenue" (string, implicit priority=1)
+      - {"text": "Sls", "priority": 3} (dict with explicit priority)
     Used for deterministic sheet-category disambiguation after Claude mapping.
     """
     data = load_taxonomy_json()
@@ -90,12 +129,120 @@ def get_alias_to_canonicals() -> Dict[str, List[tuple]]:
             canonical = item["canonical_name"]
             entry = (canonical, category)
             for alias in item.get("aliases", []):
-                key = alias.lower().strip()
-                lookup.setdefault(key, []).append(entry)
+                alias_text = _get_alias_text(alias)
+                key = alias_text.lower().strip()
+                if key:
+                    lookup.setdefault(key, []).append(entry)
             display = item.get("display_name", "")
             if display:
                 lookup.setdefault(display.lower().strip(), []).append(entry)
     return lookup
+
+
+def get_alias_to_canonicals_with_priority() -> Dict[str, List[Tuple[str, str, int]]]:
+    """Reverse alias lookup with priority: lowercased alias -> [(canonical_name, category, priority), ...].
+
+    Like get_alias_to_canonicals() but includes the priority value for each alias entry.
+    Priority 1 = highest (default for string aliases).
+    Used by disambiguation to prefer higher-priority (lower number) alias matches.
+    """
+    data = load_taxonomy_json()
+    lookup: Dict[str, List[Tuple[str, str, int]]] = {}
+    for category, items in data.get("categories", {}).items():
+        for item in items:
+            canonical = item["canonical_name"]
+            for alias in item.get("aliases", []):
+                alias_text, priority = _normalize_alias(alias)
+                key = alias_text.lower().strip()
+                if key:
+                    lookup.setdefault(key, []).append((canonical, category, priority))
+            display = item.get("display_name", "")
+            if display:
+                lookup.setdefault(display.lower().strip(), []).append(
+                    (canonical, category, 1)
+                )
+    return lookup
+
+
+# ---------------------------------------------------------------------------
+# Alias conflict detection
+# ---------------------------------------------------------------------------
+
+
+def detect_alias_conflicts() -> Dict[str, List[Tuple[str, str]]]:
+    """Detect cross-canonical alias conflicts in the taxonomy.
+
+    Scans all aliases across all categories and finds cases where the same
+    alias text (case-insensitive) maps to multiple distinct canonical names.
+
+    Logs warnings for cross-category conflicts (same alias, different categories).
+    Results are cached at module level after first call.
+
+    Returns:
+        Dict mapping conflicting alias text to list of (canonical_name, category)
+        tuples. Only aliases that map to 2+ different canonical names are included.
+    """
+    global _alias_conflicts_cache
+    if _alias_conflicts_cache is not None:
+        return _alias_conflicts_cache
+
+    data = load_taxonomy_json()
+    alias_map: Dict[str, List[Tuple[str, str]]] = defaultdict(list)
+
+    for category, items in data.get("categories", {}).items():
+        for item in items:
+            canonical = item["canonical_name"]
+            for alias in item.get("aliases", []):
+                alias_text = _get_alias_text(alias)
+                key = alias_text.lower().strip()
+                if key:
+                    alias_map[key].append((canonical, category))
+
+    # Filter to only conflicts (same alias -> multiple distinct canonicals)
+    conflicts: Dict[str, List[Tuple[str, str]]] = {}
+    cross_category_count = 0
+    same_category_count = 0
+
+    for alias_key, entries in alias_map.items():
+        distinct_canonicals = {c for c, _ in entries}
+        if len(distinct_canonicals) > 1:
+            conflicts[alias_key] = entries
+            # Check if this is a cross-category conflict
+            distinct_categories = {cat for _, cat in entries}
+            if len(distinct_categories) > 1:
+                cross_category_count += 1
+                canonical_list = [f"{c} ({cat})" for c, cat in entries]
+                logger.warning(
+                    f"Taxonomy alias conflict (cross-category): "
+                    f"'{alias_key}' maps to: {', '.join(canonical_list)}"
+                )
+            else:
+                same_category_count += 1
+
+    if conflicts:
+        logger.info(
+            f"Taxonomy alias conflicts detected: {len(conflicts)} total "
+            f"({cross_category_count} cross-category, {same_category_count} same-category)"
+        )
+    else:
+        logger.info("No taxonomy alias conflicts detected")
+
+    _alias_conflicts_cache = conflicts
+    return conflicts
+
+
+def get_alias_conflicts() -> Dict[str, List[Tuple[str, str]]]:
+    """Return cached alias conflicts, running detection if needed.
+
+    This is the public API for accessing conflict data at runtime.
+    """
+    return detect_alias_conflicts()
+
+
+def invalidate_alias_conflicts_cache() -> None:
+    """Invalidate the alias conflicts cache (e.g., after taxonomy reload)."""
+    global _alias_conflicts_cache
+    _alias_conflicts_cache = None
 
 
 # ---------------------------------------------------------------------------
@@ -228,9 +375,11 @@ def format_taxonomy_for_prompt(
             parts = []
             for item in items:
                 name = item["canonical_name"]
-                aliases = item.get("aliases", [])
+                raw_aliases = item.get("aliases", [])
                 learned = learned_by_canonical.get(name, [])
-                alias_parts = list(aliases[:5])
+                # Extract text from aliases (supports both string and dict formats)
+                alias_texts = [_get_alias_text(a) for a in raw_aliases[:5]]
+                alias_parts = list(alias_texts)
                 for la in learned[:2]:
                     if la not in alias_parts:
                         alias_parts.append(f"{la} [learned]")
@@ -270,8 +419,10 @@ def format_taxonomy_detailed(
         names = []
         for item in items:
             aliases_str = ""
-            if item.get("aliases"):
-                aliases_str = f" (aliases: {', '.join(item['aliases'][:5])})"
+            raw_aliases = item.get("aliases", [])
+            if raw_aliases:
+                alias_texts = [_get_alias_text(a) for a in raw_aliases[:5]]
+                aliases_str = f" (aliases: {', '.join(alias_texts)})"
             names.append(
                 f"  - {item['canonical_name']}: {item.get('display_name', '')}{aliases_str}"
             )

@@ -56,6 +56,9 @@ _ABS_PATTERN = re.compile(r"^=ABS\((.+)\)$", re.IGNORECASE)
 _ROUND_PATTERN = re.compile(r"^=ROUND\((.+),\s*(\d+)\)$", re.IGNORECASE)
 
 _CELL_REF = re.compile(r"[A-Z]+\d+", re.IGNORECASE)
+_INLINE_FUNC = re.compile(
+    r"(SUM|MAX|MIN|AVERAGE)\(([A-Z]+\d+):([A-Z]+\d+)\)", re.IGNORECASE
+)
 _COMPLEX_FUNCTIONS = re.compile(
     r"(VLOOKUP|HLOOKUP|INDEX|MATCH|IF|IFERROR|INDIRECT|OFFSET|SUMIF|COUNTIF|"
     r"SUMPRODUCT|MOD|POWER|SQRT|LOG|LN|EXP|"
@@ -188,6 +191,9 @@ class FormulaVerifier:
         cell_lookup: Dict[Tuple[str, str], float],
     ) -> FormulaCheckResult:
         """Verify a single formula against the extracted value."""
+        # Normalize: strip $ from absolute references ($C$10 → C10)
+        formula = formula.replace("$", "")
+
         _unresolvable = FormulaCheckResult(
             canonical_name=canonical, period=period, cell_ref=cell_ref,
             formula=formula, extracted_value=extracted, computed_value=None,
@@ -386,15 +392,47 @@ class FormulaVerifier:
         sheet_name: str,
         cell_lookup: Dict[Tuple[str, str], float],
     ) -> Optional[Decimal]:
-        """Resolve simple arithmetic formulas like =A1+B2-C3."""
+        """Resolve arithmetic formulas, including those with inline functions.
+
+        Handles patterns like =A1+B2-C3, =A1*B2^3, and =SUM(A1:A5)*B1.
+        Inline SUM/MAX/MIN/AVERAGE calls are resolved first, then the
+        resulting expression is evaluated as pure arithmetic.
+        """
         if not formula.startswith("="):
             return None
 
         expr = formula[1:]  # strip leading =
 
+        # Resolve inline function calls: SUM(A1:A5), MAX(B1:B3), etc.
+        # Replace each with its computed numeric value
+        while True:
+            match = _INLINE_FUNC.search(expr)
+            if not match:
+                break
+            func_name = match.group(1).upper()
+            start_ref = match.group(2).upper()
+            end_ref = match.group(3).upper()
+            start_col = re.match(r"([A-Z]+)", start_ref).group(1)
+            start_row = int(re.search(r"(\d+)", start_ref).group(1))
+            end_col = re.match(r"([A-Z]+)", end_ref).group(1)
+            end_row = int(re.search(r"(\d+)", end_ref).group(1))
+            if func_name == "SUM":
+                val = self._resolve_sum(
+                    start_col, start_row, end_col, end_row,
+                    sheet_name, cell_lookup,
+                )
+            else:
+                val = self._resolve_aggregate(
+                    func_name, start_col, start_row, end_col, end_row,
+                    sheet_name, cell_lookup,
+                )
+            if val is None:
+                return None
+            expr = expr[:match.start()] + str(val) + expr[match.end():]
+
         # Check if it only contains cell refs, numbers, and +/-/*
         refs = _CELL_REF.findall(expr)
-        if not refs:
+        if not refs and not re.search(r'\d', expr):
             return None
 
         # Replace cell refs with their values
@@ -407,9 +445,11 @@ class FormulaVerifier:
 
         # Evaluate the expression safely
         try:
-            # Only allow digits, decimal points, +, -, *, /, spaces, parens
-            if not re.match(r'^[\d\.\+\-\*/\s\(\)]+$', resolved):
+            # Only allow digits, decimal points, +, -, *, /, ^, spaces, parens
+            if not re.match(r'^[\d\.\+\-\*/\^\s\(\)eE]+$', resolved):
                 return None
+            # Convert Excel ^ (power) to Python **
+            resolved = resolved.replace("^", "**")
             result = eval(resolved)  # noqa: S307 — input is sanitized
             return Decimal(str(result))
         except Exception:

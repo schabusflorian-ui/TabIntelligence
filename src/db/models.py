@@ -206,6 +206,9 @@ class LearnedAlias(Base):
     occurrence_count: Mapped[int] = mapped_column(Integer, server_default="1")
     source_entities: Mapped[list] = mapped_column(JSON, default=list, server_default="[]")
     promoted: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    last_seen_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    archived: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    archived_reason: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     def __repr__(self):
