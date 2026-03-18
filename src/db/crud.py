@@ -2692,6 +2692,37 @@ def get_cost_analytics(
 # STRUCTURED STATEMENT & MULTI-PERIOD COMPARISON (Phase 7)
 # ============================================================================
 
+# Canonical display order for root-level items per financial statement category.
+# Items in the list sort to their position; unknown items sort to the end alphabetically.
+STATEMENT_DISPLAY_ORDER = {
+    "income_statement": [
+        "revenue", "gross_profit", "opex", "ebit", "ebitda",
+        "ebt", "tax_expense", "net_income",
+    ],
+    "balance_sheet": [
+        "total_assets", "current_assets", "non_current_assets",
+        "total_liabilities", "current_liabilities", "long_term_debt",
+        "total_equity", "total_liabilities_and_equity",
+    ],
+    "cash_flow": [
+        "cfo", "cfi", "cff", "net_change_cash", "fcf",
+        "beginning_cash", "ending_cash",
+    ],
+    "debt_schedule": [
+        "total_debt", "debt_service", "debt_covenants",
+    ],
+    "metrics": [
+        "profitability_metrics", "leverage_metrics", "coverage_metrics",
+        "liquidity_metrics", "return_metrics", "efficiency_metrics",
+        "growth_metrics", "credit_metrics", "saas_metrics",
+        "real_estate_metrics", "retail_metrics", "manufacturing_metrics",
+        "operational_metrics", "valuation_metrics", "per_share_metrics",
+    ],
+    "project_finance": [
+        "total_investment", "cfads", "equity_returns",
+    ],
+}
+
 
 def get_structured_statement(
     db: Session,
@@ -2816,6 +2847,24 @@ def get_structured_statement(
             line_items[parent]["is_subtotal"] = True
         else:
             root_items.append(item_data)
+
+    # 6b. Sort root items by financial statement display order
+    order = STATEMENT_DISPLAY_ORDER.get(category, [])
+    order_map = {cn: i for i, cn in enumerate(order)}
+    root_items.sort(key=lambda item: (
+        order_map.get(item["canonical_name"], len(order)),
+        item["canonical_name"],
+    ))
+
+    # Sort children within each parent by display_name
+    def _sort_children(item: dict) -> None:
+        if item["children"]:
+            item["children"].sort(key=lambda c: c.get("display_name", c["canonical_name"]))
+            for child in item["children"]:
+                _sort_children(child)
+
+    for item in root_items:
+        _sort_children(item)
 
     # 7. Compute subtotals for parent items (sum of children)
     def _compute_subtotals(item: dict) -> None:

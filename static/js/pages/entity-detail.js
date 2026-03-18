@@ -341,149 +341,185 @@ function destroySparklineCharts() {
   sparklineCharts = [];
 }
 
-async function renderFinancialsTab(panel, entityId) {
-  // Clean up previous sparklines before rendering
-  destroySparklineCharts();
+const CATEGORY_ORDER = [
+  'income_statement', 'balance_sheet', 'cash_flow',
+  'debt_schedule', 'metrics', 'project_finance',
+];
 
+async function renderFinancialsTab(panel, entityId) {
+  destroySparklineCharts();
   panel.innerHTML = loadingPlaceholder('Loading financials...');
+
   try {
-    const data = await apiGet('/api/v1/analytics/entity/' + entityId + '/financials');
-    const items = data.items || [];
-    const periods = data.periods || [];
+    // First: discover which categories have data
+    const overview = await apiGet('/api/v1/analytics/entity/' + entityId + '/financials');
+    const items = overview.items || [];
 
     if (items.length === 0) {
       panel.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--color-text-secondary)">No financial data available for this entity.</div>`;
       return;
     }
 
-    // Group items by taxonomy_category
-    const groups = {};
+    // Determine which categories have data
+    const activeCats = new Set();
     for (const item of items) {
-      const cat = item.taxonomy_category || 'Uncategorized';
-      if (!groups[cat]) groups[cat] = [];
-      groups[cat].push(item);
+      if (item.taxonomy_category) activeCats.add(item.taxonomy_category);
     }
 
-    const colCount = periods.length + 2; // canonical_name + periods + trend
-
-    let html = '<div class="table-wrapper"><table class="data-table">';
-
-    // Build table for each category group
-    for (const [category, groupItems] of Object.entries(groups)) {
-      const displayName = CATEGORY_LABELS[category] || category;
-
-      // Category group header row
-      html += `<tbody>`;
-      html += `<tr><td colspan="${colCount}" style="font-size:11px;font-weight:500;text-transform:uppercase;background:var(--color-background-secondary);padding:6px 12px;color:var(--color-text-secondary);letter-spacing:0.03em">${esc(displayName)}</td></tr>`;
-
-      // Column header row
-      html += '<tr>';
-      html += '<th style="text-align:left;font-size:10.5px;font-weight:500;padding:6px 12px">Canonical Name</th>';
-      for (const period of periods) {
-        html += `<th style="text-align:right;font-size:10.5px;font-weight:500;font-family:'IBM Plex Mono',monospace;padding:6px 12px">${esc(period)}</th>`;
-      }
-      html += '<th style="text-align:center;font-size:10.5px;font-weight:500;padding:6px 12px">Trend</th>';
-      html += '</tr>';
-
-      // Data rows
-      for (const item of groupItems) {
-        // Build a lookup of period -> amount for this item
-        const valueMap = {};
-        const valueList = [];
-        for (const v of (item.values || [])) {
-          valueMap[v.period] = v.amount;
-        }
-
-        html += '<tr>';
-        html += `<td style="text-align:left;font-size:11.5px;font-weight:500;padding:6px 12px">${esc(item.canonical_name)}</td>`;
-
-        for (const period of periods) {
-          const amount = valueMap[period];
-          if (amount != null) {
-            valueList.push(amount);
-            const formatted = formatFinancial(amount);
-            const color = amount < 0 ? 'color:#A32626;' : '';
-            html += `<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-variant-numeric:tabular-nums;${color}padding:6px 12px">${formatted}</td>`;
-          } else {
-            valueList.push(null);
-            html += `<td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11.5px;padding:6px 12px">\u2014</td>`;
-          }
-        }
-
-        // Trend sparkline cell
-        // Only render sparkline if there are >= 2 non-null values
-        const nonNullValues = valueList.filter(v => v != null);
-        if (nonNullValues.length >= 2) {
-          const canvasId = 'sparkline-' + category + '-' + item.canonical_name.replace(/[^a-zA-Z0-9]/g, '_');
-          html += `<td style="text-align:center;padding:6px 12px"><canvas id="${esc(canvasId)}" width="60" height="20" style="display:inline-block"></canvas></td>`;
-        } else {
-          html += `<td style="text-align:center;padding:6px 12px">\u2014</td>`;
-        }
-
-        html += '</tr>';
-      }
-
-      html += '</tbody>';
+    // Fetch structured statements for each category (in display order)
+    const orderedCats = CATEGORY_ORDER.filter(c => activeCats.has(c));
+    // Add any categories not in CATEGORY_ORDER
+    for (const c of activeCats) {
+      if (!orderedCats.includes(c)) orderedCats.push(c);
     }
 
-    html += '</table></div>';
+    const statements = await Promise.all(
+      orderedCats.map(cat =>
+        apiGet(`/api/v1/analytics/entity/${entityId}/statement?category=${encodeURIComponent(cat)}`)
+          .catch(() => null)
+      )
+    );
+
+    let html = '';
+
+    for (let i = 0; i < orderedCats.length; i++) {
+      const cat = orderedCats[i];
+      const data = statements[i];
+      if (!data || !data.items || data.items.length === 0) continue;
+
+      const catLabel = CATEGORY_LABELS[cat] || cat;
+      const periods = data.periods || [];
+      const colCount = periods.length + 2; // name + periods + trend
+
+      html += '<div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">';
+
+      // Category header
+      html += `<div style="padding:10px 14px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)">`;
+      html += `<span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--color-text-secondary)">${esc(catLabel)}</span>`;
+      html += `<span style="font-size:10px;color:var(--color-text-tertiary);margin-left:8px">${data.total_items} items</span>`;
+      html += '</div>';
+
+      html += '<div class="table-wrapper" style="border:none;border-radius:0">';
+      html += '<table class="data-table"><thead><tr>';
+      html += '<th style="text-align:left;min-width:220px;padding:6px 12px;font-size:10.5px">Line Item</th>';
+      for (const p of periods) {
+        html += `<th style="text-align:right;font-size:10px;font-family:var(--font-mono);padding:6px 10px;white-space:nowrap">${esc(p)}</th>`;
+      }
+      html += '<th style="text-align:center;font-size:10.5px;padding:6px 12px;width:70px">Trend</th>';
+      html += '</tr></thead><tbody>';
+
+      // Render hierarchical items
+      html += _renderStatementRows(data.items, periods, 0, cat);
+
+      html += '</tbody></table></div></div>';
+    }
+
+    if (!html) {
+      panel.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--color-text-secondary)">No structured data available.</div>`;
+      return;
+    }
+
     panel.innerHTML = html;
 
-    // Now create sparkline Chart.js instances for each item with >= 2 values
-    for (const [category, groupItems] of Object.entries(groups)) {
-      for (const item of groupItems) {
-        const valueMap = {};
-        const valueList = [];
-        for (const v of (item.values || [])) {
-          valueMap[v.period] = v.amount;
-        }
-        for (const period of periods) {
-          valueList.push(valueMap[period] != null ? valueMap[period] : null);
-        }
-
-        const nonNullValues = valueList.filter(v => v != null);
-        if (nonNullValues.length < 2) continue;
-
-        const canvasId = 'sparkline-' + category + '-' + item.canonical_name.replace(/[^a-zA-Z0-9]/g, '_');
-        const canvas = document.getElementById(canvasId);
-        if (!canvas) continue;
-
-        const ctx = canvas.getContext('2d');
-        const chart = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: periods,
-            datasets: [{
-              data: valueList,
-              borderColor: '#1D6B9F',
-              borderWidth: 1.5,
-              fill: false,
-              spanGaps: true,
-            }],
-          },
-          options: {
-            responsive: false,
-            plugins: {
-              legend: { display: false },
-              tooltip: { display: false },
-            },
-            scales: {
-              x: { display: false },
-              y: { display: false },
-            },
-            elements: {
-              point: { radius: 0 },
-            },
-          },
-        });
-        sparklineCharts.push(chart);
-      }
-    }
+    // Create sparklines after DOM is ready
+    _createSparklines();
 
   } catch (err) {
     panel.innerHTML = errorState('Failed to load financials: ' + err.message, 'Retry');
     panel.querySelector('.error-retry-btn')?.addEventListener('click', () => renderFinancialsTab(panel, entityId));
   }
+}
+
+function _renderStatementRows(items, periods, depth, category) {
+  let html = '';
+  for (const item of items) {
+    const indent = depth * 24;
+    const isBold = item.is_subtotal === true;
+    const hasChildren = item.children && item.children.length > 0;
+    const isRoot = depth === 0;
+
+    // Styling
+    const fontWeight = isBold ? '600' : (isRoot ? '500' : '400');
+    const fontSize = isRoot ? '12px' : '11.5px';
+    const bgColor = isBold && depth === 0 ? 'rgba(0,0,0,0.02)' : (depth > 0 ? 'var(--color-background-secondary)' : 'transparent');
+    const borderTop = isBold && isRoot ? '1px solid rgba(0,0,0,0.06)' : 'none';
+
+    const displayName = item.display_name || item.canonical_name.replace(/_/g, ' ');
+
+    html += `<tr style="background:${bgColor}">`;
+
+    // Name cell with indentation
+    html += `<td style="padding-left:${indent + 12}px;font-weight:${fontWeight};font-size:${fontSize};border-top:${borderTop};padding-top:5px;padding-bottom:5px">`;
+    html += esc(displayName);
+    if (isRoot && item.canonical_name !== displayName.toLowerCase().replace(/[^a-z0-9]/g, '_')) {
+      html += `<span style="display:block;font-family:var(--font-mono);font-size:9.5px;color:var(--color-text-tertiary);font-weight:400;margin-top:1px">${esc(item.canonical_name)}</span>`;
+    }
+    html += '</td>';
+
+    // Period values
+    const valueList = [];
+    for (const p of periods) {
+      const val = item.values ? item.values[p] : undefined;
+      valueList.push(val != null ? val : null);
+
+      if (val != null) {
+        const formatted = formatFinancial(val);
+        const color = val < 0 ? 'color:#A32626;' : '';
+        html += `<td style="text-align:right;font-family:var(--font-mono);font-size:11px;font-variant-numeric:tabular-nums;${color}font-weight:${fontWeight};border-top:${borderTop};padding:5px 10px">${formatted}</td>`;
+      } else {
+        html += `<td style="text-align:right;font-family:var(--font-mono);font-size:11px;border-top:${borderTop};padding:5px 10px;color:var(--color-text-tertiary)">\u2014</td>`;
+      }
+    }
+
+    // Sparkline cell
+    const nonNull = valueList.filter(v => v != null);
+    if (nonNull.length >= 2) {
+      const canvasId = 'sparkline-' + category + '-' + item.canonical_name.replace(/[^a-zA-Z0-9]/g, '_');
+      html += `<td style="text-align:center;padding:5px 8px;border-top:${borderTop}"><canvas id="${esc(canvasId)}" width="56" height="18" style="display:inline-block" data-sparkline="${valueList.map(v => v == null ? '' : v).join(',')}"></canvas></td>`;
+    } else {
+      html += `<td style="text-align:center;padding:5px 8px;border-top:${borderTop};color:var(--color-text-tertiary);font-size:11px">\u2014</td>`;
+    }
+
+    html += '</tr>';
+
+    // Render children recursively
+    if (hasChildren) {
+      html += _renderStatementRows(item.children, periods, depth + 1, category);
+    }
+  }
+  return html;
+}
+
+function _createSparklines() {
+  document.querySelectorAll('canvas[data-sparkline]').forEach(canvas => {
+    const rawData = canvas.dataset.sparkline.split(',').map(v => v === '' ? null : parseFloat(v));
+    const nonNull = rawData.filter(v => v != null);
+    if (nonNull.length < 2) return;
+
+    try {
+      const ctx = canvas.getContext('2d');
+      const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: rawData.map((_, i) => i),
+          datasets: [{
+            data: rawData,
+            borderColor: '#1D6B9F',
+            borderWidth: 1.5,
+            fill: false,
+            spanGaps: true,
+          }],
+        },
+        options: {
+          responsive: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+          scales: { x: { display: false }, y: { display: false } },
+          elements: { point: { radius: 0 } },
+        },
+      });
+      sparklineCharts.push(chart);
+    } catch { /* Chart.js not loaded */ }
+  });
 }
 
 // --- Quality Tab ---
