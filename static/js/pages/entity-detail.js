@@ -8,6 +8,7 @@ import { statusBadge, qualityBadge } from '../components/badge.js';
 import { skeletonStats, loadingPlaceholder, errorState } from '../components/loading.js';
 import { emptyState } from '../components/empty-state.js';
 import { showToast } from '../components/toast.js';
+import { MONTH_NAMES } from '../constants/dates.js';
 import { showModal, confirm } from '../components/modal.js';
 import { renderUploadZone } from '../components/upload.js';
 import { CATEGORY_LABELS } from '../constants/categories.js';
@@ -93,7 +94,7 @@ function renderHeader(entityId) {
   }
 }
 
-const MONTH_NAMES = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
 
 function renderStats() {
   const el = document.getElementById('ed-stats');
@@ -430,13 +431,32 @@ async function renderFinancialsTab(panel, entityId) {
   }
 }
 
+// CF section labels for root-level canonical names
+const CF_SECTIONS = {
+  cfo: 'Operating Activities',
+  cfi: 'Investing Activities',
+  cff: 'Financing Activities',
+};
+
 function _renderStatementRows(items, periods, depth, category) {
   let html = '';
+  let lastCfSection = null;
+
   for (const item of items) {
     const indent = depth * 24;
     const isBold = item.is_subtotal === true;
     const hasChildren = item.children && item.children.length > 0;
     const isRoot = depth === 0;
+
+    // CF section headers: insert a separator row before each Operating/Investing/Financing group
+    if (category === 'cash_flow' && isRoot) {
+      const section = CF_SECTIONS[item.canonical_name] || null;
+      if (section && section !== lastCfSection) {
+        lastCfSection = section;
+        const colSpan = periods.length + 2;
+        html += `<tr><td colspan="${colSpan}" style="padding:10px 12px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--color-text-tertiary);border-top:2px solid var(--color-border-secondary);background:var(--color-background-primary)">${esc(section)}</td></tr>`;
+      }
+    }
 
     // Styling
     const fontWeight = isBold ? '600' : (isRoot ? '500' : '400');

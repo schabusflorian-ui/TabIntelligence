@@ -28,13 +28,32 @@ export async function apiFetch(path, opts = {}) {
   const key = getApiKey();
   if (!key) throw new ApiError('API key is required. Configure it in the sidebar.', 0);
 
+  const timeout = opts.timeout || 30000;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  // Allow callers to pass their own signal (e.g. for request cancellation)
+  if (opts.signal) {
+    opts.signal.addEventListener('abort', () => controller.abort());
+  }
+
   const headers = {
     Authorization: 'Bearer ' + key,
     ...(opts.headers || {}),
   };
 
   const url = path.startsWith('http') || path.startsWith('/') ? path : API_BASE + '/' + path;
-  const res = await fetch(url, { ...opts, headers });
+
+  let res;
+  try {
+    res = await fetch(url, { ...opts, headers, signal: controller.signal });
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new ApiError('Request timed out', 0);
+    }
+    throw err;
+  }
+  clearTimeout(timeoutId);
 
   if (res.status === 401) throw new ApiError('Invalid API key', 401);
   if (res.status === 403) throw new ApiError('Forbidden — insufficient permissions', 403);
@@ -46,7 +65,11 @@ export async function apiFetch(path, opts = {}) {
   }
   if (res.status === 422) {
     const body = await res.json().catch(() => ({}));
-    throw new ApiError(body.detail || 'Validation error', 422);
+    const detail = body.detail;
+    const msg = typeof detail === 'string' ? detail
+      : Array.isArray(detail) ? detail.map(d => d.msg || JSON.stringify(d)).join('; ')
+      : 'Validation error';
+    throw new ApiError(msg, 422);
   }
 
   if (!res.ok) {

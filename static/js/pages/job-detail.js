@@ -15,6 +15,8 @@ let currentJobId = null;
 let resultData = null;
 let pollTimer = null;
 let pollInterval = 2000;
+let pollStartTime = null;
+const POLL_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 let pendingCorrections = {};
 let activeDropdown = null;
 let selectedPeriods = new Set();
@@ -168,11 +170,20 @@ function showProgress(job) {
 
 function startPolling() {
   pollInterval = 2000;
+  pollStartTime = Date.now();
   poll();
 }
 
 async function poll() {
   if (!currentJobId) return;
+
+  // Check for polling timeout
+  if (pollStartTime && (Date.now() - pollStartTime) > POLL_TIMEOUT_MS) {
+    document.getElementById('jd-progress').classList.add('hidden');
+    showError('Job appears stuck — it has been processing for over 10 minutes. You can retry the extraction.');
+    return;
+  }
+
   try {
     const job = await apiGet('/api/v1/jobs/' + currentJobId);
 
@@ -255,8 +266,12 @@ async function loadReviewSuggestions() {
       });
     });
   } catch (err) {
-    // Non-critical — silently ignore
     console.warn('Could not load review suggestions:', err.message);
+    const el = document.getElementById('jd-suggestions');
+    if (el) {
+      el.classList.remove('hidden');
+      el.innerHTML = `<div style="padding:8px 12px;font-size:11px;color:var(--color-text-tertiary)">Review suggestions unavailable.</div>`;
+    }
   }
 }
 
@@ -890,8 +905,9 @@ function renderLineItemsTab(panel, data) {
     renderRows(items);
   }
 
-  // Bulk toolbar taxonomy search (standalone, debounced)
+  // Bulk toolbar taxonomy search (standalone, debounced with request cancellation)
   let bulkTaxTimer = null;
+  let bulkTaxController = null;
   let bulkHighlightedIndex = -1;
 
   function setupBulkTaxSearch() {
@@ -901,10 +917,12 @@ function renderLineItemsTab(panel, data) {
 
     taxInput.addEventListener('input', () => {
       clearTimeout(bulkTaxTimer);
+      if (bulkTaxController) bulkTaxController.abort();
       bulkHighlightedIndex = -1;
       const q = taxInput.value.trim();
       if (q.length < 1) { taxResults.innerHTML = ''; return; }
       bulkTaxTimer = setTimeout(async () => {
+        bulkTaxController = new AbortController();
         try {
           const data = await apiGet('/api/v1/taxonomy/search?q=' + encodeURIComponent(q));
           taxResults.innerHTML = '';
@@ -925,7 +943,8 @@ function renderLineItemsTab(panel, data) {
             taxResults.innerHTML = '<div class="tax-option text-secondary">No matches</div>';
           }
           bulkHighlightedIndex = -1;
-        } catch {
+        } catch (err) {
+          if (err.name === 'AbortError' || err.message === 'Request timed out') return;
           taxResults.innerHTML = '<div class="tax-option" style="color:var(--color-danger)">Search failed</div>';
         }
       }, 300);

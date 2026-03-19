@@ -2,9 +2,10 @@
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
+from src.api.rate_limit import limiter
 from src.api.schemas import (
     ApplyCorrectionRequest,
     ApplyCorrectionResponse,
@@ -32,7 +33,9 @@ router = APIRouter(prefix="/api/v1", tags=["corrections"])
 
 
 @router.post("/jobs/{job_id}/corrections", response_model=CorrectionResponse)
+@limiter.limit("200/hour")
 def submit_corrections(
+    request: Request,
     job_id: str,
     body: CorrectionRequest,
     db: Session = Depends(get_db),
@@ -120,7 +123,9 @@ def submit_corrections(
 
 
 @router.get("/entities/{entity_id}/patterns", response_model=PatternListResponse)
+@limiter.limit("500/hour")
 def list_entity_patterns(
+    request: Request,
     entity_id: str,
     min_confidence: float = Query(0.0, ge=0.0, le=1.0),
     limit: int = Query(200, ge=1, le=1000),
@@ -160,7 +165,9 @@ def list_entity_patterns(
 
 
 @router.delete("/entities/{entity_id}/patterns/{pattern_id}", status_code=204)
+@limiter.limit("200/hour")
 def delete_entity_pattern(
+    request: Request,
     entity_id: str,
     pattern_id: str,
     db: Session = Depends(get_db),
@@ -193,7 +200,9 @@ def delete_entity_pattern(
     "/entities/{entity_id}/pattern-stats",
     response_model=PatternStatsResponse,
 )
+@limiter.limit("500/hour")
 def get_pattern_stats(
+    request: Request,
     entity_id: str,
     db: Session = Depends(get_db),
     _api_key=Depends(require_entity_scope),
@@ -273,7 +282,9 @@ def get_pattern_stats(
     "/learned-aliases",
     response_model=LearnedAliasListResponse,
 )
+@limiter.limit("500/hour")
 def list_learned_aliases(
+    request: Request,
     min_occurrences: int = Query(1, ge=1),
     limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_db),
@@ -310,7 +321,9 @@ def list_learned_aliases(
     "/learned-aliases/{alias_id}/promote",
     response_model=LearnedAliasPromoteResponse,
 )
+@limiter.limit("200/hour")
 def promote_learned_alias(
+    request: Request,
     alias_id: str,
     db: Session = Depends(get_db),
     _api_key=Depends(get_current_api_key),
@@ -433,7 +446,9 @@ def _apply_and_respond(
     "/jobs/{job_id}/corrections/preview",
     response_model=PreviewCorrectionResponse,
 )
+@limiter.limit("500/hour")
 def preview_corrections(
+    request: Request,
     job_id: str,
     body: ApplyCorrectionRequest,
     db: Session = Depends(get_db),
@@ -481,7 +496,9 @@ def preview_corrections(
     "/jobs/{job_id}/corrections/apply",
     response_model=ApplyCorrectionResponse,
 )
+@limiter.limit("200/hour")
 def apply_corrections(
+    request: Request,
     job_id: str,
     body: ApplyCorrectionRequest,
     db: Session = Depends(get_db),
@@ -501,7 +518,9 @@ def apply_corrections(
     "/jobs/{job_id}/corrections/bulk",
     response_model=ApplyCorrectionResponse,
 )
+@limiter.limit("200/hour")
 def bulk_apply_corrections(
+    request: Request,
     job_id: str,
     body: ApplyCorrectionRequest,
     db: Session = Depends(get_db),
@@ -540,7 +559,9 @@ def bulk_apply_corrections(
     "/corrections/{correction_id}/undo",
     response_model=UndoCorrectionResponse,
 )
+@limiter.limit("200/hour")
 def undo_correction_endpoint(
+    request: Request,
     correction_id: str,
     db: Session = Depends(get_db),
     _api_key=Depends(get_current_api_key),
@@ -585,7 +606,9 @@ def undo_correction_endpoint(
     "/jobs/{job_id}/corrections/history",
     response_model=CorrectionHistoryResponse,
 )
+@limiter.limit("500/hour")
 def get_correction_history(
+    request: Request,
     job_id: str,
     include_reverted: bool = Query(True),
     offset: int = Query(0, ge=0),

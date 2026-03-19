@@ -9,6 +9,8 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from src.api.schemas import (
+    ChangelogResponse,
+    DeprecateResponse,
     HierarchyNode,
     TaxonomyItemResponse,
     TaxonomyListResponse,
@@ -45,6 +47,13 @@ class TaxonomySuggestionListResponse(BaseModel):
     suggestions: List[TaxonomySuggestionResponse]
 
 router = APIRouter(prefix="/api/v1/taxonomy", tags=["taxonomy"])
+
+# Separate router for /{canonical_name} wildcard routes.  Must be included
+# AFTER ``router`` in main.py so that fixed paths (/suggestions, /changelog,
+# /stats, etc.) are matched before the wildcard.  Starlette's trie-based
+# routing can otherwise prefer path-parameter routes over exact-match siblings
+# registered on the same router.
+detail_router = APIRouter(prefix="/api/v1/taxonomy", tags=["taxonomy"])
 
 _manager = TaxonomyManager()
 
@@ -201,7 +210,7 @@ def reject_suggestion(
 # ============================================================================
 
 
-@router.get("/changelog", response_model=None)
+@router.get("/changelog", response_model=ChangelogResponse)
 def get_changelog(
     canonical_name: Optional[str] = Query(None, description="Filter by canonical name"),
     limit: int = Query(100, ge=1, le=500, description="Max entries to return"),
@@ -209,7 +218,7 @@ def get_changelog(
     _api_key=Depends(get_current_api_key),
 ):
     """Get taxonomy changelog entries, optionally filtered by canonical_name."""
-    from src.api.schemas import ChangelogEntry, ChangelogResponse
+    from src.api.schemas import ChangelogEntry
     from src.db.crud import get_taxonomy_changelog
 
     entries = get_taxonomy_changelog(db, canonical_name=canonical_name, limit=limit)
@@ -231,7 +240,7 @@ def get_changelog(
     )
 
 
-@router.post("/{canonical_name}/deprecate", response_model=None)
+@detail_router.post("/{canonical_name}/deprecate", response_model=DeprecateResponse)
 def deprecate_item(
     canonical_name: str,
     redirect_to: Optional[str] = Query(None, description="Redirect to this canonical name"),
@@ -239,7 +248,6 @@ def deprecate_item(
     _api_key=Depends(get_current_api_key),
 ):
     """Deprecate a taxonomy item, optionally redirecting to another."""
-    from src.api.schemas import DeprecateResponse
     from src.db.crud import deprecate_taxonomy_item
 
     try:
@@ -259,7 +267,7 @@ def deprecate_item(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/{canonical_name}", response_model=TaxonomyItemResponse)
+@detail_router.get("/{canonical_name}", response_model=TaxonomyItemResponse)
 def get_taxonomy_item(
     canonical_name: str,
     db: Session = Depends(get_db),

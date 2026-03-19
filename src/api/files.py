@@ -183,16 +183,23 @@ async def upload_file(
         )
 
         # --- Enqueue Celery task ---
-        # Pass file_bytes directly when S3 is not available (local dev)
+        # S3 storage is required; files are always fetched from S3 by the worker.
+        if not s3_key:
+            try:
+                crud.fail_job(db, db_job.job_id, "S3 storage unavailable")
+            except Exception:
+                pass
+            raise HTTPException(
+                status_code=503,
+                detail="S3 storage is unavailable — cannot process upload. Please try again later.",
+            )
+
         try:
             task_kwargs: dict[str, Any] = {
                 "job_id": str(db_job.job_id),
                 "entity_id": entity_id,
+                "s3_key": s3_key,
             }
-            if s3_key:
-                task_kwargs["s3_key"] = s3_key
-            else:
-                task_kwargs["file_bytes"] = file_bytes
             task = run_extraction_task.delay(**task_kwargs)
         except Exception as enqueue_err:
             logger.error(f"Failed to enqueue Celery task: {enqueue_err}")
@@ -315,7 +322,7 @@ async def download_file(
         )
 
     try:
-        s3_client = get_s3_client()
+        s3_client = get_s3_client(get_settings())
         url = s3_client.generate_presigned_url(file.s3_key, filename=file.filename)
     except FileStorageError as e:
         logger.error(f"Failed to generate presigned URL for file {file_id}: {str(e)}")

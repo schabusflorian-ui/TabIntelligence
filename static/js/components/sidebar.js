@@ -76,6 +76,17 @@ export function renderSidebar(container) {
 
   // Check health
   checkHealth();
+
+  // First-time user prompt: highlight API key input if not configured
+  if (!hasApiKey()) {
+    keyInput.classList.add('pulse-highlight');
+    keyInput.placeholder = 'Enter your API key to get started';
+    const hint = document.createElement('p');
+    hint.className = 'text-sm';
+    hint.style.cssText = 'color:#C47D00;margin:4px 0 0;font-size:10.5px';
+    hint.textContent = 'An API key is required to use DebtFund.';
+    container.querySelector('.sidebar-key').appendChild(hint);
+  }
 }
 
 function navItem({ route, icon, label }) {

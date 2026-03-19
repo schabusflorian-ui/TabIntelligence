@@ -328,7 +328,7 @@ async def retry_job(
             if idx + 1 < len(STAGE_ORDER):
                 resume_from_stage = STAGE_ORDER[idx + 1]
         except ValueError:
-            pass
+            logger.warning(f"Unknown checkpoint stage '{last_completed}' — starting fresh")
 
     # Enqueue Celery task (task downloads from S3 itself using s3_key)
     entity_id = str(file_record.entity_id) if file_record.entity_id else None

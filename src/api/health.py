@@ -20,12 +20,61 @@ from fastapi import status as http_status
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
+from sqlalchemy.orm import Session
+
 from src.auth.dependencies import get_current_api_key
+from src.core.config import get_settings
 from src.core.logging import api_logger as logger
 from src.db.resilience import db_circuit_breaker
-from src.db.session import async_engine, get_db_async
+from src.db.session import async_engine, get_db, get_db_async
+from src.storage.s3 import get_s3_client
 
 router = APIRouter(prefix="/health", tags=["health"])
+
+
+# ============================================================================
+# Root Health Check (moved from main.py)
+# ============================================================================
+
+
+@router.get("", status_code=200)
+async def health(db: Session = Depends(get_db)):
+    """
+    Comprehensive health check with component status.
+
+    Returns status of all dependent services (database, S3).
+    Returns 200 if healthy, 503 if any critical component is down.
+    """
+    from datetime import timezone as tz
+
+    checks: Dict[str, Any] = {
+        "status": "healthy",
+        "version": get_settings().app_version,
+        "timestamp": datetime.now(tz.utc).isoformat(),
+        "components": {},
+    }
+
+    # Database check
+    try:
+        start = time.time()
+        db.execute(text("SELECT 1"))
+        latency_ms = round((time.time() - start) * 1000, 2)
+        checks["components"]["database"] = {"status": "up", "latency_ms": latency_ms}
+    except Exception as e:
+        checks["status"] = "degraded"
+        checks["components"]["database"] = {"status": "down", "error": str(e)}
+
+    # S3/MinIO check
+    try:
+        s3_settings = get_settings()
+        s3_client = get_s3_client(s3_settings)
+        s3_client.ensure_bucket_exists()
+        checks["components"]["s3"] = {"status": "up", "bucket": s3_settings.s3_bucket}
+    except Exception as e:
+        checks["components"]["s3"] = {"status": "down", "error": str(e)}
+
+    status_code = 200 if checks["status"] == "healthy" else 503
+    return JSONResponse(content=checks, status_code=status_code)
 
 
 # ============================================================================

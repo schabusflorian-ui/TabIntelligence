@@ -176,6 +176,15 @@ body {
 
 .sidebar-key button:hover { background: rgba(255,255,255,0.12); }
 
+.sidebar-key input.pulse-highlight {
+  border-color: #C47D00;
+  animation: pulse-border 2s ease-in-out 3;
+}
+@keyframes pulse-border {
+  0%, 100% { border-color: #C47D00; }
+  50% { border-color: rgba(196, 125, 0, 0.3); }
+}
+
 .sidebar-health {
   display: flex;
   align-items: center;

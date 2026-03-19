@@ -160,27 +160,33 @@ async function _performSearch(query) {
 
   try {
     const data = await apiGet(`/api/v1/taxonomy/search?q=${encodeURIComponent(query)}`);
-    const items = data.items || [];
+    const allItems = data.items || [];
 
-    if (items.length === 0) {
+    if (allItems.length === 0) {
       main.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--color-text-secondary)">No results for "${esc(query)}"</div>`;
       return;
     }
 
-    _renderSearchResults(items);
+    const MAX_SEARCH_RESULTS = 100;
+    const items = allItems.slice(0, MAX_SEARCH_RESULTS);
+    const truncated = allItems.length > MAX_SEARCH_RESULTS;
+    _renderSearchResults(items, truncated ? allItems.length : null);
   } catch (err) {
     main.innerHTML = errorState('Search failed: ' + err.message, 'Retry');
     main.querySelector('.error-retry-btn')?.addEventListener('click', () => _performSearch(query));
   }
 }
 
-function _renderSearchResults(items) {
+function _renderSearchResults(items, totalCount) {
   const main = document.getElementById('tax-main');
   if (!main) return;
 
   let html = '<div class="card" style="padding:0;overflow:hidden">';
   html += '<div style="padding:11px 14px;border-bottom:0.5px solid var(--color-border-tertiary)">';
-  html += `<span style="font-size:13px;font-weight:500">${items.length} result${items.length !== 1 ? 's' : ''}</span>`;
+  const countLabel = totalCount
+    ? `Showing ${items.length} of ${totalCount} results`
+    : `${items.length} result${items.length !== 1 ? 's' : ''}`;
+  html += `<span style="font-size:13px;font-weight:500">${countLabel}</span>`;
   html += '</div>';
   html += '<div class="table-wrapper" style="border:none;border-radius:0">';
   html += '<table class="data-table"><thead><tr>';
@@ -595,26 +601,36 @@ async function _showDetail(canonicalName) {
 }
 
 async function _handleDeprecate(canonicalName) {
-  const ok = await confirmModal(
-    'Deprecate Taxonomy Item',
-    `<p style="margin-bottom:12px">Are you sure you want to deprecate <strong>${esc(canonicalName)}</strong>?</p>
-     <p style="font-size:12px;color:var(--color-text-secondary)">Deprecated items are excluded from extraction prompts and will no longer be used for mapping. This action is recorded in the changelog.</p>
-     <div style="margin-top:12px">
-       <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px">Redirect to (optional):</label>
-       <input type="text" id="deprecate-redirect-input" placeholder="e.g. total_revenue" style="width:100%;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:12px;font-family:var(--font-mono)">
-     </div>`,
-    { confirmText: 'Deprecate', confirmClass: 'btn btn-destructive' }
-  );
+  // Use showModal for manual control so we can read the redirect input before closing.
+  const { showModal: openModal } = await import('../components/modal.js');
+  const { close, el } = openModal(`
+    <h3 style="margin:0 0 12px">${esc('Deprecate Taxonomy Item')}</h3>
+    <p style="margin-bottom:12px">Are you sure you want to deprecate <strong>${esc(canonicalName)}</strong>?</p>
+    <p style="font-size:12px;color:var(--color-text-secondary)">Deprecated items are excluded from extraction prompts and will no longer be used for mapping. This action is recorded in the changelog.</p>
+    <div style="margin-top:12px">
+      <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px">Redirect to (optional):</label>
+      <input type="text" id="deprecate-redirect-input" placeholder="e.g. total_revenue" style="width:100%;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:12px;font-family:var(--font-mono)">
+    </div>
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="btn btn-secondary modal-cancel">Cancel</button>
+      <button class="btn btn-destructive modal-confirm">Deprecate</button>
+    </div>
+  `);
 
-  if (!ok) return;
+  const confirmed = await new Promise(resolve => {
+    el.querySelector('.modal-cancel').addEventListener('click', () => { close(); resolve(false); });
+    el.querySelector('.modal-confirm').addEventListener('click', () => resolve(true));
+  });
 
-  // Get redirect value from the modal input (it was in the DOM during confirm)
-  // Since the modal is already closed, we need a different approach
-  // Let's use the prompt modal instead
-  // Actually the confirm modal removes itself — we need to capture before close
-  // For simplicity, do a two-step: confirm first, then if redirect is needed, prompt
+  if (!confirmed) return;
+
+  // Capture redirect value BEFORE closing the modal
+  const redirectTo = el.querySelector('#deprecate-redirect-input')?.value?.trim() || '';
+  close();
+
   try {
-    const res = await apiFetch(`/api/v1/taxonomy/${encodeURIComponent(canonicalName)}/deprecate`, {
+    const params = redirectTo ? `?redirect_to=${encodeURIComponent(redirectTo)}` : '';
+    const res = await apiFetch(`/api/v1/taxonomy/${encodeURIComponent(canonicalName)}/deprecate${params}`, {
       method: 'POST',
     });
     const data = await res.json();

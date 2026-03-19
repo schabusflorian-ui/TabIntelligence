@@ -6,6 +6,7 @@ import { showModal } from '../components/modal.js';
 import { skeletonTable, errorState } from '../components/loading.js';
 import { emptyState } from '../components/empty-state.js';
 import { showToast } from '../components/toast.js';
+import { MONTH_NAMES } from '../constants/dates.js';
 
 let allEntities = [];
 
@@ -109,7 +110,7 @@ function renderTable(entities) {
 }
 
 function openCreateModal() {
-  const monthOptions = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+  const monthOptions = MONTH_NAMES.slice(1)
     .map((name, i) => `<option value="${i + 1}">${name}</option>`).join('');
 
   const { close, el: box } = showModal(`

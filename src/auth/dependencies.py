@@ -20,7 +20,10 @@ from src.db.session import get_db
 # HTTP Bearer scheme for Authorization header
 security = HTTPBearer()
 
-# In-memory sliding window rate limiter keyed by API key id
+# In-memory sliding window rate limiter keyed by API key id.
+# NOTE: This dict is NOT shared across Uvicorn workers. For single-worker
+# deployments (trial/dev) this is fine. For multi-worker production, replace
+# with Redis-backed rate limiting (e.g. redis INCR + EXPIRE).
 # {key_id: [timestamp, timestamp, ...]}
 _rate_limit_windows: dict[str, list[float]] = defaultdict(list)
 

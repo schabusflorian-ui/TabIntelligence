@@ -139,9 +139,10 @@ async def async_extraction_wrapper(
     if file_bytes is None:
         if s3_key is None:
             raise ValueError(f"Job {job_id}: neither s3_key nor file_bytes provided")
+        from src.core.config import get_settings
         from src.storage.s3 import get_s3_client
 
-        s3_client = get_s3_client()
+        s3_client = get_s3_client(get_settings())
         file_bytes = s3_client.download_file(s3_key)
 
     def update_progress(stage_name: str, progress_percent: int):

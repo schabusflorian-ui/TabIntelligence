@@ -12,11 +12,11 @@ from unittest.mock import MagicMock, patch
 _FAKE_XLSX = b"PK\x03\x04" + b"\x00" * 100
 
 
-class TestUploadS3FailureGracefulDegradation:
-    """Fix 1: If S3 upload fails, upload proceeds without storage (graceful degradation)."""
+class TestUploadS3FailureReturns503:
+    """Fix 1: If S3 upload fails, upload returns 503 (S3 is required)."""
 
-    def test_s3_failure_proceeds_without_storage(self, test_client_with_db, test_db):
-        """When S3 upload fails, endpoint returns 200 with s3_key=None."""
+    def test_s3_failure_returns_503(self, test_client_with_db, test_db):
+        """When S3 upload fails, endpoint returns 503 with clear error."""
         from src.core.exceptions import FileStorageError
 
         mock_s3 = MagicMock()
@@ -29,20 +29,8 @@ class TestUploadS3FailureGracefulDegradation:
                 files={"file": ("test.xlsx", _FAKE_XLSX, "application/vnd.ms-excel")},
             )
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data["s3_key"] is None  # Graceful degradation: no S3 key
-
-        # File and job records should still be created
-        from src.db import crud
-
-        session = test_db()
-        try:
-            files = crud.list_files(session, limit=100)
-            assert len(files) == 1, "File record should exist despite S3 failure"
-            assert files[0].s3_key is None
-        finally:
-            session.close()
+        assert response.status_code == 503
+        assert "S3 storage" in response.json()["detail"]
 
 
 class TestCeleryEnqueueFailureReturns503:

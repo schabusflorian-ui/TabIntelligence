@@ -153,14 +153,27 @@ async function loadStatement(container) {
         )
       );
 
-      // Merge all periods and items
+      // Merge all periods and items (deduplicate by canonical_name)
       const allPeriods = new Set();
       const allItems = [];
+      const seenCn = new Map();
       for (let i = 0; i < results.length; i++) {
         const r = results[i];
         if (r && r.items && r.items.length > 0) {
           r.periods.forEach(p => allPeriods.add(p));
-          allItems.push(...r.items);
+          for (const item of r.items) {
+            if (seenCn.has(item.canonical_name)) {
+              // Merge period values from duplicate into existing item
+              const existing = seenCn.get(item.canonical_name);
+              if (item.values) {
+                existing.values = { ...(existing.values || {}), ...item.values };
+              }
+            } else {
+              const copy = { ...item, values: { ...(item.values || {}) } };
+              seenCn.set(item.canonical_name, copy);
+              allItems.push(copy);
+            }
+          }
         }
       }
 
@@ -317,6 +330,7 @@ function renderItemRows(items, periods, depth) {
 
       if (fromVal != null && toVal != null) {
         const change = toVal - fromVal;
+        // Math.abs ensures correct direction for negative baselines (e.g. -100 → -50 = +50%)
         const pctChange = fromVal !== 0 ? ((change / Math.abs(fromVal)) * 100) : null;
         const color = change > 0 ? '#1A7A4A' : change < 0 ? '#A32626' : '#888';
         const arrow = change > 0 ? '+' : '';
@@ -397,6 +411,7 @@ function flattenItemsForCSV(items, periods, rows, depth) {
 
       if (fromVal != null && toVal != null) {
         const change = toVal - fromVal;
+        // Math.abs ensures correct direction for negative baselines (e.g. -100 → -50 = +50%)
         const pctChange = fromVal !== 0 ? ((change / Math.abs(fromVal)) * 100) : null;
         row.push(change);
         row.push(pctChange != null ? pctChange.toFixed(2) + '%' : '');

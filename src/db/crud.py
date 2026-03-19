@@ -1458,7 +1458,7 @@ def promote_learned_alias(db: Session, alias_id: UUID) -> Optional[LearnedAlias]
 
             invalidate_promoted_cache()
         except ImportError:
-            pass
+            logger.debug("taxonomy_loader not available — skipping cache invalidation")
         return alias
     except SQLAlchemyError as e:
         db.rollback()
@@ -3138,7 +3138,7 @@ def check_auto_promotions(db: Session) -> int:
 
                 invalidate_promoted_cache()
             except ImportError:
-                pass
+                logger.debug("taxonomy_loader not available — skipping cache invalidation")
 
             # Persist promoted aliases into Taxonomy.aliases (best-effort)
             try:

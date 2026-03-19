@@ -7,6 +7,7 @@ import { showToast } from '../components/toast.js';
 import { createDropdown } from '../components/dropdown.js';
 import { renderPagination } from '../components/pagination.js';
 import { CATEGORY_BADGE_CLASS } from '../constants/categories.js';
+import { MONTH_NAMES } from '../constants/dates.js';
 
 let chartInstances = [];
 let dropdownInstances = [];
@@ -153,14 +154,18 @@ async function renderPortfolioHealth(panel) {
   } catch (err) {
     panel.querySelector('#health-stats').innerHTML = errorState('Failed to load portfolio summary.', 'Retry');
     panel.querySelector('#health-stats .error-retry-btn')?.addEventListener('click', () => renderPortfolioHealth(panel));
-    panel.querySelector('#health-chart-card').style.display = 'none';
+    const chartCard = panel.querySelector('#health-chart-card');
+    chartCard.innerHTML = `<div class="card-header"><span class="card-title">Quality Distribution</span></div>
+      <div style="padding:20px;text-align:center;color:var(--color-text-secondary);font-size:12px">
+        Chart unavailable. ${esc(err.message || 'Failed to load data.')}
+      </div>`;
     showToast('Failed to load analytics', 'error');
   }
 }
 
 // ========== TAB 2: Cross-Entity Compare ==========
 
-const MONTH_NAMES = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
 
 async function renderCompare(panel) {
   panel.innerHTML = `
@@ -260,8 +265,20 @@ async function renderCompare(panel) {
       const targetCurrency = panel.querySelector('#compare-target-currency').value;
       const resultsEl = panel.querySelector('#compare-results');
 
-      if (selectedIds.length === 0 && !canonical) {
-        showToast('Select at least one entity or enter canonical names', 'warning');
+      if (selectedIds.length === 0) {
+        showToast('Select at least one entity', 'warning');
+        return;
+      }
+      if (!canonical) {
+        showToast('Enter at least one canonical name (e.g. total_revenue)', 'warning');
+        return;
+      }
+      if (!periodVal) {
+        showToast('Enter a period value (e.g. FY2024)', 'warning');
+        return;
+      }
+      if (periodMode === 'year' && !/^\d{4}$/.test(periodVal)) {
+        showToast('Year must be a 4-digit number (e.g. 2024). Use "Period Normalized" for FY2024.', 'warning');
         return;
       }
 
@@ -276,7 +293,7 @@ async function renderCompare(panel) {
         if (targetCurrency) params.set('target_currency', targetCurrency);
 
         const cmpData = await apiGet(`/api/v1/analytics/compare?${params.toString()}`);
-        renderCompareResults(resultsEl, cmpData, entities, includeMetadata);
+        renderCompareResults(resultsEl, cmpData, entities, includeMetadata, targetCurrency);
       } catch (err) {
         resultsEl.innerHTML = errorState('Comparison failed: ' + (err.message || 'Unknown error'), 'Retry');
         showToast('Comparison failed', 'error');
@@ -287,7 +304,7 @@ async function renderCompare(panel) {
   }
 }
 
-function renderCompareResults(el, data, entities, showMetadata) {
+function renderCompareResults(el, data, entities, showMetadata, targetCurrency) {
   let html = '';
 
   // Alignment warnings
@@ -333,7 +350,8 @@ function renderCompareResults(el, data, entities, showMetadata) {
   }
 
   html += '<div class="card"><div class="table-wrapper"><table class="data-table"><thead><tr>';
-  html += '<th>Canonical Name</th>';
+  const currencySuffix = targetCurrency ? ` (${esc(targetCurrency)})` : '';
+  html += `<th>Canonical Name</th>`;
   for (const eid of entityIds) {
     let colHeader = esc(entityMap.get(eid));
     if (showMetadata) {
@@ -345,7 +363,7 @@ function renderCompareResults(el, data, entities, showMetadata) {
         colHeader += `<br><span style="font-size:10px;color:#888;font-weight:normal">${esc(parts.join(' | '))}</span>`;
       }
     }
-    html += `<th class="text-mono" style="text-align:right">${colHeader}</th>`;
+    html += `<th class="text-mono" style="text-align:right">${colHeader}${currencySuffix}</th>`;
   }
   html += '</tr></thead><tbody>';
 

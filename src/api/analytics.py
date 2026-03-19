@@ -191,6 +191,18 @@ def _financials_from_json(
     if not grouped:
         return None
 
+    # Build canonical_name -> category lookup for enrichment
+    from src.extraction.taxonomy_loader import load_taxonomy_json
+
+    cn_to_cat: dict = {}
+    try:
+        tax_data = load_taxonomy_json()
+        for cat, cat_items in tax_data.get("categories", {}).items():
+            for ti in cat_items:
+                cn_to_cat[ti["canonical_name"]] = cat
+    except Exception:
+        pass  # graceful fallback: taxonomy_category stays None
+
     items = []
     for cn in sorted(grouped):
         if not grouped[cn]:
@@ -199,7 +211,7 @@ def _financials_from_json(
         items.append(
             {
                 "canonical_name": cn,
-                "taxonomy_category": None,
+                "taxonomy_category": cn_to_cat.get(cn),
                 "values": values,
             }
         )
@@ -228,7 +240,7 @@ def cross_entity_compare(
     period_normalized: Optional[str] = Query(
         None, description="Match on normalized period (e.g. FY2024)"
     ),
-    year: Optional[int] = Query(None, description="Match by calendar year"),
+    year: Optional[str] = Query(None, description="Match by calendar year (e.g. 2024)"),
     include_metadata: bool = Query(False, description="Include normalization metadata"),
     target_currency: Optional[str] = Query(
         None, description="Convert all values to this currency (e.g. USD)"
@@ -245,6 +257,18 @@ def cross_entity_compare(
     """
     if not period and not period_normalized and not year:
         raise HTTPException(400, "One of 'period', 'period_normalized', or 'year' is required")
+
+    # Parse year as integer with a helpful error message
+    year_int: Optional[int] = None
+    if year is not None:
+        try:
+            year_int = int(year)
+        except ValueError:
+            raise HTTPException(
+                400,
+                f"'year' must be a number (e.g. 2024). "
+                f"Use 'period_normalized' for values like '{year}'.",
+            )
 
     try:
         id_list = [UUID(eid.strip()) for eid in entity_ids.split(",") if eid.strip()]
@@ -271,7 +295,7 @@ def cross_entity_compare(
             canonical_names=name_list,
             period=period,
             period_normalized=period_normalized,
-            year=year,
+            year=year_int,
         )
     except DatabaseError:
         raise HTTPException(500, "Database error querying comparison")

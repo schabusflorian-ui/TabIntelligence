@@ -85,6 +85,12 @@ export function renderUploadZone(container, opts) {
       return;
     }
 
+    const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+    if (file.size > MAX_FILE_SIZE) {
+      statusText.textContent = `File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum size is 100 MB.`;
+      return;
+    }
+
     const apiKey = getApiKey();
     if (!apiKey) {
       showToast('API key is required. Configure it in the sidebar.', 'error');

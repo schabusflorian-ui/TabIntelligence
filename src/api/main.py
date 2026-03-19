@@ -41,6 +41,7 @@ from src.api.jobs import router as jobs_router
 from src.api.metrics import MetricsMiddleware, metrics_endpoint
 from src.api.middleware import RequestIDMiddleware
 from src.api.middleware.security_headers import SecurityHeadersMiddleware
+from src.api.taxonomy import detail_router as taxonomy_detail_router
 from src.api.taxonomy import router as taxonomy_router
 from src.db.session import get_db
 from src.storage.s3 import get_s3_client
@@ -181,6 +182,10 @@ app.include_router(corrections_router)
 # Analytics endpoints (cross-entity, portfolio, trends, coverage, costs)
 app.include_router(analytics_router)
 
+# Taxonomy detail routes (/{canonical_name}) — MUST be last so fixed taxonomy
+# paths (/suggestions, /changelog, etc.) are matched before the wildcard.
+app.include_router(taxonomy_detail_router)
+
 # Serve frontend static files
 _static_dir = Path(__file__).parent.parent.parent / "static"
 if _static_dir.is_dir():
@@ -198,51 +203,6 @@ async def root():
         "version": _settings.app_version,
         "status": "operational",
     }
-
-
-@app.get("/health")
-async def health(db: Session = Depends(get_db)):
-    """
-    Comprehensive health check with component status.
-
-    Returns status of all dependent services (database, S3).
-    Returns 200 if healthy, 503 if any critical component is down.
-    """
-    import time
-    from datetime import datetime
-    from datetime import timezone as tz
-
-    from fastapi.responses import JSONResponse
-    from sqlalchemy import text
-
-    checks = {
-        "status": "healthy",
-        "version": _settings.app_version,
-        "timestamp": datetime.now(tz.utc).isoformat(),
-        "components": {},
-    }
-
-    # Database check
-    try:
-        start = time.time()
-        db.execute(text("SELECT 1"))
-        latency_ms = round((time.time() - start) * 1000, 2)
-        checks["components"]["database"] = {"status": "up", "latency_ms": latency_ms}  # type: ignore[index]
-    except Exception as e:
-        checks["status"] = "degraded"
-        checks["components"]["database"] = {"status": "down", "error": str(e)}  # type: ignore[index]
-
-    # S3/MinIO check
-    try:
-        s3_settings = get_settings()
-        s3_client = get_s3_client(s3_settings)
-        s3_client.ensure_bucket_exists()
-        checks["components"]["s3"] = {"status": "up", "bucket": s3_settings.s3_bucket}  # type: ignore[index]
-    except Exception as e:
-        checks["components"]["s3"] = {"status": "down", "error": str(e)}  # type: ignore[index]
-
-    status_code = 200 if checks["status"] == "healthy" else 503
-    return JSONResponse(content=checks, status_code=status_code)
 
 
 if __name__ == "__main__":
