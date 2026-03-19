@@ -744,6 +744,7 @@ class StatementLineItem(BaseModel):
     hierarchy_level: int = 0
     is_subtotal: bool = False
     parent_canonical: Optional[str] = None
+    typical_sign: Optional[str] = None  # "positive", "negative", "varies"
     values: Dict[str, float] = {}  # period -> amount
     children: List["StatementLineItem"] = []
 
@@ -753,6 +754,14 @@ class StatementLineItem(BaseModel):
 StatementLineItem.model_rebuild()
 
 
+class StatementReconciliation(BaseModel):
+    check: str  # e.g. "Assets = Liabilities + Equity"
+    expected: Optional[float] = None
+    actual: Optional[float] = None
+    balanced: Optional[bool] = None
+    difference: Optional[float] = None
+
+
 class StructuredStatementResponse(BaseModel):
     entity_id: str
     entity_name: Optional[str] = None
@@ -760,6 +769,7 @@ class StructuredStatementResponse(BaseModel):
     periods: List[str] = []
     items: List[StatementLineItem]
     total_items: int = 0
+    reconciliation: Optional[List[StatementReconciliation]] = None
 
 
 # ============================================================================

@@ -286,7 +286,8 @@ function renderStatementTable(el, data) {
   html += '</tr></thead><tbody>';
 
   // Render items recursively
-  html += renderItemRows(items, periods, 0);
+  _cmpLastCfSection = null;
+  html += renderItemRows(items, periods, 0, data.category);
 
   html += '</tbody></table></div></div>';
 
@@ -299,26 +300,73 @@ function renderStatementTable(el, data) {
   }
 }
 
-function renderItemRows(items, periods, depth) {
+// CF section labels for comparison page
+const CF_SECTIONS = {
+  cfo: 'Operating Activities',
+  cfi: 'Investing Activities',
+  cff: 'Financing Activities',
+};
+
+// Grand total items get double-underline; regular subtotals get single line
+const FINAL_TOTALS = new Set([
+  'net_income', 'total_assets', 'total_liabilities_and_equity',
+  'total_equity', 'net_change_cash', 'ending_cash', 'fcf',
+  'total_debt', 'total_investment', 'total_liabilities',
+]);
+
+function _getValueColor(val, typicalSign) {
+  if (val == null) return '';
+  if (!typicalSign || typicalSign === 'varies') {
+    return val < 0 ? 'color:#A32626;' : '';
+  }
+  const expectedPositive = typicalSign === 'positive';
+  const isUnexpected = expectedPositive ? val < 0 : val > 0;
+  return isUnexpected ? 'color:#A32626;' : '';
+}
+
+let _cmpLastCfSection = null;
+
+function renderItemRows(items, periods, depth, category) {
   let html = '';
   for (const item of items) {
     const indent = depth * 24;
     const isBold = item.is_subtotal === true;
+    const isRoot = depth === 0;
     const fontWeight = isBold ? '600' : '400';
     const bgColor = isBold ? 'rgba(0,0,0,0.015)' : 'transparent';
     const borderTop = isBold ? '1px solid rgba(0,0,0,0.06)' : 'none';
 
+    // CF section headers
+    if (category === 'cash_flow' && isRoot) {
+      const section = CF_SECTIONS[item.canonical_name] || null;
+      if (section && section !== _cmpLastCfSection) {
+        _cmpLastCfSection = section;
+        const colSpan = periods.length + Math.max(0, periods.length - 1) + 1;
+        html += `<tr><td colspan="${colSpan}" style="padding:10px 12px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--color-text-tertiary);border-top:2px solid var(--color-border-secondary);background:var(--color-background-primary)">${esc(section)}</td></tr>`;
+      }
+    }
+
+    // Double-underline for grand totals
+    let borderBottom = 'none';
+    if (isBold && isRoot) {
+      borderBottom = FINAL_TOTALS.has(item.canonical_name)
+        ? '3px double var(--color-text-primary)'
+        : '1px solid rgba(0,0,0,0.15)';
+    }
+
     const displayName = item.display_name || item.canonical_name.replace(/_/g, ' ');
+    const typicalSign = item.typical_sign || null;
 
     html += `<tr style="background:${bgColor}">`;
-    html += `<td style="padding-left:${indent + 12}px;font-weight:${fontWeight};border-top:${borderTop}">
+    html += `<td style="padding-left:${indent + 12}px;font-weight:${fontWeight};border-top:${borderTop};border-bottom:${borderBottom}">
       ${esc(displayName)}
     </td>`;
 
     // Period values
     for (const p of periods) {
       const val = item.values ? item.values[p] : undefined;
-      html += `<td class="text-mono" style="text-align:right;font-weight:${fontWeight};border-top:${borderTop}">
+      const color = _getValueColor(val, typicalSign);
+      html += `<td class="text-mono" style="text-align:right;font-weight:${fontWeight};border-top:${borderTop};border-bottom:${borderBottom};${color}">
         ${formatFinancialValue(val)}
       </td>`;
     }
@@ -340,11 +388,11 @@ function renderItemRows(items, periods, depth) {
           displayText += ` (${arrow}${pctChange.toFixed(1)}%)`;
         }
 
-        html += `<td class="text-mono" style="text-align:right;font-size:11px;color:${color};border-top:${borderTop}">
+        html += `<td class="text-mono" style="text-align:right;font-size:11px;color:${color};border-top:${borderTop};border-bottom:${borderBottom}">
           ${displayText}
         </td>`;
       } else {
-        html += `<td class="text-mono text-secondary" style="text-align:right;font-size:11px;border-top:${borderTop}">-</td>`;
+        html += `<td class="text-mono text-secondary" style="text-align:right;font-size:11px;border-top:${borderTop};border-bottom:${borderBottom}">-</td>`;
       }
     }
 
@@ -352,7 +400,7 @@ function renderItemRows(items, periods, depth) {
 
     // Render children
     if (item.children && item.children.length > 0) {
-      html += renderItemRows(item.children, periods, depth + 1);
+      html += renderItemRows(item.children, periods, depth + 1, category);
     }
   }
   return html;

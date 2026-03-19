@@ -400,19 +400,43 @@ async function renderFinancialsTab(panel, entityId) {
       html += `<span style="font-size:10px;color:var(--color-text-tertiary);margin-left:8px">${data.total_items} items</span>`;
       html += '</div>';
 
+      // Determine if we show a YoY% column (for 2+ periods, show change for last two)
+      const showYoY = periods.length >= 2;
+      const yoyFromIdx = showYoY ? periods.length - 2 : -1;
+      const yoyToIdx = showYoY ? periods.length - 1 : -1;
+
       html += '<div class="table-wrapper" style="border:none;border-radius:0">';
       html += '<table class="data-table"><thead><tr>';
       html += '<th style="text-align:left;min-width:220px;padding:6px 12px;font-size:10.5px">Line Item</th>';
       for (const p of periods) {
         html += `<th style="text-align:right;font-size:10px;font-family:var(--font-mono);padding:6px 10px;white-space:nowrap">${esc(p)}</th>`;
       }
+      if (showYoY) {
+        html += `<th style="text-align:right;font-size:10px;padding:6px 10px;white-space:nowrap;color:#888">Chg%</th>`;
+      }
       html += '<th style="text-align:center;font-size:10.5px;padding:6px 12px;width:70px">Trend</th>';
       html += '</tr></thead><tbody>';
 
       // Render hierarchical items
-      html += _renderStatementRows(data.items, periods, 0, cat);
+      html += _renderStatementRows(data.items, periods, 0, cat, yoyFromIdx, yoyToIdx);
 
-      html += '</tbody></table></div></div>';
+      html += '</tbody></table></div>';
+
+      // Reconciliation banner
+      if (data.reconciliation && data.reconciliation.length > 0) {
+        for (const rec of data.reconciliation) {
+          const isBalanced = rec.balanced === true;
+          const bg = isBalanced ? '#F0FDF4' : '#FEF2F2';
+          const fg = isBalanced ? '#166534' : '#991B1B';
+          const icon = isBalanced ? '\u2713' : '\u26A0';
+          const msg = isBalanced
+            ? `${rec.check}: Balanced`
+            : `${rec.check}: Difference of ${formatFinancial(rec.difference || 0)}`;
+          html += `<div style="padding:6px 14px;font-size:11px;border-top:1px solid var(--color-border-tertiary);background:${bg};color:${fg}">${icon} ${esc(msg)}</div>`;
+        }
+      }
+
+      html += '</div>';
     }
 
     if (!html) {
@@ -438,7 +462,25 @@ const CF_SECTIONS = {
   cff: 'Financing Activities',
 };
 
-function _renderStatementRows(items, periods, depth, category) {
+// Grand total items get double-underline; regular subtotals get single line
+const FINAL_TOTALS = new Set([
+  'net_income', 'total_assets', 'total_liabilities_and_equity',
+  'total_equity', 'net_change_cash', 'ending_cash', 'fcf',
+  'total_debt', 'total_investment', 'total_liabilities',
+]);
+
+function _getValueColor(val, typicalSign) {
+  if (val == null) return '';
+  if (!typicalSign || typicalSign === 'varies') {
+    return val < 0 ? 'color:#A32626;' : '';
+  }
+  // "positive" means value is normally positive; "negative" means normally negative
+  const expectedPositive = typicalSign === 'positive';
+  const isUnexpected = expectedPositive ? val < 0 : val > 0;
+  return isUnexpected ? 'color:#A32626;' : '';
+}
+
+function _renderStatementRows(items, periods, depth, category, yoyFromIdx = -1, yoyToIdx = -1) {
   let html = '';
   let lastCfSection = null;
 
@@ -453,7 +495,7 @@ function _renderStatementRows(items, periods, depth, category) {
       const section = CF_SECTIONS[item.canonical_name] || null;
       if (section && section !== lastCfSection) {
         lastCfSection = section;
-        const colSpan = periods.length + 2;
+        const colSpan = periods.length + 2 + (yoyFromIdx >= 0 ? 1 : 0);
         html += `<tr><td colspan="${colSpan}" style="padding:10px 12px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--color-text-tertiary);border-top:2px solid var(--color-border-secondary);background:var(--color-background-primary)">${esc(section)}</td></tr>`;
       }
     }
@@ -464,12 +506,20 @@ function _renderStatementRows(items, periods, depth, category) {
     const bgColor = isBold && depth === 0 ? 'rgba(0,0,0,0.02)' : (depth > 0 ? 'var(--color-background-secondary)' : 'transparent');
     const borderTop = isBold && isRoot ? '1px solid rgba(0,0,0,0.06)' : 'none';
 
+    // Double-underline for grand totals, single line for regular subtotals
+    let borderBottom = 'none';
+    if (isBold && isRoot) {
+      borderBottom = FINAL_TOTALS.has(item.canonical_name)
+        ? '3px double var(--color-text-primary)'
+        : '1px solid rgba(0,0,0,0.15)';
+    }
+
     const displayName = item.display_name || item.canonical_name.replace(/_/g, ' ');
 
     html += `<tr style="background:${bgColor}">`;
 
     // Name cell with indentation
-    html += `<td style="padding-left:${indent + 12}px;font-weight:${fontWeight};font-size:${fontSize};border-top:${borderTop};padding-top:5px;padding-bottom:5px">`;
+    html += `<td style="padding-left:${indent + 12}px;font-weight:${fontWeight};font-size:${fontSize};border-top:${borderTop};border-bottom:${borderBottom};padding-top:5px;padding-bottom:5px">`;
     html += esc(displayName);
     if (isRoot && item.canonical_name !== displayName.toLowerCase().replace(/[^a-z0-9]/g, '_')) {
       html += `<span style="display:block;font-family:var(--font-mono);font-size:9.5px;color:var(--color-text-tertiary);font-weight:400;margin-top:1px">${esc(item.canonical_name)}</span>`;
@@ -478,16 +528,31 @@ function _renderStatementRows(items, periods, depth, category) {
 
     // Period values
     const valueList = [];
+    const typicalSign = item.typical_sign || null;
     for (const p of periods) {
       const val = item.values ? item.values[p] : undefined;
       valueList.push(val != null ? val : null);
 
       if (val != null) {
         const formatted = formatFinancial(val);
-        const color = val < 0 ? 'color:#A32626;' : '';
-        html += `<td style="text-align:right;font-family:var(--font-mono);font-size:11px;font-variant-numeric:tabular-nums;${color}font-weight:${fontWeight};border-top:${borderTop};padding:5px 10px">${formatted}</td>`;
+        const color = _getValueColor(val, typicalSign);
+        html += `<td style="text-align:right;font-family:var(--font-mono);font-size:11px;font-variant-numeric:tabular-nums;${color}font-weight:${fontWeight};border-top:${borderTop};border-bottom:${borderBottom};padding:5px 10px">${formatted}</td>`;
       } else {
-        html += `<td style="text-align:right;font-family:var(--font-mono);font-size:11px;border-top:${borderTop};padding:5px 10px;color:var(--color-text-tertiary)">\u2014</td>`;
+        html += `<td style="text-align:right;font-family:var(--font-mono);font-size:11px;border-top:${borderTop};border-bottom:${borderBottom};padding:5px 10px;color:var(--color-text-tertiary)">\u2014</td>`;
+      }
+    }
+
+    // YoY% change cell (between last two periods)
+    if (yoyFromIdx >= 0 && yoyToIdx >= 0) {
+      const fromVal = valueList[yoyFromIdx];
+      const toVal = valueList[yoyToIdx];
+      if (fromVal != null && toVal != null && fromVal !== 0) {
+        const pctChg = ((toVal - fromVal) / Math.abs(fromVal)) * 100;
+        const arrow = pctChg > 0 ? '+' : '';
+        const chgColor = pctChg > 0 ? '#1A7A4A' : pctChg < 0 ? '#A32626' : '#888';
+        html += `<td style="text-align:right;font-family:var(--font-mono);font-size:10.5px;color:${chgColor};font-weight:${fontWeight};border-top:${borderTop};border-bottom:${borderBottom};padding:5px 10px">${arrow}${pctChg.toFixed(1)}%</td>`;
+      } else {
+        html += `<td style="text-align:right;font-family:var(--font-mono);font-size:10.5px;border-top:${borderTop};border-bottom:${borderBottom};padding:5px 10px;color:var(--color-text-tertiary)">\u2014</td>`;
       }
     }
 
@@ -495,16 +560,16 @@ function _renderStatementRows(items, periods, depth, category) {
     const nonNull = valueList.filter(v => v != null);
     if (nonNull.length >= 2) {
       const canvasId = 'sparkline-' + category + '-' + item.canonical_name.replace(/[^a-zA-Z0-9]/g, '_');
-      html += `<td style="text-align:center;padding:5px 8px;border-top:${borderTop}"><canvas id="${esc(canvasId)}" width="56" height="18" style="display:inline-block" data-sparkline="${valueList.map(v => v == null ? '' : v).join(',')}"></canvas></td>`;
+      html += `<td style="text-align:center;padding:5px 8px;border-top:${borderTop};border-bottom:${borderBottom}"><canvas id="${esc(canvasId)}" width="56" height="18" style="display:inline-block" data-sparkline="${valueList.map(v => v == null ? '' : v).join(',')}"></canvas></td>`;
     } else {
-      html += `<td style="text-align:center;padding:5px 8px;border-top:${borderTop};color:var(--color-text-tertiary);font-size:11px">\u2014</td>`;
+      html += `<td style="text-align:center;padding:5px 8px;border-top:${borderTop};border-bottom:${borderBottom};color:var(--color-text-tertiary);font-size:11px">\u2014</td>`;
     }
 
     html += '</tr>';
 
     // Render children recursively
     if (hasChildren) {
-      html += _renderStatementRows(item.children, periods, depth + 1, category);
+      html += _renderStatementRows(item.children, periods, depth + 1, category, yoyFromIdx, yoyToIdx);
     }
   }
   return html;

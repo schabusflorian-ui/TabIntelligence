@@ -2696,7 +2696,10 @@ def get_cost_analytics(
 # Items in the list sort to their position; unknown items sort to the end alphabetically.
 STATEMENT_DISPLAY_ORDER = {
     "income_statement": [
-        "revenue", "gross_profit", "opex", "ebit", "ebitda",
+        "revenue", "cogs", "gross_profit",
+        "opex", "depreciation_and_amortization",
+        "ebit", "ebitda",
+        "interest_expense", "interest_income", "other_income", "other_expense",
         "ebt", "tax_expense", "net_income",
     ],
     "balance_sheet": [
@@ -2798,6 +2801,7 @@ def get_structured_statement(
             "hierarchy_level": 0,
             "is_subtotal": False,
             "parent_canonical": tax_item.get("parent_canonical"),
+            "typical_sign": tax_item.get("typical_sign"),
             "values": period_values,
             "children": [],
         }
@@ -2834,6 +2838,7 @@ def get_structured_statement(
             "hierarchy_level": _get_level(parent_cn),
             "is_subtotal": True,
             "parent_canonical": tax_item.get("parent_canonical"),
+            "typical_sign": tax_item.get("typical_sign"),
             "values": {},
             "children": [],
         }
@@ -2889,6 +2894,77 @@ def get_structured_statement(
     for item in root_items:
         _compute_subtotals(item)
 
+    # 8. Reconciliation checks
+    reconciliation = []
+
+    # Helper: get root-level values by canonical_name
+    root_values: dict = {}
+    for item in root_items:
+        root_values[item["canonical_name"]] = item.get("values", {})
+
+    if category == "balance_sheet":
+        # A = L + E check (per period)
+        ta = root_values.get("total_assets", {})
+        tl = root_values.get("total_liabilities", {})
+        te = root_values.get("total_equity", {})
+        tle = root_values.get("total_liabilities_and_equity", {})
+        # Prefer total_liabilities_and_equity if available; otherwise sum L+E
+        for p in sorted_periods:
+            a_val = ta.get(p)
+            if tle:
+                le_val = tle.get(p)
+            else:
+                l_val = tl.get(p)
+                e_val = te.get(p)
+                le_val = (l_val or 0) + (e_val or 0) if (l_val is not None or e_val is not None) else None
+            if a_val is not None and le_val is not None:
+                diff = round(a_val - le_val, 2)
+                reconciliation.append({
+                    "check": f"Assets = Liabilities + Equity ({p})",
+                    "expected": a_val,
+                    "actual": le_val,
+                    "balanced": abs(diff) < 0.01,
+                    "difference": diff,
+                })
+                break  # One check is sufficient (most recent period)
+
+    elif category == "cash_flow":
+        cfo = root_values.get("cfo", {})
+        cfi = root_values.get("cfi", {})
+        cff = root_values.get("cff", {})
+        net_change = root_values.get("net_change_cash", {})
+        for p in sorted_periods:
+            o, i, f_, nc = cfo.get(p), cfi.get(p), cff.get(p), net_change.get(p)
+            if all(v is not None for v in [o, i, f_]) and nc is not None:
+                computed = round(o + i + f_, 2)
+                diff = round(computed - nc, 2)
+                reconciliation.append({
+                    "check": f"CFO + CFI + CFF = Net Change ({p})",
+                    "expected": nc,
+                    "actual": computed,
+                    "balanced": abs(diff) < 0.01,
+                    "difference": diff,
+                })
+                break
+
+    elif category == "income_statement":
+        rev = root_values.get("revenue", {})
+        cogs = root_values.get("cogs", {})
+        gp = root_values.get("gross_profit", {})
+        for p in sorted_periods:
+            r, c, g = rev.get(p), cogs.get(p), gp.get(p)
+            if all(v is not None for v in [r, c, g]):
+                computed = round(r - c, 2)
+                diff = round(computed - g, 2)
+                reconciliation.append({
+                    "check": f"Revenue - COGS = Gross Profit ({p})",
+                    "expected": g,
+                    "actual": computed,
+                    "balanced": abs(diff) < 0.01,
+                    "difference": diff,
+                })
+                break
+
     # Count total items (including nested)
     def _count_items(items: list) -> int:
         count = 0
@@ -2905,6 +2981,7 @@ def get_structured_statement(
         "periods": sorted_periods,
         "items": root_items,
         "total_items": total,
+        "reconciliation": reconciliation if reconciliation else None,
     }
 
 

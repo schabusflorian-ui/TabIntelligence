@@ -1,5 +1,5 @@
 {
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "Consolidated canonical financial taxonomy for DebtFund extraction pipeline",
   "categories": {
     "balance_sheet": [
@@ -3995,7 +3995,7 @@
         ],
         "definition": "Systematic allocation of intangible asset costs over useful life",
         "typical_sign": "negative",
-        "parent_canonical": "opex",
+        "parent_canonical": null,
         "validation_rules": {
           "type": "currency",
           "cross_item_validation": {
@@ -4048,7 +4048,7 @@
         ],
         "definition": "Direct costs attributable to production of goods sold",
         "typical_sign": "negative",
-        "parent_canonical": "gross_profit",
+        "parent_canonical": null,
         "validation_rules": {
           "type": "currency",
           "cross_item_validation": {
@@ -4182,7 +4182,7 @@
         ],
         "definition": "Systematic allocation of tangible asset costs over useful life",
         "typical_sign": "negative",
-        "parent_canonical": "opex",
+        "parent_canonical": null,
         "validation_rules": {
           "type": "currency",
           "cross_item_validation": {
@@ -4232,7 +4232,7 @@
         ],
         "definition": "Combined depreciation and amortization expense",
         "typical_sign": "negative",
-        "parent_canonical": "opex",
+        "parent_canonical": null,
         "validation_rules": {
           "type": "currency",
           "derivation": "depreciation + amortization",
@@ -4815,7 +4815,7 @@
           "Write-downs"
         ],
         "definition": "Reduction in value of assets when carrying value exceeds recoverable amount",
-        "typical_sign": "positive",
+        "typical_sign": "negative",
         "parent_canonical": "opex",
         "industry_tags": [
           "all",
@@ -4867,7 +4867,7 @@
         ],
         "definition": "Cost of borrowed funds; interest paid on debt",
         "typical_sign": "negative",
-        "parent_canonical": "ebt",
+        "parent_canonical": null,
         "validation_rules": {
           "type": "currency",
           "typical_sign": "negative",
@@ -4915,7 +4915,7 @@
         ],
         "definition": "Income earned from interest-bearing assets and investments",
         "typical_sign": "positive",
-        "parent_canonical": "ebt",
+        "parent_canonical": null,
         "validation_rules": {
           "type": "currency"
         },
@@ -4976,7 +4976,7 @@
           "Marketing & Advertising"
         ],
         "definition": "Costs related to marketing and advertising activities",
-        "typical_sign": "positive",
+        "typical_sign": "negative",
         "parent_canonical": "sga",
         "industry_tags": [
           "all",
@@ -5294,7 +5294,7 @@
         ],
         "definition": "Expenses from non-operating activities",
         "typical_sign": "negative",
-        "parent_canonical": "ebt",
+        "parent_canonical": null,
         "validation_rules": {
           "type": "currency"
         },
@@ -5314,7 +5314,7 @@
         ],
         "definition": "Income from non-operating activities",
         "typical_sign": "varies",
-        "parent_canonical": "ebt",
+        "parent_canonical": null,
         "validation_rules": {
           "type": "currency"
         },
@@ -5431,7 +5431,7 @@
           "Reorganization Costs"
         ],
         "definition": "One-time costs associated with reorganizing business operations",
-        "typical_sign": "positive",
+        "typical_sign": "negative",
         "parent_canonical": "opex",
         "industry_tags": [
           "all",
