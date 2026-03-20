@@ -24,6 +24,8 @@ let tabsController = null;
 let currentJob = null;
 let bulkEditMode = false;
 let bulkSelectedTaxonomy = null;
+let _bulkTaxTimer = null;
+let _bulkTaxController = null;
 
 // --- Unsaved Corrections Guard ---
 function beforeUnloadHandler(e) {
@@ -906,8 +908,8 @@ function renderLineItemsTab(panel, data) {
   }
 
   // Bulk toolbar taxonomy search (standalone, debounced with request cancellation)
-  let bulkTaxTimer = null;
-  let bulkTaxController = null;
+  _bulkTaxTimer = null;
+  _bulkTaxController = null;
   let bulkHighlightedIndex = -1;
 
   function setupBulkTaxSearch() {
@@ -916,15 +918,15 @@ function renderLineItemsTab(panel, data) {
     if (!taxInput || !taxResults) return;
 
     taxInput.addEventListener('input', () => {
-      clearTimeout(bulkTaxTimer);
-      if (bulkTaxController) bulkTaxController.abort();
+      clearTimeout(_bulkTaxTimer);
+      if (_bulkTaxController) _bulkTaxController.abort();
       bulkHighlightedIndex = -1;
       const q = taxInput.value.trim();
       if (q.length < 1) { taxResults.innerHTML = ''; return; }
-      bulkTaxTimer = setTimeout(async () => {
-        bulkTaxController = new AbortController();
+      _bulkTaxTimer = setTimeout(async () => {
+        _bulkTaxController = new AbortController();
         try {
-          const data = await apiGet('/api/v1/taxonomy/search?q=' + encodeURIComponent(q));
+          const data = await apiGet('/api/v1/taxonomy/search?q=' + encodeURIComponent(q), { signal: _bulkTaxController.signal });
           taxResults.innerHTML = '';
           (data.items || []).forEach(item => {
             const div = document.createElement('div');
@@ -1241,6 +1243,8 @@ function showError(msg) {
 
 export function destroy() {
   if (pollTimer) clearTimeout(pollTimer);
+  if (_bulkTaxTimer) clearTimeout(_bulkTaxTimer);
+  if (_bulkTaxController) _bulkTaxController.abort();
   window.removeEventListener('beforeunload', beforeUnloadHandler);
   closeProvenancePanel();
   currentJobId = null;
@@ -1250,4 +1254,6 @@ export function destroy() {
   currentJob = null;
   bulkEditMode = false;
   bulkSelectedTaxonomy = null;
+  _bulkTaxTimer = null;
+  _bulkTaxController = null;
 }

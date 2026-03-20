@@ -81,8 +81,8 @@ export async function apiFetch(path, opts = {}) {
 }
 
 /** Convenience: GET + parse JSON */
-export async function apiGet(path) {
-  const res = await apiFetch(path);
+export async function apiGet(path, opts = {}) {
+  const res = await apiFetch(path, opts);
   return res.json();
 }
 

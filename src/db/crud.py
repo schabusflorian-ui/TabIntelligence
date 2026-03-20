@@ -1773,11 +1773,183 @@ def persist_cell_mappings(
         db.bulk_save_objects(mappings)
         db.commit()
         logger.info(f"Persisted {len(mappings)} cell mappings for job {job_id}")
+
+        # Best-effort: link cell mappings to their extraction facts via cell_ref
+        try:
+            linked = (
+                db.query(CellMapping)
+                .filter(
+                    CellMapping.job_id == job_id,
+                    CellMapping.cell_role == "value",
+                    CellMapping.fact_id.is_(None),
+                )
+                .all()
+            )
+            if linked:
+                # Build lookup: (sheet_name, cell_ref) -> fact.id
+                facts = (
+                    db.query(ExtractionFact.id, ExtractionFact.sheet_name, ExtractionFact.cell_ref)
+                    .filter(
+                        ExtractionFact.job_id == job_id,
+                        ExtractionFact.cell_ref.isnot(None),
+                    )
+                    .all()
+                )
+                fact_lookup = {(f.sheet_name, f.cell_ref.upper()): f.id for f in facts if f.cell_ref}
+                update_count = 0
+                for cm in linked:
+                    fid = fact_lookup.get((cm.sheet_name, cm.cell_ref))
+                    if fid:
+                        cm.fact_id = fid
+                        update_count += 1
+                if update_count:
+                    db.commit()
+                    logger.info(f"Linked {update_count} cell mappings to extraction facts")
+        except Exception as link_err:
+            db.rollback()
+            logger.warning(f"Could not link cell mappings to facts: {link_err}")
+
         return len(mappings)
     except SQLAlchemyError as e:
         db.rollback()
         logger.warning(f"Could not persist cell mappings: {e}")
         return 0
+
+
+# ============================================================================
+# Cell Mapping Queries
+# ============================================================================
+
+
+def get_cell_mappings_for_job(
+    db: Session,
+    job_id: UUID,
+    sheet_name: Optional[str] = None,
+    mapping_status: Optional[str] = None,
+    limit: int = 500,
+    offset: int = 0,
+) -> dict:
+    """Get cell mappings for a job with optional filtering.
+
+    Returns dict with keys: job_id, total, items.
+    """
+    query = db.query(CellMapping).filter(CellMapping.job_id == job_id)
+
+    if sheet_name:
+        query = query.filter(CellMapping.sheet_name == sheet_name)
+    if mapping_status:
+        query = query.filter(CellMapping.mapping_status == mapping_status)
+
+    total = query.count()
+    items = (
+        query
+        .order_by(CellMapping.sheet_name, CellMapping.row_index, CellMapping.col_index)
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+    return {
+        "job_id": str(job_id),
+        "total": total,
+        "items": [
+            {
+                "id": str(cm.id),
+                "sheet_name": cm.sheet_name,
+                "cell_ref": cm.cell_ref,
+                "row_index": cm.row_index,
+                "col_index": cm.col_index,
+                "cell_role": cm.cell_role,
+                "raw_value": cm.raw_value,
+                "canonical_name": cm.canonical_name,
+                "original_label": cm.original_label,
+                "period": cm.period,
+                "fact_id": str(cm.fact_id) if cm.fact_id else None,
+                "mapping_status": cm.mapping_status,
+                "confidence": cm.confidence,
+                "has_formula": cm.has_formula,
+                "formula_text": cm.formula_text,
+            }
+            for cm in items
+        ],
+    }
+
+
+def get_cell_mapping_stats(
+    db: Session,
+    job_id: UUID,
+) -> dict:
+    """Get cell mapping statistics per sheet for a job.
+
+    Returns dict with keys: job_id, sheets, totals.
+    """
+    from sqlalchemy import func as sa_func
+
+    rows = (
+        db.query(
+            CellMapping.sheet_name,
+            CellMapping.mapping_status,
+            sa_func.count(CellMapping.id).label("count"),
+        )
+        .filter(CellMapping.job_id == job_id)
+        .group_by(CellMapping.sheet_name, CellMapping.mapping_status)
+        .all()
+    )
+
+    sheets: dict = {}
+    totals = {"mapped": 0, "unmapped": 0, "header": 0, "skipped": 0, "total": 0}
+
+    for sheet_name, status, count in rows:
+        if sheet_name not in sheets:
+            sheets[sheet_name] = {"mapped": 0, "unmapped": 0, "header": 0, "skipped": 0, "total": 0}
+        sheets[sheet_name][status] = count
+        sheets[sheet_name]["total"] += count
+        totals[status] = totals.get(status, 0) + count
+        totals["total"] += count
+
+    return {
+        "job_id": str(job_id),
+        "sheets": sheets,
+        "totals": totals,
+    }
+
+
+def get_cell_mapping_by_ref(
+    db: Session,
+    job_id: UUID,
+    sheet_name: str,
+    cell_ref: str,
+) -> Optional[dict]:
+    """Look up a single cell mapping by job, sheet, and cell reference."""
+    cm = (
+        db.query(CellMapping)
+        .filter(
+            CellMapping.job_id == job_id,
+            CellMapping.sheet_name == sheet_name,
+            CellMapping.cell_ref == cell_ref.upper(),
+        )
+        .first()
+    )
+    if not cm:
+        return None
+
+    return {
+        "id": str(cm.id),
+        "sheet_name": cm.sheet_name,
+        "cell_ref": cm.cell_ref,
+        "row_index": cm.row_index,
+        "col_index": cm.col_index,
+        "cell_role": cm.cell_role,
+        "raw_value": cm.raw_value,
+        "canonical_name": cm.canonical_name,
+        "original_label": cm.original_label,
+        "period": cm.period,
+        "fact_id": str(cm.fact_id) if cm.fact_id else None,
+        "mapping_status": cm.mapping_status,
+        "confidence": cm.confidence,
+        "has_formula": cm.has_formula,
+        "formula_text": cm.formula_text,
+    }
 
 
 def get_unmapped_label_aggregation(

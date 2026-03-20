@@ -613,6 +613,7 @@ const GRADE_VALUES = { A: 4, B: 3, C: 2, D: 1, F: 0 };
 const GRADE_COLORS_MAP = { A: '#1A7A4A', B: '#1D6B9F', C: '#C47D00', D: '#A32626', F: '#6B7280' };
 
 async function renderQualityTab(panel, entityId) {
+  destroySparklineCharts();
   panel.innerHTML = loadingPlaceholder('Loading quality trend...');
   try {
     const data = await apiGet('/api/v1/analytics/entity/' + entityId + '/quality-trend');

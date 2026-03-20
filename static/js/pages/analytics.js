@@ -511,8 +511,10 @@ async function renderCosts(panel) {
         </div>
       `;
     } else if (trend.length === 0) {
-      panel.querySelector('#costs-trend-card').querySelector('[style*="height:200px"]').innerHTML =
-        '<div class="text-center text-secondary text-sm" style="padding:3rem">No trend data available.</div>';
+      const trendContainer = panel.querySelector('#costs-trend-card')?.querySelector('[style*="height:200px"]');
+      if (trendContainer) {
+        trendContainer.innerHTML = '<div class="text-center text-secondary text-sm" style="padding:3rem">No trend data available.</div>';
+      }
     }
   } catch (err) {
     panel.querySelector('#costs-stats').innerHTML = errorState('Failed to load cost data.', 'Retry');

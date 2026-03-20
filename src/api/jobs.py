@@ -9,6 +9,9 @@ from sqlalchemy.orm import Session
 from src.api.middleware import get_client_ip, log_audit_event
 from src.api.rate_limit import limiter
 from src.api.schemas import (
+    CellMappingItem,
+    CellMappingListResponse,
+    CellMappingStatsResponse,
     ExtractionDiffResponse,
     ItemLineageResponse,
     JobListResponse,
@@ -809,3 +812,69 @@ def _build_csv_response(result: dict, line_items: list, job_id: str):
             "Content-Disposition": f'attachment; filename="extraction_{job_id}.csv"',
         },
     )
+
+
+# ============================================================================
+# Cell Mapping Endpoints
+# ============================================================================
+
+
+@router.get("/{job_id}/cells", response_model=CellMappingListResponse)
+@limiter.limit("500/hour")
+async def get_job_cell_mappings(
+    request: Request,
+    job_id: UUID,
+    sheet_name: Optional[str] = None,
+    mapping_status: Optional[str] = None,
+    limit: int = 500,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    _api_key: APIKey = Depends(get_current_api_key),
+):
+    """Get cell mappings for a job. Supports filtering by sheet and mapping status."""
+    job = crud.get_extraction_job(db, job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+
+    result = crud.get_cell_mappings_for_job(
+        db, job_id,
+        sheet_name=sheet_name,
+        mapping_status=mapping_status,
+        limit=min(limit, 2000),
+        offset=offset,
+    )
+    return result
+
+
+@router.get("/{job_id}/cells/stats", response_model=CellMappingStatsResponse)
+@limiter.limit("500/hour")
+async def get_job_cell_stats(
+    request: Request,
+    job_id: UUID,
+    db: Session = Depends(get_db),
+    _api_key: APIKey = Depends(get_current_api_key),
+):
+    """Get cell mapping statistics per sheet for a job."""
+    job = crud.get_extraction_job(db, job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+
+    return crud.get_cell_mapping_stats(db, job_id)
+
+
+@router.get("/{job_id}/cells/{sheet_name}/{cell_ref}", response_model=CellMappingItem)
+@limiter.limit("500/hour")
+async def get_cell_mapping(
+    request: Request,
+    job_id: UUID,
+    sheet_name: str,
+    cell_ref: str,
+    db: Session = Depends(get_db),
+    _api_key: APIKey = Depends(get_current_api_key),
+):
+    """Look up a single cell's canonical mapping."""
+    result = crud.get_cell_mapping_by_ref(db, job_id, sheet_name, cell_ref)
+    if not result:
+        raise HTTPException(404, f"No cell mapping for {sheet_name}!{cell_ref}")
+
+    return result
