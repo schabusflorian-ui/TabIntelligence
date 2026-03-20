@@ -942,6 +942,159 @@ class TestTaxonomySuggestions:
 
 
 # ============================================================================
+# CORRECTION FEEDBACK LOOP TESTS
+# ============================================================================
+
+
+class TestCorrectionFeedbackLoop:
+    """Test that user corrections feed back into LearnedAlias and TaxonomySuggestion."""
+
+    def test_correction_creates_learned_alias(self, db_session):
+        """Applying a correction should also create a LearnedAlias record."""
+        from src.db.models import (
+            Entity,
+            ExtractionFact,
+            ExtractionJob,
+            File,
+            LearnedAlias,
+        )
+
+        entity = Entity(name="Test Corp", industry="technology")
+        db_session.add(entity)
+        db_session.flush()
+
+        file = File(
+            filename="test.xlsx",
+            file_size=100,
+            entity_id=entity.id,
+        )
+        db_session.add(file)
+        db_session.flush()
+
+        job = ExtractionJob(
+            file_id=file.file_id,
+            status=JobStatusEnum.COMPLETED,
+            result={
+                "line_items": [
+                    {
+                        "original_label": "Net Sales",
+                        "canonical_name": "gross_revenue",
+                        "confidence": 0.7,
+                        "sheet": "IS",
+                        "row": 5,
+                        "values": {"FY2024": 1000000},
+                    }
+                ]
+            },
+        )
+        db_session.add(job)
+        db_session.flush()
+
+        # Add a fact so update_extraction_facts_for_correction can find it
+        fact = ExtractionFact(
+            job_id=job.job_id,
+            entity_id=entity.id,
+            canonical_name="gross_revenue",
+            original_label="Net Sales",
+            period="FY2024",
+            value=1000000,
+            confidence=0.7,
+            sheet_name="IS",
+            row_index=5,
+        )
+        db_session.add(fact)
+        db_session.commit()
+
+        # Apply correction
+        result = crud.apply_correction_to_result(
+            db_session,
+            job.job_id,
+            [{"original_label": "Net Sales", "new_canonical_name": "revenue"}],
+        )
+
+        assert len(result["diffs"]) == 1
+
+        # Verify LearnedAlias was created with 3x weight
+        alias = (
+            db_session.query(LearnedAlias)
+            .filter(
+                LearnedAlias.canonical_name == "revenue",
+                LearnedAlias.alias_text == "Net Sales",
+            )
+            .first()
+        )
+        assert alias is not None
+        assert alias.occurrence_count == 3  # 3x weight for user corrections
+        assert str(entity.id) in alias.source_entities
+
+    def test_correction_updates_pending_suggestion(self, db_session):
+        """Correction should update evidence on a matching pending suggestion."""
+        from src.db.models import (
+            Entity,
+            ExtractionJob,
+            File,
+            TaxonomySuggestion,
+        )
+
+        entity = Entity(name="Test Corp", industry="technology")
+        db_session.add(entity)
+        db_session.flush()
+
+        file = File(
+            filename="test.xlsx",
+            file_size=100,
+            entity_id=entity.id,
+        )
+        db_session.add(file)
+        db_session.flush()
+
+        job = ExtractionJob(
+            file_id=file.file_id,
+            status=JobStatusEnum.COMPLETED,
+            result={
+                "line_items": [
+                    {
+                        "original_label": "Total Net Rev",
+                        "canonical_name": "unmapped",
+                        "confidence": 0.0,
+                        "sheet": "IS",
+                        "row": 3,
+                        "values": {"FY2024": 500000},
+                    }
+                ]
+            },
+        )
+        db_session.add(job)
+        db_session.flush()
+
+        # Create a pending suggestion for this label
+        suggestion = TaxonomySuggestion(
+            suggestion_type="new_item",
+            canonical_name=None,
+            suggested_text="Total Net Rev",
+            evidence_count=2,
+            evidence_jobs=[],
+            status="pending",
+        )
+        db_session.add(suggestion)
+        db_session.commit()
+
+        # Apply correction
+        crud.apply_correction_to_result(
+            db_session,
+            job.job_id,
+            [{"original_label": "Total Net Rev", "new_canonical_name": "revenue"}],
+        )
+
+        # Verify suggestion was updated
+        db_session.refresh(suggestion)
+        assert suggestion.evidence_count == 3
+        assert str(job.job_id) in suggestion.evidence_jobs
+        assert suggestion.canonical_name == "revenue"
+        assert suggestion.suggestion_type == "new_alias"
+
+
+# ============================================================================
 # TAXONOMY SUGGESTION API TESTS
 # ============================================================================
 

@@ -1891,6 +1891,82 @@ def update_extraction_facts_for_correction(
         return 0
 
 
+def _record_learned_alias_from_correction(
+    db: Session,
+    canonical_name: str,
+    alias_text: str,
+    entity_id: str,
+) -> None:
+    """Record a learned alias from a user correction (flush only, no commit).
+
+    User corrections count 3x toward auto-promotion thresholds because
+    they are high-confidence signals (explicit human verification).
+    """
+    from src.extraction.taxonomy_loader import get_all_canonical_names
+
+    if canonical_name not in get_all_canonical_names():
+        return
+
+    existing = (
+        db.query(LearnedAlias)
+        .filter(
+            LearnedAlias.canonical_name == canonical_name,
+            LearnedAlias.alias_text == alias_text,
+        )
+        .first()
+    )
+
+    correction_weight = 3  # User corrections count 3x
+
+    if existing:
+        existing.occurrence_count += correction_weight
+        existing.last_seen_at = datetime.now(timezone.utc)
+        sources = list(existing.source_entities or [])
+        if entity_id not in sources:
+            sources.append(entity_id)
+            existing.source_entities = sources
+    else:
+        alias = LearnedAlias(
+            canonical_name=canonical_name,
+            alias_text=alias_text,
+            occurrence_count=correction_weight,
+            source_entities=[entity_id],
+            last_seen_at=datetime.now(timezone.utc),
+        )
+        db.add(alias)
+
+    db.flush()
+
+
+def _update_suggestion_evidence(
+    db: Session,
+    label: str,
+    canonical_name: str,
+    job_id: UUID,
+) -> None:
+    """Update pending TaxonomySuggestion evidence if one matches this label."""
+    suggestion = (
+        db.query(TaxonomySuggestion)
+        .filter(
+            TaxonomySuggestion.suggested_text == label,
+            TaxonomySuggestion.status == "pending",
+        )
+        .first()
+    )
+    if suggestion:
+        suggestion.evidence_count = (suggestion.evidence_count or 0) + 1
+        evidence_jobs = list(suggestion.evidence_jobs or [])
+        job_str = str(job_id)
+        if job_str not in evidence_jobs:
+            evidence_jobs.append(job_str)
+            suggestion.evidence_jobs = evidence_jobs
+        # If suggestion had no canonical_name, set it now from the correction
+        if not suggestion.canonical_name and canonical_name:
+            suggestion.canonical_name = canonical_name
+            suggestion.suggestion_type = "new_alias"
+        db.flush()
+
+
 def apply_correction_to_result(
     db: Session,
     job_id: UUID,
@@ -2024,6 +2100,18 @@ def apply_correction_to_result(
                     patterns_updated += 1
                 else:
                     patterns_created += 1
+
+                # Record learned alias for cross-entity learning.
+                # User corrections are high-signal, so count 3x toward
+                # auto-promotion thresholds.
+                _record_learned_alias_from_correction(
+                    db, new_canonical, original_label, str(entity_id)
+                )
+
+                # Update pending taxonomy suggestion evidence if one matches
+                _update_suggestion_evidence(
+                    db, original_label, new_canonical, job_id
+                )
 
                 # Update extraction facts
                 facts_updated += update_extraction_facts_for_correction(
