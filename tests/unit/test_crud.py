@@ -832,6 +832,62 @@ class TestTaxonomySuggestions:
         suggestions = crud.generate_taxonomy_suggestions(db_session, min_occurrences=3)
         assert len(suggestions) == 0
 
+    def test_generate_taxonomy_suggestions_fuzzy_match(self, db_session):
+        """Fuzzy matching detects labels similar to canonical names (minor typos, reordering)."""
+        from src.db.models import Taxonomy, UnmappedLabelAggregate
+
+        db_session.add(
+            Taxonomy(
+                canonical_name="net_income",
+                category="income_statement",
+                display_name="Net Income",
+                aliases=["net profit", "bottom line"],
+            )
+        )
+        # "net incme" has a typo (missing 'o') — should still match with fuzzy
+        db_session.add(
+            UnmappedLabelAggregate(
+                label_normalized="net incme",
+                original_labels=["Net Incme"],
+                occurrence_count=5,
+                sheet_names=["IS"],
+            )
+        )
+        db_session.commit()
+
+        suggestions = crud.generate_taxonomy_suggestions(db_session, min_occurrences=3)
+        assert len(suggestions) == 1
+        assert suggestions[0].suggestion_type == "new_alias"
+        assert suggestions[0].canonical_name == "net_income"
+
+    def test_generate_taxonomy_suggestions_alias_match(self, db_session):
+        """Fuzzy matching also checks taxonomy aliases, not just canonical names."""
+        from src.db.models import Taxonomy, UnmappedLabelAggregate
+
+        db_session.add(
+            Taxonomy(
+                canonical_name="accounts_receivable",
+                category="balance_sheet",
+                display_name="Accounts Receivable",
+                aliases=["trade receivables", "A/R", "accts receivable"],
+            )
+        )
+        # "trade receivable" (missing 's') should match alias "trade receivables"
+        db_session.add(
+            UnmappedLabelAggregate(
+                label_normalized="trade receivable",
+                original_labels=["Trade Receivable"],
+                occurrence_count=4,
+                sheet_names=["BS"],
+            )
+        )
+        db_session.commit()
+
+        suggestions = crud.generate_taxonomy_suggestions(db_session, min_occurrences=3)
+        assert len(suggestions) == 1
+        assert suggestions[0].suggestion_type == "new_alias"
+        assert suggestions[0].canonical_name == "accounts_receivable"
+
     def test_accept_nonexistent_raises(self, db_session):
         """Accepting a nonexistent suggestion raises ValueError."""
         with pytest.raises(ValueError, match="not found"):

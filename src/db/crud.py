@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from uuid import UUID
 
+from rapidfuzz import fuzz
 from sqlalchemy import func as sa_func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, joinedload
@@ -2954,7 +2955,9 @@ def get_structured_statement(
         for p in sorted_periods:
             r, c, g = rev.get(p), cogs.get(p), gp.get(p)
             if all(v is not None for v in [r, c, g]):
-                computed = round(r - c, 2)
+                # COGS may be stored as negative (typical_sign="negative")
+                # or positive depending on source. Use abs() for safety.
+                computed = round(r - abs(c), 2)
                 diff = round(computed - g, 2)
                 reconciliation.append({
                     "check": f"Revenue - COGS = Gross Profit ({p})",
@@ -3419,22 +3422,40 @@ def get_quality_trend(
 
 def _normalize_for_comparison(text: str) -> str:
     """Normalize a string for fuzzy comparison: lowercase, strip, collapse whitespace/underscores."""
-    return text.lower().strip().replace("_", " ").replace("-", " ").split().__str__
+    return " ".join(text.lower().strip().replace("_", " ").replace("-", " ").split())
 
 
-def _is_close_match(unmapped: str, canonical: str) -> bool:
+# Threshold for fuzzy matching: above this score, labels are considered a close match
+_FUZZY_MATCH_THRESHOLD = 85
+
+
+def _compute_alias_similarity(unmapped: str, canonical: str, aliases: list | None = None) -> float:
     """
-    Check if an unmapped label closely matches a canonical name.
+    Compute similarity between an unmapped label and a canonical name + its aliases.
 
-    Returns True if the two strings differ only by underscores, spaces, hyphens,
-    or minor whitespace variations.
+    Uses rapidfuzz token_sort_ratio which handles word reordering
+    (e.g., 'total revenue' vs 'revenue total') and is case-insensitive.
+
+    Returns a score from 0.0 to 100.0.
     """
-    norm_unmapped = unmapped.lower().strip().replace("_", " ").replace("-", " ")
-    norm_canonical = canonical.lower().strip().replace("_", " ").replace("-", " ")
-    # Collapse multiple spaces
-    norm_unmapped = " ".join(norm_unmapped.split())
-    norm_canonical = " ".join(norm_canonical.split())
-    return norm_unmapped == norm_canonical
+    norm_unmapped = _normalize_for_comparison(unmapped)
+    best = fuzz.token_sort_ratio(norm_unmapped, _normalize_for_comparison(canonical))
+    if aliases:
+        for alias in aliases:
+            score = fuzz.token_sort_ratio(norm_unmapped, _normalize_for_comparison(str(alias)))
+            if score > best:
+                best = score
+    return best
+
+
+def _is_close_match(unmapped: str, canonical: str, aliases: list | None = None) -> bool:
+    """
+    Check if an unmapped label closely matches a canonical name or any of its aliases.
+
+    Uses fuzzy matching (rapidfuzz token_sort_ratio) with a configurable threshold.
+    Handles word reordering, minor typos, and underscore/space/hyphen variations.
+    """
+    return _compute_alias_similarity(unmapped, canonical, aliases) >= _FUZZY_MATCH_THRESHOLD
 
 
 def generate_taxonomy_suggestions(db: Session, min_occurrences: int = 3) -> list:
@@ -3459,9 +3480,9 @@ def generate_taxonomy_suggestions(db: Session, min_occurrences: int = 3) -> list
         if not aggregates:
             return []
 
-        # Load all canonical names for matching
-        all_taxonomy = db.query(Taxonomy.canonical_name).all()
-        canonical_names = [t.canonical_name for t in all_taxonomy]
+        # Load all taxonomy items with aliases for fuzzy matching
+        all_taxonomy = db.query(Taxonomy.canonical_name, Taxonomy.aliases).all()
+        taxonomy_lookup = {t.canonical_name: t.aliases or [] for t in all_taxonomy}
 
         new_suggestions = []
         for agg in aggregates:
@@ -3477,12 +3498,15 @@ def generate_taxonomy_suggestions(db: Session, min_occurrences: int = 3) -> list
             if existing:
                 continue
 
-            # Try to find a close match in taxonomy canonical names
+            # Try to find a close match in taxonomy (canonical names + aliases)
             matched_canonical = None
-            for cn in canonical_names:
-                if _is_close_match(agg.label_normalized, cn):
-                    matched_canonical = cn
-                    break
+            best_score = 0.0
+            for cn, aliases in taxonomy_lookup.items():
+                score = _compute_alias_similarity(agg.label_normalized, cn, aliases)
+                if score > best_score:
+                    best_score = score
+                    if score >= _FUZZY_MATCH_THRESHOLD:
+                        matched_canonical = cn
 
             if matched_canonical:
                 suggestion_type = "new_alias"
