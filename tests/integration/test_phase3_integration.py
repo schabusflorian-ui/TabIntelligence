@@ -17,11 +17,7 @@ import pytest
 
 from src.db import crud
 from src.db.models import (
-    Entity,
     EntityPattern,
-    ExtractionFact,
-    ExtractionJob,
-    File,
     FxRateCache,
     LearnedAlias,
     QualitySnapshot,
@@ -30,7 +26,6 @@ from src.db.models import (
 from src.normalization.anomaly_detection import detect_iqr_anomalies, detect_zscore_anomalies
 from src.normalization.fx_service import FxService
 from src.normalization.suggestion_engine import suggest_for_label
-
 
 # ============================================================================
 # Fixtures — Multi-entity portfolio with full metadata

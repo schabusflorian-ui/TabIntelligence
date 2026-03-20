@@ -1,13 +1,10 @@
 """Tests for Phase 7 — Comparison endpoints (structured statement + multi-period comparison)."""
 
 import uuid
-from decimal import Decimal
 
 import pytest
 
 from src.db import crud
-from src.db.models import ExtractionFact
-
 
 # ============================================================================
 # Fixtures

@@ -19,7 +19,6 @@ from fastapi import APIRouter, Depends, Response
 from fastapi import status as http_status
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
-
 from sqlalchemy.orm import Session
 
 from src.auth.dependencies import get_current_api_key

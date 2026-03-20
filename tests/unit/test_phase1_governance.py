@@ -14,7 +14,6 @@ from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from sqlalchemy.orm import Session
 
 from src.db.models import Taxonomy, TaxonomyVersion
 from src.guidelines.taxonomy import TaxonomyManager
@@ -23,7 +22,6 @@ from src.taxonomy_constants import (
     CATEGORY_DISPLAY_NAMES,
     VALID_CATEGORIES,
 )
-
 
 # ============================================================================
 # Category Constants SSoT
@@ -229,7 +227,7 @@ class TestTaxonomyVersioning:
         versions = db_session.query(TaxonomyVersion).all()
         assert len(versions) == 1
         v = versions[0]
-        assert v.version == "3.1.0"
+        assert v.version == "3.2.0"
         assert v.item_count > 200
         assert len(v.checksum) == 64  # SHA-256 hex
         assert v.applied_by == "test"

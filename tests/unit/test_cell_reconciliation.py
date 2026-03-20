@@ -4,7 +4,6 @@ from decimal import Decimal
 
 from src.validation.cell_reconciliation import (
     CellReconciliationValidator,
-    ReconciliationSummary,
 )
 
 

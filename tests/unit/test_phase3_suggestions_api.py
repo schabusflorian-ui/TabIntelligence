@@ -10,8 +10,7 @@ from uuid import uuid4
 
 import pytest
 
-from src.db.models import Entity, EntityPattern, LearnedAlias, Taxonomy
-
+from src.db.models import Entity, EntityPattern, Taxonomy
 
 # ============================================================================
 # Fixtures

@@ -5,13 +5,12 @@ DebtFund - API Server
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from sqlalchemy.orm import Session
 
 from src.api.rate_limit import limiter
 from src.core.config import get_settings
@@ -43,7 +42,6 @@ from src.api.middleware import RequestIDMiddleware
 from src.api.middleware.security_headers import SecurityHeadersMiddleware
 from src.api.taxonomy import detail_router as taxonomy_detail_router
 from src.api.taxonomy import router as taxonomy_router
-from src.db.session import get_db
 from src.storage.s3 import get_s3_client
 
 use_json_logging = os.getenv("LOG_FORMAT", "plain").lower() == "json"

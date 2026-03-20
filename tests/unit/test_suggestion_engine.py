@@ -12,7 +12,6 @@ import pytest
 from src.db.models import EntityPattern, LearnedAlias, Taxonomy
 from src.normalization.suggestion_engine import suggest_for_label
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================

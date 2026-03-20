@@ -7,7 +7,6 @@ No Claude API calls are made -- all LLM interactions are mocked.
 """
 
 import io
-import json
 import re
 from decimal import Decimal
 from pathlib import Path
@@ -1746,7 +1745,7 @@ class TestCompletenessAndQuality:
 
     def test_quality_model_type_weights(self):
         """Model-type-specific weights should be applied."""
-        from src.validation.quality_scorer import QualityScorer, MODEL_TYPE_WEIGHTS
+        from src.validation.quality_scorer import MODEL_TYPE_WEIGHTS, QualityScorer
         for model_type in MODEL_TYPE_WEIGHTS:
             scorer = QualityScorer(model_type=model_type)
             result = scorer.score(0.80, 0.80, 0.80, 0.80)
@@ -2352,7 +2351,6 @@ class TestTimeSeriesValidator:
 
     def test_lifecycle_aware_suppression(self):
         """Lifecycle-aware mode should suppress flags at phase transitions."""
-        from src.validation.lifecycle_detector import LifecycleResult
         from src.validation.time_series_validator import TimeSeriesConfig
         config = TimeSeriesConfig(lifecycle_aware=True)
         validator = self._get_validator()

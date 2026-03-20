@@ -17,8 +17,8 @@ from src.extraction.taxonomy_loader import get_all_taxonomy_items, get_validatio
 from src.extraction.utils import extract_json
 from src.validation.accounting_validator import AccountingValidator
 from src.validation.cell_reconciliation import CellReconciliationValidator, ReconciliationSummary
-from src.validation.formula_verifier import FormulaVerificationSummary, FormulaVerifier
 from src.validation.completeness_scorer import CompletenessScorer
+from src.validation.formula_verifier import FormulaVerificationSummary, FormulaVerifier
 from src.validation.lifecycle_detector import LifecycleDetector, LifecycleResult
 from src.validation.quality_scorer import QualityScorer
 from src.validation.time_series_validator import TimeSeriesValidator

@@ -12,7 +12,6 @@ import pytest
 
 from src.db.models import Entity, ExtractionFact, ExtractionJob, File, FxRateCache
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================

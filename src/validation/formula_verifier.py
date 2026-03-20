@@ -9,7 +9,7 @@ as unresolvable rather than producing false negatives.
 import re
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from src.core.logging import extraction_logger as logger
 

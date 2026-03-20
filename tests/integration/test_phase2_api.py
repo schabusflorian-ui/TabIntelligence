@@ -6,13 +6,11 @@ End-to-end tests through HTTP endpoints using test_client_with_db fixture
 including parameter validation, error handling, and response shapes.
 """
 
-import uuid
 
 import pytest
 from fastapi.testclient import TestClient
 
 from src.db import crud
-
 
 # ============================================================================
 # Fixtures

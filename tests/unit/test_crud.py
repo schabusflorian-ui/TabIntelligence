@@ -453,7 +453,6 @@ class TestLearnedAliasLifecycle:
 
     def test_archive_stale_aliases_archives_old(self, db_session):
         """Aliases with last_seen_at older than stale_days get archived."""
-        from src.db.models import LearnedAlias
 
         # Create an alias and manually set last_seen_at to 200 days ago
         alias = crud.record_learned_alias(db_session, "revenue", "Old Revenue", "entity-1")
@@ -659,7 +658,7 @@ class TestTaxonomySuggestions:
 
     def test_generate_taxonomy_suggestions_creates_from_unmapped(self, db_session):
         """Seed UnmappedLabelAggregate rows with high occurrence, call generate, verify suggestions created."""
-        from src.db.models import Taxonomy, TaxonomySuggestion, UnmappedLabelAggregate
+        from src.db.models import Taxonomy, UnmappedLabelAggregate
 
         # Seed taxonomy
         db_session.add(
@@ -1126,12 +1125,12 @@ class TestTaxonomyGovernance:
 
     def test_deprecated_excluded_from_prompt(self, db_session):
         """Verify format_taxonomy_for_prompt skips deprecated items."""
-        from src.extraction.taxonomy_loader import format_taxonomy_for_prompt
-
         # format_taxonomy_for_prompt uses JSON taxonomy, not DB.
         # To test deprecation filtering, we test with a dict-based approach.
         # We'll mock load_taxonomy_json to return items with deprecated flag.
         from unittest.mock import patch
+
+        from src.extraction.taxonomy_loader import format_taxonomy_for_prompt
 
         fake_data = {
             "categories": {

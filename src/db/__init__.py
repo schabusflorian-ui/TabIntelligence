@@ -1,5 +1,6 @@
 """Database models and session management (Week 2 canonical location)."""
 
+from src.db import crud  # noqa: E402 — must be after models to avoid circular import
 from src.db.base import Base, create_tables, drop_tables, get_engine
 from src.db.models import (
     AuditLog,
@@ -23,7 +24,7 @@ from src.db.session import (
     get_db_sync,
     get_sync_engine,
 )
-from src.db import crud  # noqa: E402 — must be after models to avoid circular import
+
 # NOTE: APIKey (src.auth.models) is registered with Base.metadata when src.auth is imported
 # by the app. Do NOT import it here — it causes circular imports.
 

@@ -8,11 +8,8 @@ Tests for:
 """
 
 import uuid
-from datetime import datetime, timezone
 from decimal import Decimal
-from unittest.mock import MagicMock, Mock, patch
-
-import pytest
+from unittest.mock import patch
 
 from src.db.models import (
     CorrectionHistory,
@@ -23,7 +20,6 @@ from src.db.models import (
     JobStatusEnum,
     LearnedAlias,
 )
-
 
 # ============================================================================
 # Confidence Calibration Endpoint
@@ -179,9 +175,10 @@ class TestConfidenceCalibration:
 
     def test_auth_required(self, test_db):
         """Endpoint should require authentication."""
+        from fastapi.testclient import TestClient
+
         from src.api.main import app
         from src.db.session import get_db
-        from fastapi.testclient import TestClient
 
         def override_get_db():
             db = test_db()
@@ -367,9 +364,10 @@ class TestReviewSuggestions:
 
     def test_auth_required(self, test_db):
         """Endpoint should require authentication."""
+        from fastapi.testclient import TestClient
+
         from src.api.main import app
         from src.db.session import get_db
-        from fastapi.testclient import TestClient
 
         def override_get_db():
             db = test_db()

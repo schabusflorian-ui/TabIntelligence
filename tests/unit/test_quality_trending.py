@@ -12,7 +12,6 @@ import pytest
 from src.db import crud
 from src.db.models import Entity, QualitySnapshot
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================

@@ -1337,7 +1337,6 @@ class TestDuplicateConflictDetection:
     def test_large_values_within_relative_tolerance_not_conflict(self):
         """Large values where absolute diff > 0.01 but relative diff < 0.1%
         should NOT be a conflict."""
-        from decimal import Decimal
 
         parsed = {
             "sheets": [
@@ -1372,7 +1371,6 @@ class TestDuplicateConflictDetection:
     def test_small_values_relative_tolerance_catches_conflict(self):
         """Small values where both absolute AND relative tolerance are exceeded
         should be a conflict."""
-        from decimal import Decimal
 
         parsed = {
             "sheets": [

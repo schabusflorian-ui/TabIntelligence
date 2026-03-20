@@ -41,7 +41,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.db.base import Base  # noqa: F401 — re-exported for backward compat
 from src.taxonomy_constants import VALID_CATEGORIES
 
-
 # ============================================================================
 # ENUMS
 # ============================================================================

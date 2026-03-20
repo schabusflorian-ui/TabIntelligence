@@ -9,18 +9,13 @@ Tests:
 - Unmapped label collection in persist_extraction_facts
 """
 
-import uuid
-from decimal import Decimal
-from unittest.mock import MagicMock, Mock
 
-import pytest
 
 from src.normalization.anomaly_detection import (
     AnomalyResult,
     detect_iqr_anomalies,
     detect_zscore_anomalies,
 )
-
 
 # ============================================================================
 # Anomaly Detection — IQR

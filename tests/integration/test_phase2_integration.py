@@ -6,14 +6,10 @@ verifying cross-entity comparison, unmapped label aggregation,
 and anomaly detection queries work end-to-end.
 """
 
-import uuid
-from decimal import Decimal
 
 import pytest
 
 from src.db import crud
-from src.db.models import Entity, ExtractionFact, UnmappedLabelAggregate
-
 
 # ============================================================================
 # Fixtures

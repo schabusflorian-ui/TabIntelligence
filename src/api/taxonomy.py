@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
 from src.api.schemas import (
@@ -20,7 +20,6 @@ from src.api.schemas import (
 from src.auth.dependencies import get_current_api_key
 from src.db.session import get_db
 from src.guidelines.taxonomy import TaxonomyManager
-
 
 # ============================================================================
 # Suggestion Response Models

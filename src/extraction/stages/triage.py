@@ -15,7 +15,6 @@ from src.extraction.prompts import get_prompt
 from src.extraction.section_detector import SectionDetector
 from src.extraction.utils import extract_json
 
-
 # Deterministic sheet classification rules (skip Claude when confident)
 _TIER_1_PATTERNS = [
     "income statement", "p&l", "profit and loss", "profit & loss",

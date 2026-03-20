@@ -473,8 +473,8 @@ def test_db():
     # Ensure all models are imported so Base.metadata knows about every table.
     # The APIKey model is defined in src/auth/models.py (separate from src/db/models.py)
     # and must be imported before create_all() to avoid NoReferencedTableError.
-    import src.db.models  # noqa: F401
     import src.auth.models  # noqa: F401
+    import src.db.models  # noqa: F401
 
     # Use SQLite in-memory for fast tests
     engine = create_engine(

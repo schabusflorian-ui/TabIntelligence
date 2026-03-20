@@ -6,13 +6,11 @@ same-currency shortcut, and convert() arithmetic.
 """
 
 from decimal import Decimal
-from uuid import uuid4
 
 import pytest
 
 from src.db.models import FxRateCache
 from src.normalization.fx_service import FxService
-
 
 # ============================================================================
 # Fixtures
