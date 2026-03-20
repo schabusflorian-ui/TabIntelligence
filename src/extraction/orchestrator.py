@@ -771,9 +771,10 @@ def _build_result(
         from src.db.session import get_db_sync
 
         with get_db_sync() as db:
+            job_uuid = uuid.UUID(context.job_id) if context.job_id else uuid.uuid4()
             fact_count = persist_extraction_facts(
                 db,
-                job_id=uuid.UUID(context.job_id) if context.job_id else uuid.uuid4(),
+                job_id=job_uuid,
                 entity_id=getattr(context, "entity_id", None),
                 line_items=line_items,
                 validation_lookup=item_validation_lookup,
@@ -781,6 +782,22 @@ def _build_result(
             logger.info(f"Persisted {fact_count} extraction facts for job {context.job_id}")
     except Exception as e:
         logger.warning(f"Could not persist extraction facts: {e}")
+
+    # --- Best-effort cell mapping persistence ---
+    try:
+        from src.db.crud import persist_cell_mappings
+        from src.db.session import get_db_sync
+
+        with get_db_sync() as db:
+            cell_count = persist_cell_mappings(
+                db,
+                job_id=uuid.UUID(context.job_id) if context.job_id else uuid.uuid4(),
+                line_items=line_items,
+            )
+            if cell_count:
+                logger.info(f"Persisted {cell_count} cell mappings for job {context.job_id}")
+    except Exception as e:
+        logger.warning(f"Could not persist cell mappings: {e}")
 
     # --- Best-effort taxonomy suggestion generation ---
     try:

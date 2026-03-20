@@ -1439,3 +1439,139 @@ class TestTaxonomyGovernanceAPI:
         data = resp.json()
         assert data["count"] == 1
         assert data["entries"][0]["canonical_name"] == "revenue"
+
+
+# ============================================================================
+# CELL MAPPING PERSISTENCE TESTS
+# ============================================================================
+
+
+class TestCellMappingPersistence:
+    """Test persist_cell_mappings creates correct reverse lookup entries."""
+
+    def test_persist_cell_mappings_from_line_items(self, db_session):
+        """Cell mappings are created from line items with source_cells provenance."""
+        from src.db.models import CellMapping, ExtractionJob, File
+
+        file = File(filename="test.xlsx", file_size=100)
+        db_session.add(file)
+        db_session.flush()
+
+        job = ExtractionJob(
+            file_id=file.file_id,
+            status=JobStatusEnum.COMPLETED,
+            result={},
+        )
+        db_session.add(job)
+        db_session.commit()
+
+        line_items = [
+            {
+                "original_label": "Revenue",
+                "canonical_name": "revenue",
+                "confidence": 0.95,
+                "sheet_name": "Income Statement",
+                "values": {"FY2024": 1000000},
+                "provenance": {
+                    "source_cells": [
+                        {"sheet": "Income Statement", "cell_ref": "A5", "raw_value": "Revenue"},
+                        {"sheet": "Income Statement", "cell_ref": "B5", "raw_value": 1000000, "period": "FY2024"},
+                    ]
+                },
+            },
+            {
+                "original_label": "Unknown Item",
+                "canonical_name": "unmapped",
+                "confidence": 0.0,
+                "sheet_name": "Income Statement",
+                "values": {},
+                "provenance": {
+                    "source_cells": [
+                        {"sheet": "Income Statement", "cell_ref": "A10", "raw_value": "Unknown Item"},
+                    ]
+                },
+            },
+        ]
+
+        count = crud.persist_cell_mappings(db_session, job.job_id, line_items)
+        assert count == 3
+
+        # Check mapped cell
+        mapped = (
+            db_session.query(CellMapping)
+            .filter(CellMapping.cell_ref == "B5")
+            .first()
+        )
+        assert mapped is not None
+        assert mapped.canonical_name == "revenue"
+        assert mapped.mapping_status == "mapped"
+        assert mapped.period == "FY2024"
+        assert mapped.confidence == 0.95
+
+        # Check label cell
+        label = (
+            db_session.query(CellMapping)
+            .filter(CellMapping.cell_ref == "A5")
+            .first()
+        )
+        assert label is not None
+        assert label.cell_role == "label"  # No period = label cell
+        assert label.canonical_name == "revenue"
+
+        # Check unmapped cell
+        unmapped = (
+            db_session.query(CellMapping)
+            .filter(CellMapping.cell_ref == "A10")
+            .first()
+        )
+        assert unmapped is not None
+        assert unmapped.mapping_status == "unmapped"
+        assert unmapped.canonical_name is None
+
+    def test_persist_cell_mappings_deduplicates(self, db_session):
+        """Same cell ref across items is only persisted once."""
+        from src.db.models import CellMapping, ExtractionJob, File
+
+        file = File(filename="test.xlsx", file_size=100)
+        db_session.add(file)
+        db_session.flush()
+
+        job = ExtractionJob(
+            file_id=file.file_id,
+            status=JobStatusEnum.COMPLETED,
+            result={},
+        )
+        db_session.add(job)
+        db_session.commit()
+
+        # Two items referencing the same cell
+        line_items = [
+            {
+                "original_label": "Revenue",
+                "canonical_name": "revenue",
+                "confidence": 0.9,
+                "sheet_name": "IS",
+                "provenance": {"source_cells": [{"sheet": "IS", "cell_ref": "A5"}]},
+            },
+            {
+                "original_label": "Revenue Copy",
+                "canonical_name": "revenue",
+                "confidence": 0.8,
+                "sheet_name": "IS",
+                "provenance": {"source_cells": [{"sheet": "IS", "cell_ref": "A5"}]},
+            },
+        ]
+
+        count = crud.persist_cell_mappings(db_session, job.job_id, line_items)
+        assert count == 1  # Deduplicated
+
+    def test_persist_cell_mappings_empty(self, db_session):
+        """No cell mappings when line items have no provenance."""
+        count = crud.persist_cell_mappings(db_session, uuid4(), [])
+        assert count == 0
+
+        count = crud.persist_cell_mappings(
+            db_session, uuid4(),
+            [{"canonical_name": "revenue", "provenance": {}}],
+        )
+        assert count == 0

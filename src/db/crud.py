@@ -1582,6 +1582,14 @@ def persist_extraction_facts(
             if validation_lookup and canonical in validation_lookup:
                 validation_passed = validation_lookup[canonical].get("passed")
 
+            # Extract cell reference for this period from provenance
+            source_cells = item.get("provenance", {}).get("source_cells", [])
+            period_cell = next(
+                (sc for sc in source_cells if str(sc.get("period", "")) == str(period)),
+                None,
+            )
+            cell_ref = period_cell.get("cell_ref") if period_cell else None
+
             facts.append(
                 ExtractionFact(
                     job_id=job_id,
@@ -1603,6 +1611,8 @@ def persist_extraction_facts(
                     currency_code=item.get("currency_code"),
                     source_unit=item.get("source_unit"),
                     source_scale=item.get("source_scale"),
+                    cell_ref=cell_ref,
+                    source_cell_refs=source_cells if source_cells else None,
                 )
             )
 
@@ -1679,6 +1689,95 @@ def _persist_unmapped_labels(
     logger.info(
         f"Persisted {len(unmapped_labels)} unmapped label records for job {job_id}"
     )
+
+
+def persist_cell_mappings(
+    db: Session,
+    job_id: UUID,
+    line_items: List[dict],
+) -> int:
+    """Build reverse lookup index from extraction line items.
+
+    For each line item's source cells, creates CellMapping rows that enable
+    looking up which canonical name a cell maps to.
+
+    Args:
+        db: Database session
+        job_id: ExtractionJob UUID
+        line_items: List of line item dicts with provenance.source_cells
+
+    Returns:
+        Number of cell mappings created
+    """
+    import re
+
+    mappings = []
+    seen = set()  # (sheet_name, cell_ref) to prevent duplicates
+
+    for item in line_items:
+        canonical = item.get("canonical_name")
+        source_cells = item.get("provenance", {}).get("source_cells", [])
+        sheet_name = item.get("sheet_name") or item.get("sheet")
+        confidence = item.get("confidence")
+        original_label = item.get("original_label")
+
+        is_mapped = canonical and canonical != "unmapped"
+        mapping_status = "mapped" if is_mapped else "unmapped"
+
+        for sc in source_cells:
+            sc_sheet = sc.get("sheet") or sheet_name
+            cell_ref = sc.get("cell_ref")
+            if not sc_sheet or not cell_ref:
+                continue
+
+            key = (sc_sheet, cell_ref)
+            if key in seen:
+                continue
+            seen.add(key)
+
+            # Parse column/row from cell reference (e.g., "C15" -> col=2, row=15)
+            match = re.match(r"^([A-Z]+)(\d+)$", cell_ref.upper())
+            if not match:
+                continue
+            col_letters, row_str = match.groups()
+            row_idx = int(row_str)
+            col_idx = 0
+            for ch in col_letters:
+                col_idx = col_idx * 26 + (ord(ch) - ord("A"))
+
+            formula_text = sc.get("formula")
+
+            mappings.append(
+                CellMapping(
+                    job_id=job_id,
+                    sheet_name=sc_sheet,
+                    cell_ref=cell_ref.upper(),
+                    row_index=row_idx,
+                    col_index=col_idx,
+                    cell_role="value" if sc.get("period") else "label",
+                    raw_value=str(sc.get("raw_value")) if sc.get("raw_value") is not None else None,
+                    canonical_name=canonical if is_mapped else None,
+                    original_label=original_label,
+                    period=str(sc.get("period")) if sc.get("period") else None,
+                    mapping_status=mapping_status,
+                    confidence=confidence if is_mapped else None,
+                    has_formula=bool(formula_text),
+                    formula_text=formula_text,
+                )
+            )
+
+    if not mappings:
+        return 0
+
+    try:
+        db.bulk_save_objects(mappings)
+        db.commit()
+        logger.info(f"Persisted {len(mappings)} cell mappings for job {job_id}")
+        return len(mappings)
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.warning(f"Could not persist cell mappings: {e}")
+        return 0
 
 
 def get_unmapped_label_aggregation(
