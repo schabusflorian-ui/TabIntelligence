@@ -486,6 +486,8 @@ class ExtractionFact(Base):
     currency_code: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
     source_unit: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     source_scale: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    cell_ref: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    source_cell_refs: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     def __repr__(self):
@@ -524,6 +526,8 @@ class CorrectionHistory(Base):
     old_confidence: Mapped[float] = mapped_column(Float)
     new_confidence: Mapped[float] = mapped_column(Float, default=1.0)
     old_line_item_snapshot: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    cell_ref: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    row_index: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     reverted: Mapped[bool] = mapped_column(Boolean, default=False)
     reverted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -720,6 +724,60 @@ class TaxonomyChangelog(Base):
         return (
             f"<TaxonomyChangelog(canonical='{self.canonical_name}', "
             f"field='{self.field_name}', by='{self.changed_by}')>"
+        )
+
+
+# ============================================================================
+# CELL MAPPING (reverse lookup index for cell-level tracking)
+# ============================================================================
+
+
+class CellMapping(Base):
+    """
+    Reverse lookup: given a cell reference, find its canonical mapping.
+
+    One row per (job_id, sheet_name, cell_ref). Populated after extraction
+    completes. Enables bi-directional tracking between Excel cells and
+    canonical financial items.
+    """
+
+    __tablename__ = "cell_mappings"
+
+    __table_args__ = (
+        Index("ix_cellmap_job_sheet_cell", "job_id", "sheet_name", "cell_ref"),
+        Index("ix_cellmap_job_sheet_row", "job_id", "sheet_name", "row_index"),
+        UniqueConstraint("job_id", "sheet_name", "cell_ref", name="uq_cellmap_job_sheet_cell"),
+    )
+
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    job_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("extraction_jobs.job_id", ondelete="CASCADE"), index=True
+    )
+    sheet_name: Mapped[str] = mapped_column(String(255))
+    cell_ref: Mapped[str] = mapped_column(String(20))
+    row_index: Mapped[int] = mapped_column(Integer)
+    col_index: Mapped[int] = mapped_column(Integer)
+    cell_role: Mapped[str] = mapped_column(String(20))  # "label", "value", "formula", "header"
+    raw_value: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    canonical_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    original_label: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    period: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    fact_id: Mapped[Optional[UUID]] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("extraction_facts.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    mapping_status: Mapped[str] = mapped_column(String(20))  # "mapped", "unmapped", "header", "skipped"
+    confidence: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    has_formula: Mapped[bool] = mapped_column(Boolean, default=False)
+    formula_text: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    def __repr__(self):
+        return (
+            f"<CellMapping(job_id={self.job_id}, sheet='{self.sheet_name}', "
+            f"cell='{self.cell_ref}', canonical='{self.canonical_name}', "
+            f"status='{self.mapping_status}')>"
         )
 
 

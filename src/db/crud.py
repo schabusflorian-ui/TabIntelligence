@@ -20,6 +20,7 @@ from src.core.config import get_settings
 from src.core.exceptions import DatabaseError
 from src.core.logging import database_logger as logger
 from src.db.models import (
+    CellMapping,
     CorrectionHistory,
     DLQEntry,
     Entity,
