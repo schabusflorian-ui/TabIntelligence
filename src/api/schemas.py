@@ -980,3 +980,50 @@ class ChangelogEntry(BaseModel):
 class ChangelogResponse(BaseModel):
     count: int
     entries: List[ChangelogEntry]
+
+
+# ============================================================================
+# Cell Mapping (bi-directional cell tracking)
+# ============================================================================
+
+
+class CellMappingItem(BaseModel):
+    """Cell mapping with id and fact linkage."""
+
+    id: str
+    sheet_name: str
+    cell_ref: str
+    row_index: int
+    col_index: int
+    cell_role: str
+    raw_value: Optional[str] = None
+    canonical_name: Optional[str] = None
+    original_label: Optional[str] = None
+    period: Optional[str] = None
+    fact_id: Optional[str] = None
+    mapping_status: str
+    confidence: Optional[float] = None
+    has_formula: bool = False
+    formula_text: Optional[str] = None
+
+
+class CellMappingListResponse(BaseModel):
+    """Paginated cell mappings for a job."""
+
+    job_id: str
+    total: int
+    items: List[CellMappingItem]
+
+
+class CellMappingSheetStats(BaseModel):
+    mapped: int = 0
+    unmapped: int = 0
+    header: int = 0
+    skipped: int = 0
+    total: int = 0
+
+
+class CellMappingStatsResponse(BaseModel):
+    job_id: str
+    sheets: Dict[str, CellMappingSheetStats]
+    totals: CellMappingSheetStats
