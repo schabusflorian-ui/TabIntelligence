@@ -444,7 +444,7 @@ class TestAutoPromotion:
                 canonical_name="revenue",
                 alias_text="Net Sales",
                 occurrence_count=10,
-                source_entities=["e1", "e2"],  # Only 2 entities, need 3
+                source_entities=["e1"],  # Only 1 entity, need 2
                 promoted=False,
             )
             db.add(alias)
@@ -458,7 +458,7 @@ class TestAutoPromotion:
             db.close()
 
     def test_skips_low_occurrence(self, test_db):
-        """Aliases with occurrence_count < 5 are not promoted."""
+        """Aliases with occurrence_count < 3 are not promoted."""
         from src.db import crud
 
         db = test_db()
@@ -466,7 +466,7 @@ class TestAutoPromotion:
             alias = LearnedAlias(
                 canonical_name="revenue",
                 alias_text="Net Sales",
-                occurrence_count=3,  # Below threshold of 5
+                occurrence_count=2,  # Below threshold of 3
                 source_entities=["e1", "e2", "e3", "e4"],
                 promoted=False,
             )

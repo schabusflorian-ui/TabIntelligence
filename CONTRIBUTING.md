@@ -143,6 +143,21 @@ The 5-stage pipeline follows a registry pattern (`src/extraction/stages/`):
 
 Each stage extends `ExtractionStage` from `src/extraction/base.py`. The orchestrator runs them sequentially via `StageExecutor`.
 
+## Documentation
+
+Internal developer documentation lives in `docs/`:
+
+| Directory | Audience | Contents |
+|-----------|----------|----------|
+| `docs/demo/` | Users & stakeholders | Product overview, feature catalog, roadmap, demo script, architecture & data flow diagrams |
+| `docs/architecture/` | Engineers | Agent organization, kickoff briefs, product integration plan |
+| `docs/adr/` | Engineers | Architecture Decision Records (auth, DB consolidation, S3, lineage, retry) |
+| `docs/development/` | Engineers | Getting started, project setup, parallelization strategy |
+| `docs/verification/` | Engineers | Agent and feature verification reports |
+| `docs/governance/` | All | Project governance (The Four Laws) |
+
+When adding significant features, update the relevant documentation — especially `docs/demo/feature-catalog.md` for user-visible features and `CHANGELOG.md` for all changes.
+
 ## Definition of Done
 
 - [ ] Code follows existing patterns (read neighboring code first)

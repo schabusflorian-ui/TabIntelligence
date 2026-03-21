@@ -421,3 +421,11 @@ Delete a DLQ entry. **Status:** 204.
 ### GET /metrics
 
 Prometheus-compatible metrics. Not in OpenAPI schema. No auth in dev (use network-level protection in production).
+
+---
+
+## See Also
+
+- [Feature Catalog](demo/feature-catalog.md) — Complete endpoint reference table with rate limits, organized by router
+- [Product Overview](demo/product-overview.html) — Visual product pitch with platform capabilities
+- [Architecture Diagrams](demo/architecture-diagrams.md) — System architecture, pipeline sequence diagram, database ER diagram

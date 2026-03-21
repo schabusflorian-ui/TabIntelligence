@@ -150,6 +150,23 @@ See `/docs` on a running instance for full OpenAPI documentation.
 
 ---
 
+## Demo & Product Documentation
+
+The `docs/demo/` directory contains a comprehensive documentation package for sharing with potential users:
+
+| Document | Format | Description |
+|----------|--------|-------------|
+| [Product Overview](docs/demo/product-overview.html) | HTML | Self-contained product pitch — open in any browser |
+| [Architecture Diagrams](docs/demo/architecture-diagrams.md) | Mermaid | System architecture, pipeline, ER diagram, quality scoring, taxonomy |
+| [Data Flow Diagrams](docs/demo/data-flow-diagrams.md) | Mermaid | Data lifecycle, entity learning loop, security flow, deployment |
+| [Feature Catalog](docs/demo/feature-catalog.md) | Markdown | Features organized by persona (analyst, PM, data team) + full API reference |
+| [Roadmap](docs/demo/roadmap.md) | Mermaid Gantt | Product vision: MVP → Phase 4 (2025–2027) |
+| [Demo Walkthrough](docs/demo/demo-walkthrough.md) | Markdown | 20-minute guided demo script with talking points |
+
+**Quick start:** Open `docs/demo/product-overview.html` in a browser for the flagship overview.
+
+---
+
 ## Development
 
 ### Project Structure
@@ -176,6 +193,11 @@ DebtFund/
 │   └── fixtures/          # Test Excel files + expected JSON
 ├── data/
 │   └── taxonomy.json      # Canonical taxonomy (350+ items)
+├── docs/
+│   ├── demo/              # Product documentation for users
+│   ├── architecture/      # Architecture decisions & briefs
+│   ├── adr/               # Architecture Decision Records
+│   └── ...                # Developer guides, testing, governance
 ├── alembic/               # Database migrations
 ├── static/                # Frontend UI
 ├── scripts/               # Utilities (benchmarks, fixtures)

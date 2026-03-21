@@ -104,11 +104,11 @@ class Settings(BaseSettings):
         description="Minimum confidence for recording learned aliases in Stage 5",
     )
     taxonomy_auto_promote_occurrences: int = Field(
-        default=5,
+        default=3,
         description="Minimum occurrence count for auto-promoting a learned alias",
     )
     taxonomy_auto_promote_entities: int = Field(
-        default=3,
+        default=2,
         description="Minimum distinct source entities for auto-promoting a learned alias",
     )
     taxonomy_confidence_decay_rate: float = Field(
@@ -118,6 +118,10 @@ class Settings(BaseSettings):
     taxonomy_confidence_decay_floor: float = Field(
         default=0.5,
         description="Minimum decay factor floor for pattern confidence",
+    )
+    taxonomy_fuzzy_rescue_threshold: int = Field(
+        default=80,
+        description="Minimum rapidfuzz score (0-100) for fuzzy alias rescue in Stage 3",
     )
     taxonomy_mapping_batch_size: int = Field(
         default=60,

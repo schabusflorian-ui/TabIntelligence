@@ -63,6 +63,20 @@ src/
 │   └── differ.py         # ExtractionDiffer (compare two job results)
 └── storage/
     └── s3.py             # S3/MinIO client (upload, download, presign)
+
+docs/
+├── demo/                     # User-facing product documentation
+│   ├── product-overview.html # Self-contained HTML product pitch
+│   ├── architecture-diagrams.md  # System architecture (5 Mermaid diagrams)
+│   ├── data-flow-diagrams.md     # Data lifecycle & deployment (4 Mermaid diagrams)
+│   ├── feature-catalog.md        # Features by persona + API endpoint reference
+│   ├── roadmap.md                # Product roadmap (Gantt chart)
+│   └── demo-walkthrough.md       # 20-min demo script
+├── architecture/             # Architecture plans & agent briefs
+├── adr/                      # Architecture Decision Records
+├── development/              # Getting started, setup guides
+├── verification/             # Agent verification reports
+└── governance/               # Project governance
 ```
 
 ## Quick Start

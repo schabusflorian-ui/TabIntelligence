@@ -39,7 +39,7 @@ class TestFindRemappingCandidates:
         assert candidates[0]["original_label"] == "Mystery Row"
 
     def test_low_confidence_selected(self):
-        """Items with confidence < 0.7 should be candidates."""
+        """Items with confidence < 0.8 should be candidates."""
         mappings = [
             {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95},
             {"original_label": "Net Rev", "canonical_name": "net_revenue", "confidence": 0.5},
@@ -49,31 +49,31 @@ class TestFindRemappingCandidates:
         assert candidates[0]["original_label"] == "Net Rev"
 
     def test_high_confidence_excluded(self):
-        """Items with confidence >= 0.7 and valid mapping should be excluded."""
+        """Items with confidence >= 0.8 and valid mapping should be excluded."""
         mappings = [
             {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95},
             {"original_label": "COGS", "canonical_name": "cogs", "confidence": 0.85},
             {
                 "original_label": "Gross Profit",
                 "canonical_name": "gross_profit",
-                "confidence": 0.70,
+                "confidence": 0.80,
             },
         ]
         candidates = self.stage._find_remapping_candidates(mappings)
         assert len(candidates) == 0
 
     def test_boundary_confidence_excluded(self):
-        """Exactly 0.7 confidence should NOT be a candidate."""
+        """Exactly 0.8 confidence should NOT be a candidate."""
         mappings = [
-            {"original_label": "SGA", "canonical_name": "sga", "confidence": 0.7},
+            {"original_label": "SGA", "canonical_name": "sga", "confidence": 0.8},
         ]
         candidates = self.stage._find_remapping_candidates(mappings)
         assert len(candidates) == 0
 
     def test_just_below_threshold(self):
-        """Confidence 0.69 should be a candidate."""
+        """Confidence 0.79 should be a candidate."""
         mappings = [
-            {"original_label": "SGA", "canonical_name": "sga", "confidence": 0.69},
+            {"original_label": "SGA", "canonical_name": "sga", "confidence": 0.79},
         ]
         candidates = self.stage._find_remapping_candidates(mappings)
         assert len(candidates) == 1

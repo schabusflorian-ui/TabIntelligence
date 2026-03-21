@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - MVP Demo Documentation Package
+- **Product overview** (`docs/demo/product-overview.html`) — Self-contained HTML pitch page with Meridian design system styling
+- **Architecture diagrams** (`docs/demo/architecture-diagrams.md`) — 5 Mermaid diagrams: system architecture, extraction pipeline, database ER (17 tables), quality scoring, taxonomy hierarchy
+- **Data flow diagrams** (`docs/demo/data-flow-diagrams.md`) — 4 Mermaid diagrams: data lifecycle, entity learning loop, security/auth flow, deployment topology
+- **Feature catalog** (`docs/demo/feature-catalog.md`) — Features by persona (analyst, PM, data team) with complete 50+ endpoint reference
+- **Product roadmap** (`docs/demo/roadmap.md`) — Gantt chart: MVP (done) → Phase 2 (integration) → Phase 3 (intelligence) → Phase 4 (scale)
+- **Demo walkthrough** (`docs/demo/demo-walkthrough.md`) — 20-minute guided demo script with 6 acts, talking points, and Q&A
+
+### Added - Phase 3: Analytics Intelligence
+- Cross-entity comparison with FX conversion (Alpha Vantage integration)
+- Taxonomy governance: AI suggestions, deprecation workflow, changelog, learned alias lifecycle
+- Quality trending per entity over time
+- Structured financial statement hierarchy with STATEMENT_DISPLAY_ORDER sorting
+- Frontend: analytics page with 6 intelligence modules, comparison page, taxonomy browser with tabs
+
 ### Added - Error Handling & Logging (Week 1, Days 4-5)
 - **Exception hierarchy** (`src/core/exceptions.py`)
   - Base `DebtFundError` exception class

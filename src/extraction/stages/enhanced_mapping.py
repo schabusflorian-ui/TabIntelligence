@@ -295,7 +295,7 @@ class EnhancedMappingStage(ExtractionStage):
             canonical = m.get("canonical_name", "")
             label = m.get("original_label", "")
 
-            if canonical == "unmapped" or confidence < 0.7:
+            if canonical == "unmapped" or confidence < 0.8:
                 if label not in seen_labels:
                     candidates.append(dict(m))
                     seen_labels.add(label)

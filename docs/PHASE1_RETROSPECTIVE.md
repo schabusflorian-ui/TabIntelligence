@@ -97,7 +97,18 @@ tests/       ~45,000 lines
 static/js/   ~8,000 lines (JavaScript)
 templates/   ~500 lines (HTML)
 scripts/     28 utility scripts
-docs/        17 documentation files
+docs/        52 documentation files (including demo package)
+```
+
+### Demo Documentation Package
+```
+docs/demo/   6 files
+  product-overview.html    — Self-contained HTML product pitch (Meridian design system)
+  architecture-diagrams.md — 5 Mermaid diagrams (system, pipeline, ER, quality, taxonomy)
+  data-flow-diagrams.md    — 4 Mermaid diagrams (lifecycle, learning loop, security, deployment)
+  feature-catalog.md       — Features by persona + 50+ endpoint reference
+  roadmap.md               — Product roadmap with Gantt chart (2025–2027)
+  demo-walkthrough.md      — 20-minute guided demo script
 ```
 
 ### Database

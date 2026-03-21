@@ -580,3 +580,167 @@ class TestEndToEndNoClaude:
 # 3. No "just in case" code found. All detection methods are called
 #    in production. No dead code or unused configuration options.
 #
+
+
+# ============================================================================
+# Fuzzy Rescue & Enhanced Normalization Tests
+# ============================================================================
+
+
+class TestNormalizeLabelQualifiers:
+    """Test that _normalize_label strips qualifier parentheticals."""
+
+    def test_strips_adjusted(self):
+        from src.extraction.stages.mapping import _normalize_label
+        assert _normalize_label("Revenue (Adjusted)") == "Revenue"
+
+    def test_strips_net(self):
+        from src.extraction.stages.mapping import _normalize_label
+        assert _normalize_label("Income (Net)") == "Income"
+
+    def test_strips_gross(self):
+        from src.extraction.stages.mapping import _normalize_label
+        assert _normalize_label("Profit (Gross)") == "Profit"
+
+    def test_strips_pro_forma(self):
+        from src.extraction.stages.mapping import _normalize_label
+        assert _normalize_label("EBITDA (Pro Forma)") == "EBITDA"
+
+    def test_strips_excl(self):
+        from src.extraction.stages.mapping import _normalize_label
+        assert _normalize_label("Revenue (excl. one-time items)") == "Revenue"
+
+    def test_strips_excluding(self):
+        from src.extraction.stages.mapping import _normalize_label
+        assert _normalize_label("EBITDA (excluding restructuring)") == "EBITDA"
+
+    def test_strips_restated(self):
+        from src.extraction.stages.mapping import _normalize_label
+        assert _normalize_label("Net Income (Restated)") == "Net Income"
+
+    def test_strips_before(self):
+        from src.extraction.stages.mapping import _normalize_label
+        assert _normalize_label("Income (before tax)") == "Income"
+
+    def test_strips_after(self):
+        from src.extraction.stages.mapping import _normalize_label
+        assert _normalize_label("Income (after minority interest)") == "Income"
+
+    def test_keeps_non_qualifier_parens(self):
+        from src.extraction.stages.mapping import _normalize_label
+        # Non-qualifier parentheticals should be preserved
+        assert _normalize_label("Revenue (FY2023)") == "Revenue (FY2023)"
+
+    def test_strips_unit_and_qualifier(self):
+        from src.extraction.stages.mapping import _normalize_label
+        # Unit at end gets stripped first, then qualifier
+        result = _normalize_label("Revenue (Adjusted) ($M)")
+        assert result == "Revenue"
+
+    def test_preserves_basic_labels(self):
+        from src.extraction.stages.mapping import _normalize_label
+        assert _normalize_label("Total Revenue") == "Total Revenue"
+        assert _normalize_label("Cost of Goods Sold") == "Cost of Goods Sold"
+
+
+class TestFuzzyRescueUnmapped:
+    """Test _fuzzy_rescue_unmapped() function."""
+
+    def test_rescues_close_match(self):
+        from src.extraction.stages.mapping import _fuzzy_rescue_unmapped
+        mappings = [
+            {"original_label": "Total Revenues", "canonical_name": "unmapped", "confidence": 0.0},
+        ]
+        grouped_items = [
+            {"label": "Total Revenues", "sheet": "Income Statement"},
+        ]
+        # "total revenues" should fuzzy-match "revenue" alias "Total Revenue"
+        alias_lookup = {
+            "total revenue": [("revenue", "income_statement")],
+        }
+        count = _fuzzy_rescue_unmapped(mappings, grouped_items, alias_lookup, threshold=80)
+        assert count == 1
+        assert mappings[0]["canonical_name"] == "revenue"
+        assert mappings[0]["method"] == "fuzzy_alias"
+        assert mappings[0]["confidence"] > 0.8
+
+    def test_skips_below_threshold(self):
+        from src.extraction.stages.mapping import _fuzzy_rescue_unmapped
+        mappings = [
+            {"original_label": "XYZ Widget Sales", "canonical_name": "unmapped", "confidence": 0.0},
+        ]
+        grouped_items = [
+            {"label": "XYZ Widget Sales", "sheet": "Income Statement"},
+        ]
+        alias_lookup = {
+            "total revenue": [("revenue", "income_statement")],
+        }
+        count = _fuzzy_rescue_unmapped(mappings, grouped_items, alias_lookup, threshold=80)
+        assert count == 0
+        assert mappings[0]["canonical_name"] == "unmapped"
+
+    def test_skips_ambiguous_category_match(self):
+        from src.extraction.stages.mapping import _fuzzy_rescue_unmapped
+        mappings = [
+            {"original_label": "Depreciation", "canonical_name": "unmapped", "confidence": 0.0},
+        ]
+        grouped_items = [
+            {"label": "Depreciation", "sheet": "Income Statement"},
+        ]
+        # Two different canonicals in the same category => ambiguous
+        alias_lookup = {
+            "depreciation": [
+                ("depreciation", "income_statement"),
+                ("depreciation_and_amortization", "income_statement"),
+            ],
+        }
+        count = _fuzzy_rescue_unmapped(mappings, grouped_items, alias_lookup, threshold=80)
+        assert count == 0
+
+    def test_uses_sheet_category_filter(self):
+        from src.extraction.stages.mapping import _fuzzy_rescue_unmapped
+        mappings = [
+            {"original_label": "Net Income", "canonical_name": "unmapped", "confidence": 0.0},
+        ]
+        grouped_items = [
+            {"label": "Net Income", "sheet": "Cash Flow Statement"},
+        ]
+        alias_lookup = {
+            "net income": [
+                ("net_income", "income_statement"),
+                ("net_income_cf", "cash_flow"),
+            ],
+        }
+        count = _fuzzy_rescue_unmapped(mappings, grouped_items, alias_lookup, threshold=80)
+        assert count == 1
+        assert mappings[0]["canonical_name"] == "net_income_cf"
+
+    def test_leaves_already_mapped_alone(self):
+        from src.extraction.stages.mapping import _fuzzy_rescue_unmapped
+        mappings = [
+            {"original_label": "Revenue", "canonical_name": "revenue", "confidence": 0.95},
+        ]
+        grouped_items = [
+            {"label": "Revenue", "sheet": "Income Statement"},
+        ]
+        alias_lookup = {
+            "revenue": [("revenue", "income_statement")],
+        }
+        count = _fuzzy_rescue_unmapped(mappings, grouped_items, alias_lookup, threshold=80)
+        assert count == 0
+        assert mappings[0]["confidence"] == 0.95
+
+    def test_unique_global_match_no_category(self):
+        from src.extraction.stages.mapping import _fuzzy_rescue_unmapped
+        mappings = [
+            {"original_label": "CFADS", "canonical_name": "unmapped", "confidence": 0.0},
+        ]
+        grouped_items = [
+            {"label": "CFADS", "sheet": "Model"},  # no category match
+        ]
+        alias_lookup = {
+            "cfads": [("cfads", "project_finance")],
+        }
+        count = _fuzzy_rescue_unmapped(mappings, grouped_items, alias_lookup, threshold=80)
+        assert count == 1
+        assert mappings[0]["canonical_name"] == "cfads"
