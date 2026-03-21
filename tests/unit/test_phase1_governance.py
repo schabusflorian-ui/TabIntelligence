@@ -227,7 +227,7 @@ class TestTaxonomyVersioning:
         versions = db_session.query(TaxonomyVersion).all()
         assert len(versions) == 1
         v = versions[0]
-        assert v.version == "3.2.0"
+        assert v.version == "3.3.0"
         assert v.item_count > 200
         assert len(v.checksum) == 64  # SHA-256 hex
         assert v.applied_by == "test"

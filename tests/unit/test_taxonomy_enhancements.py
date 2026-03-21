@@ -38,7 +38,7 @@ class TestTaxonomyJSON:
             self.all_items.extend(cat_items)
 
     def test_version_is_3_0_0(self):
-        assert self.data["version"] == "3.2.0"
+        assert self.data["version"] == "3.3.0"
 
     def test_minimum_295_items(self):
         assert len(self.all_items) >= 295

@@ -1,5 +1,5 @@
 {
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "Consolidated canonical financial taxonomy for DebtFund extraction pipeline",
   "categories": {
     "balance_sheet": [
@@ -3949,6 +3949,252 @@
           "all",
           "leveraged"
         ]
+      },
+      {
+        "canonical_name": "pik_interest",
+        "category": "debt_schedule",
+        "display_name": "PIK Interest",
+        "aliases": [
+          "Payment-in-Kind Interest",
+          "PIK",
+          "Payment in Kind",
+          "Paid-in-Kind Interest",
+          "PIK Toggle",
+          "PIK Accrual",
+          "Non-Cash Interest"
+        ],
+        "definition": "Interest paid by adding to the principal balance rather than cash payment, increasing the debt over time",
+        "typical_sign": "positive",
+        "parent_canonical": "interest_rate",
+        "validation_rules": {
+          "type": "percentage",
+          "min_value": 0,
+          "max_value": 1
+        },
+        "industry_tags": [
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "original_issue_discount",
+        "category": "debt_schedule",
+        "display_name": "Original Issue Discount",
+        "aliases": [
+          "OID",
+          "Issue Discount",
+          "Discount to Par",
+          "Original Discount",
+          "OID Amount"
+        ],
+        "definition": "Discount at which debt is issued below par value, amortized over the life of the instrument",
+        "typical_sign": "negative",
+        "parent_canonical": "total_debt",
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "delayed_draw_term_loan",
+        "category": "debt_schedule",
+        "display_name": "Delayed Draw Term Loan",
+        "aliases": [
+          "DDTL",
+          "Delayed Draw",
+          "Delayed Draw TL",
+          "DD Term Loan",
+          "Delayed Funding Term Loan"
+        ],
+        "definition": "Term loan facility allowing the borrower to draw funds over a specified period after initial closing",
+        "typical_sign": "positive",
+        "parent_canonical": "total_debt",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "accordion_facility",
+        "category": "debt_schedule",
+        "display_name": "Accordion Facility",
+        "aliases": [
+          "Incremental Facility",
+          "Accordion",
+          "Incremental Term Loan",
+          "Incremental Capacity",
+          "Accordion Feature",
+          "Incremental Basket"
+        ],
+        "definition": "Pre-approved capacity to increase existing debt facilities without renegotiating the credit agreement",
+        "typical_sign": "positive",
+        "parent_canonical": "total_debt",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "unitranche",
+        "category": "debt_schedule",
+        "display_name": "Unitranche Debt",
+        "aliases": [
+          "Unitranche Facility",
+          "Unitranche Loan",
+          "Uni-Tranche",
+          "Single Tranche",
+          "Blended Senior/Sub"
+        ],
+        "definition": "Single-tranche debt combining senior and subordinated layers into one facility with a blended interest rate",
+        "typical_sign": "positive",
+        "parent_canonical": "total_debt",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "commitment_fee",
+        "category": "debt_schedule",
+        "display_name": "Commitment Fee",
+        "aliases": [
+          "Unused Fee",
+          "Undrawn Fee",
+          "Commitment Charge",
+          "Facility Fee",
+          "Standby Fee",
+          "Unused Line Fee"
+        ],
+        "definition": "Fee charged on the undrawn portion of a committed credit facility",
+        "typical_sign": "negative",
+        "parent_canonical": "debt_service",
+        "validation_rules": {
+          "type": "percentage",
+          "min_value": 0,
+          "max_value": 0.05
+        },
+        "industry_tags": [
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "credit_spread",
+        "category": "debt_schedule",
+        "display_name": "Credit Spread",
+        "aliases": [
+          "Spread",
+          "Margin",
+          "Credit Margin",
+          "Spread Over SOFR",
+          "Spread Over LIBOR",
+          "Applicable Margin",
+          "Borrowing Margin",
+          "Yield Spread"
+        ],
+        "definition": "Interest rate margin above the reference rate (SOFR/LIBOR) charged on the debt",
+        "typical_sign": "positive",
+        "parent_canonical": "interest_rate",
+        "validation_rules": {
+          "type": "percentage",
+          "min_value": 0,
+          "max_value": 0.15
+        },
+        "industry_tags": [
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "floor_rate",
+        "category": "debt_schedule",
+        "display_name": "Interest Rate Floor",
+        "aliases": [
+          "LIBOR Floor",
+          "SOFR Floor",
+          "Rate Floor",
+          "Base Rate Floor",
+          "Reference Rate Floor",
+          "Minimum Rate"
+        ],
+        "definition": "Minimum reference rate (SOFR/LIBOR) applied regardless of the actual market rate, protecting lenders from very low rates",
+        "typical_sign": "positive",
+        "parent_canonical": "interest_rate",
+        "validation_rules": {
+          "type": "percentage",
+          "min_value": 0,
+          "max_value": 0.05
+        },
+        "industry_tags": [
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "call_protection",
+        "category": "debt_schedule",
+        "display_name": "Call Protection",
+        "aliases": [
+          "Prepayment Premium",
+          "Call Premium",
+          "Make-Whole",
+          "Make-Whole Premium",
+          "Early Redemption Premium",
+          "Prepayment Penalty",
+          "Non-Call Period",
+          "NC Period"
+        ],
+        "definition": "Premium or restriction on early repayment of debt, protecting lenders from reinvestment risk",
+        "typical_sign": "positive",
+        "parent_canonical": "total_debt",
+        "validation_rules": {
+          "type": "percentage",
+          "min_value": 0,
+          "max_value": 0.10
+        },
+        "industry_tags": [
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "par_value",
+        "category": "debt_schedule",
+        "display_name": "Par Value",
+        "aliases": [
+          "Face Value",
+          "Principal Amount",
+          "Nominal Value",
+          "Par",
+          "Stated Value"
+        ],
+        "definition": "Face value or nominal value of the debt instrument at maturity",
+        "typical_sign": "positive",
+        "parent_canonical": "total_debt",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "all",
+          "leveraged",
+          "credit_analysis"
+        ]
       }
     ],
     "income_statement": [
@@ -6143,6 +6389,78 @@
         "typical_sign": "negative",
         "validation_rules": {
           "type": "currency"
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "construction_costs",
+        "category": "project_finance",
+        "display_name": "Construction Costs",
+        "aliases": [
+          "EPC Costs",
+          "Engineering Procurement Construction",
+          "Construction Budget",
+          "Build Costs",
+          "Capital Construction",
+          "EPC Contract Value"
+        ],
+        "definition": "Total engineering, procurement, and construction costs for the project",
+        "typical_sign": "negative",
+        "parent_canonical": "total_investment",
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "mra_balance",
+        "category": "project_finance",
+        "display_name": "Maintenance Reserve Account",
+        "aliases": [
+          "MRA",
+          "MRA Balance",
+          "Maintenance Reserve",
+          "Major Maintenance Reserve",
+          "MMRA",
+          "Lifecycle Reserve"
+        ],
+        "definition": "Reserve account funded to cover major maintenance and lifecycle replacement costs",
+        "typical_sign": "positive",
+        "parent_canonical": "cfads",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "distribution_lock_up",
+        "category": "project_finance",
+        "display_name": "Distribution Lock-Up",
+        "aliases": [
+          "Lock-Up Test",
+          "Distribution Test",
+          "Cash Sweep",
+          "Cash Trap",
+          "Restricted Payment Test",
+          "Dividend Lock-Up"
+        ],
+        "definition": "DSCR threshold below which equity distributions are restricted and cash is trapped for debt service",
+        "typical_sign": "positive",
+        "parent_canonical": "cfads",
+        "validation_rules": {
+          "type": "ratio",
+          "min_value": 1.0,
+          "max_value": 2.0
         },
         "industry_tags": [
           "project_finance",
@@ -8497,6 +8815,339 @@
         "industry_tags": [
           "all",
           "corporate"
+        ]
+      },
+      {
+        "canonical_name": "warf",
+        "category": "metrics",
+        "display_name": "Weighted Average Rating Factor",
+        "aliases": [
+          "WARF",
+          "Weighted Avg Rating Factor",
+          "Portfolio WARF",
+          "CLO WARF",
+          "Rating Factor"
+        ],
+        "definition": "Moody's metric representing the weighted average credit quality of a CLO portfolio, where higher values indicate lower credit quality",
+        "typical_sign": "positive",
+        "parent_canonical": "credit_metrics",
+        "validation_rules": {
+          "type": "number",
+          "min_value": 0,
+          "max_value": 10000
+        },
+        "industry_tags": [
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "weighted_average_life",
+        "category": "metrics",
+        "display_name": "Weighted Average Life",
+        "aliases": [
+          "WAL",
+          "Avg Life",
+          "Average Life",
+          "Weighted Avg Life",
+          "Portfolio WAL",
+          "Expected Average Life"
+        ],
+        "definition": "Weighted average time until principal repayment, measured in years, reflecting the expected duration of a debt portfolio",
+        "typical_sign": "positive",
+        "parent_canonical": "credit_metrics",
+        "validation_rules": {
+          "type": "number",
+          "min_value": 0,
+          "max_value": 30
+        },
+        "industry_tags": [
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "default_rate",
+        "category": "metrics",
+        "display_name": "Default Rate",
+        "aliases": [
+          "Portfolio Default Rate",
+          "Annual Default Rate",
+          "Cumulative Default Rate",
+          "CDR",
+          "Conditional Default Rate"
+        ],
+        "definition": "Percentage of debt principal that has defaulted over a given period",
+        "typical_sign": "positive",
+        "parent_canonical": "credit_metrics",
+        "validation_rules": {
+          "type": "percentage",
+          "min_value": 0,
+          "max_value": 1
+        },
+        "industry_tags": [
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "recovery_rate",
+        "category": "metrics",
+        "display_name": "Recovery Rate",
+        "aliases": [
+          "Expected Recovery",
+          "Recovery Value",
+          "Recovery Percentage",
+          "Assumed Recovery",
+          "Workout Recovery"
+        ],
+        "definition": "Percentage of principal recovered after a default event, typically expressed as cents on the dollar",
+        "typical_sign": "positive",
+        "parent_canonical": "credit_metrics",
+        "validation_rules": {
+          "type": "percentage",
+          "min_value": 0,
+          "max_value": 1
+        },
+        "industry_tags": [
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "loss_given_default",
+        "category": "metrics",
+        "display_name": "Loss Given Default",
+        "aliases": [
+          "LGD",
+          "Loss Severity",
+          "Expected Loss Severity",
+          "Credit Loss Rate"
+        ],
+        "definition": "Percentage of exposure lost when a borrower defaults, equal to 1 minus the recovery rate",
+        "typical_sign": "positive",
+        "parent_canonical": "credit_metrics",
+        "validation_rules": {
+          "type": "percentage",
+          "min_value": 0,
+          "max_value": 1,
+          "derivation": "1 - recovery_rate"
+        },
+        "industry_tags": [
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "senior_leverage_ratio",
+        "category": "metrics",
+        "display_name": "Senior Leverage Ratio",
+        "aliases": [
+          "Senior Debt / EBITDA",
+          "First Lien Leverage",
+          "Senior Leverage",
+          "Senior Secured Leverage",
+          "Senior Net Leverage"
+        ],
+        "definition": "Senior debt (first lien) divided by EBITDA, measuring leverage from the most senior tranche only",
+        "typical_sign": "positive",
+        "parent_canonical": "leverage_metrics",
+        "validation_rules": {
+          "type": "ratio",
+          "min_value": 0,
+          "max_value": 10.0,
+          "derivation": "senior_debt / ebitda",
+          "industry_benchmarks": {
+            "leveraged": {
+              "typical_range": [2.0, 5.0],
+              "description": "Leveraged buyout senior leverage typically 2-5x"
+            }
+          }
+        },
+        "industry_tags": [
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "first_lien_leverage_ratio",
+        "category": "metrics",
+        "display_name": "First Lien Leverage Ratio",
+        "aliases": [
+          "First Lien Debt / EBITDA",
+          "1L Leverage",
+          "First Lien Net Leverage",
+          "Secured Leverage"
+        ],
+        "definition": "First lien debt divided by EBITDA, distinguishing from total or net leverage",
+        "typical_sign": "positive",
+        "parent_canonical": "leverage_metrics",
+        "validation_rules": {
+          "type": "ratio",
+          "min_value": 0,
+          "max_value": 10.0
+        },
+        "industry_tags": [
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "fixed_charge_coverage",
+        "category": "metrics",
+        "display_name": "Fixed Charge Coverage Ratio",
+        "aliases": [
+          "FCCR",
+          "Fixed Charge Coverage",
+          "Fixed Charges Coverage",
+          "EBITDA - CapEx / Fixed Charges"
+        ],
+        "definition": "EBITDA minus capex divided by fixed charges (interest + scheduled principal + lease payments), measuring ability to cover all fixed obligations",
+        "typical_sign": "positive",
+        "parent_canonical": "coverage_metrics",
+        "validation_rules": {
+          "type": "ratio",
+          "min_value": 0,
+          "max_value": 20.0,
+          "derivation": "(ebitda - capex) / (interest_expense + principal_payment)",
+          "industry_benchmarks": {
+            "healthy": {
+              "typical_range": [1.25, 3.0],
+              "description": "Healthy companies typically above 1.25x"
+            }
+          }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "loan_to_value",
+        "category": "metrics",
+        "display_name": "Loan to Value",
+        "aliases": [
+          "LTV",
+          "Loan-to-Value",
+          "Loan to Value Ratio",
+          "LTV Ratio",
+          "Debt / Asset Value"
+        ],
+        "definition": "Outstanding loan balance divided by the appraised or market value of the underlying collateral or asset",
+        "typical_sign": "positive",
+        "parent_canonical": "leverage_metrics",
+        "validation_rules": {
+          "type": "percentage",
+          "min_value": 0,
+          "max_value": 1.5,
+          "industry_benchmarks": {
+            "conservative": {
+              "typical_range": [0.5, 0.65],
+              "description": "Conservative lending at 50-65% LTV"
+            },
+            "aggressive": {
+              "typical_range": [0.65, 0.80],
+              "description": "Aggressive lending at 65-80% LTV"
+            }
+          }
+        },
+        "industry_tags": [
+          "real_estate",
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "oc_ratio",
+        "category": "metrics",
+        "display_name": "Overcollateralization Ratio",
+        "aliases": [
+          "OC Ratio",
+          "OC Test",
+          "Overcollateralization Test",
+          "O/C Ratio",
+          "OC Level",
+          "Par Value OC"
+        ],
+        "definition": "Ratio of collateral par value to outstanding note balance in a CLO, must exceed trigger level to allow distributions",
+        "typical_sign": "positive",
+        "parent_canonical": "credit_metrics",
+        "validation_rules": {
+          "type": "percentage",
+          "min_value": 1.0,
+          "max_value": 2.0,
+          "industry_benchmarks": {
+            "clo_senior": {
+              "typical_range": [1.20, 1.35],
+              "description": "CLO senior OC test typically 120-135%"
+            }
+          }
+        },
+        "industry_tags": [
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "ic_ratio",
+        "category": "metrics",
+        "display_name": "Interest Coverage Ratio (CLO)",
+        "aliases": [
+          "IC Ratio",
+          "IC Test",
+          "Interest Coverage Test",
+          "I/C Ratio",
+          "CLO Interest Coverage"
+        ],
+        "definition": "Ratio of interest income from collateral to interest due on CLO liabilities, must exceed trigger level",
+        "typical_sign": "positive",
+        "parent_canonical": "credit_metrics",
+        "validation_rules": {
+          "type": "percentage",
+          "min_value": 1.0,
+          "max_value": 5.0,
+          "industry_benchmarks": {
+            "clo_senior": {
+              "typical_range": [1.15, 1.50],
+              "description": "CLO senior IC test typically 115-150%"
+            }
+          }
+        },
+        "industry_tags": [
+          "leveraged",
+          "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "debt_yield",
+        "category": "metrics",
+        "display_name": "Debt Yield",
+        "aliases": [
+          "Debt Yield Ratio",
+          "NOI / Loan Amount",
+          "Loan Debt Yield",
+          "Property Debt Yield"
+        ],
+        "definition": "Net operating income divided by the total loan amount, used in real estate and asset-based lending as an alternative to LTV and DSCR",
+        "typical_sign": "positive",
+        "parent_canonical": "credit_metrics",
+        "validation_rules": {
+          "type": "percentage",
+          "min_value": 0,
+          "max_value": 0.30,
+          "derivation": "noi / total_debt",
+          "industry_benchmarks": {
+            "typical": {
+              "typical_range": [0.08, 0.12],
+              "description": "Typical debt yield 8-12%"
+            }
+          }
+        },
+        "industry_tags": [
+          "real_estate",
+          "leveraged",
+          "credit_analysis"
         ]
       }
     ]
