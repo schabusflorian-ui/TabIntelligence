@@ -5,6 +5,7 @@ import time
 from typing import Any, Dict, List, Optional, Set
 
 import anthropic
+from rapidfuzz import fuzz
 
 from src.core.config import get_settings
 from src.core.exceptions import ClaudeAPIError, ExtractionError, RateLimitError
@@ -80,6 +81,19 @@ def _normalize_label(label: str) -> str:
         r"(?:\$|€|£|USD|EUR|GBP|CHF|JPY|AUD|CAD|NOK|SEK|DKK|ISK)?"
         r"\s*(?:M|m|MM|mm|k|K|000s?|thousands?|millions?|billions?|mn|bn)?"
         r"\s*\)\s*$",
+        "",
+        s,
+        flags=re.IGNORECASE,
+    )
+    # Strip qualifier parentheticals that prevent alias matching
+    # e.g., "(Adjusted)", "(Net)", "(excl. depreciation)", "(Pro Forma)", "(Restated)"
+    s = re.sub(
+        r"\s*\("
+        r"(?:adjusted|net|gross|restated|pro\s*forma|"
+        r"excl\.?\s+[^)]{1,40}|incl\.?\s+[^)]{1,40}|"
+        r"excluding\s+[^)]{1,40}|including\s+[^)]{1,40}|"
+        r"before\s+[^)]{1,40}|after\s+[^)]{1,40})"
+        r"\)",
         "",
         s,
         flags=re.IGNORECASE,
@@ -344,6 +358,109 @@ def _disambiguate_by_sheet_category(
     return overrides
 
 
+def _fuzzy_rescue_unmapped(
+    mappings: list,
+    grouped_items: list,
+    alias_lookup: dict,
+    threshold: int = 80,
+) -> int:
+    """Rescue unmapped items via fuzzy alias matching (rapidfuzz).
+
+    For each mapping still marked 'unmapped' after exact-alias passes,
+    score the normalized label against all alias keys using token_sort_ratio.
+    If the best score >= threshold and the match is unambiguous for the
+    expected sheet category, override to that canonical.
+
+    Mutates mappings in-place. Returns count of rescues.
+    """
+    from collections import defaultdict
+
+    # Build label -> sheet lookup for category resolution
+    label_to_sheets: dict[str, list[str]] = defaultdict(list)
+    label_to_section_categories: dict[str, list[str | None]] = defaultdict(list)
+    for item in grouped_items:
+        lbl = item["label"]
+        label_to_sheets[lbl].append(item["sheet"])
+        label_to_section_categories[lbl].append(item.get("section_category"))
+
+    def _resolve_category(label: str) -> str | None:
+        """Return the expected taxonomy category for a label based on sheet context."""
+        sheets = label_to_sheets.get(label, [])
+        section_cats = label_to_section_categories.get(label, [])
+        for sheet, sec_cat in zip(sheets, section_cats):
+            if sec_cat:
+                return sec_cat
+            sheet_lower = sheet.lower()
+            for pattern, cat in _SHEET_TO_CATEGORY.items():
+                if pattern in sheet_lower:
+                    return cat
+        return None
+
+    # Pre-compute normalized alias keys for scoring
+    alias_keys = list(alias_lookup.keys())
+
+    rescues = 0
+    for m in mappings:
+        if m.get("canonical_name", "unmapped") != "unmapped":
+            continue
+
+        label = m.get("original_label", "")
+        normalized = _normalize_label(label).lower().strip()
+        if not normalized:
+            continue
+
+        # Score against all alias keys
+        best_score = 0
+        best_key = None
+        for alias_key in alias_keys:
+            score = fuzz.token_sort_ratio(normalized, alias_key)
+            if score > best_score:
+                best_score = score
+                best_key = alias_key
+
+        if best_score < threshold or best_key is None:
+            continue
+
+        candidates = alias_lookup[best_key]
+        expected_cat = _resolve_category(label)
+
+        # Filter to expected category if known
+        if expected_cat:
+            cat_matches = [c for c in candidates if c[1] == expected_cat]
+            if len(cat_matches) == 1:
+                chosen = cat_matches[0]
+            elif len(cat_matches) > 1:
+                # Multiple matches in same category — skip (ambiguous)
+                continue
+            else:
+                # No match in expected category — try unique global
+                if len(candidates) == 1:
+                    chosen = candidates[0]
+                else:
+                    continue
+        else:
+            # No category context — only accept unique global match
+            if len(candidates) == 1:
+                chosen = candidates[0]
+            else:
+                continue
+
+        logger.info(
+            f"Stage 3: Fuzzy rescue: '{label}' -> {chosen[0]} "
+            f"(score={best_score}, alias='{best_key}')"
+        )
+        m["canonical_name"] = chosen[0]
+        m["confidence"] = round(best_score / 100.0, 3)
+        m["method"] = "fuzzy_alias"
+        m["disambiguation_override"] = {
+            "original": "unmapped",
+            "reason": f"fuzzy alias match '{best_key}' (score={best_score})",
+        }
+        rescues += 1
+
+    return rescues
+
+
 def _handle_deprecated_redirect(canonical_name: str, db) -> str:
     """If canonical_name is deprecated, return its redirect target."""
     from src.db.models import Taxonomy
@@ -588,6 +705,53 @@ class MappingStage(ExtractionStage):
                 },
             }
 
+        # --- Embedding-based pre-filter ---
+        embedding_matched: Dict[str, Any] = {}
+        embedding_hints: Dict[str, list] = {}
+        try:
+            from src.extraction.embeddings import filter_remaining_labels
+
+            embedding_matched, remaining_labels, embedding_hints = (
+                filter_remaining_labels(remaining_labels)
+            )
+            if embedding_matched:
+                pre_mapped.update(embedding_matched)
+                logger.info(
+                    f"Stage 3: Embedding pre-filter resolved "
+                    f"{len(embedding_matched)} labels, "
+                    f"{len(remaining_labels)} still need Claude"
+                )
+
+            # If ALL labels now resolved, skip Claude entirely
+            if not remaining_labels:
+                logger.info(
+                    f"Stage 3: All labels resolved "
+                    f"({len(pre_mapped)} total: patterns + embeddings)"
+                )
+                mappings_list = list(pre_mapped.values())
+                cat_lookup = get_canonical_to_category()
+                for m in mappings_list:
+                    if "taxonomy_category" not in m:
+                        m["taxonomy_category"] = cat_lookup.get(
+                            m.get("canonical_name", ""), "unknown"
+                        )
+                return {
+                    "mappings": mappings_list,
+                    "tokens": 0,
+                    "input_tokens": 0,
+                    "output_tokens": 0,
+                    "lineage_metadata": {
+                        "mappings_count": len(mappings_list),
+                        "unmapped_count": 0,
+                        "avg_confidence": 1.0,
+                        "pattern_matched": len(pre_mapped) - len(embedding_matched),
+                        "embedding_matched": len(embedding_matched),
+                        "claude_mapped": 0,
+                    },
+                }
+        except Exception as e:
+            logger.warning(f"Stage 3: Embedding pre-filter unavailable: {e}")
+
         # Filter grouped_items to only include remaining (unmatched) labels
         remaining_grouped_items = [
             item for item in grouped_items if item["label"] in remaining_labels
@@ -679,9 +843,22 @@ class MappingStage(ExtractionStage):
                     f"sheet-category disambiguation"
                 )
 
-            # Tag Claude mappings with method
+            # Fuzzy alias rescue for still-unmapped items
+            fuzzy_count = _fuzzy_rescue_unmapped(
+                claude_mappings_list,
+                remaining_grouped_items,
+                alias_lookup,
+                threshold=settings.taxonomy_fuzzy_rescue_threshold,
+            )
+            if fuzzy_count:
+                logger.info(
+                    f"Stage 3: {fuzzy_count} unmapped item(s) rescued via fuzzy matching"
+                )
+
+            # Tag Claude mappings with method (skip items already tagged by fuzzy rescue)
             for m in claude_mappings_list:
-                m["method"] = "claude"
+                if "method" not in m:
+                    m["method"] = "claude"
 
             # Merge pre-mapped patterns + Claude results
             final_mappings = list(pre_mapped.values()) + claude_mappings_list
@@ -717,6 +894,9 @@ class MappingStage(ExtractionStage):
                 else 0
             )
 
+            n_embedding = len(embedding_matched)
+            n_pattern = len(pre_mapped) - n_embedding
+
             log_performance(
                 logger,
                 "stage_3_mapping",
@@ -725,14 +905,16 @@ class MappingStage(ExtractionStage):
                     "tokens": tokens,
                     "labels": len(labels),
                     "mappings": len(final_mappings),
-                    "pattern_matched": len(pre_mapped),
+                    "pattern_matched": n_pattern,
+                    "embedding_matched": n_embedding,
                     "claude_mapped": len(claude_mappings_list),
                 },
             )
 
             logger.info(
                 f"Stage 3: Mapping completed - {len(final_mappings)} items mapped "
-                f"({len(pre_mapped)} from patterns, {len(claude_mappings_list)} from Claude)"
+                f"({n_pattern} patterns, {n_embedding} embeddings, "
+                f"{len(claude_mappings_list)} Claude)"
             )
 
             return {
@@ -744,8 +926,10 @@ class MappingStage(ExtractionStage):
                     "mappings_count": len(final_mappings),
                     "unmapped_count": unmapped,
                     "avg_confidence": round(avg_conf, 3),
-                    "pattern_matched": len(pre_mapped),
+                    "pattern_matched": n_pattern,
+                    "embedding_matched": n_embedding,
                     "claude_mapped": len(claude_mappings_list),
+                    "fuzzy_rescued": fuzzy_count,
                     "batched": batch_count > 1,
                     "batch_count": batch_count,
                 },

@@ -8,6 +8,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
+def _noop_embedding_filter(remaining_labels, category_filter=None):
+    """No-op embedding filter that passes all labels through unchanged."""
+    return {}, remaining_labels, {}
+
+
 class TestPatternShortcircuit:
     """Test that high-confidence entity patterns shortcircuit Claude calls."""
 
@@ -154,6 +159,7 @@ class TestPatternShortcircuit:
             patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude),
             patch.object(stage, "_lookup_patterns") as mock_lookup,
             patch.object(stage, "_build_entity_hints", return_value=""),
+            patch("src.extraction.embeddings.filter_remaining_labels", side_effect=_noop_embedding_filter),
         ):
             # 2 of 3 labels pre-mapped
             pre_mapped = {
@@ -245,6 +251,7 @@ class TestPatternShortcircuit:
         with (
             patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude),
             patch.object(stage, "_build_entity_hints", return_value=""),
+            patch("src.extraction.embeddings.filter_remaining_labels", side_effect=_noop_embedding_filter),
         ):
             result = await stage.execute(context)
 
@@ -301,6 +308,7 @@ class TestPatternShortcircuit:
             patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude),
             patch.object(stage, "_lookup_patterns") as mock_lookup,
             patch.object(stage, "_build_entity_hints", return_value=""),
+            patch("src.extraction.embeddings.filter_remaining_labels", side_effect=_noop_embedding_filter),
         ):
             # Simulate pattern lookup returning empty (as if exception was caught)
             mock_lookup.return_value = ({}, {"Revenue", "Cost of Goods Sold", "Gross Profit"})

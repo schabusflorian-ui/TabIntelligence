@@ -301,9 +301,13 @@ class TestMappingStageValidation:
         mock_claude = MagicMock()
         mock_claude.messages.create.return_value = mock_response
 
+        def _noop_embedding_filter(remaining_labels, category_filter=None):
+            return {}, remaining_labels, {}
+
         with (
             patch("src.extraction.stages.mapping.get_claude_client", return_value=mock_claude),
             patch.object(stage, "_build_entity_hints", return_value=""),
+            patch("src.extraction.embeddings.filter_remaining_labels", side_effect=_noop_embedding_filter),
         ):
             result = await stage.execute(context)
 

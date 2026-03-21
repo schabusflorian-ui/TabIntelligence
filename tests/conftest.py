@@ -454,6 +454,14 @@ def mock_anthropic(monkeypatch, mock_claude_client):
         "src.extraction.stages.enhanced_mapping.get_claude_client", mock_get_claude_client
     )
     monkeypatch.setattr("src.lineage.tracker.LineageTracker.save_to_db", mock_save_to_db)
+
+    # Disable embedding pre-filter in e2e tests so Claude mock controls all mapping
+    def _noop_embedding_filter(remaining_labels, category_filter=None):
+        return {}, remaining_labels, {}
+
+    monkeypatch.setattr(
+        "src.extraction.embeddings.filter_remaining_labels", _noop_embedding_filter
+    )
     return mock_claude_client
 
 
