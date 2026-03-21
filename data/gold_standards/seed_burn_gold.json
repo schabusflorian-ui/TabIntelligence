@@ -1,0 +1,1067 @@
+{
+  "version": "1.0.0",
+  "description": "Ground truth for seed_burn.xlsx accuracy measurement",
+  "created_at": "2026-03-21T10:50:12.935201+00:00",
+  "model_info": {
+    "file": "seed_burn.xlsx",
+    "sheets": 3,
+    "company_type": "Pre-revenue seed-stage startup",
+    "periods": [
+      "Jan-25",
+      "Feb-25",
+      "Mar-25",
+      "Apr-25",
+      "May-25",
+      "Jun-25",
+      "Jul-25",
+      "Aug-25",
+      "Sep-25",
+      "Oct-25",
+      "Nov-25",
+      "Dec-25"
+    ],
+    "notes": "Monthly periods, <20 items, cash burn focus. Revenue near-zero."
+  },
+  "expected_triage": [
+    {
+      "sheet_name": "Monthly P&L",
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "rationale": "Income statement with revenue, expenses, net income"
+    },
+    {
+      "sheet_name": "Cash",
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "rationale": "Cash tracker with beginning/ending cash and burn metrics"
+    },
+    {
+      "sheet_name": "Notes",
+      "tier": 4,
+      "decision": "SKIP",
+      "rationale": "Text notes, no financial data"
+    }
+  ],
+  "expected_mappings": [
+    {
+      "original_label": "Revenue",
+      "canonical_name": "revenue",
+      "sheet": "Monthly P&L"
+    },
+    {
+      "original_label": "Cost of Revenue",
+      "canonical_name": "cogs",
+      "sheet": "Monthly P&L",
+      "notes": "May also map to 'cost_of_sales'"
+    },
+    {
+      "original_label": "Gross Profit",
+      "canonical_name": "gross_profit",
+      "sheet": "Monthly P&L"
+    },
+    {
+      "original_label": "Payroll",
+      "canonical_name": "labor_costs",
+      "sheet": "Monthly P&L",
+      "notes": "May map to 'sga' or 'operating_expenses'"
+    },
+    {
+      "original_label": "Rent",
+      "canonical_name": "other_expense",
+      "sheet": "Monthly P&L",
+      "notes": "Generic expense \u2014 may map to 'opex' or 'operating_expenses'"
+    },
+    {
+      "original_label": "Software",
+      "canonical_name": "other_expense",
+      "sheet": "Monthly P&L",
+      "notes": "May map to 'rd_expense' or 'operating_expenses'"
+    },
+    {
+      "original_label": "Total Expenses",
+      "canonical_name": "operating_expenses",
+      "sheet": "Monthly P&L",
+      "notes": "May also map to 'opex'"
+    },
+    {
+      "original_label": "Net Income",
+      "canonical_name": "net_income",
+      "sheet": "Monthly P&L"
+    },
+    {
+      "original_label": "Beginning Cash",
+      "canonical_name": "beginning_cash",
+      "sheet": "Cash"
+    },
+    {
+      "original_label": "Ending Cash",
+      "canonical_name": "ending_cash",
+      "sheet": "Cash"
+    },
+    {
+      "original_label": "Net Burn",
+      "canonical_name": "burn_rate",
+      "sheet": "Cash",
+      "notes": "May map to 'monthly_burn' or 'net_income'"
+    },
+    {
+      "original_label": "Runway (months)",
+      "canonical_name": "cash_runway_months",
+      "sheet": "Cash"
+    }
+  ],
+  "acceptable_alternatives": {
+    "revenue": [
+      "revenue"
+    ],
+    "cogs": [
+      "cogs",
+      "cost_of_sales"
+    ],
+    "gross_profit": [
+      "gross_profit"
+    ],
+    "labor_costs": [
+      "labor_costs",
+      "sga",
+      "operating_expenses",
+      "opex"
+    ],
+    "other_expense": [
+      "other_expense",
+      "opex",
+      "operating_expenses",
+      "rd_expense",
+      "general_admin"
+    ],
+    "operating_expenses": [
+      "operating_expenses",
+      "opex"
+    ],
+    "net_income": [
+      "net_income",
+      "net_profit"
+    ],
+    "beginning_cash": [
+      "beginning_cash",
+      "cash_and_equivalents",
+      "cash"
+    ],
+    "ending_cash": [
+      "ending_cash",
+      "cash_and_equivalents",
+      "cash"
+    ],
+    "burn_rate": [
+      "burn_rate",
+      "monthly_burn",
+      "net_income"
+    ],
+    "cash_runway_months": [
+      "cash_runway_months"
+    ]
+  },
+  "expected_completeness": {
+    "statements": {
+      "Monthly P&L": {
+        "min_items": 8,
+        "min_coverage_pct": 80.0
+      },
+      "Cash": {
+        "min_items": 4,
+        "min_coverage_pct": 80.0
+      }
+    },
+    "total_min_items": 12,
+    "total_min_coverage_pct": 75.0
+  },
+  "expected_values": {
+    "revenue": {
+      "2025-01": {
+        "value": 0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-02": {
+        "value": 0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-03": {
+        "value": 0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-04": {
+        "value": 0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-05": {
+        "value": 2,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-06": {
+        "value": 5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-07": {
+        "value": 8,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-08": {
+        "value": 12,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-09": {
+        "value": 18,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-10": {
+        "value": 25,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-11": {
+        "value": 35,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-12": {
+        "value": 48,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      }
+    },
+    "cogs": {
+      "2025-01": {
+        "value": 0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-02": {
+        "value": 0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-03": {
+        "value": 0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-04": {
+        "value": 0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-05": {
+        "value": -1,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-06": {
+        "value": -2,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-07": {
+        "value": -3,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-08": {
+        "value": -4,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-09": {
+        "value": -6,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-10": {
+        "value": -8,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-11": {
+        "value": -11,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-12": {
+        "value": -14,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      }
+    },
+    "gross_profit": {
+      "2025-01": {
+        "value": 0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-02": {
+        "value": 0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-03": {
+        "value": 0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-04": {
+        "value": 0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-05": {
+        "value": 1,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-06": {
+        "value": 3,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-07": {
+        "value": 5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-08": {
+        "value": 8,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-09": {
+        "value": 12,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-10": {
+        "value": 17,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-11": {
+        "value": 24,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-12": {
+        "value": 34,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      }
+    },
+    "labor_costs": {
+      "2025-01": {
+        "value": -85,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.85
+      },
+      "2025-02": {
+        "value": -85,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.85
+      },
+      "2025-03": {
+        "value": -95,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.9500000000000001
+      },
+      "2025-04": {
+        "value": -95,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.9500000000000001
+      },
+      "2025-05": {
+        "value": -95,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.9500000000000001
+      },
+      "2025-06": {
+        "value": -100,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.0
+      },
+      "2025-07": {
+        "value": -100,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.0
+      },
+      "2025-08": {
+        "value": -100,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.0
+      },
+      "2025-09": {
+        "value": -110,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.1
+      },
+      "2025-10": {
+        "value": -110,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.1
+      },
+      "2025-11": {
+        "value": -110,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.1
+      },
+      "2025-12": {
+        "value": -120,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.2
+      }
+    },
+    "opex": {
+      "2025-01": {
+        "value": -5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-02": {
+        "value": -5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-03": {
+        "value": -5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-04": {
+        "value": -5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-05": {
+        "value": -5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-06": {
+        "value": -6,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-07": {
+        "value": -6,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-08": {
+        "value": -6,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-09": {
+        "value": -6,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-10": {
+        "value": -6,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-11": {
+        "value": -7,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-12": {
+        "value": -7,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      }
+    },
+    "general_admin": {
+      "2025-01": {
+        "value": -12,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-02": {
+        "value": -3,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-03": {
+        "value": -3,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-04": {
+        "value": -15,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-05": {
+        "value": -3,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-06": {
+        "value": -3,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-07": {
+        "value": -3,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-08": {
+        "value": -3,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-09": {
+        "value": -3,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-10": {
+        "value": -3,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-11": {
+        "value": -3,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-12": {
+        "value": -3,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      }
+    },
+    "operating_expenses": {
+      "2025-01": {
+        "value": -110,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.1
+      },
+      "2025-02": {
+        "value": -101,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.01
+      },
+      "2025-03": {
+        "value": -111,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.11
+      },
+      "2025-04": {
+        "value": -123,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.23
+      },
+      "2025-05": {
+        "value": -111,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.11
+      },
+      "2025-06": {
+        "value": -117,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.17
+      },
+      "2025-07": {
+        "value": -117,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.17
+      },
+      "2025-08": {
+        "value": -117,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.17
+      },
+      "2025-09": {
+        "value": -127,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.27
+      },
+      "2025-10": {
+        "value": -127,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.27
+      },
+      "2025-11": {
+        "value": -128,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.28
+      },
+      "2025-12": {
+        "value": -138,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.3800000000000001
+      }
+    },
+    "net_income": {
+      "2025-01": {
+        "value": -110,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.1
+      },
+      "2025-02": {
+        "value": -101,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.01
+      },
+      "2025-03": {
+        "value": -111,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.11
+      },
+      "2025-04": {
+        "value": -123,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.23
+      },
+      "2025-05": {
+        "value": -110,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.1
+      },
+      "2025-06": {
+        "value": -114,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.1400000000000001
+      },
+      "2025-07": {
+        "value": -112,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.12
+      },
+      "2025-08": {
+        "value": -109,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.09
+      },
+      "2025-09": {
+        "value": -115,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.1500000000000001
+      },
+      "2025-10": {
+        "value": -110,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.1
+      },
+      "2025-11": {
+        "value": -104,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.04
+      },
+      "2025-12": {
+        "value": -104,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.04
+      }
+    },
+    "beginning_cash": {
+      "2025-01": {
+        "value": 2000,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 20.0
+      },
+      "2025-02": {
+        "value": 1890,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 18.900000000000002
+      },
+      "2025-03": {
+        "value": 1789,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 17.89
+      },
+      "2025-04": {
+        "value": 1678,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 16.78
+      },
+      "2025-05": {
+        "value": 1555,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 15.55
+      },
+      "2025-06": {
+        "value": 1445,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 14.450000000000001
+      },
+      "2025-07": {
+        "value": 1331,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 13.31
+      },
+      "2025-08": {
+        "value": 1219,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 12.19
+      },
+      "2025-09": {
+        "value": 1110,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 11.1
+      },
+      "2025-10": {
+        "value": 995,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 9.950000000000001
+      },
+      "2025-11": {
+        "value": 885,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 8.85
+      },
+      "2025-12": {
+        "value": 781,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 7.8100000000000005
+      }
+    },
+    "burn_rate": {
+      "2025-01": {
+        "value": -110,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.1
+      },
+      "2025-02": {
+        "value": -101,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.01
+      },
+      "2025-03": {
+        "value": -111,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.11
+      },
+      "2025-04": {
+        "value": -123,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.23
+      },
+      "2025-05": {
+        "value": -110,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.1
+      },
+      "2025-06": {
+        "value": -114,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.1400000000000001
+      },
+      "2025-07": {
+        "value": -112,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.12
+      },
+      "2025-08": {
+        "value": -109,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.09
+      },
+      "2025-09": {
+        "value": -115,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.1500000000000001
+      },
+      "2025-10": {
+        "value": -110,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.1
+      },
+      "2025-11": {
+        "value": -104,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.04
+      },
+      "2025-12": {
+        "value": -104,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.04
+      }
+    },
+    "ending_cash": {
+      "2025-01": {
+        "value": 1890,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 18.900000000000002
+      },
+      "2025-02": {
+        "value": 1789,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 17.89
+      },
+      "2025-03": {
+        "value": 1678,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 16.78
+      },
+      "2025-04": {
+        "value": 1555,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 15.55
+      },
+      "2025-05": {
+        "value": 1445,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 14.450000000000001
+      },
+      "2025-06": {
+        "value": 1331,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 13.31
+      },
+      "2025-07": {
+        "value": 1219,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 12.19
+      },
+      "2025-08": {
+        "value": 1110,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 11.1
+      },
+      "2025-09": {
+        "value": 995,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 9.950000000000001
+      },
+      "2025-10": {
+        "value": 885,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 8.85
+      },
+      "2025-11": {
+        "value": 781,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 7.8100000000000005
+      },
+      "2025-12": {
+        "value": 677,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 6.7700000000000005
+      }
+    },
+    "cash_runway_months": {
+      "2025-01": {
+        "value": 17.2,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-02": {
+        "value": 17.7,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-03": {
+        "value": 15.1,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-04": {
+        "value": 12.6,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-05": {
+        "value": 13.1,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-06": {
+        "value": 11.7,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-07": {
+        "value": 10.9,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-08": {
+        "value": 10.2,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-09": {
+        "value": 8.7,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-10": {
+        "value": 8,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-11": {
+        "value": 7.5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "2025-12": {
+        "value": 6.5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      }
+    }
+  },
+  "expected_parsing": [
+    {
+      "canonical_name": "revenue",
+      "sheet": "Monthly P&L",
+      "original_label": "Revenue",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "cogs",
+      "sheet": "Monthly P&L",
+      "original_label": "Cost of Revenue",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "gross_profit",
+      "sheet": "Monthly P&L",
+      "original_label": "Gross Profit",
+      "is_bold": true,
+      "is_formula": false,
+      "is_subtotal": true,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "labor_costs",
+      "sheet": "Monthly P&L",
+      "original_label": "Payroll",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "opex",
+      "sheet": "Monthly P&L",
+      "original_label": "Rent",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "opex",
+      "sheet": "Monthly P&L",
+      "original_label": "Software",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "general_admin",
+      "sheet": "Monthly P&L",
+      "original_label": "Legal & Professional",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "operating_expenses",
+      "sheet": "Monthly P&L",
+      "original_label": "Total Expenses",
+      "is_bold": true,
+      "is_formula": false,
+      "is_subtotal": true,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "net_income",
+      "sheet": "Monthly P&L",
+      "original_label": "Net Income",
+      "is_bold": true,
+      "is_formula": false,
+      "is_subtotal": true,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "beginning_cash",
+      "sheet": "Cash",
+      "original_label": "Beginning Cash",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "revenue",
+      "sheet": "Cash",
+      "original_label": "Revenue",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "operating_expenses",
+      "sheet": "Cash",
+      "original_label": "Total Expenses",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": true,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "burn_rate",
+      "sheet": "Cash",
+      "original_label": "Net Burn",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": true,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "ending_cash",
+      "sheet": "Cash",
+      "original_label": "Ending Cash",
+      "is_bold": true,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "cash_runway_months",
+      "sheet": "Cash",
+      "original_label": "Runway (months)",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    }
+  ],
+  "metadata": {
+    "source_result": "seed_burn.xlsx",
+    "source_timestamp": "2026-03-12T12:52:03.893404+00:00",
+    "values_verified": false,
+    "notes": "Values auto-populated from extraction result. Review and verify before use."
+  }
+}

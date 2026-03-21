@@ -1,0 +1,1023 @@
+{
+  "version": "1.0.0",
+  "description": "Ground truth for european_model.xlsx accuracy measurement",
+  "created_at": "2026-03-21T10:50:12.925130+00:00",
+  "model_info": {
+    "file": "european_model.xlsx",
+    "sheets": 6,
+    "company_type": "European mid-market company (~EUR 150M revenue, IFRS)",
+    "periods": [
+      "FY2022A",
+      "FY2023A",
+      "FY2024E",
+      "FY2025E"
+    ],
+    "notes": "IFRS terminology (Turnover, Stocks, Debtors, Creditors), EUR millions"
+  },
+  "expected_triage": [
+    {
+      "sheet_name": "Profit & Loss Account",
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "rationale": "Core income statement with turnover, operating profit, net profit"
+    },
+    {
+      "sheet_name": "Statement of Financial Position",
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "rationale": "Core balance sheet with assets, liabilities, shareholders' funds"
+    },
+    {
+      "sheet_name": "Cash Flow Statement",
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "rationale": "Core cash flow statement \u2014 operating, investing, financing"
+    },
+    {
+      "sheet_name": "Debt Summary",
+      "tier": 2,
+      "decision": "PROCESS_MEDIUM",
+      "rationale": "Debt facility detail with interest rates"
+    },
+    {
+      "sheet_name": "Assumptions",
+      "tier": 3,
+      "decision": "PROCESS_LOW",
+      "rationale": "Input assumptions \u2014 growth rates, margins, tax rate"
+    },
+    {
+      "sheet_name": "Board Notes",
+      "tier": 4,
+      "decision": "SKIP",
+      "rationale": "Board meeting text notes, no financial data"
+    }
+  ],
+  "expected_mappings": [
+    {
+      "original_label": "Turnover",
+      "canonical_name": "revenue",
+      "sheet": "Profit & Loss Account",
+      "notes": "IFRS term for revenue \u2014 'Turnover' is a taxonomy alias"
+    },
+    {
+      "original_label": "Cost of Sales",
+      "canonical_name": "cogs",
+      "sheet": "Profit & Loss Account",
+      "notes": "May also map to 'cost_of_sales'"
+    },
+    {
+      "original_label": "Gross Profit",
+      "canonical_name": "gross_profit",
+      "sheet": "Profit & Loss Account"
+    },
+    {
+      "original_label": "Distribution Costs",
+      "canonical_name": "sales_marketing",
+      "sheet": "Profit & Loss Account",
+      "notes": "IFRS term \u2014 may map to 'marketing_expense' or 'operating_expenses'"
+    },
+    {
+      "original_label": "Administrative Expenses",
+      "canonical_name": "general_admin",
+      "sheet": "Profit & Loss Account",
+      "notes": "May also map to 'sga'"
+    },
+    {
+      "original_label": "Other Operating Income",
+      "canonical_name": "other_income",
+      "sheet": "Profit & Loss Account",
+      "notes": "May also map to 'other_revenue'"
+    },
+    {
+      "original_label": "Operating Profit",
+      "canonical_name": "operating_income",
+      "sheet": "Profit & Loss Account",
+      "notes": "May also map to 'ebit'"
+    },
+    {
+      "original_label": "Finance Costs",
+      "canonical_name": "interest_expense",
+      "sheet": "Profit & Loss Account"
+    },
+    {
+      "original_label": "Finance Income",
+      "canonical_name": "interest_income",
+      "sheet": "Profit & Loss Account"
+    },
+    {
+      "original_label": "Profit Before Tax",
+      "canonical_name": "earnings_before_tax",
+      "sheet": "Profit & Loss Account",
+      "notes": "May also map to 'ebt'"
+    },
+    {
+      "original_label": "Taxation",
+      "canonical_name": "income_tax",
+      "sheet": "Profit & Loss Account",
+      "notes": "May also map to 'tax_expense'"
+    },
+    {
+      "original_label": "Profit for the Year",
+      "canonical_name": "net_income",
+      "sheet": "Profit & Loss Account",
+      "notes": "May also map to 'net_profit'"
+    },
+    {
+      "original_label": "Property, Plant and Equipment",
+      "canonical_name": "net_ppe",
+      "sheet": "Statement of Financial Position",
+      "notes": "May also map to 'ppe' or 'property_plant_equipment'"
+    },
+    {
+      "original_label": "Intangible Assets",
+      "canonical_name": "intangible_assets",
+      "sheet": "Statement of Financial Position"
+    },
+    {
+      "original_label": "Goodwill",
+      "canonical_name": "goodwill",
+      "sheet": "Statement of Financial Position"
+    },
+    {
+      "original_label": "Total Non-Current Assets",
+      "canonical_name": "non_current_assets",
+      "sheet": "Statement of Financial Position"
+    },
+    {
+      "original_label": "Stocks",
+      "canonical_name": "inventory",
+      "sheet": "Statement of Financial Position",
+      "notes": "IFRS/UK term \u2014 'Stocks' is a taxonomy alias for inventory"
+    },
+    {
+      "original_label": "Trade Debtors",
+      "canonical_name": "accounts_receivable",
+      "sheet": "Statement of Financial Position",
+      "notes": "IFRS/UK term \u2014 may also map to 'receivables'"
+    },
+    {
+      "original_label": "Cash at Bank",
+      "canonical_name": "cash_and_equivalents",
+      "sheet": "Statement of Financial Position",
+      "notes": "May also map to 'cash'"
+    },
+    {
+      "original_label": "Total Current Assets",
+      "canonical_name": "total_current_assets",
+      "sheet": "Statement of Financial Position"
+    },
+    {
+      "original_label": "Total Assets",
+      "canonical_name": "total_assets",
+      "sheet": "Statement of Financial Position"
+    },
+    {
+      "original_label": "Trade Creditors",
+      "canonical_name": "accounts_payable",
+      "sheet": "Statement of Financial Position",
+      "notes": "IFRS/UK term \u2014 may also map to 'payables'"
+    },
+    {
+      "original_label": "Accruals",
+      "canonical_name": "accrued_expenses",
+      "sheet": "Statement of Financial Position",
+      "notes": "May also map to 'accrued_liabilities'"
+    },
+    {
+      "original_label": "Provisions",
+      "canonical_name": "accrued_expenses",
+      "sheet": "Statement of Financial Position",
+      "notes": "IFRS provisions \u2014 closest match is 'accrued_expenses' or 'accrued_liabilities'"
+    },
+    {
+      "original_label": "Current Portion of Borrowings",
+      "canonical_name": "current_portion_lt_debt",
+      "sheet": "Statement of Financial Position",
+      "notes": "May also map to 'current_portion_debt' or 'short_term_debt'"
+    },
+    {
+      "original_label": "Total Current Liabilities",
+      "canonical_name": "total_current_liabilities",
+      "sheet": "Statement of Financial Position"
+    },
+    {
+      "original_label": "Bank Borrowings",
+      "canonical_name": "long_term_debt",
+      "sheet": "Statement of Financial Position",
+      "notes": "May also map to 'total_debt' or 'senior_debt'"
+    },
+    {
+      "original_label": "Total Liabilities",
+      "canonical_name": "total_liabilities",
+      "sheet": "Statement of Financial Position"
+    },
+    {
+      "original_label": "Share Capital",
+      "canonical_name": "common_stock",
+      "sheet": "Statement of Financial Position"
+    },
+    {
+      "original_label": "Retained Profit",
+      "canonical_name": "retained_earnings",
+      "sheet": "Statement of Financial Position"
+    },
+    {
+      "original_label": "Total Shareholders' Funds",
+      "canonical_name": "total_equity",
+      "sheet": "Statement of Financial Position",
+      "notes": "May also map to 'shareholders_equity'"
+    },
+    {
+      "original_label": "Total Liabilities and Shareholders' Funds",
+      "canonical_name": "total_liabilities_and_equity",
+      "sheet": "Statement of Financial Position"
+    },
+    {
+      "original_label": "Net Cash from Operating Activities",
+      "canonical_name": "operating_cash_flow",
+      "sheet": "Cash Flow Statement",
+      "notes": "May also map to 'cfo'"
+    },
+    {
+      "original_label": "Net Cash Used in Investing Activities",
+      "canonical_name": "investing_cash_flow",
+      "sheet": "Cash Flow Statement",
+      "notes": "May also map to 'cfi'"
+    },
+    {
+      "original_label": "Net Cash Used in Financing Activities",
+      "canonical_name": "financing_cash_flow",
+      "sheet": "Cash Flow Statement",
+      "notes": "May also map to 'cff'"
+    },
+    {
+      "original_label": "Net Increase in Cash",
+      "canonical_name": "net_change_cash",
+      "sheet": "Cash Flow Statement",
+      "notes": "May also map to 'change_in_cash'"
+    },
+    {
+      "original_label": "Cash at End of Year",
+      "canonical_name": "ending_cash",
+      "sheet": "Cash Flow Statement"
+    },
+    {
+      "original_label": "Revolving Credit Facility",
+      "canonical_name": "revolving_credit",
+      "sheet": "Debt Summary",
+      "notes": "May also map to 'revolver_balance'"
+    },
+    {
+      "original_label": "Term Loan",
+      "canonical_name": "term_loan_a",
+      "sheet": "Debt Summary",
+      "notes": "May also map to 'long_term_debt'"
+    },
+    {
+      "original_label": "Total Borrowings",
+      "canonical_name": "total_debt",
+      "sheet": "Debt Summary",
+      "notes": "May also map to 'gross_debt'"
+    },
+    {
+      "original_label": "Interest Rate",
+      "canonical_name": "interest_rate",
+      "sheet": "Debt Summary"
+    },
+    {
+      "original_label": "Interest Paid",
+      "canonical_name": "interest_expense_debt",
+      "sheet": "Debt Summary",
+      "notes": "May also map to 'interest_expense' or 'interest_payment'"
+    }
+  ],
+  "acceptable_alternatives": {
+    "revenue": [
+      "revenue"
+    ],
+    "cogs": [
+      "cogs",
+      "cost_of_sales"
+    ],
+    "sales_marketing": [
+      "sales_marketing",
+      "marketing_expense",
+      "operating_expenses",
+      "opex"
+    ],
+    "general_admin": [
+      "general_admin",
+      "sga",
+      "operating_expenses"
+    ],
+    "other_income": [
+      "other_income",
+      "other_revenue"
+    ],
+    "operating_income": [
+      "operating_income",
+      "ebit"
+    ],
+    "earnings_before_tax": [
+      "earnings_before_tax",
+      "ebt"
+    ],
+    "income_tax": [
+      "income_tax",
+      "tax_expense"
+    ],
+    "net_income": [
+      "net_income",
+      "net_profit"
+    ],
+    "net_ppe": [
+      "net_ppe",
+      "ppe",
+      "property_plant_equipment",
+      "fixed_assets"
+    ],
+    "inventory": [
+      "inventory",
+      "inventories"
+    ],
+    "accounts_receivable": [
+      "accounts_receivable",
+      "receivables",
+      "ar"
+    ],
+    "cash_and_equivalents": [
+      "cash_and_equivalents",
+      "cash"
+    ],
+    "accounts_payable": [
+      "accounts_payable",
+      "payables",
+      "ap"
+    ],
+    "accrued_expenses": [
+      "accrued_expenses",
+      "accrued_liabilities"
+    ],
+    "current_portion_lt_debt": [
+      "current_portion_lt_debt",
+      "current_portion_debt",
+      "short_term_debt"
+    ],
+    "long_term_debt": [
+      "long_term_debt",
+      "total_debt",
+      "senior_debt"
+    ],
+    "total_equity": [
+      "total_equity",
+      "shareholders_equity",
+      "stockholders_equity"
+    ],
+    "total_liabilities_and_equity": [
+      "total_liabilities_and_equity"
+    ],
+    "operating_cash_flow": [
+      "operating_cash_flow",
+      "cfo",
+      "cash_from_operations"
+    ],
+    "investing_cash_flow": [
+      "investing_cash_flow",
+      "cfi"
+    ],
+    "financing_cash_flow": [
+      "financing_cash_flow",
+      "cff"
+    ],
+    "net_change_cash": [
+      "net_change_cash",
+      "change_in_cash"
+    ],
+    "revolving_credit": [
+      "revolving_credit",
+      "revolver_balance"
+    ],
+    "term_loan_a": [
+      "term_loan_a",
+      "long_term_debt",
+      "term_loan_b"
+    ],
+    "total_debt": [
+      "total_debt",
+      "gross_debt"
+    ],
+    "interest_expense_debt": [
+      "interest_expense_debt",
+      "interest_expense",
+      "interest_payment"
+    ]
+  },
+  "expected_completeness": {
+    "statements": {
+      "Profit & Loss Account": {
+        "min_items": 12,
+        "min_coverage_pct": 80.0
+      },
+      "Statement of Financial Position": {
+        "min_items": 20,
+        "min_coverage_pct": 80.0
+      },
+      "Cash Flow Statement": {
+        "min_items": 5,
+        "min_coverage_pct": 80.0
+      },
+      "Debt Summary": {
+        "min_items": 5,
+        "min_coverage_pct": 80.0
+      }
+    },
+    "total_min_items": 42,
+    "total_min_coverage_pct": 75.0
+  },
+  "expected_values": {
+    "revenue": {
+      "FY2022A": {
+        "value": 148.5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.485
+      },
+      "FY2023A": {
+        "value": 159.2,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.5919999999999999
+      },
+      "FY2024E": {
+        "value": 170.8,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.7080000000000002
+      },
+      "FY2025E": {
+        "value": 182.4,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.824
+      }
+    },
+    "cost_of_sales": {
+      "FY2022A": {
+        "value": -87.8,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.878
+      },
+      "FY2023A": {
+        "value": -93.4,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.934
+      },
+      "FY2024E": {
+        "value": -99.6,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.996
+      },
+      "FY2025E": {
+        "value": -105.5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.055
+      }
+    },
+    "gross_profit": {
+      "FY2022A": {
+        "value": 60.7,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.6070000000000001
+      },
+      "FY2023A": {
+        "value": 65.8,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.658
+      },
+      "FY2024E": {
+        "value": 71.2,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.7120000000000001
+      },
+      "FY2025E": {
+        "value": 76.9,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.7690000000000001
+      }
+    },
+    "sales_marketing": {
+      "FY2022A": {
+        "value": -18.6,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2023A": {
+        "value": -19.9,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2024E": {
+        "value": -21.0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2025E": {
+        "value": -22.0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      }
+    },
+    "general_admin": {
+      "FY2022A": {
+        "value": -22.3,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2023A": {
+        "value": -23.5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2024E": {
+        "value": -24.8,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2025E": {
+        "value": -26.1,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      }
+    },
+    "other_revenue": {
+      "FY2022A": {
+        "value": 1.2,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2023A": {
+        "value": 1.5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2024E": {
+        "value": 1.8,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2025E": {
+        "value": 2.0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      }
+    },
+    "operating_income": {
+      "FY2022A": {
+        "value": 21.0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2023A": {
+        "value": 23.9,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2024E": {
+        "value": 27.2,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2025E": {
+        "value": 30.8,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      }
+    },
+    "interest_expense": {
+      "FY2022A": {
+        "value": -4.8,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2023A": {
+        "value": -4.5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2024E": {
+        "value": -4.1,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2025E": {
+        "value": -3.7,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      }
+    },
+    "interest_income": {
+      "FY2022A": {
+        "value": 0.3,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2023A": {
+        "value": 0.4,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2024E": {
+        "value": 0.5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2025E": {
+        "value": 0.6,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      }
+    },
+    "ebt": {
+      "FY2022A": {
+        "value": 16.5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2023A": {
+        "value": 19.8,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2024E": {
+        "value": 23.6,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2025E": {
+        "value": 27.7,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      }
+    },
+    "tax_expense": {
+      "FY2022A": {
+        "value": -4.1,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2023A": {
+        "value": -5.0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2024E": {
+        "value": -5.9,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2025E": {
+        "value": -6.9,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      }
+    },
+    "net_income": {
+      "FY2022A": {
+        "value": 12.4,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2023A": {
+        "value": 14.8,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2024E": {
+        "value": 17.7,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2025E": {
+        "value": 20.8,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      }
+    },
+    "property_plant_equipment": {
+      "FY2022A": {
+        "value": 45.2,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2023A": {
+        "value": 46.8,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2024E": {
+        "value": 48.5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2025E": {
+        "value": 50.1,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.501
+      }
+    },
+    "intangible_assets": {
+      "FY2022A": {
+        "value": 12.5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2023A": {
+        "value": 11.8,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2024E": {
+        "value": 11.1,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2025E": {
+        "value": 10.4,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      }
+    },
+    "goodwill": {
+      "FY2022A": {
+        "value": 28.0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2023A": {
+        "value": 28.0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2024E": {
+        "value": 28.0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2025E": {
+        "value": 28.0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      }
+    },
+    "non_current_assets": {
+      "FY2022A": {
+        "value": 85.7,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.8570000000000001
+      },
+      "FY2023A": {
+        "value": 86.6,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.866
+      },
+      "FY2024E": {
+        "value": 87.6,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.876
+      },
+      "FY2025E": {
+        "value": 88.5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.885
+      }
+    },
+    "inventory": {
+      "FY2022A": {
+        "value": 14.8,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2023A": {
+        "value": 15.5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2024E": {
+        "value": 16.2,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2025E": {
+        "value": 17.0,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      }
+    },
+    "accounts_receivable": {
+      "FY2022A": {
+        "value": 24.8,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2023A": {
+        "value": 26.5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2024E": {
+        "value": 28.5,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      },
+      "FY2025E": {
+        "value": 30.4,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.5
+      }
+    }
+  },
+  "expected_parsing": [
+    {
+      "canonical_name": "revenue",
+      "sheet": "Profit & Loss Account",
+      "original_label": "Turnover",
+      "is_bold": true,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "cost_of_sales",
+      "sheet": "Profit & Loss Account",
+      "original_label": "Cost of Sales",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "gross_profit",
+      "sheet": "Profit & Loss Account",
+      "original_label": "Gross Profit",
+      "is_bold": true,
+      "is_formula": false,
+      "is_subtotal": true,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "sales_marketing",
+      "sheet": "Profit & Loss Account",
+      "original_label": "Distribution Costs",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "general_admin",
+      "sheet": "Profit & Loss Account",
+      "original_label": "Administrative Expenses",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "other_revenue",
+      "sheet": "Profit & Loss Account",
+      "original_label": "Other Operating Income",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "operating_income",
+      "sheet": "Profit & Loss Account",
+      "original_label": "Operating Profit",
+      "is_bold": true,
+      "is_formula": false,
+      "is_subtotal": true,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "interest_expense",
+      "sheet": "Profit & Loss Account",
+      "original_label": "Finance Costs",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "interest_income",
+      "sheet": "Profit & Loss Account",
+      "original_label": "Finance Income",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "ebt",
+      "sheet": "Profit & Loss Account",
+      "original_label": "Profit Before Tax",
+      "is_bold": true,
+      "is_formula": false,
+      "is_subtotal": true,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "tax_expense",
+      "sheet": "Profit & Loss Account",
+      "original_label": "Taxation",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "net_income",
+      "sheet": "Profit & Loss Account",
+      "original_label": "Profit for the Year",
+      "is_bold": true,
+      "is_formula": false,
+      "is_subtotal": true,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "non_current_assets",
+      "sheet": "Statement of Financial Position",
+      "original_label": "Non-Current Assets",
+      "is_bold": true,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 0
+    },
+    {
+      "canonical_name": "property_plant_equipment",
+      "sheet": "Statement of Financial Position",
+      "original_label": "Property, Plant and Equipment",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 2
+    },
+    {
+      "canonical_name": "intangible_assets",
+      "sheet": "Statement of Financial Position",
+      "original_label": "Intangible Assets",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 2
+    },
+    {
+      "canonical_name": "goodwill",
+      "sheet": "Statement of Financial Position",
+      "original_label": "Goodwill",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 2
+    },
+    {
+      "canonical_name": "non_current_assets",
+      "sheet": "Statement of Financial Position",
+      "original_label": "Total Non-Current Assets",
+      "is_bold": true,
+      "is_formula": false,
+      "is_subtotal": true,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "current_assets",
+      "sheet": "Statement of Financial Position",
+      "original_label": "Current Assets",
+      "is_bold": true,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 0
+    },
+    {
+      "canonical_name": "inventory",
+      "sheet": "Statement of Financial Position",
+      "original_label": "Stocks",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 2
+    },
+    {
+      "canonical_name": "accounts_receivable",
+      "sheet": "Statement of Financial Position",
+      "original_label": "Trade Debtors",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 2
+    }
+  ],
+  "metadata": {
+    "source_result": "european_model.xlsx",
+    "source_timestamp": "2026-03-12T12:26:30.443326+00:00",
+    "values_verified": false,
+    "notes": "Values auto-populated from extraction result. Review and verify before use."
+  }
+}

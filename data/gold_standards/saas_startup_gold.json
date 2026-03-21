@@ -1,0 +1,860 @@
+{
+  "version": "1.0.0",
+  "description": "Ground truth for saas_startup.xlsx accuracy measurement",
+  "created_at": "2026-03-21T10:50:12.933241+00:00",
+  "model_info": {
+    "file": "saas_startup.xlsx",
+    "sheets": 5,
+    "company_type": "Series B SaaS company (~$5M ARR)",
+    "periods": [
+      "FY2023",
+      "FY2024",
+      "FY2025E"
+    ],
+    "notes": "Messy labels (Rev, GP, Opex), SaaS metrics, col B spacer layout"
+  },
+  "expected_triage": [
+    {
+      "sheet_name": "P&L",
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "rationale": "Income statement with revenue, EBITDA, EBIT"
+    },
+    {
+      "sheet_name": "Balance Sheet",
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "rationale": "Core financial statement with assets, liabilities, equity"
+    },
+    {
+      "sheet_name": "SaaS Metrics",
+      "tier": 1,
+      "decision": "PROCESS_HIGH",
+      "rationale": "Key SaaS KPIs \u2014 ARR, MRR, NRR, CAC, LTV"
+    },
+    {
+      "sheet_name": "Headcount",
+      "tier": 3,
+      "decision": "PROCESS_LOW",
+      "rationale": "Supporting headcount data, not core financial statement"
+    },
+    {
+      "sheet_name": "Scratch",
+      "tier": 4,
+      "decision": "SKIP",
+      "rationale": "TODO notes, no financial data"
+    }
+  ],
+  "expected_mappings": [
+    {
+      "original_label": "Rev",
+      "canonical_name": "revenue",
+      "sheet": "P&L",
+      "notes": "Short form \u2014 may also map to 'recurring_revenue'"
+    },
+    {
+      "original_label": "Subscription Revenue",
+      "canonical_name": "subscription_revenue",
+      "sheet": "P&L",
+      "notes": "May also map to 'recurring_revenue'"
+    },
+    {
+      "original_label": "Services Revenue",
+      "canonical_name": "service_revenue",
+      "sheet": "P&L"
+    },
+    {
+      "original_label": "COGS",
+      "canonical_name": "cogs",
+      "sheet": "P&L"
+    },
+    {
+      "original_label": "GP",
+      "canonical_name": "gross_profit",
+      "sheet": "P&L",
+      "notes": "Short form for Gross Profit"
+    },
+    {
+      "original_label": "S&M",
+      "canonical_name": "sales_marketing",
+      "sheet": "P&L",
+      "notes": "May also map to 'marketing_expense'"
+    },
+    {
+      "original_label": "R&D",
+      "canonical_name": "rd_expense",
+      "sheet": "P&L"
+    },
+    {
+      "original_label": "G&A",
+      "canonical_name": "general_admin",
+      "sheet": "P&L",
+      "notes": "May also map to 'sga'"
+    },
+    {
+      "original_label": "Total Opex",
+      "canonical_name": "operating_expenses",
+      "sheet": "P&L",
+      "notes": "May also map to 'opex'"
+    },
+    {
+      "original_label": "EBITDA",
+      "canonical_name": "ebitda",
+      "sheet": "P&L"
+    },
+    {
+      "original_label": "D&A",
+      "canonical_name": "depreciation_and_amortization",
+      "sheet": "P&L",
+      "notes": "Short form \u2014 may also map to 'depreciation'"
+    },
+    {
+      "original_label": "EBIT",
+      "canonical_name": "ebit",
+      "sheet": "P&L",
+      "notes": "May also map to 'operating_income'"
+    },
+    {
+      "original_label": "Cash & Equivalents",
+      "canonical_name": "cash_and_equivalents",
+      "sheet": "Balance Sheet",
+      "notes": "May also map to 'cash'"
+    },
+    {
+      "original_label": "Accounts Receivable",
+      "canonical_name": "accounts_receivable",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Prepaid Expenses",
+      "canonical_name": "prepaid_expenses",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Total Current Assets",
+      "canonical_name": "total_current_assets",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "PP&E, Net",
+      "canonical_name": "net_ppe",
+      "sheet": "Balance Sheet",
+      "notes": "May also map to 'ppe' or 'fixed_assets'"
+    },
+    {
+      "original_label": "Total Assets",
+      "canonical_name": "total_assets",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Accounts Payable",
+      "canonical_name": "accounts_payable",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Deferred Revenue",
+      "canonical_name": "deferred_revenue",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Total Current Liabilities",
+      "canonical_name": "total_current_liabilities",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Convertible Notes",
+      "canonical_name": "convertible_notes",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Total Liabilities",
+      "canonical_name": "total_liabilities",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Total Equity",
+      "canonical_name": "total_equity",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "Total Liabilities & Equity",
+      "canonical_name": "total_liabilities_and_equity",
+      "sheet": "Balance Sheet"
+    },
+    {
+      "original_label": "ARR ($000)",
+      "canonical_name": "arr",
+      "sheet": "SaaS Metrics"
+    },
+    {
+      "original_label": "MRR",
+      "canonical_name": "mrr",
+      "sheet": "SaaS Metrics"
+    },
+    {
+      "original_label": "NRR",
+      "canonical_name": "net_revenue_retention",
+      "sheet": "SaaS Metrics",
+      "notes": "May also map to 'gross_retention'"
+    },
+    {
+      "original_label": "Logo Churn",
+      "canonical_name": "logo_churn_rate",
+      "sheet": "SaaS Metrics",
+      "notes": "May also map to 'churn_rate'"
+    },
+    {
+      "original_label": "CAC",
+      "canonical_name": "cac",
+      "sheet": "SaaS Metrics"
+    },
+    {
+      "original_label": "LTV",
+      "canonical_name": "ltv",
+      "sheet": "SaaS Metrics"
+    },
+    {
+      "original_label": "LTV/CAC",
+      "canonical_name": "ltv_cac_ratio",
+      "sheet": "SaaS Metrics"
+    },
+    {
+      "original_label": "Burn Rate",
+      "canonical_name": "burn_rate",
+      "sheet": "SaaS Metrics",
+      "notes": "May also map to 'monthly_burn'"
+    },
+    {
+      "original_label": "Runway (months)",
+      "canonical_name": "cash_runway_months",
+      "sheet": "SaaS Metrics"
+    },
+    {
+      "original_label": "Customers",
+      "canonical_name": "customer_count",
+      "sheet": "SaaS Metrics"
+    },
+    {
+      "original_label": "New Customers",
+      "canonical_name": "new_customers",
+      "sheet": "SaaS Metrics"
+    },
+    {
+      "original_label": "Rev per Employee",
+      "canonical_name": "revenue_per_employee",
+      "sheet": "Headcount"
+    }
+  ],
+  "acceptable_alternatives": {
+    "revenue": [
+      "revenue",
+      "recurring_revenue",
+      "subscription_revenue"
+    ],
+    "subscription_revenue": [
+      "subscription_revenue",
+      "recurring_revenue",
+      "revenue"
+    ],
+    "service_revenue": [
+      "service_revenue",
+      "non_recurring_revenue"
+    ],
+    "cogs": [
+      "cogs",
+      "cost_of_sales"
+    ],
+    "gross_profit": [
+      "gross_profit"
+    ],
+    "sales_marketing": [
+      "sales_marketing",
+      "marketing_expense",
+      "sga"
+    ],
+    "rd_expense": [
+      "rd_expense"
+    ],
+    "general_admin": [
+      "general_admin",
+      "sga"
+    ],
+    "operating_expenses": [
+      "operating_expenses",
+      "opex"
+    ],
+    "depreciation_and_amortization": [
+      "depreciation_and_amortization",
+      "depreciation",
+      "amortization"
+    ],
+    "ebit": [
+      "ebit",
+      "operating_income"
+    ],
+    "cash_and_equivalents": [
+      "cash_and_equivalents",
+      "cash"
+    ],
+    "total_current_assets": [
+      "total_current_assets",
+      "current_assets"
+    ],
+    "net_ppe": [
+      "net_ppe",
+      "ppe",
+      "property_plant_equipment",
+      "fixed_assets"
+    ],
+    "total_current_liabilities": [
+      "total_current_liabilities",
+      "current_liabilities"
+    ],
+    "total_equity": [
+      "total_equity",
+      "shareholders_equity",
+      "stockholders_equity"
+    ],
+    "total_liabilities_and_equity": [
+      "total_liabilities_and_equity"
+    ],
+    "net_revenue_retention": [
+      "net_revenue_retention",
+      "gross_retention"
+    ],
+    "logo_churn_rate": [
+      "logo_churn_rate",
+      "churn_rate",
+      "revenue_churn_rate"
+    ],
+    "burn_rate": [
+      "burn_rate",
+      "monthly_burn"
+    ],
+    "arr": [
+      "arr",
+      "recurring_revenue"
+    ],
+    "ltv_cac_ratio": [
+      "ltv_cac_ratio"
+    ]
+  },
+  "expected_completeness": {
+    "statements": {
+      "P&L": {
+        "min_items": 12,
+        "min_coverage_pct": 80.0
+      },
+      "Balance Sheet": {
+        "min_items": 13,
+        "min_coverage_pct": 80.0
+      },
+      "SaaS Metrics": {
+        "min_items": 11,
+        "min_coverage_pct": 80.0
+      },
+      "Headcount": {
+        "min_items": 1,
+        "min_coverage_pct": 80.0
+      }
+    },
+    "total_min_items": 37,
+    "total_min_coverage_pct": 75.0
+  },
+  "expected_values": {
+    "revenue": {
+      "FY2023": {
+        "value": 4200,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 42.0
+      },
+      "FY2024": {
+        "value": 5880,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 58.800000000000004
+      },
+      "FY2025E": {
+        "value": 7644,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 76.44
+      }
+    },
+    "subscription_revenue": {
+      "FY2023": {
+        "value": 3570,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 35.7
+      },
+      "FY2024": {
+        "value": 5058,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 50.58
+      },
+      "FY2025E": {
+        "value": 6879,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 68.79
+      }
+    },
+    "service_revenue": {
+      "FY2023": {
+        "value": 630,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 6.3
+      },
+      "FY2024": {
+        "value": 822,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 8.22
+      },
+      "FY2025E": {
+        "value": 765,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 7.65
+      }
+    },
+    "cogs": {
+      "FY2023": {
+        "value": -1260,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 12.6
+      },
+      "FY2024": {
+        "value": -1646,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 16.46
+      },
+      "FY2025E": {
+        "value": -1911,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 19.11
+      }
+    },
+    "sales_marketing": {
+      "FY2023": {
+        "value": -1680,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 16.8
+      },
+      "FY2024": {
+        "value": -2117,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 21.17
+      },
+      "FY2025E": {
+        "value": -2446,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 24.46
+      }
+    },
+    "rd_expense": {
+      "FY2023": {
+        "value": -1050,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 10.5
+      },
+      "FY2024": {
+        "value": -1411,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 14.11
+      },
+      "FY2025E": {
+        "value": -1681,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 16.81
+      }
+    },
+    "headcount": {
+      "FY2023": {
+        "value": -420,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 4.2
+      },
+      "FY2024": {
+        "value": -529,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 5.29
+      },
+      "FY2025E": {
+        "value": -612,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 6.12
+      }
+    },
+    "opex": {
+      "FY2023": {
+        "value": -3150,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 31.5
+      },
+      "FY2024": {
+        "value": -4057,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 40.57
+      },
+      "FY2025E": {
+        "value": -4739,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 47.39
+      }
+    },
+    "ebitda": {
+      "FY2023": {
+        "value": -210,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 2.1
+      },
+      "FY2024": {
+        "value": 177,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.77
+      },
+      "FY2025E": {
+        "value": 994,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 9.94
+      }
+    },
+    "depreciation_and_amortization": {
+      "FY2023": {
+        "value": -168,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 1.68
+      },
+      "FY2024": {
+        "value": -235,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 2.35
+      },
+      "FY2025E": {
+        "value": -306,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 3.06
+      }
+    },
+    "ebit": {
+      "FY2023": {
+        "value": -378,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 3.7800000000000002
+      },
+      "FY2024": {
+        "value": -58,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 0.58
+      },
+      "FY2025E": {
+        "value": 688,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 6.88
+      }
+    },
+    "cash": {
+      "FY2023": {
+        "value": 8500,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 85.0
+      },
+      "FY2024": {
+        "value": 6200,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 62.0
+      },
+      "FY2025E": {
+        "value": 5800,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 58.0
+      }
+    },
+    "accounts_receivable": {
+      "FY2023": {
+        "value": 1050,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 10.5
+      },
+      "FY2024": {
+        "value": 1470,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 14.700000000000001
+      },
+      "FY2025E": {
+        "value": 1911,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 19.11
+      }
+    },
+    "prepaid_expenses": {
+      "FY2023": {
+        "value": 210,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 2.1
+      },
+      "FY2024": {
+        "value": 294,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 2.94
+      },
+      "FY2025E": {
+        "value": 382,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 3.8200000000000003
+      }
+    },
+    "total_current_assets": {
+      "FY2023": {
+        "value": 9760,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 97.60000000000001
+      },
+      "FY2024": {
+        "value": 7964,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 79.64
+      },
+      "FY2025E": {
+        "value": 8093,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 80.93
+      }
+    },
+    "net_ppe": {
+      "FY2023": {
+        "value": 840,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 8.4
+      },
+      "FY2024": {
+        "value": 1176,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 11.76
+      },
+      "FY2025E": {
+        "value": 1529,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 15.290000000000001
+      }
+    },
+    "total_assets": {
+      "FY2023": {
+        "value": 10600,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 106.0
+      },
+      "FY2024": {
+        "value": 9140,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 91.4
+      },
+      "FY2025E": {
+        "value": 9622,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 96.22
+      }
+    },
+    "accounts_payable": {
+      "FY2023": {
+        "value": 315,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 3.15
+      },
+      "FY2024": {
+        "value": 412,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 4.12
+      },
+      "FY2025E": {
+        "value": 478,
+        "tolerance_pct": 1.0,
+        "tolerance_abs": 4.78
+      }
+    }
+  },
+  "expected_parsing": [
+    {
+      "canonical_name": "revenue",
+      "sheet": "P&L",
+      "original_label": "Rev",
+      "is_bold": true,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 0
+    },
+    {
+      "canonical_name": "subscription_revenue",
+      "sheet": "P&L",
+      "original_label": "Subscription Revenue",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "service_revenue",
+      "sheet": "P&L",
+      "original_label": "Services Revenue",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "cogs",
+      "sheet": "P&L",
+      "original_label": "COGS",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "gross_profit",
+      "sheet": "P&L",
+      "original_label": "GP",
+      "is_bold": true,
+      "is_formula": true,
+      "is_subtotal": true,
+      "hierarchy_level": 0
+    },
+    {
+      "canonical_name": "operating_expenses",
+      "sheet": "P&L",
+      "original_label": "Operating Expenses",
+      "is_bold": true,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 0
+    },
+    {
+      "canonical_name": "sales_marketing",
+      "sheet": "P&L",
+      "original_label": "S&M",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "rd_expense",
+      "sheet": "P&L",
+      "original_label": "R&D",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "headcount",
+      "sheet": "P&L",
+      "original_label": "G&A",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "opex",
+      "sheet": "P&L",
+      "original_label": "Total Opex",
+      "is_bold": true,
+      "is_formula": false,
+      "is_subtotal": true,
+      "hierarchy_level": 0
+    },
+    {
+      "canonical_name": "ebitda",
+      "sheet": "P&L",
+      "original_label": "EBITDA",
+      "is_bold": true,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 0
+    },
+    {
+      "canonical_name": "depreciation_and_amortization",
+      "sheet": "P&L",
+      "original_label": "D&A",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "ebit",
+      "sheet": "P&L",
+      "original_label": "EBIT",
+      "is_bold": true,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 0
+    },
+    {
+      "canonical_name": "cash",
+      "sheet": "Balance Sheet",
+      "original_label": "Cash & Equivalents",
+      "is_bold": true,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 0
+    },
+    {
+      "canonical_name": "accounts_receivable",
+      "sheet": "Balance Sheet",
+      "original_label": "Accounts Receivable",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "prepaid_expenses",
+      "sheet": "Balance Sheet",
+      "original_label": "Prepaid Expenses",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "total_current_assets",
+      "sheet": "Balance Sheet",
+      "original_label": "Total Current Assets",
+      "is_bold": true,
+      "is_formula": false,
+      "is_subtotal": true,
+      "hierarchy_level": 0
+    },
+    {
+      "canonical_name": "net_ppe",
+      "sheet": "Balance Sheet",
+      "original_label": "PP&E, Net",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    },
+    {
+      "canonical_name": "total_assets",
+      "sheet": "Balance Sheet",
+      "original_label": "Total Assets",
+      "is_bold": true,
+      "is_formula": false,
+      "is_subtotal": true,
+      "hierarchy_level": 0
+    },
+    {
+      "canonical_name": "accounts_payable",
+      "sheet": "Balance Sheet",
+      "original_label": "Accounts Payable",
+      "is_bold": false,
+      "is_formula": false,
+      "is_subtotal": false,
+      "hierarchy_level": 1
+    }
+  ],
+  "metadata": {
+    "source_result": "saas_startup.xlsx",
+    "source_timestamp": "2026-03-12T12:41:40.097368+00:00",
+    "values_verified": false,
+    "notes": "Values auto-populated from extraction result. Review and verify before use."
+  }
+}
