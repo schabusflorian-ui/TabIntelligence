@@ -1027,3 +1027,57 @@ class CellMappingStatsResponse(BaseModel):
     job_id: str
     sheets: Dict[str, CellMappingSheetStats]
     totals: CellMappingSheetStats
+
+
+# ============================================================================
+# Taxonomy Gap Analysis
+# ============================================================================
+
+
+class TaxonomyMatchItem(BaseModel):
+    canonical_name: str
+    category: str
+    score: float
+
+
+class GapItem(BaseModel):
+    label: str
+    classification: str
+    total_occurrences: int
+    entity_count: int
+    variants: List[str] = []
+    sheet_names: List[str] = []
+    category_hint: Optional[str] = None
+    best_score: float = 0.0
+    top_matches: List[TaxonomyMatchItem] = []
+    suggested_canonical: Optional[str] = None
+
+
+class GapSummary(BaseModel):
+    total_analyzed: int
+    alias_candidates: int
+    new_item_candidates: int
+    ambiguous: int
+
+
+class GapAnalysisResponse(BaseModel):
+    alias_candidates: List[GapItem]
+    new_item_candidates: List[GapItem]
+    ambiguous: List[GapItem]
+    summary: GapSummary
+
+
+class GapClusterItem(BaseModel):
+    representative: str
+    labels: List[str]
+    total_occurrences: int
+    entity_count: int
+    cluster_size: int
+    best_taxonomy_score: float = 0.0
+    suggested_action: str
+    suggested_canonical: Optional[str] = None
+
+
+class GapClusterResponse(BaseModel):
+    clusters: List[GapClusterItem]
+    total_clusters: int

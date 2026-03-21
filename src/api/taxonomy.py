@@ -11,6 +11,8 @@ from sqlalchemy.orm import Session
 from src.api.schemas import (
     ChangelogResponse,
     DeprecateResponse,
+    GapAnalysisResponse,
+    GapClusterResponse,
     HierarchyNode,
     TaxonomyItemResponse,
     TaxonomyListResponse,
@@ -290,3 +292,62 @@ def get_taxonomy_item(
         "deprecated_redirect": getattr(item, 'deprecated_redirect', None),
         "deprecated_at": getattr(item, 'deprecated_at', None).isoformat() if getattr(item, 'deprecated_at', None) else None,
     }
+
+
+# ============================================================================
+# Taxonomy Gap Analysis
+# ============================================================================
+
+
+@router.get("/gaps", response_model=GapAnalysisResponse)
+def get_taxonomy_gaps(
+    min_occurrences: int = Query(2, ge=1, description="Minimum total occurrences"),
+    min_entities: int = Query(2, ge=1, description="Minimum distinct entities"),
+    limit: int = Query(200, ge=1, le=1000, description="Max labels to analyze"),
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Analyze taxonomy gaps by scoring unmapped labels against taxonomy embeddings.
+
+    Classifies each unmapped label as:
+    - alias_candidate: likely alias for an existing taxonomy item (score >= 0.80)
+    - new_item_candidate: genuinely new term not in taxonomy (score < 0.60)
+    - ambiguous: unclear, needs human review (score 0.60-0.80)
+    """
+    from src.taxonomy.gap_analyzer import analyze_gaps
+
+    return analyze_gaps(
+        db,
+        min_occurrences=min_occurrences,
+        min_entities=min_entities,
+        limit=limit,
+    )
+
+
+@router.get("/gaps/clusters", response_model=GapClusterResponse)
+def get_taxonomy_gap_clusters(
+    min_occurrences: int = Query(2, ge=1, description="Minimum total occurrences"),
+    min_entities: int = Query(2, ge=1, description="Minimum distinct entities"),
+    limit: int = Query(200, ge=1, le=1000, description="Max labels to cluster"),
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Cluster related unmapped labels by semantic similarity.
+
+    Groups similar unmapped labels together so reviewers can address
+    related gaps as a batch. Each cluster suggests whether to add aliases
+    or create new taxonomy items.
+    """
+    from src.taxonomy.gap_analyzer import cluster_gaps
+
+    clusters = cluster_gaps(
+        db,
+        min_occurrences=min_occurrences,
+        min_entities=min_entities,
+        limit=limit,
+    )
+
+    return GapClusterResponse(
+        clusters=clusters,
+        total_clusters=len(clusters),
+    )
