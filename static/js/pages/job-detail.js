@@ -10,6 +10,7 @@ import { showToast } from '../components/toast.js';
 import { confirm, showModal, prompt as promptModal } from '../components/modal.js';
 import { renderTimeline } from '../components/timeline.js';
 import { renderProvenanceSummary, renderProvenancePanel, closeProvenancePanel } from '../components/provenance.js';
+import { renderSourceView } from '../components/source-view.js';
 
 let currentJobId = null;
 let resultData = null;
@@ -297,6 +298,7 @@ function renderResults(data, job) {
     { id: 'validation', label: 'Validation', render: (panel) => renderValidationTab(panel, data) },
     { id: 'lineage', label: 'Lineage', render: (panel) => renderLineageTab(panel) },
     { id: 'corrections', label: 'Corrections', render: (panel) => renderCorrectionsTab(panel) },
+    { id: 'source-view', label: 'Source View', render: (panel) => renderSourceView(panel, currentJobId, data) },
   ], 'line-items');
 
   // Export + re-extract actions
