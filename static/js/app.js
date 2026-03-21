@@ -37,6 +37,10 @@ addRoute('/analytics', analyticsModule.render, analyticsModule.destroy, analytic
 import * as comparisonModule from './pages/comparison.js';
 addRoute('/comparison', comparisonModule.render, comparisonModule.destroy, comparisonModule);
 
+// Benchmarks
+import * as benchmarksModule from './pages/benchmarks.js';
+addRoute('/benchmarks', benchmarksModule.render, benchmarksModule.destroy, benchmarksModule);
+
 // Admin
 import * as adminModule from './pages/admin.js';
 addRoute('/admin', adminModule.render, adminModule.destroy, adminModule);

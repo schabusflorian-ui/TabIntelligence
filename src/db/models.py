@@ -781,6 +781,91 @@ class CellMapping(Base):
         )
 
 
+# ============================================================================
+# BENCHMARK TRACKING
+# ============================================================================
+
+
+class BenchmarkRun(Base):
+    """
+    One row per benchmark run per fixture.
+
+    Stores the full accuracy evaluation: mapping P/R/F1, value accuracy,
+    triage accuracy, stage attribution, and overall summary. Links to
+    taxonomy version for tracking accuracy across taxonomy changes.
+    """
+
+    __tablename__ = "benchmark_runs"
+
+    __table_args__ = (
+        Index("ix_benchmark_fixture_date", "fixture_name", "run_date"),
+    )
+
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    fixture_name: Mapped[str] = mapped_column(String(200))
+    run_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    taxonomy_version: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+
+    # Mapping accuracy
+    mapping_precision: Mapped[float] = mapped_column(Float, default=0.0)
+    mapping_recall: Mapped[float] = mapped_column(Float, default=0.0)
+    mapping_f1: Mapped[float] = mapped_column(Float, default=0.0)
+    mapping_accuracy: Mapped[float] = mapped_column(Float, default=0.0)
+
+    # Value accuracy
+    value_exact_match_rate: Mapped[float] = mapped_column(Float, default=0.0)
+    value_tolerance_match_rate: Mapped[float] = mapped_column(Float, default=0.0)
+    value_mae: Mapped[float] = mapped_column(Float, default=0.0)
+    value_mape: Mapped[float] = mapped_column(Float, default=0.0)
+
+    # Triage accuracy
+    triage_accuracy: Mapped[float] = mapped_column(Float, default=0.0)
+
+    # Extraction metrics
+    duration_seconds: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    tokens_used: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    cost_usd: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    total_line_items: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
+    # Full detail stored as JSON
+    full_result: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+
+    def __repr__(self):
+        return (
+            f"<BenchmarkRun(fixture='{self.fixture_name}', "
+            f"f1={self.mapping_f1:.3f}, date={self.run_date})>"
+        )
+
+
+class BenchmarkCategoryMetric(Base):
+    """Per-category accuracy breakdown for a benchmark run."""
+
+    __tablename__ = "benchmark_category_metrics"
+
+    __table_args__ = (
+        Index("ix_benchcat_run_category", "benchmark_run_id", "category"),
+    )
+
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    benchmark_run_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("benchmark_runs.id", ondelete="CASCADE"),
+        index=True,
+    )
+    category: Mapped[str] = mapped_column(String(100))  # e.g., "income_statement", "balance_sheet"
+    precision: Mapped[float] = mapped_column(Float, default=0.0)
+    recall: Mapped[float] = mapped_column(Float, default=0.0)
+    f1: Mapped[float] = mapped_column(Float, default=0.0)
+    total_items: Mapped[int] = mapped_column(Integer, default=0)
+    true_positives: Mapped[int] = mapped_column(Integer, default=0)
+
+    def __repr__(self):
+        return (
+            f"<BenchmarkCategoryMetric(category='{self.category}', "
+            f"f1={self.f1:.3f}, items={self.total_items})>"
+        )
+
+
 # NOTE: APIKey (src.auth.models) is registered with Base.metadata when
 # src.auth is imported by the app. Do NOT import it here — circular import.
 

@@ -1148,3 +1148,36 @@ class TaxonomyHealthResponse(BaseModel):
     categories: Dict[str, int]
     suggestions: SuggestionStats
     learned_aliases: LearnedAliasStats
+
+
+# ============================================================================
+# Benchmarks
+# ============================================================================
+
+
+class BenchmarkRunResponse(BaseModel):
+    id: str
+    fixture_name: str
+    run_date: Optional[str] = None
+    taxonomy_version: Optional[str] = None
+    mapping_f1: float
+    mapping_precision: float
+    mapping_recall: float
+    triage_accuracy: float
+    value_tolerance_match_rate: float
+    duration_seconds: Optional[float] = None
+    tokens_used: Optional[int] = None
+    cost_usd: Optional[float] = None
+    total_line_items: Optional[int] = None
+
+
+class BenchmarkTrendsResponse(BaseModel):
+    fixture_name: Optional[str] = None
+    count: int
+    runs: List[BenchmarkRunResponse]
+
+
+class BenchmarkHeatmapResponse(BaseModel):
+    categories: List[str]
+    runs: List[str]
+    heatmap: Dict[str, Dict[str, float]]

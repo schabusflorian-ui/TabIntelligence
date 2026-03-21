@@ -71,6 +71,12 @@ export function iconComparison() {
 }
 
 /** System — gear/settings icon */
+export function iconBenchmarks() {
+  return `<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M1.5 11.5h10M3 11.5V7M6.5 11.5V4M10 11.5V1.5"/>
+  </svg>`;
+}
+
 export function iconSystem() {
   return `<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="6.5" cy="6.5" r="2"/>

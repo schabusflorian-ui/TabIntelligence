@@ -38,6 +38,16 @@ from pathlib import Path
 DEFAULT_THRESHOLDS = {
     "mapping": 0.02,  # 2% mapping accuracy drop
     "triage": 0.00,  # 0% triage accuracy drop (triage should be stable)
+    "f1": 0.02,      # 2% F1 drop
+    "recall": 0.03,  # 3% recall drop (slightly more lenient — remapping can shift)
+}
+
+# Looser thresholds applied when taxonomy version changes between runs
+TAXONOMY_CHANGE_THRESHOLDS = {
+    "mapping": 0.05,
+    "triage": 0.02,
+    "f1": 0.05,
+    "recall": 0.05,
 }
 
 # Per-fixture threshold overrides for fixtures expected to have lower accuracy
@@ -66,6 +76,17 @@ class RegressionResult:
     current_triage: float | None = None
     triage_delta: float | None = None
     triage_threshold: float = 0.00
+    # F1 and recall
+    baseline_f1: float | None = None
+    current_f1: float | None = None
+    f1_delta: float | None = None
+    f1_threshold: float = 0.02
+    baseline_recall: float | None = None
+    current_recall: float | None = None
+    recall_delta: float | None = None
+    recall_threshold: float = 0.03
+    # Taxonomy version tracking
+    taxonomy_version_changed: bool = False
     reason: str = ""
     warnings: list = field(default_factory=list)
 
@@ -140,39 +161,91 @@ def compare_fixture(
     baseline: dict,
     threshold_file: str | None = None,
 ) -> RegressionResult:
-    """Compare a single fixture's result against its baseline."""
+    """Compare a single fixture's result against its baseline.
+
+    Checks mapping accuracy, F1, recall, and triage accuracy. If the
+    taxonomy version changed between baseline and current, applies looser
+    thresholds from TAXONOMY_CHANGE_THRESHOLDS.
+    """
     thresholds = get_thresholds(fixture_name, threshold_file)
-    mapping_threshold = thresholds.get("mapping", DEFAULT_THRESHOLDS["mapping"])
-    triage_threshold = thresholds.get("triage", DEFAULT_THRESHOLDS["triage"])
+
+    # Detect taxonomy version change → apply looser thresholds
+    current_tax_ver = result.get("taxonomy_version") or result.get("metadata", {}).get("taxonomy_version")
+    baseline_tax_ver = baseline.get("taxonomy_version") or baseline.get("metadata", {}).get("taxonomy_version")
+    taxonomy_changed = (
+        current_tax_ver is not None
+        and baseline_tax_ver is not None
+        and current_tax_ver != baseline_tax_ver
+    )
+
+    if taxonomy_changed:
+        effective_thresholds = {**thresholds}
+        for key, val in TAXONOMY_CHANGE_THRESHOLDS.items():
+            effective_thresholds[key] = max(effective_thresholds.get(key, val), val)
+    else:
+        effective_thresholds = thresholds
+
+    mapping_threshold = effective_thresholds.get("mapping", DEFAULT_THRESHOLDS["mapping"])
+    triage_threshold = effective_thresholds.get("triage", DEFAULT_THRESHOLDS["triage"])
+    f1_threshold = effective_thresholds.get("f1", DEFAULT_THRESHOLDS["f1"])
+    recall_threshold = effective_thresholds.get("recall", DEFAULT_THRESHOLDS["recall"])
 
     reg = RegressionResult(
         fixture_name=fixture_name,
         passed=True,
         mapping_threshold=mapping_threshold,
         triage_threshold=triage_threshold,
+        f1_threshold=f1_threshold,
+        recall_threshold=recall_threshold,
+        taxonomy_version_changed=taxonomy_changed,
     )
 
-    # Extract accuracies from result
+    if taxonomy_changed:
+        reg.warnings.append(
+            f"Taxonomy version changed ({baseline_tax_ver} -> {current_tax_ver}), using looser thresholds"
+        )
+
+    # Extract accuracies from result (supports both old and new formats)
     mapping_acc = result.get("mapping_accuracy", {})
     triage_acc = result.get("triage_accuracy", {})
     current_mapping = mapping_acc.get("accuracy")
     current_triage = triage_acc.get("accuracy")
+    current_f1 = mapping_acc.get("f1")
+    current_recall = mapping_acc.get("recall")
+
+    # Also check new-format evaluation results
+    if current_f1 is None and "mapping" in result:
+        current_f1 = result["mapping"].get("f1")
+    if current_recall is None and "mapping" in result:
+        current_recall = result["mapping"].get("recall")
 
     # Extract accuracies from baseline
     baseline_mapping = baseline.get("mapping_accuracy", {}).get("accuracy")
     baseline_triage = baseline.get("triage_accuracy", {}).get("accuracy")
+    baseline_f1 = baseline.get("mapping_accuracy", {}).get("f1")
+    baseline_recall = baseline.get("mapping_accuracy", {}).get("recall")
+
+    if baseline_f1 is None and "mapping" in baseline:
+        baseline_f1 = baseline["mapping"].get("f1")
+    if baseline_recall is None and "mapping" in baseline:
+        baseline_recall = baseline["mapping"].get("recall")
 
     reg.current_mapping = current_mapping
     reg.current_triage = current_triage
+    reg.current_f1 = current_f1
+    reg.current_recall = current_recall
     reg.baseline_mapping = baseline_mapping
     reg.baseline_triage = baseline_triage
+    reg.baseline_f1 = baseline_f1
+    reg.baseline_recall = baseline_recall
+
+    failures = []
 
     # Check mapping regression
     if current_mapping is not None and baseline_mapping is not None:
         reg.mapping_delta = current_mapping - baseline_mapping
         if reg.mapping_delta < -mapping_threshold:
-            reg.passed = False
-            reg.reason = (
+            failures.append(
                 f"Mapping accuracy dropped {abs(reg.mapping_delta):.1%} "
                 f"({baseline_mapping:.1%} -> {current_mapping:.1%}), "
                 f"threshold: {mapping_threshold:.1%}"
@@ -180,26 +253,49 @@ def compare_fixture(
     elif current_mapping is None:
         reg.warnings.append("No mapping accuracy in current result")
 
+    # Check F1 regression
+    if current_f1 is not None and baseline_f1 is not None:
+        reg.f1_delta = current_f1 - baseline_f1
+        if reg.f1_delta < -f1_threshold:
+            failures.append(
+                f"F1 dropped {abs(reg.f1_delta):.1%} "
+                f"({baseline_f1:.1%} -> {current_f1:.1%}), "
+                f"threshold: {f1_threshold:.1%}"
+            )
+
+    # Check recall regression
+    if current_recall is not None and baseline_recall is not None:
+        reg.recall_delta = current_recall - baseline_recall
+        if reg.recall_delta < -recall_threshold:
+            failures.append(
+                f"Recall dropped {abs(reg.recall_delta):.1%} "
+                f"({baseline_recall:.1%} -> {current_recall:.1%}), "
+                f"threshold: {recall_threshold:.1%}"
+            )
+
     # Check triage regression
     if current_triage is not None and baseline_triage is not None:
         reg.triage_delta = current_triage - baseline_triage
         if reg.triage_delta < -triage_threshold:
-            reg.passed = False
-            triage_msg = (
+            failures.append(
                 f"Triage accuracy dropped {abs(reg.triage_delta):.1%} "
                 f"({baseline_triage:.1%} -> {current_triage:.1%}), "
                 f"threshold: {triage_threshold:.1%}"
             )
-            if reg.reason:
-                reg.reason += "; " + triage_msg
-            else:
-                reg.reason = triage_msg
     elif current_triage is None:
         reg.warnings.append("No triage accuracy in current result")
+
+    if failures:
+        reg.passed = False
+        reg.reason = "; ".join(failures)
 
     # Note improvements
     if reg.mapping_delta is not None and reg.mapping_delta > 0:
         reg.warnings.append(f"Mapping improved +{reg.mapping_delta:.1%}")
+    if reg.f1_delta is not None and reg.f1_delta > 0:
+        reg.warnings.append(f"F1 improved +{reg.f1_delta:.1%}")
+    if reg.recall_delta is not None and reg.recall_delta > 0:
+        reg.warnings.append(f"Recall improved +{reg.recall_delta:.1%}")
     if reg.triage_delta is not None and reg.triage_delta > 0:
         reg.warnings.append(f"Triage improved +{reg.triage_delta:.1%}")
 
@@ -226,41 +322,37 @@ def print_results(results: list[RegressionResult]):
         print("No results to display.")
         return
 
-    print("\n" + "=" * 80)
+    print("\n" + "=" * 100)
     print("REGRESSION CHECK RESULTS")
-    print("=" * 80)
+    print("=" * 100)
 
     # Header
-    print(f"{'Fixture':<25} {'Status':<8} {'Mapping':<20} {'Triage':<20}")
-    print("-" * 80)
+    print(f"{'Fixture':<22} {'Status':<7} {'Mapping':<16} {'F1':<16} {'Recall':<16} {'Triage':<16}")
+    print("-" * 100)
+
+    def _metric_str(current, baseline, delta):
+        if current is not None and baseline is not None:
+            d = f"{delta:+.1%}" if delta else "+0.0%"
+            return f"{current:.1%} ({d})"
+        elif current is not None:
+            return f"{current:.1%} (new)"
+        return "N/A"
 
     for r in results:
         status = "PASS" if r.passed else "FAIL"
+        mapping_str = _metric_str(r.current_mapping, r.baseline_mapping, r.mapping_delta)
+        f1_str = _metric_str(r.current_f1, r.baseline_f1, r.f1_delta)
+        recall_str = _metric_str(r.current_recall, r.baseline_recall, r.recall_delta)
+        triage_str = _metric_str(r.current_triage, r.baseline_triage, r.triage_delta)
 
-        if r.baseline_mapping is not None and r.current_mapping is not None:
-            delta_str = f"{r.mapping_delta:+.1%}" if r.mapping_delta else "+0.0%"
-            mapping_str = f"{r.current_mapping:.1%} ({delta_str})"
-        elif r.current_mapping is not None:
-            mapping_str = f"{r.current_mapping:.1%} (new)"
-        else:
-            mapping_str = "N/A"
-
-        if r.baseline_triage is not None and r.current_triage is not None:
-            delta_str = f"{r.triage_delta:+.1%}" if r.triage_delta else "+0.0%"
-            triage_str = f"{r.current_triage:.1%} ({delta_str})"
-        elif r.current_triage is not None:
-            triage_str = f"{r.current_triage:.1%} (new)"
-        else:
-            triage_str = "N/A"
-
-        print(f"{r.fixture_name:<25} {status:<8} {mapping_str:<20} {triage_str:<20}")
+        print(f"{r.fixture_name:<22} {status:<7} {mapping_str:<16} {f1_str:<16} {recall_str:<16} {triage_str:<16}")
 
         if not r.passed:
             print(f"  >> {r.reason}")
         for w in r.warnings:
             print(f"  -- {w}")
 
-    print("=" * 80)
+    print("=" * 100)
 
     passed = sum(1 for r in results if r.passed)
     total = len(results)

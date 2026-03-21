@@ -1192,6 +1192,63 @@ tr.row-corrected td:first-child { border-left: 2px solid var(--color-ok); }
   font-size: 12px;
 }
 
+/* --- Benchmark Dashboard --- */
+.benchmark-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.benchmark-card {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-secondary);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.benchmark-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--space-2);
+}
+
+.benchmark-card-metric {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.benchmark-card-label {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  margin-top: var(--space-1);
+}
+
+.benchmark-card-details {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.metric-good { color: var(--color-ok); }
+.metric-warn { color: var(--color-warn); }
+.metric-bad  { color: var(--color-bad); }
+
+/* Heatmap */
+.heatmap-table td, .heatmap-table th { text-align: center; }
+.heatmap-col { font-size: 10px; writing-mode: vertical-rl; max-width: 60px; }
+.heatmap-cat { font-weight: 500; text-align: left !important; }
+.heatmap-cell { font-size: 12px; font-weight: 500; min-width: 50px; }
+.heatmap-empty { color: var(--color-text-tertiary); }
+
 /* --- Responsive Tables --- */
 @media (max-width: 640px) {
   .data-table { font-size: 11px; }
@@ -1199,4 +1256,5 @@ tr.row-corrected td:first-child { border-left: 2px solid var(--color-ok); }
   .filter-bar { flex-direction: column; align-items: stretch; }
   .source-view-legend { flex-wrap: wrap; gap: var(--space-2); }
   .source-grid-scroll { max-height: 400px; }
+  .benchmark-summary-cards { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
 }

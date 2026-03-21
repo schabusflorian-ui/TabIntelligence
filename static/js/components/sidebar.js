@@ -9,6 +9,7 @@ import {
   iconTaxonomy,
   iconAnalytics,
   iconComparison,
+  iconBenchmarks,
   iconSystem,
 } from './icons.js';
 
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { route: '/taxonomy', icon: iconTaxonomy, label: 'Taxonomy' },
   { route: '/analytics', icon: iconAnalytics, label: 'Analytics' },
   { route: '/comparison', icon: iconComparison, label: 'Comparison' },
+  { route: '/benchmarks', icon: iconBenchmarks, label: 'Benchmarks' },
 ];
 
 const ADMIN_ITEMS = [

@@ -4445,3 +4445,156 @@ def get_taxonomy_health(db: Session) -> dict:
             "promoted": promoted_learned,
         },
     }
+
+
+# ============================================================================
+# BENCHMARK TRACKING CRUD
+# ============================================================================
+
+
+def create_benchmark_run(
+    db: Session,
+    fixture_name: str,
+    evaluation_result: dict,
+    taxonomy_version: str | None = None,
+    duration_seconds: float | None = None,
+    tokens_used: int | None = None,
+    cost_usd: float | None = None,
+    total_line_items: int | None = None,
+) -> "BenchmarkRun":
+    """Persist a benchmark evaluation to the database.
+
+    Args:
+        db: SQLAlchemy session
+        fixture_name: Name of the benchmark fixture
+        evaluation_result: Dict from FullEvaluationResult.to_dict()
+        taxonomy_version: Current taxonomy version
+        duration_seconds: Extraction duration
+        tokens_used: Total tokens consumed
+        cost_usd: Estimated cost
+        total_line_items: Number of extracted line items
+
+    Returns:
+        The created BenchmarkRun instance
+    """
+    from src.db.models import BenchmarkCategoryMetric, BenchmarkRun
+
+    mapping = evaluation_result.get("mapping", {})
+    values = evaluation_result.get("values", {})
+    triage = evaluation_result.get("triage", {})
+
+    run = BenchmarkRun(
+        fixture_name=fixture_name,
+        taxonomy_version=taxonomy_version,
+        mapping_precision=mapping.get("precision", 0.0),
+        mapping_recall=mapping.get("recall", 0.0),
+        mapping_f1=mapping.get("f1", 0.0),
+        mapping_accuracy=mapping.get("accuracy", 0.0),
+        value_exact_match_rate=values.get("exact_match_rate", 0.0),
+        value_tolerance_match_rate=values.get("tolerance_match_rate", 0.0),
+        value_mae=values.get("mae", 0.0),
+        value_mape=values.get("mape", 0.0),
+        triage_accuracy=triage.get("accuracy", 0.0),
+        duration_seconds=duration_seconds,
+        tokens_used=tokens_used,
+        cost_usd=cost_usd,
+        total_line_items=total_line_items,
+        full_result=evaluation_result,
+    )
+    db.add(run)
+    db.flush()
+
+    # Persist per-category metrics
+    per_category = mapping.get("per_category", {})
+    for cat_name, cat_data in per_category.items():
+        metric = BenchmarkCategoryMetric(
+            benchmark_run_id=run.id,
+            category=cat_name,
+            precision=cat_data.get("precision", 0.0),
+            recall=cat_data.get("recall", 0.0),
+            f1=cat_data.get("f1", 0.0),
+            total_items=cat_data.get("total", 0),
+            true_positives=cat_data.get("true_positives", 0),
+        )
+        db.add(metric)
+
+    db.commit()
+    return run
+
+
+def get_benchmark_trends(
+    db: Session,
+    fixture_name: str | None = None,
+    limit: int = 50,
+) -> list[dict]:
+    """Get benchmark accuracy trends over time.
+
+    Returns list of dicts with run metrics, ordered by date descending.
+    """
+    from src.db.models import BenchmarkRun
+
+    query = db.query(BenchmarkRun).order_by(BenchmarkRun.run_date.desc())
+    if fixture_name:
+        query = query.filter(BenchmarkRun.fixture_name == fixture_name)
+
+    runs = query.limit(limit).all()
+    return [
+        {
+            "id": str(r.id),
+            "fixture_name": r.fixture_name,
+            "run_date": r.run_date.isoformat() if r.run_date else None,
+            "taxonomy_version": r.taxonomy_version,
+            "mapping_f1": r.mapping_f1,
+            "mapping_precision": r.mapping_precision,
+            "mapping_recall": r.mapping_recall,
+            "triage_accuracy": r.triage_accuracy,
+            "value_tolerance_match_rate": r.value_tolerance_match_rate,
+            "duration_seconds": r.duration_seconds,
+            "tokens_used": r.tokens_used,
+            "cost_usd": r.cost_usd,
+            "total_line_items": r.total_line_items,
+        }
+        for r in runs
+    ]
+
+
+def get_benchmark_category_heatmap(
+    db: Session,
+    fixture_name: str | None = None,
+    limit: int = 10,
+) -> dict:
+    """Get category-level accuracy as a heatmap.
+
+    Returns dict with categories as rows and recent runs as columns,
+    each cell containing the F1 score.
+    """
+    from src.db.models import BenchmarkCategoryMetric, BenchmarkRun
+
+    query = db.query(BenchmarkRun).order_by(BenchmarkRun.run_date.desc())
+    if fixture_name:
+        query = query.filter(BenchmarkRun.fixture_name == fixture_name)
+
+    runs = query.limit(limit).all()
+    if not runs:
+        return {"categories": [], "runs": [], "heatmap": {}}
+
+    heatmap: dict[str, dict[str, float]] = {}
+    run_labels = []
+
+    for run in reversed(runs):  # oldest first for display
+        label = f"{run.fixture_name}_{run.run_date.strftime('%Y%m%d') if run.run_date else 'unknown'}"
+        run_labels.append(label)
+
+        metrics = (
+            db.query(BenchmarkCategoryMetric)
+            .filter(BenchmarkCategoryMetric.benchmark_run_id == run.id)
+            .all()
+        )
+        for m in metrics:
+            heatmap.setdefault(m.category, {})[label] = m.f1
+
+    return {
+        "categories": sorted(heatmap.keys()),
+        "runs": run_labels,
+        "heatmap": heatmap,
+    }

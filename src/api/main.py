@@ -31,6 +31,7 @@ except ImportError:
 import os
 
 from src.api.analytics import router as analytics_router
+from src.api.benchmarks import router as benchmarks_router
 from src.api.corrections import router as corrections_router
 from src.api.dlq import router as dlq_router
 from src.api.entities import router as entities_router
@@ -179,6 +180,9 @@ app.include_router(corrections_router)
 
 # Analytics endpoints (cross-entity, portfolio, trends, coverage, costs)
 app.include_router(analytics_router)
+
+# Benchmark accuracy tracking endpoints
+app.include_router(benchmarks_router)
 
 # Taxonomy detail routes (/{canonical_name}) — MUST be last so fixed taxonomy
 # paths (/suggestions, /changelog, etc.) are matched before the wildcard.
