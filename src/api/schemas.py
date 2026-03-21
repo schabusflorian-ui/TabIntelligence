@@ -1081,3 +1081,70 @@ class GapClusterItem(BaseModel):
 class GapClusterResponse(BaseModel):
     clusters: List[GapClusterItem]
     total_clusters: int
+
+
+# ============================================================================
+# Taxonomy Governance
+# ============================================================================
+
+
+class ImpactPreviewResponse(BaseModel):
+    canonical_name: str
+    action: str
+    affected_facts: int
+    affected_patterns: int
+    affected_entities: int
+    pending_suggestions: int
+    learned_aliases: int
+    total_impact: int
+
+
+class BulkAcceptRequest(BaseModel):
+    suggestion_ids: List[str]
+
+
+class BulkAcceptResponse(BaseModel):
+    accepted: int
+    already_resolved: int
+    failed: List[dict] = []
+    total_requested: int
+
+
+class AliasAddItem(BaseModel):
+    canonical_name: str
+    alias: str
+
+
+class BulkAddAliasesRequest(BaseModel):
+    aliases: List[AliasAddItem]
+
+
+class BulkAddAliasesResponse(BaseModel):
+    added: int
+    duplicate: int
+    failed: List[dict] = []
+    total_requested: int
+
+
+class SuggestionStats(BaseModel):
+    pending: int
+    total: int
+    acceptance_rate: float
+
+
+class LearnedAliasStats(BaseModel):
+    total: int
+    promoted: int
+
+
+class TaxonomyHealthResponse(BaseModel):
+    mapping_success_rate: float
+    alias_hit_rate: float
+    total_facts: int
+    mapped_facts: int
+    coverage_utilization: float
+    total_taxonomy_items: int
+    used_taxonomy_items: int
+    categories: Dict[str, int]
+    suggestions: SuggestionStats
+    learned_aliases: LearnedAliasStats

@@ -9,11 +9,17 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
 from src.api.schemas import (
+    BulkAcceptRequest,
+    BulkAcceptResponse,
+    BulkAddAliasesRequest,
+    BulkAddAliasesResponse,
     ChangelogResponse,
     DeprecateResponse,
     GapAnalysisResponse,
     GapClusterResponse,
     HierarchyNode,
+    ImpactPreviewResponse,
+    TaxonomyHealthResponse,
     TaxonomyItemResponse,
     TaxonomyListResponse,
     TaxonomySearchResponse,
@@ -292,6 +298,70 @@ def get_taxonomy_item(
         "deprecated_redirect": getattr(item, 'deprecated_redirect', None),
         "deprecated_at": getattr(item, 'deprecated_at', None).isoformat() if getattr(item, 'deprecated_at', None) else None,
     }
+
+
+# ============================================================================
+# Taxonomy Governance: Impact Preview, Bulk Ops, Health
+# ============================================================================
+
+
+@router.get("/impact-preview/{canonical_name}", response_model=ImpactPreviewResponse)
+def get_impact_preview(
+    canonical_name: str,
+    action: str = Query("deprecate", description="Action to preview: deprecate, rename, delete"),
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Preview the impact of a taxonomy action before executing it.
+
+    Shows how many ExtractionFacts, EntityPatterns, entities, and
+    suggestions would be affected.
+    """
+    from src.db.crud import get_taxonomy_impact_preview
+
+    return get_taxonomy_impact_preview(db, canonical_name=canonical_name, action=action)
+
+
+@router.post("/bulk-accept", response_model=BulkAcceptResponse)
+def bulk_accept(
+    request: BulkAcceptRequest,
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Accept multiple taxonomy suggestions in a single transaction."""
+    from src.db.crud import bulk_accept_suggestions
+
+    return bulk_accept_suggestions(
+        db, suggestion_ids=request.suggestion_ids, resolved_by="api"
+    )
+
+
+@router.post("/bulk-add-aliases", response_model=BulkAddAliasesResponse)
+def bulk_add_aliases(
+    request: BulkAddAliasesRequest,
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Add multiple aliases to taxonomy items in a single transaction."""
+    from src.db.crud import bulk_add_aliases
+
+    aliases = [{"canonical_name": a.canonical_name, "alias": a.alias} for a in request.aliases]
+    return bulk_add_aliases(db, aliases=aliases, changed_by="api")
+
+
+@router.get("/health", response_model=TaxonomyHealthResponse)
+def taxonomy_health(
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Get taxonomy governance health metrics.
+
+    Returns mapping success rate, alias hit rate, coverage utilization,
+    suggestion backlog, and learned alias statistics.
+    """
+    from src.db.crud import get_taxonomy_health
+
+    return get_taxonomy_health(db)
 
 
 # ============================================================================

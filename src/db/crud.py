@@ -4178,3 +4178,270 @@ def get_taxonomy_changelog(
     if canonical_name:
         query = query.filter(TaxonomyChangelog.canonical_name == canonical_name)
     return query.order_by(TaxonomyChangelog.created_at.desc()).limit(limit).all()
+
+
+# ============================================================================
+# TAXONOMY GOVERNANCE: Impact Preview, Bulk Operations, Health Metrics
+# ============================================================================
+
+
+def get_taxonomy_impact_preview(
+    db: Session,
+    canonical_name: str,
+    action: str = "deprecate",
+) -> dict:
+    """Preview the impact of a taxonomy action before executing it.
+
+    Args:
+        db: Database session
+        canonical_name: The canonical name to preview impact for
+        action: "deprecate", "rename", or "delete"
+
+    Returns:
+        Dict with affected counts: facts, patterns, entities, suggestions
+    """
+    # Count affected ExtractionFacts
+    fact_count = (
+        db.query(sa_func.count(ExtractionFact.id))
+        .filter(ExtractionFact.canonical_name == canonical_name)
+        .scalar()
+    ) or 0
+
+    # Count affected EntityPatterns
+    pattern_count = (
+        db.query(sa_func.count(EntityPattern.id))
+        .filter(EntityPattern.canonical_name == canonical_name)
+        .scalar()
+    ) or 0
+
+    # Count distinct entities with this mapping
+    entity_count = (
+        db.query(sa_func.count(sa_func.distinct(EntityPattern.entity_id)))
+        .filter(EntityPattern.canonical_name == canonical_name)
+        .scalar()
+    ) or 0
+
+    # Count pending suggestions referencing this item
+    suggestion_count = (
+        db.query(sa_func.count(TaxonomySuggestion.id))
+        .filter(
+            TaxonomySuggestion.canonical_name == canonical_name,
+            TaxonomySuggestion.status == "pending",
+        )
+        .scalar()
+    ) or 0
+
+    # Count learned aliases
+    alias_count = (
+        db.query(sa_func.count(LearnedAlias.id))
+        .filter(LearnedAlias.canonical_name == canonical_name)
+        .scalar()
+    ) or 0
+
+    return {
+        "canonical_name": canonical_name,
+        "action": action,
+        "affected_facts": fact_count,
+        "affected_patterns": pattern_count,
+        "affected_entities": entity_count,
+        "pending_suggestions": suggestion_count,
+        "learned_aliases": alias_count,
+        "total_impact": fact_count + pattern_count,
+    }
+
+
+def bulk_accept_suggestions(
+    db: Session,
+    suggestion_ids: list,
+    resolved_by: str = "api",
+) -> dict:
+    """Accept multiple taxonomy suggestions in a single transaction.
+
+    Returns dict with counts of accepted, failed, already_resolved.
+    """
+    accepted = 0
+    failed = []
+    already_resolved = 0
+
+    for sid in suggestion_ids:
+        try:
+            # Ensure UUID type for query
+            from uuid import UUID as _UUID
+
+            sid_uuid = _UUID(str(sid)) if not isinstance(sid, _UUID) else sid
+
+            suggestion = db.query(TaxonomySuggestion).filter(TaxonomySuggestion.id == sid_uuid).first()
+            if not suggestion:
+                failed.append({"id": str(sid), "reason": "not found"})
+                continue
+            if suggestion.status != "pending":
+                already_resolved += 1
+                continue
+
+            accept_taxonomy_suggestion(db, sid_uuid, resolved_by=resolved_by)
+            accepted += 1
+        except Exception as e:
+            failed.append({"id": str(sid), "reason": str(e)})
+            db.rollback()
+
+    if accepted > 0:
+        db.commit()
+
+    return {
+        "accepted": accepted,
+        "already_resolved": already_resolved,
+        "failed": failed,
+        "total_requested": len(suggestion_ids),
+    }
+
+
+def bulk_add_aliases(
+    db: Session,
+    aliases: list,
+    changed_by: str = "api",
+) -> dict:
+    """Add multiple aliases to taxonomy items in a single transaction.
+
+    Args:
+        aliases: List of {"canonical_name": str, "alias": str} dicts
+        changed_by: Who is making the change
+
+    Returns dict with counts of added, failed, duplicate.
+    """
+    added = 0
+    failed = []
+    duplicate = 0
+
+    for item in aliases:
+        cn = item.get("canonical_name")
+        alias_text = item.get("alias")
+        if not cn or not alias_text:
+            failed.append({"canonical_name": cn, "alias": alias_text, "reason": "missing field"})
+            continue
+
+        tax_item = db.query(Taxonomy).filter(Taxonomy.canonical_name == cn).first()
+        if not tax_item:
+            failed.append({"canonical_name": cn, "alias": alias_text, "reason": "item not found"})
+            continue
+
+        # Check if alias already exists
+        existing_aliases = tax_item.aliases or []
+        alias_lower = alias_text.lower()
+        existing_lower = [
+            a.lower() if isinstance(a, str) else str(a.get("text", "")).lower()
+            for a in existing_aliases
+        ]
+        if alias_lower in existing_lower:
+            duplicate += 1
+            continue
+
+        # Add the alias
+        old_aliases = list(existing_aliases)
+        existing_aliases.append(alias_text)
+        tax_item.aliases = existing_aliases
+        flag_modified(tax_item, "aliases")
+
+        # Record the change
+        record_taxonomy_change(
+            db,
+            canonical_name=cn,
+            field_name="aliases",
+            old_value=str(old_aliases),
+            new_value=str(existing_aliases),
+            changed_by=changed_by,
+            _commit=False,
+        )
+        added += 1
+
+    if added > 0:
+        db.commit()
+
+    return {
+        "added": added,
+        "duplicate": duplicate,
+        "failed": failed,
+        "total_requested": len(aliases),
+    }
+
+
+def get_taxonomy_health(db: Session) -> dict:
+    """Get taxonomy governance health metrics.
+
+    Returns mapping success rate, alias hit rate, suggestion backlog,
+    coverage utilization, and category balance.
+    """
+    # --- Mapping success rate ---
+    total_facts = db.query(sa_func.count(ExtractionFact.id)).scalar() or 0
+    mapped_facts = (
+        db.query(sa_func.count(ExtractionFact.id))
+        .filter(ExtractionFact.canonical_name != "unmapped")
+        .scalar()
+    ) or 0
+    mapping_success_rate = round(mapped_facts / total_facts, 4) if total_facts else 0.0
+
+    # --- Alias hit rate (patterns vs Claude) ---
+    pattern_facts = (
+        db.query(sa_func.count(ExtractionFact.id))
+        .filter(ExtractionFact.mapping_method == "entity_pattern")
+        .scalar()
+    ) or 0
+    alias_hit_rate = round(pattern_facts / total_facts, 4) if total_facts else 0.0
+
+    # --- Suggestion backlog ---
+    pending_suggestions = (
+        db.query(sa_func.count(TaxonomySuggestion.id))
+        .filter(TaxonomySuggestion.status == "pending")
+        .scalar()
+    ) or 0
+    total_suggestions = db.query(sa_func.count(TaxonomySuggestion.id)).scalar() or 0
+    accepted_suggestions = (
+        db.query(sa_func.count(TaxonomySuggestion.id))
+        .filter(TaxonomySuggestion.status == "accepted")
+        .scalar()
+    ) or 0
+    acceptance_rate = round(accepted_suggestions / total_suggestions, 4) if total_suggestions else 0.0
+
+    # --- Coverage utilization ---
+    total_taxonomy_items = db.query(sa_func.count(Taxonomy.id)).scalar() or 0
+    used_items = (
+        db.query(sa_func.count(sa_func.distinct(ExtractionFact.canonical_name)))
+        .filter(ExtractionFact.canonical_name != "unmapped")
+        .scalar()
+    ) or 0
+    coverage_utilization = round(used_items / total_taxonomy_items, 4) if total_taxonomy_items else 0.0
+
+    # --- Category balance ---
+    category_counts = (
+        db.query(Taxonomy.category, sa_func.count(Taxonomy.id))
+        .group_by(Taxonomy.category)
+        .all()
+    )
+    categories = {cat: cnt for cat, cnt in category_counts}
+
+    # --- Learned alias stats ---
+    total_learned = db.query(sa_func.count(LearnedAlias.id)).scalar() or 0
+    promoted_learned = (
+        db.query(sa_func.count(LearnedAlias.id))
+        .filter(LearnedAlias.promoted == True)  # noqa: E712
+        .scalar()
+    ) or 0
+
+    return {
+        "mapping_success_rate": mapping_success_rate,
+        "alias_hit_rate": alias_hit_rate,
+        "total_facts": total_facts,
+        "mapped_facts": mapped_facts,
+        "coverage_utilization": coverage_utilization,
+        "total_taxonomy_items": total_taxonomy_items,
+        "used_taxonomy_items": used_items,
+        "categories": categories,
+        "suggestions": {
+            "pending": pending_suggestions,
+            "total": total_suggestions,
+            "acceptance_rate": acceptance_rate,
+        },
+        "learned_aliases": {
+            "total": total_learned,
+            "promoted": promoted_learned,
+        },
+    }
