@@ -601,6 +601,13 @@ def _build_result(
                 "unit_multiplier": s.get("unit_multiplier"),
             }
 
+    # Build set of label→value sheets (static parameters, no temporal periods)
+    _label_value_sheets: set[str] = {
+        t["sheet_name"]
+        for t in triage_list
+        if t.get("layout_type") == "label_value"
+    }
+
     # Use enhanced mappings if available, otherwise fall back to basic mappings
     mappings = enhanced_result.get("enhanced_mappings") or mapping_result.get("mappings", [])
 
@@ -649,24 +656,40 @@ def _build_result(
                     "enhanced_mapping": mapping.get("enhanced_mapping_provenance"),
                 }
 
-                # Build per-period normalization mapping for this line item
-                item_period_norm = {}
-                for pk in row.get("values", {}).keys():
-                    norm_val = period_norm_lookup.get(str(pk))
-                    if norm_val:
-                        item_period_norm[str(pk)] = norm_val
+                # For label→value sheets, replace non-temporal period keys
+                # with "static" — these are assumptions/parameters, not time series
+                sheet_name = sheet["sheet_name"]
+                raw_values = row.get("values", {})
+
+                if sheet_name in _label_value_sheets and raw_values:
+                    # Consolidate under "static" period: keep only the first
+                    # numeric value (label→value rows have one value each)
+                    row_values = {}
+                    for _pk, pv in raw_values.items():
+                        if pv is not None:
+                            row_values["static"] = pv
+                            break
+                    item_period_norm = {"static": "static"} if row_values else {}
+                else:
+                    row_values = raw_values
+                    # Build per-period normalization mapping for this line item
+                    item_period_norm = {}
+                    for pk in row_values.keys():
+                        norm_val = period_norm_lookup.get(str(pk))
+                        if norm_val:
+                            item_period_norm[str(pk)] = norm_val
 
                 # Get unit metadata for this sheet
-                unit_meta = sheet_unit_metadata.get(sheet["sheet_name"], {})
+                unit_meta = sheet_unit_metadata.get(sheet_name, {})
 
                 line_items.append(
                     {
-                        "sheet": sheet["sheet_name"],
-                        "sheet_name": sheet["sheet_name"],
+                        "sheet": sheet_name,
+                        "sheet_name": sheet_name,
                         "row": row.get("row_index"),
                         "original_label": row.get("label"),
                         "canonical_name": canonical,
-                        "values": row.get("values", {}),
+                        "values": row_values,
                         "confidence": mapping.get("confidence", 0.5),
                         "hierarchy_level": row.get("hierarchy_level", 1),
                         "provenance": provenance,

@@ -198,6 +198,10 @@ class TriageStage(ExtractionStage):
                         for sec in sections
                     ]
 
+            # Propagate label→value layout flag from parsing stage
+            if struct_sheet and struct_sheet.get("is_label_value"):
+                summary["is_label_value"] = True
+
             summaries.append(summary)
 
         return summaries
@@ -281,6 +285,24 @@ class TriageStage(ExtractionStage):
                 entry.setdefault("section_start_row", None)
                 entry.setdefault("section_end_row", None)
 
+            # Annotate triage entries from label→value sheets
+            label_value_names = {
+                s["name"] for s in sheets_summary if s.get("is_label_value")
+            }
+            label_value_count = 0
+            for entry in triage_list:
+                if entry.get("sheet_name") in label_value_names:
+                    entry["layout_type"] = "label_value"
+                    label_value_count += 1
+                else:
+                    entry.setdefault("layout_type", "time_series")
+
+            if label_value_count:
+                logger.info(
+                    f"Stage 2: {label_value_count} sheet(s) tagged as "
+                    f"label→value layout (static parameters)"
+                )
+
             logger.info(f"Stage 2: Triage completed - {len(triage_list)} entries classified")
 
             # Build tier counts for lineage metadata
@@ -302,6 +324,7 @@ class TriageStage(ExtractionStage):
                     **tier_counts,
                     "total_sections_detected": total_sections,
                     "multi_section_sheets": multi_section_sheets,
+                    "label_value_sheets": label_value_count,
                 },
             }
 

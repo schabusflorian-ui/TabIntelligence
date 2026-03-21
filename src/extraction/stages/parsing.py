@@ -320,6 +320,15 @@ class ParsingStage(ExtractionStage):
             if detection.periods:
                 sheet["detected_periods"] = detection.to_dict()
 
+        # Tag sheets with no temporal periods as label→value / static parameter layouts
+        for sheet in structured["sheets"]:
+            sheet["is_label_value"] = ParsingStage._is_label_value_layout(sheet)
+            if sheet["is_label_value"]:
+                logger.debug(
+                    f"Sheet '{sheet['sheet_name']}' detected as label→value layout "
+                    f"(no temporal periods)"
+                )
+
         # Check if file is too large for single-pass processing
         if self._should_chunk(structured):
             logger.info(
@@ -1380,6 +1389,31 @@ class ParsingStage(ExtractionStage):
                         return hint, multiplier
 
         return None, None
+
+    @staticmethod
+    def _is_label_value_layout(sheet: Dict[str, Any]) -> bool:
+        """Detect if a sheet uses a label→value layout (no time series).
+
+        A sheet is classified as label→value when it has data rows but no
+        detected temporal periods.  These sheets contain static parameters
+        (assumptions, tech specs, debt terms) where column headers like "C",
+        "Value", or "value" are not dates.
+
+        Called after period detection so ``detected_periods`` is available.
+        """
+        # Sheet with detected temporal periods is a time-series sheet
+        if sheet.get("detected_periods"):
+            return False
+
+        rows = sheet.get("rows", [])
+        if len(rows) < 3:
+            return False
+
+        # No period header row found by the year/quarter detector
+        if sheet.get("header_row_index") is not None:
+            return False
+
+        return True
 
     @staticmethod
     def _detect_sheet_metadata(sheet: Dict[str, Any]) -> Dict[str, Any]:
