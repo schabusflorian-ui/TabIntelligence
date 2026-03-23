@@ -63,8 +63,13 @@ def _normalize_label(label: str) -> str:
     """Normalize a financial label for alias lookup.
 
     Strips whitespace, removes leading numbering/bullets/dashes, trailing
-    colons, and unit parentheticals like '($M)' or '(EUR)'.  Keeps
-    meaningful parentheticals like '(Adjusted)'.
+    colons, and unit parentheticals like '($M)' or '(EUR)'.
+
+    IMPORTANT: does NOT strip semantic qualifiers like '(Adjusted)', '(Pro Forma)',
+    or '(Net)'.  These change the meaning of the metric and must be preserved so
+    that Claude can map 'EBITDA (Adjusted)' → adjusted_ebitda rather than ebitda.
+    Only truly noise-generating qualifiers (excl./incl./before/after) are stripped
+    because they prevent any alias match and Claude handles the nuance.
     """
     import re
 
@@ -75,7 +80,6 @@ def _normalize_label(label: str) -> str:
     # Remove trailing colon
     s = re.sub(r"\s*:\s*$", "", s)
     # Remove unit parentheticals at end: ($M), (EUR), (€M), (in thousands), (£m)
-    # But keep meaningful ones like (Adjusted), (Net), (Gross)
     s = re.sub(
         r"\s*\((?:in\s+)?"
         r"(?:\$|€|£|USD|EUR|GBP|CHF|JPY|AUD|CAD|NOK|SEK|DKK|ISK)?"
@@ -85,12 +89,13 @@ def _normalize_label(label: str) -> str:
         s,
         flags=re.IGNORECASE,
     )
-    # Strip qualifier parentheticals that prevent alias matching
-    # e.g., "(Adjusted)", "(Net)", "(excl. depreciation)", "(Pro Forma)", "(Restated)"
+    # Strip only noise-generating exclusion/inclusion qualifiers that prevent alias matching
+    # but carry no semantic meaning (e.g. "(excl. lease payments)", "(before tax)")
+    # DO NOT strip: (Adjusted), (Net), (Gross), (Restated), (Pro Forma), (Normalized) —
+    # these are meaningful and allow mapping to adjusted_ebitda, adjusted_ebit, etc.
     s = re.sub(
         r"\s*\("
-        r"(?:adjusted|net|gross|restated|pro\s*forma|"
-        r"excl\.?\s+[^)]{1,40}|incl\.?\s+[^)]{1,40}|"
+        r"(?:excl\.?\s+[^)]{1,40}|incl\.?\s+[^)]{1,40}|"
         r"excluding\s+[^)]{1,40}|including\s+[^)]{1,40}|"
         r"before\s+[^)]{1,40}|after\s+[^)]{1,40})"
         r"\)",
