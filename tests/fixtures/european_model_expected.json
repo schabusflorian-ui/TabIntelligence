@@ -244,7 +244,7 @@
       "notes": "May also map to 'cff'"
     },
     {
-      "original_label": "Net Increase in Cash",
+      "original_label": "Net Increase / (Decrease) in Cash",
       "canonical_name": "net_change_cash",
       "sheet": "Cash Flow Statement",
       "notes": "May also map to 'change_in_cash'"

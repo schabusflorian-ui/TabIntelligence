@@ -2998,7 +2998,8 @@
           "Net Cash Flow",
           "Net Increase in Cash",
           "Net Decrease in Cash",
-          "Net Cash Movement"
+          "Net Cash Movement",
+          "Net Increase / (Decrease) in Cash"
         ],
         "definition": "Total change in cash from all activities",
         "typical_sign": "varies",
