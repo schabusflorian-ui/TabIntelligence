@@ -1,5 +1,5 @@
 {
-  "version": "3.4.2",
+  "version": "3.5.0",
   "description": "Consolidated canonical financial taxonomy for DebtFund extraction pipeline",
   "categories": {
     "balance_sheet": [
@@ -390,7 +390,7 @@
           "C ash",
           "CASH",
           "Cash.",
-          "C\u0251sh"
+          "Cɑsh"
         ],
         "format_examples": [
           {
@@ -1741,7 +1741,7 @@
           "Total Ass ets",
           "Total-Assets",
           "TOTAL ASSETS",
-          "Tot\u0251l Assets"
+          "Totɑl Assets"
         ],
         "format_examples": [
           {
@@ -1860,7 +1860,7 @@
           "Total Equ ity",
           "Total-Equity",
           "TOTAL EQUITY",
-          "Tot\u0251l Equity"
+          "Totɑl Equity"
         ],
         "format_examples": [
           {
@@ -2194,7 +2194,7 @@
           "CAPEX",
           "CapEx",
           "Cap-Ex",
-          "C\u0251pex"
+          "Cɑpex"
         ],
         "format_examples": [
           {
@@ -2862,7 +2862,7 @@
           "FC F",
           "F CF",
           "FCF.",
-          "FC\u0191"
+          "FCƑ"
         ],
         "format_examples": [
           {
@@ -4225,7 +4225,7 @@
           "Operating Cash Flow Coverage",
           "DSCR (Operating Cash Flow)"
         ],
-        "definition": "Corporate Debt Service Coverage Ratio: CFO (Cash Flow from Operations) / Debt Service. Uses the cash flow statement CFO line \u2014 appropriate for corporate borrowers. Distinct from project finance DSCR which uses CFADS.",
+        "definition": "Corporate Debt Service Coverage Ratio: CFO (Cash Flow from Operations) / Debt Service. Uses the cash flow statement CFO line — appropriate for corporate borrowers. Distinct from project finance DSCR which uses CFADS.",
         "typical_sign": "positive",
         "parent_canonical": "debt_covenants",
         "validation_rules": {
@@ -4319,12 +4319,406 @@
             "relationships": [
               {
                 "rule": "covenant_headroom >= 0",
-                "error_message": "Covenant headroom is negative \u2014 covenant breach",
+                "error_message": "Covenant headroom is negative — covenant breach",
                 "warning_only": false,
                 "optional": true
               }
             ]
           }
+        },
+        "industry_tags": [
+          "all"
+        ]
+      },
+      {
+        "canonical_name": "restricted_payment_condition",
+        "category": "debt_schedule",
+        "display_name": "Restricted Payment Condition (RPC)",
+        "aliases": [
+          "RPC",
+          "Restricted Payment Condition",
+          "Restricted Payments Threshold",
+          "RP Condition",
+          "Distribution Lock-up Level",
+          "Restricted Payment Test"
+        ],
+        "definition": "DSCR or leverage threshold below which distributions to equity are prohibited. When dscr_project_finance < restricted_payment_condition, no dividends may be paid. Typically 1.25x–1.50x for infrastructure assets.",
+        "typical_sign": "positive",
+        "parent_canonical": "debt_covenants",
+        "validation_rules": {
+          "type": "ratio",
+          "min_value": 1.0,
+          "max_value": 3.0
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "cash_trap_trigger",
+        "category": "debt_schedule",
+        "display_name": "Cash Trap Trigger Level",
+        "aliases": [
+          "Cash Trap Trigger",
+          "Cash Trap Level",
+          "Cash Lock-up Trigger",
+          "Cash Sweep Trigger DSCR",
+          "Minimum DSCR (Cash Trap)"
+        ],
+        "definition": "DSCR level at which cash is trapped in the project and cannot be distributed. Typically set below the restricted_payment_condition. When dscr < cash_trap_trigger, all available cash is swept to debt service reserve.",
+        "typical_sign": "positive",
+        "parent_canonical": "debt_covenants",
+        "validation_rules": {
+          "type": "ratio",
+          "min_value": 1.0,
+          "max_value": 3.0
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "cash_sweep_pct",
+        "category": "debt_schedule",
+        "display_name": "Cash Sweep Percentage",
+        "aliases": [
+          "Cash Sweep %",
+          "Excess Cash Flow Sweep %",
+          "Mandatory Prepayment %",
+          "ECF Sweep Rate",
+          "Cash Sweep Rate"
+        ],
+        "definition": "Percentage of excess cash flow mandatorily applied to debt prepayment. Common in leveraged finance: 50–100% of excess CFO applied to term loan paydown. Reduces outstanding debt faster than scheduled amortization.",
+        "typical_sign": "positive",
+        "parent_canonical": "total_debt",
+        "validation_rules": {
+          "type": "percentage",
+          "min_value": 0,
+          "max_value": 100
+        },
+        "industry_tags": [
+          "leveraged",
+          "corporate"
+        ]
+      },
+      {
+        "canonical_name": "cash_sweep_threshold_dscr",
+        "category": "debt_schedule",
+        "display_name": "Cash Sweep Threshold DSCR",
+        "aliases": [
+          "Sweep Threshold",
+          "DSCR Sweep Threshold",
+          "Cash Sweep DSCR Trigger",
+          "ECF Sweep Threshold"
+        ],
+        "definition": "Minimum DSCR above which the cash sweep mechanism is active. Cash sweep only applies after this threshold is met, ensuring debt service is covered first.",
+        "typical_sign": "positive",
+        "parent_canonical": "debt_covenants",
+        "validation_rules": {
+          "type": "ratio",
+          "min_value": 1.0
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "excess_cashflow_sweep",
+        "category": "debt_schedule",
+        "display_name": "Excess Cash Flow Sweep",
+        "aliases": [
+          "Excess Cash Flow Sweep",
+          "ECF Sweep",
+          "Mandatory Prepayment from ECF",
+          "Cash Sweep Amount",
+          "Annual Cash Sweep",
+          "Excess Cash Flow Prepayment"
+        ],
+        "definition": "Actual dollar amount swept from excess cash flow for mandatory debt prepayment in a given period. Equal to excess_cashflow × cash_sweep_pct. Separate from scheduled principal amortization.",
+        "typical_sign": "negative",
+        "parent_canonical": "principal_payment",
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "leveraged",
+          "corporate"
+        ]
+      },
+      {
+        "canonical_name": "margin_ratchet_level",
+        "category": "debt_schedule",
+        "display_name": "Margin Ratchet Level",
+        "aliases": [
+          "Margin Ratchet",
+          "Interest Rate Ratchet",
+          "Rate Step-down",
+          "Pricing Grid Level",
+          "Leverage Ratchet",
+          "Margin Grid Level"
+        ],
+        "definition": "Interest margin at the current leverage or coverage level under a ratchet pricing grid. When the borrower deleverages below a threshold, the margin steps down. Expressed in basis points over SOFR/EURIBOR.",
+        "typical_sign": "positive",
+        "parent_canonical": "interest_rate",
+        "validation_rules": {
+          "type": "percentage",
+          "min_value": 0,
+          "max_value": 20
+        },
+        "industry_tags": [
+          "leveraged",
+          "corporate"
+        ]
+      },
+      {
+        "canonical_name": "commitment_fee_undrawn",
+        "category": "debt_schedule",
+        "display_name": "Commitment Fee (Undrawn)",
+        "aliases": [
+          "Commitment Fee",
+          "Non-utilisation Fee",
+          "Undrawn Fee",
+          "Availability Fee",
+          "Undrawn Commitment Fee",
+          "Revolver Commitment Fee"
+        ],
+        "definition": "Annual fee paid on the undrawn portion of a revolving credit facility or committed debt. Typically 30–50% of the drawn margin. Represents the cost of maintaining available liquidity.",
+        "typical_sign": "negative",
+        "parent_canonical": "interest_expense",
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "leveraged",
+          "corporate",
+          "project_finance"
+        ]
+      },
+      {
+        "canonical_name": "upfront_fee",
+        "category": "debt_schedule",
+        "display_name": "Upfront Fee",
+        "aliases": [
+          "Upfront Fee",
+          "Closing Fee",
+          "Funding Fee",
+          "Syndication Fee",
+          "Underwriting Fee",
+          "Initial Fee"
+        ],
+        "definition": "One-time fee paid at debt closing/funding. Amortised over the debt tenor for effective interest rate calculation. Increases the effective cost of debt above the stated margin.",
+        "typical_sign": "negative",
+        "parent_canonical": "interest_expense",
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "leveraged",
+          "corporate",
+          "project_finance"
+        ]
+      },
+      {
+        "canonical_name": "arrangement_fee",
+        "category": "debt_schedule",
+        "display_name": "Arrangement Fee",
+        "aliases": [
+          "Arrangement Fee",
+          "Arranging Fee",
+          "Structuring Fee",
+          "Origination Fee",
+          "Mandated Lead Arranger Fee",
+          "MLA Fee"
+        ],
+        "definition": "Fee paid to the arranger(s) for structuring and syndicating the debt facility. Distinct from the upfront fee paid to lenders — arrangement fee is the arranger's compensation. Typically 50–200bps of facility size.",
+        "typical_sign": "negative",
+        "parent_canonical": "interest_expense",
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "leveraged",
+          "corporate",
+          "project_finance"
+        ]
+      },
+      {
+        "canonical_name": "make_whole_amount",
+        "category": "debt_schedule",
+        "display_name": "Make-Whole Amount",
+        "aliases": [
+          "Make-Whole",
+          "Make Whole Premium",
+          "Call Protection Amount",
+          "Yield Protection",
+          "Make-whole Call",
+          "Prepayment Premium"
+        ],
+        "definition": "Premium payable on early voluntary prepayment of fixed-rate or high-yield debt. Calculated as NPV of remaining coupons at a reference treasury rate plus spread. Compensates lenders for reinvestment risk on early repayment.",
+        "typical_sign": "negative",
+        "parent_canonical": "principal_payment",
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "leveraged",
+          "project_finance"
+        ]
+      },
+      {
+        "canonical_name": "oid_amortization",
+        "category": "debt_schedule",
+        "display_name": "OID Amortization",
+        "aliases": [
+          "OID Amortization",
+          "Original Issue Discount Amortization",
+          "OID Accretion",
+          "Discount Amortization",
+          "Bond Discount Amortization"
+        ],
+        "definition": "Annual amortization of original issue discount (OID) — the difference between the face value and the issuance price of debt. Increases the carrying value of the debt toward par over the term. Adds to interest expense for tax purposes (non-cash).",
+        "typical_sign": "positive",
+        "parent_canonical": "interest_expense",
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "leveraged"
+        ]
+      },
+      {
+        "canonical_name": "weighted_average_maturity",
+        "category": "debt_schedule",
+        "display_name": "Weighted Average Maturity",
+        "aliases": [
+          "WAM",
+          "Weighted Average Maturity",
+          "Average Debt Tenor",
+          "Weighted Maturity",
+          "WAL",
+          "Weighted Average Life"
+        ],
+        "definition": "Weighted average remaining maturity of all debt tranches, weighted by outstanding balance. Metric for refinancing risk concentration: a low WAM signals near-term refinancing pressure.",
+        "typical_sign": "positive",
+        "parent_canonical": "total_debt",
+        "validation_rules": {
+          "type": "number",
+          "min_value": 0,
+          "max_value": 40
+        },
+        "industry_tags": [
+          "all"
+        ]
+      },
+      {
+        "canonical_name": "balloon_payment",
+        "category": "debt_schedule",
+        "display_name": "Balloon Payment",
+        "aliases": [
+          "Balloon Payment",
+          "Bullet Payment",
+          "Terminal Payment",
+          "Final Bullet",
+          "Maturity Payment",
+          "Lump Sum Repayment"
+        ],
+        "definition": "Large lump-sum principal repayment due at debt maturity — the residual balance not covered by scheduled amortization. Common in project finance and high-yield structures. Refinancing risk if cash or re-financing not available.",
+        "typical_sign": "negative",
+        "parent_canonical": "principal_payment",
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "leveraged",
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "amortization_schedule_type",
+        "category": "debt_schedule",
+        "display_name": "Amortization Schedule Type",
+        "aliases": [
+          "Amortization Type",
+          "Repayment Profile",
+          "Principal Schedule Type",
+          "Debt Profile",
+          "Amortisation Type"
+        ],
+        "definition": "Type of principal repayment schedule: 'linear' (equal payments), 'sculpted' (tailored to CFADS), 'ADSCR-based' (payments sized to maintain target DSCR), or 'bullet' (single payment at maturity). Affects DSCR profile over the debt tenor.",
+        "typical_sign": "varies",
+        "parent_canonical": "total_debt",
+        "validation_rules": {
+          "type": "text"
+        },
+        "industry_tags": [
+          "all"
+        ]
+      },
+      {
+        "canonical_name": "covenant_cure_period",
+        "category": "debt_schedule",
+        "display_name": "Covenant Cure Period",
+        "aliases": [
+          "Cure Period",
+          "Remedy Period",
+          "Covenant Cure Window",
+          "Breach Cure Period",
+          "Remedy Right"
+        ],
+        "definition": "Number of days or months after a covenant breach within which the borrower can remedy the breach (e.g. equity injection) before the lender can accelerate the debt. Typically 30–90 days.",
+        "typical_sign": "positive",
+        "parent_canonical": "debt_covenants",
+        "validation_rules": {
+          "type": "number",
+          "min_value": 0,
+          "max_value": 365
+        },
+        "industry_tags": [
+          "all"
+        ]
+      },
+      {
+        "canonical_name": "covenant_step_down_schedule",
+        "category": "debt_schedule",
+        "display_name": "Covenant Step-Down Schedule",
+        "aliases": [
+          "Covenant Step-down",
+          "Covenant Tightening Schedule",
+          "Leverage Step-down",
+          "Ratchet Schedule",
+          "Covenant Grid"
+        ],
+        "definition": "Schedule showing covenant thresholds that tighten (step down) over time, typically annually. Common in leveraged finance: max leverage covenants step down from 6.0x to 4.5x over 4 years. Stored as JSON array of {date, threshold} pairs.",
+        "typical_sign": "varies",
+        "parent_canonical": "debt_covenants",
+        "validation_rules": {
+          "type": "text"
+        },
+        "industry_tags": [
+          "leveraged",
+          "corporate"
+        ]
+      },
+      {
+        "canonical_name": "financial_covenant_test_date",
+        "category": "debt_schedule",
+        "display_name": "Financial Covenant Test Date",
+        "aliases": [
+          "Covenant Test Date",
+          "Testing Date",
+          "Compliance Date",
+          "Covenant Measurement Date",
+          "Financial Test Date"
+        ],
+        "definition": "Date on which financial covenants are tested. Typically quarterly (March 31, June 30, September 30, December 31). Covenant breaches at test date trigger cure rights or default.",
+        "typical_sign": "varies",
+        "parent_canonical": "debt_covenants",
+        "validation_rules": {
+          "type": "date"
         },
         "industry_tags": [
           "all"
@@ -4574,7 +4968,7 @@
           "Depreciat ion",
           "Depre ciation",
           "DEPRECIATION",
-          "Deprecia\u01abon"
+          "Depreciaƫon"
         ],
         "format_examples": [
           {
@@ -5441,7 +5835,7 @@
           "Net Inc ome",
           "Net-Income",
           "NET INCOME",
-          "N\u0247t Income",
+          "Nɇt Income",
           "Net lncome"
         ],
         "format_examples": [
@@ -5912,7 +6306,7 @@
           "RevenUe",
           "REVENUE",
           "revenue.",
-          "Reve\u03c0ue",
+          "Reveπue",
           "Rev-enue"
         ],
         "format_examples": [
@@ -6245,6 +6639,124 @@
           "all",
           "leveraged"
         ]
+      },
+      {
+        "canonical_name": "reported_ebitda",
+        "category": "income_statement",
+        "display_name": "Reported EBITDA",
+        "aliases": [
+          "Reported EBITDA",
+          "EBITDA (As Reported)",
+          "EBITDA (Statutory)",
+          "GAAP EBITDA",
+          "IFRS EBITDA",
+          "EBITDA Before Adjustments",
+          "Unadjusted EBITDA"
+        ],
+        "definition": "EBITDA as reported in the financial statements, before any management add-backs or adjustments. Relationship: adjusted_ebitda = reported_ebitda + ebitda_addbacks. Distinct from adjusted_ebitda — do not conflate.",
+        "typical_sign": "positive",
+        "parent_canonical": "ebitda",
+        "validation_rules": {
+          "type": "currency",
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "adjusted_ebitda >= reported_ebitda",
+                "error_message": "Adjusted EBITDA should be >= reported EBITDA (add-backs are positive)",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
+      },
+      {
+        "canonical_name": "total_addbacks",
+        "category": "income_statement",
+        "display_name": "Total EBITDA Add-backs",
+        "aliases": [
+          "Total Add-backs",
+          "Total Adjustments",
+          "Total Non-recurring Items",
+          "Total One-time Charges",
+          "Total Management Adjustments",
+          "Cumulative Add-backs",
+          "Sum of Add-backs"
+        ],
+        "definition": "Total of all EBITDA adjustments/add-backs. Relationship: adjusted_ebitda = reported_ebitda + total_addbacks. Alias for ebitda_addbacks; use this canonical when the model presents a single add-back total.",
+        "typical_sign": "positive",
+        "parent_canonical": "adjusted_ebitda",
+        "validation_rules": {
+          "type": "currency",
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "adjusted_ebitda == reported_ebitda + total_addbacks",
+                "tolerance": 0.02,
+                "error_message": "adjusted_ebitda should equal reported_ebitda + total_addbacks",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
+      },
+      {
+        "canonical_name": "adjusted_net_income",
+        "category": "income_statement",
+        "display_name": "Adjusted Net Income",
+        "aliases": [
+          "Adjusted Net Income",
+          "Adjusted Profit After Tax",
+          "Adjusted Net Profit",
+          "Underlying Net Income",
+          "Core Net Income",
+          "Normalised Net Income"
+        ],
+        "definition": "Net income adjusted for non-recurring items, restructuring charges, and other management adjustments. Distinct from reported net_income — used in management presentations and covenant packages.",
+        "typical_sign": "positive",
+        "parent_canonical": "net_income",
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
+      },
+      {
+        "canonical_name": "proforma_revenue",
+        "category": "income_statement",
+        "display_name": "Pro Forma Revenue",
+        "aliases": [
+          "Pro Forma Revenue",
+          "Pro-forma Revenue",
+          "Proforma Revenue",
+          "Adjusted Revenue",
+          "Revenue (Pro Forma)",
+          "Annualised Revenue",
+          "LTM Revenue (Adjusted)",
+          "Revenue (Including Acquisitions)"
+        ],
+        "definition": "Revenue adjusted to include full-period contribution of acquisitions, disposals, or other structural changes as if they had been in place for the full period. Used in acquisition finance and leveraged buyout models.",
+        "typical_sign": "positive",
+        "parent_canonical": "revenue",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       }
     ],
     "project_finance": [
@@ -6260,7 +6772,7 @@
           "Cash Available for Debt Service (CFADS)",
           "Operating Cash Flow Before Debt Service"
         ],
-        "definition": "Cash flow available for debt service (CFADS): computed as EBITDA less taxes paid less maintenance capex, adjusted for changes in working capital, BEFORE any debt service payments. This is the primary metric for assessing project debt capacity. Do NOT start from Net Income \u2014 that is already post-interest and will double-count on leveraged deals.",
+        "definition": "Cash flow available for debt service (CFADS): computed as EBITDA less taxes paid less maintenance capex, adjusted for changes in working capital, BEFORE any debt service payments. This is the primary metric for assessing project debt capacity. Do NOT start from Net Income — that is already post-interest and will double-count on leveraged deals.",
         "typical_sign": "positive",
         "validation_rules": {
           "type": "currency",
@@ -6673,7 +7185,7 @@
           "Annual DSCR",
           "Project DSCR"
         ],
-        "definition": "Project finance Debt Service Coverage Ratio: CFADS / Debt Service. Uses CFADS (not corporate CFO) as the numerator \u2014 this is the covenant-relevant DSCR for infrastructure and project finance deals. Minimum typical covenant 1.10-1.25x (trigger); distribution lock-up typically 1.25-1.50x.",
+        "definition": "Project finance Debt Service Coverage Ratio: CFADS / Debt Service. Uses CFADS (not corporate CFO) as the numerator — this is the covenant-relevant DSCR for infrastructure and project finance deals. Minimum typical covenant 1.10-1.25x (trigger); distribution lock-up typically 1.25-1.50x.",
         "typical_sign": "positive",
         "parent_canonical": "dscr",
         "validation_rules": {
@@ -6691,12 +7203,107 @@
               },
               {
                 "rule": "dscr_project_finance >= distribution_lock_up",
-                "error_message": "PF DSCR below distribution lock-up threshold \u2014 cash trap may apply",
+                "error_message": "PF DSCR below distribution lock-up threshold — cash trap may apply",
                 "warning_only": true,
                 "optional": true
               }
             ]
           }
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "dra_balance",
+        "category": "project_finance",
+        "display_name": "Distribution Reserve Account Balance",
+        "aliases": [
+          "DRA Balance",
+          "DRA",
+          "Distribution Reserve Account",
+          "Distribution Reserve",
+          "Equity Distribution Reserve"
+        ],
+        "definition": "Cash held in the Distribution Reserve Account — a sub-account funded by excess cash flows after debt service, to support future equity distributions. Drawdown requires passing the restricted_payment_condition test.",
+        "typical_sign": "positive",
+        "parent_canonical": "dsra_balance",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "lcra_balance",
+        "category": "project_finance",
+        "display_name": "Loss Compensation Reserve Account Balance",
+        "aliases": [
+          "LCRA Balance",
+          "LCRA",
+          "Loss Compensation Reserve",
+          "Loss Reserve Account",
+          "Renewable Energy Reserve",
+          "Production Shortfall Reserve"
+        ],
+        "definition": "Reserve account funded to compensate for production shortfalls below P90 generation. Primarily used in renewable energy (solar, wind) project finance. Balance is drawn when actual generation falls below minimum contracted output.",
+        "typical_sign": "positive",
+        "parent_canonical": "dsra_balance",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "reserve_account_interest_income",
+        "category": "project_finance",
+        "display_name": "Reserve Account Interest Income",
+        "aliases": [
+          "Reserve Account Interest",
+          "DSRA Interest Income",
+          "Reserve Interest",
+          "Interest on Reserve Accounts",
+          "Escrow Interest Income"
+        ],
+        "definition": "Interest earned on cash held in reserve accounts (DSRA, LCRA, DRA, decommissioning). Typically swept into operating cash flows or credited to the reserve account balance.",
+        "typical_sign": "positive",
+        "parent_canonical": "interest_income",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "decommissioning_reserve",
+        "category": "project_finance",
+        "display_name": "Decommissioning Reserve",
+        "aliases": [
+          "Decommissioning Reserve",
+          "Decom Reserve",
+          "Restoration Reserve",
+          "Asset Retirement Obligation Reserve",
+          "ARO Reserve",
+          "Abandonment Reserve",
+          "End-of-life Reserve"
+        ],
+        "definition": "Reserve account funded over the asset life to cover decommissioning costs at end of concession or lease. Mandatory in mining, oil & gas, offshore wind, and some regulated infrastructure projects. Funded as a periodic cash charge reducing CFADS.",
+        "typical_sign": "positive",
+        "parent_canonical": "dsra_balance",
+        "validation_rules": {
+          "type": "currency",
+          "min_value": 0
         },
         "industry_tags": [
           "project_finance",
@@ -8484,7 +9091,7 @@
           "OEE",
           "Equipment Effectiveness"
         ],
-        "definition": "Availability \u00d7 Performance \u00d7 Quality; measures manufacturing productivity",
+        "definition": "Availability × Performance × Quality; measures manufacturing productivity",
         "typical_sign": "positive",
         "parent_canonical": "manufacturing_metrics",
         "validation_rules": {
