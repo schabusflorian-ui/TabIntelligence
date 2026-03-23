@@ -1,4 +1,4 @@
-# DebtFund - Excel Model Intelligence Platform
+# TabIntelligence - Excel Model Intelligence Platform
 
 **Guided Hybrid Extraction Platform for Excel Financial Models**
 
