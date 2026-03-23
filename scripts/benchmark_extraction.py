@@ -165,10 +165,11 @@ def _evaluate_triage_accuracy(result: dict, expected: dict) -> dict:
 
 def _evaluate_mapping_accuracy(result: dict, expected: dict) -> dict:
     """Compare mapping results against expected canonical names."""
-    # Build lookup from result line items
+    # Build lookup from result line items — strip whitespace to handle
+    # Excel hierarchy indentation (e.g. '  Cash at Bank' == 'Cash at Bank')
     actual_mappings = {}
     for item in result.get("line_items", []):
-        label = item.get("original_label", "")
+        label = item.get("original_label", "").strip()
         canonical = item.get("canonical_name", "unmapped")
         if label and label not in actual_mappings:
             actual_mappings[label] = canonical
@@ -183,7 +184,7 @@ def _evaluate_mapping_accuracy(result: dict, expected: dict) -> dict:
     unmapped_labels = []
 
     for exp in expected_mappings:
-        label = exp["original_label"]
+        label = exp["original_label"].strip() if exp.get("original_label") else ""
         exp_canonical = exp["canonical_name"]
         act_canonical = actual_mappings.get(label)
 
@@ -221,7 +222,7 @@ def _evaluate_mapping_accuracy(result: dict, expected: dict) -> dict:
         per_statement.setdefault(sheet, {"correct": 0, "total": 0, "mismatches": []})
         per_statement[sheet]["total"] += 1
 
-        label = exp["original_label"]
+        label = exp["original_label"].strip() if exp.get("original_label") else ""
         exp_canonical = exp["canonical_name"]
         act_canonical = actual_mappings.get(label)
 

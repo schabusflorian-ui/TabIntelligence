@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-03-12T12:23:29.429705+00:00",
+  "timestamp": "2026-03-22T09:30:46.747033+00:00",
   "file": "edge_cases.xlsx",
-  "duration_seconds": 126.28,
+  "duration_seconds": 112.5,
   "sheets": [
     "Financials",
     "Quarterly Detail",
@@ -17,7 +17,8 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Core Income Statement section with standard P&L structure including Revenue, Cost of Goods Sold, and Gross Profit. Has proper subtotals and bold section headers indicating structured financial statement."
+      "reasoning": "Core Income Statement section with standard P&L structure including revenue, COGS, gross profit, and operating expenses with proper subtotals",
+      "layout_type": "time_series"
     },
     {
       "sheet_name": "Financials",
@@ -27,7 +28,8 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.9,
-      "reasoning": "Continuation of Income Statement with Operating Income, Interest Expense, and Net Income calculations. Part of core P&L financial statement structure."
+      "reasoning": "Continuation of Income Statement with operating income, interest expense, tax, and net income - core P&L components",
+      "layout_type": "time_series"
     },
     {
       "sheet_name": "Financials",
@@ -37,7 +39,8 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.95,
-      "reasoning": "Core Balance Sheet section showing Assets including Cash, Accounts Receivable, and Inventory. Standard financial statement with proper subtotals and structure."
+      "reasoning": "Core Balance Sheet section with standard asset structure including cash, receivables, inventory with proper subtotals",
+      "layout_type": "time_series"
     },
     {
       "sheet_name": "Financials",
@@ -47,7 +50,8 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.9,
-      "reasoning": "Liabilities section of Balance Sheet with Accounts Payable, Accrued Expenses, and Long-Term Debt. Essential component of core financial statement."
+      "reasoning": "Balance Sheet liabilities section with accounts payable, accrued expenses, and long-term debt - core balance sheet components",
+      "layout_type": "time_series"
     },
     {
       "sheet_name": "Financials",
@@ -57,61 +61,65 @@
       "tier": 1,
       "decision": "PROCESS_HIGH",
       "confidence": 0.85,
-      "reasoning": "Equity section completing the Balance Sheet with Total Equity and balancing Total Liabilities & Equity. Critical for balance sheet integrity."
+      "reasoning": "Balance Sheet equity section completing the standard balance sheet structure",
+      "layout_type": "time_series"
     },
     {
       "sheet_name": "Quarterly Detail",
       "tier": 2,
       "decision": "PROCESS_MEDIUM",
       "confidence": 0.9,
-      "reasoning": "Supporting schedule showing quarterly breakdown of revenue and expenses. Name explicitly indicates 'Quarterly Detail' which fits Tier 2 criteria for periodic breakdowns.",
+      "reasoning": "Quarterly breakdown of revenue and financial metrics - fits supporting schedule category for detailed period analysis",
       "section": null,
       "section_start_row": null,
-      "section_end_row": null
+      "section_end_row": null,
+      "layout_type": "time_series"
     },
     {
       "sheet_name": "Sensitivities",
       "tier": 3,
       "decision": "PROCESS_LOW",
-      "confidence": 0.85,
-      "reasoning": "Sensitivity analysis sheet examining revenue growth and margin scenarios. Contains analytical content for testing different assumptions, fitting Tier 3 criteria.",
+      "confidence": 0.95,
+      "reasoning": "Revenue growth and margin sensitivity analysis - clearly analytical content for scenario modeling",
       "section": null,
       "section_start_row": null,
-      "section_end_row": null
+      "section_end_row": null,
+      "layout_type": "label_value"
     },
     {
       "sheet_name": "Old Draft v1",
       "tier": 4,
       "decision": "SKIP",
-      "confidence": 0.95,
-      "reasoning": "Sheet name contains 'Old' and 'Draft' which are explicit SKIP criteria. Sample labels confirm it's marked as 'DRAFT - DO NOT USE' and described as old version.",
+      "confidence": 0.98,
+      "reasoning": "Sheet name contains 'Old Draft' and has explicit 'DRAFT - DO NOT USE' warning, clearly marked as outdated version",
       "section": null,
       "section_start_row": null,
-      "section_end_row": null
+      "section_end_row": null,
+      "layout_type": "label_value"
     }
   ],
   "line_items_count": 45,
-  "tokens_used": 47694,
-  "cost_usd": 0.302898,
+  "tokens_used": 45532,
+  "cost_usd": 0.264168,
   "validation": {
     "period_results": {
       "FY2022": {
-        "total_checks": 55,
-        "passed": 52,
+        "total_checks": 61,
+        "passed": 58,
         "failed": 3,
-        "success_rate": 0.945
+        "success_rate": 0.951
       },
       "FY2023": {
-        "total_checks": 55,
-        "passed": 52,
+        "total_checks": 61,
+        "passed": 58,
         "failed": 3,
-        "success_rate": 0.945
+        "success_rate": 0.951
       },
       "FY2024E": {
-        "total_checks": 55,
-        "passed": 52,
+        "total_checks": 61,
+        "passed": 58,
         "failed": 3,
-        "success_rate": 0.945
+        "success_rate": 0.951
       },
       "Q1 FY24": {
         "total_checks": 15,
@@ -367,174 +375,174 @@
         "flag_index": 0,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "COGS should always be positive in financial statements. The negative value suggests extraction error - likely extracted as an expense format rather than absolute cost value.",
-        "suggested_fix": "22500 (convert negative to positive)"
+        "reasoning": "COGS should always be positive in financial statements. The negative value suggests extraction error - likely picking up a formatted negative number or subtracting when it should add.",
+        "suggested_fix": "22500"
       },
       {
         "flag_index": 1,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Mathematical inconsistency: Revenue (50000) - COGS (-22500) = 72500, but extracted gross profit is 27500. This confirms COGS sign error.",
-        "suggested_fix": "COGS should be 22500 (positive), making gross profit = 50000 - 22500 = 27500"
+        "reasoning": "This is a cascading error from the negative COGS. With Revenue=50000 and correct COGS=22500, Gross Profit should be 27500, which matches the actual extracted value.",
+        "suggested_fix": "Fix COGS to positive 22500"
       },
       {
         "flag_index": 2,
-        "assessment": "error",
-        "confidence": 0.95,
-        "reasoning": "Same mathematical inconsistency as above. Gross profit is actually correct at 27500, but COGS needs sign correction.",
-        "suggested_fix": "Correct COGS to positive 22500"
+        "assessment": "acceptable",
+        "confidence": 0.9,
+        "reasoning": "The gross profit value of 27500 appears correct. This validation failure is due to the COGS sign error, not an issue with gross profit itself.",
+        "suggested_fix": null
       },
       {
         "flag_index": 3,
         "assessment": "error",
         "confidence": 0.95,
         "reasoning": "Same systematic issue - COGS extracted as negative when it should be positive.",
-        "suggested_fix": "24750 (convert negative to positive)"
+        "suggested_fix": "24750"
       },
       {
         "flag_index": 4,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Revenue (55000) - COGS (-24750) = 79750, but gross profit shows 30250. COGS sign error confirmed.",
-        "suggested_fix": "COGS should be 24750 (positive)"
+        "reasoning": "Cascading error from negative COGS in FY2023.",
+        "suggested_fix": "Fix COGS to positive 24750"
       },
       {
         "flag_index": 5,
-        "assessment": "error",
-        "confidence": 0.95,
-        "reasoning": "Gross profit is correct at 30250, confirms COGS should be 24750 positive (55000 - 24750 = 30250).",
-        "suggested_fix": "Correct COGS to positive 24750"
+        "assessment": "acceptable",
+        "confidence": 0.9,
+        "reasoning": "Gross profit value appears mathematically correct given the revenue, just affected by COGS sign error.",
+        "suggested_fix": null
       },
       {
         "flag_index": 6,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Systematic COGS sign error continues in FY2024E projections.",
-        "suggested_fix": "27225 (convert negative to positive)"
+        "reasoning": "Continuation of systematic COGS extraction error.",
+        "suggested_fix": "27225"
       },
       {
         "flag_index": 7,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Revenue (60500) - COGS (-27225) = 87725, but gross profit is 33275. COGS sign error.",
-        "suggested_fix": "COGS should be 27225 (positive)"
+        "reasoning": "Cascading error from negative COGS in FY2024E.",
+        "suggested_fix": "Fix COGS to positive 27225"
       },
       {
         "flag_index": 8,
-        "assessment": "error",
-        "confidence": 0.95,
-        "reasoning": "Gross profit is correct at 33275, confirms COGS should be 27225 positive.",
-        "suggested_fix": "Correct COGS to positive 27225"
+        "assessment": "acceptable",
+        "confidence": 0.9,
+        "reasoning": "Gross profit calculation appears correct, issue stems from COGS sign error.",
+        "suggested_fix": null
       },
       {
         "flag_index": 9,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Q1 FY24 shows same systematic COGS sign error.",
-        "suggested_fix": "6300 (convert negative to positive)"
+        "reasoning": "Q1 FY24 COGS extraction error - should be positive.",
+        "suggested_fix": "6300"
       },
       {
         "flag_index": 10,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Revenue (14000) - COGS (-6300) = 20300, but gross profit is 7700. COGS sign error.",
-        "suggested_fix": "COGS should be 6300 (positive)"
+        "reasoning": "Cascading error from negative COGS in Q1 FY24.",
+        "suggested_fix": "Fix COGS to positive 6300"
       },
       {
         "flag_index": 11,
-        "assessment": "error",
-        "confidence": 0.95,
-        "reasoning": "Gross profit is correct at 7700, confirms COGS should be 6300 positive.",
-        "suggested_fix": "Correct COGS to positive 6300"
+        "assessment": "acceptable",
+        "confidence": 0.9,
+        "reasoning": "Gross profit appears mathematically sound, affected by COGS sign issue.",
+        "suggested_fix": null
       },
       {
         "flag_index": 12,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Q2 FY24 systematic COGS sign error.",
-        "suggested_fix": "6525 (convert negative to positive)"
+        "reasoning": "Q2 FY24 COGS extraction error - should be positive.",
+        "suggested_fix": "6525"
       },
       {
         "flag_index": 13,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Revenue (14500) - COGS (-6525) = 21025, but gross profit is 7975. COGS sign error.",
-        "suggested_fix": "COGS should be 6525 (positive)"
+        "reasoning": "Cascading error from negative COGS in Q2 FY24.",
+        "suggested_fix": "Fix COGS to positive 6525"
       },
       {
         "flag_index": 14,
-        "assessment": "error",
-        "confidence": 0.95,
-        "reasoning": "Gross profit is correct at 7975, confirms COGS should be 6525 positive.",
-        "suggested_fix": "Correct COGS to positive 6525"
+        "assessment": "acceptable",
+        "confidence": 0.9,
+        "reasoning": "Gross profit calculation correct, issue is upstream COGS sign error.",
+        "suggested_fix": null
       },
       {
         "flag_index": 15,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Q3 FY24 systematic COGS sign error.",
-        "suggested_fix": "6975 (convert negative to positive)"
+        "reasoning": "Q3 FY24 COGS extraction error - should be positive.",
+        "suggested_fix": "6975"
       },
       {
         "flag_index": 16,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Revenue (15500) - COGS (-6975) = 22475, but gross profit is 8525. COGS sign error.",
-        "suggested_fix": "COGS should be 6975 (positive)"
+        "reasoning": "Cascading error from negative COGS in Q3 FY24.",
+        "suggested_fix": "Fix COGS to positive 6975"
       },
       {
         "flag_index": 17,
-        "assessment": "error",
-        "confidence": 0.95,
-        "reasoning": "Gross profit is correct at 8525, confirms COGS should be 6975 positive.",
-        "suggested_fix": "Correct COGS to positive 6975"
+        "assessment": "acceptable",
+        "confidence": 0.9,
+        "reasoning": "Gross profit mathematically correct, stems from COGS sign error.",
+        "suggested_fix": null
       },
       {
         "flag_index": 18,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Q4 FY24 systematic COGS sign error.",
-        "suggested_fix": "7425 (convert negative to positive)"
+        "reasoning": "Q4 FY24 COGS extraction error - should be positive.",
+        "suggested_fix": "7425"
       },
       {
         "flag_index": 19,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Revenue (16500) - COGS (-7425) = 23925, but gross profit is 9075. COGS sign error.",
-        "suggested_fix": "COGS should be 7425 (positive)"
+        "reasoning": "Cascading error from negative COGS in Q4 FY24.",
+        "suggested_fix": "Fix COGS to positive 7425"
       },
       {
         "flag_index": 20,
-        "assessment": "error",
-        "confidence": 0.95,
-        "reasoning": "Gross profit is correct at 9075, confirms COGS should be 7425 positive.",
-        "suggested_fix": "Correct COGS to positive 7425"
+        "assessment": "acceptable",
+        "confidence": 0.9,
+        "reasoning": "Gross profit calculation appears correct, issue is COGS sign error.",
+        "suggested_fix": null
       },
       {
         "flag_index": 21,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "FY2024 annual total shows same systematic COGS sign error.",
-        "suggested_fix": "27225 (convert negative to positive)"
+        "reasoning": "FY2024 COGS extraction error - should be positive. Note: This duplicates FY2024E data.",
+        "suggested_fix": "27225"
       },
       {
         "flag_index": 22,
         "assessment": "error",
         "confidence": 0.95,
-        "reasoning": "Revenue (60500) - COGS (-27225) = 87725, but gross profit is 33275. COGS sign error.",
-        "suggested_fix": "COGS should be 27225 (positive)"
+        "reasoning": "Cascading error from negative COGS in FY2024.",
+        "suggested_fix": "Fix COGS to positive 27225"
       },
       {
         "flag_index": 23,
-        "assessment": "error",
-        "confidence": 0.95,
-        "reasoning": "Gross profit is correct at 33275, confirms COGS should be 27225 positive.",
-        "suggested_fix": "Correct COGS to positive 27225"
+        "assessment": "acceptable",
+        "confidence": 0.9,
+        "reasoning": "Gross profit appears mathematically correct, affected by upstream COGS sign error.",
+        "suggested_fix": null
       }
     ],
-    "overall_confidence": 0.9,
+    "overall_confidence": 0.907,
     "time_series": {
-      "total_checks": 320,
+      "total_checks": 323,
       "flags": [
         {
           "check_type": "gap",
@@ -570,18 +578,26 @@
         },
         {
           "check_type": "gap",
-          "canonical_name": "earnings_before_tax",
+          "canonical_name": "current_assets",
           "period": "FY2024",
           "severity": "info",
-          "message": "earnings_before_tax missing in period FY2024 (gap in series)",
+          "message": "current_assets missing in period FY2024 (gap in series)",
           "details": null
         },
         {
           "check_type": "gap",
-          "canonical_name": "ebit",
-          "period": "FY2024E",
+          "canonical_name": "current_liabilities",
+          "period": "FY2024",
           "severity": "info",
-          "message": "ebit missing in period FY2024E (gap in series)",
+          "message": "current_liabilities missing in period FY2024 (gap in series)",
+          "details": null
+        },
+        {
+          "check_type": "gap",
+          "canonical_name": "earnings_before_tax",
+          "period": "FY2024",
+          "severity": "info",
+          "message": "earnings_before_tax missing in period FY2024 (gap in series)",
           "details": null
         },
         {
@@ -610,10 +626,10 @@
         },
         {
           "check_type": "gap",
-          "canonical_name": "intangibles",
+          "canonical_name": "intangible_assets",
           "period": "FY2024",
           "severity": "info",
-          "message": "intangibles missing in period FY2024 (gap in series)",
+          "message": "intangible_assets missing in period FY2024 (gap in series)",
           "details": null
         },
         {
@@ -658,14 +674,6 @@
         },
         {
           "check_type": "gap",
-          "canonical_name": "operating_income",
-          "period": "FY2024",
-          "severity": "info",
-          "message": "operating_income missing in period FY2024 (gap in series)",
-          "details": null
-        },
-        {
-          "check_type": "gap",
           "canonical_name": "opex",
           "period": "FY2024E",
           "severity": "info",
@@ -706,22 +714,6 @@
         },
         {
           "check_type": "gap",
-          "canonical_name": "total_current_assets",
-          "period": "FY2024",
-          "severity": "info",
-          "message": "total_current_assets missing in period FY2024 (gap in series)",
-          "details": null
-        },
-        {
-          "check_type": "gap",
-          "canonical_name": "total_current_liabilities",
-          "period": "FY2024",
-          "severity": "info",
-          "message": "total_current_liabilities missing in period FY2024 (gap in series)",
-          "details": null
-        },
-        {
-          "check_type": "gap",
           "canonical_name": "total_equity",
           "period": "FY2024",
           "severity": "info",
@@ -745,33 +737,21 @@
           "details": null
         }
       ],
-      "consistency_score": 0.959,
-      "items_checked": 29,
+      "consistency_score": 0.963,
+      "items_checked": 28,
       "periods_analyzed": 8
     },
     "completeness": {
       "model_type": "corporate",
-      "overall_score": 0.706,
+      "overall_score": 0.734,
       "detected_statements": [
         "balance_sheet",
         "income_statement"
       ],
       "total_expected": 21,
-      "total_found": 14,
-      "total_missing": 7,
+      "total_found": 16,
+      "total_missing": 5,
       "missing_items": [
-        {
-          "canonical_name": "current_assets",
-          "category": "balance_sheet",
-          "weight": 0.8,
-          "is_core": true
-        },
-        {
-          "canonical_name": "current_liabilities",
-          "category": "balance_sheet",
-          "weight": 0.8,
-          "is_core": true
-        },
         {
           "canonical_name": "ppe",
           "category": "balance_sheet",
@@ -805,27 +785,40 @@
       ],
       "per_statement": {
         "balance_sheet": {
-          "raw_score": 0.7,
-          "weighted_score": 0.724,
-          "core_score": 0.701,
+          "raw_score": 0.9,
+          "weighted_score": 0.757,
+          "core_score": 1.0,
           "found": [
             "total_assets",
             "total_liabilities",
             "total_equity",
+            "current_assets",
             "cash",
+            "current_liabilities",
             "long_term_debt",
             "accounts_receivable",
             "accounts_payable"
           ],
           "missing": [
-            "current_assets",
-            "current_liabilities",
             "ppe"
+          ],
+          "period_coverage": 0.375,
+          "total_periods": 8,
+          "sparse_items": [
+            "total_assets",
+            "total_liabilities",
+            "total_equity",
+            "current_assets",
+            "cash",
+            "current_liabilities",
+            "long_term_debt",
+            "accounts_receivable",
+            "accounts_payable"
           ]
         },
         "income_statement": {
           "raw_score": 0.636,
-          "weighted_score": 0.69,
+          "weighted_score": 0.713,
           "core_score": 0.844,
           "found": [
             "revenue",
@@ -841,36 +834,48 @@
             "depreciation",
             "tax_expense",
             "ebt"
+          ],
+          "period_coverage": 0.768,
+          "total_periods": 8,
+          "sparse_items": [
+            "net_income",
+            "interest_expense"
           ]
         }
       }
     },
     "quality": {
-      "numeric_score": 0.873,
+      "numeric_score": 0.872,
       "letter_grade": "B",
       "label": "trustworthy",
       "dimensions": [
         {
           "name": "mapping_confidence",
-          "score": 0.931,
-          "weight": 0.3,
+          "score": 0.796,
+          "weight": 0.25,
           "details": null
         },
         {
           "name": "validation_success",
-          "score": 0.9,
-          "weight": 0.25,
+          "score": 0.907,
+          "weight": 0.2,
           "details": null
         },
         {
           "name": "completeness",
-          "score": 0.706,
-          "weight": 0.25,
+          "score": 0.734,
+          "weight": 0.2,
           "details": null
         },
         {
           "name": "time_series_consistency",
-          "score": 0.959,
+          "score": 0.963,
+          "weight": 0.15,
+          "details": null
+        },
+        {
+          "name": "cell_reconciliation",
+          "score": 1.0,
           "weight": 0.2,
           "details": null
         }
@@ -894,6 +899,21 @@
         "Q4 FY24": "operations"
       }
     },
+    "cell_reconciliation": {
+      "total_cells": 106,
+      "matched": 106,
+      "mismatched": 0,
+      "unmatched": 0,
+      "match_rate": 1.0,
+      "mismatches": []
+    },
+    "formula_verification": {
+      "total_formulas": 0,
+      "verified": 0,
+      "mismatched": 0,
+      "unresolvable": 0
+    },
+    "duplicate_conflicts": [],
     "unit_normalization": {}
   },
   "lineage_summary": {
@@ -906,11 +926,11 @@
       5
     ],
     "event_types": [
-      "triage",
       "validation",
+      "parsing",
       "mapping",
       "enhanced_mapping",
-      "parsing"
+      "triage"
     ]
   },
   "triage_accuracy": {
@@ -968,27 +988,15 @@
   },
   "completeness": {
     "model_type": "corporate",
-    "overall_score": 0.706,
+    "overall_score": 0.734,
     "detected_statements": [
       "balance_sheet",
       "income_statement"
     ],
     "total_expected": 21,
-    "total_found": 14,
-    "total_missing": 7,
+    "total_found": 16,
+    "total_missing": 5,
     "missing_items": [
-      {
-        "canonical_name": "current_assets",
-        "category": "balance_sheet",
-        "weight": 0.8,
-        "is_core": true
-      },
-      {
-        "canonical_name": "current_liabilities",
-        "category": "balance_sheet",
-        "weight": 0.8,
-        "is_core": true
-      },
       {
         "canonical_name": "ppe",
         "category": "balance_sheet",
@@ -1022,27 +1030,40 @@
     ],
     "per_statement": {
       "balance_sheet": {
-        "raw_score": 0.7,
-        "weighted_score": 0.724,
-        "core_score": 0.701,
+        "raw_score": 0.9,
+        "weighted_score": 0.757,
+        "core_score": 1.0,
         "found": [
           "total_assets",
           "total_liabilities",
           "total_equity",
+          "current_assets",
           "cash",
+          "current_liabilities",
           "long_term_debt",
           "accounts_receivable",
           "accounts_payable"
         ],
         "missing": [
-          "current_assets",
-          "current_liabilities",
           "ppe"
+        ],
+        "period_coverage": 0.375,
+        "total_periods": 8,
+        "sparse_items": [
+          "total_assets",
+          "total_liabilities",
+          "total_equity",
+          "current_assets",
+          "cash",
+          "current_liabilities",
+          "long_term_debt",
+          "accounts_receivable",
+          "accounts_payable"
         ]
       },
       "income_statement": {
         "raw_score": 0.636,
-        "weighted_score": 0.69,
+        "weighted_score": 0.713,
         "core_score": 0.844,
         "found": [
           "revenue",
@@ -1058,36 +1079,48 @@
           "depreciation",
           "tax_expense",
           "ebt"
+        ],
+        "period_coverage": 0.768,
+        "total_periods": 8,
+        "sparse_items": [
+          "net_income",
+          "interest_expense"
         ]
       }
     }
   },
   "quality": {
-    "numeric_score": 0.873,
+    "numeric_score": 0.872,
     "letter_grade": "B",
     "label": "trustworthy",
     "dimensions": [
       {
         "name": "mapping_confidence",
-        "score": 0.931,
-        "weight": 0.3,
+        "score": 0.796,
+        "weight": 0.25,
         "details": null
       },
       {
         "name": "validation_success",
-        "score": 0.9,
-        "weight": 0.25,
+        "score": 0.907,
+        "weight": 0.2,
         "details": null
       },
       {
         "name": "completeness",
-        "score": 0.706,
-        "weight": 0.25,
+        "score": 0.734,
+        "weight": 0.2,
         "details": null
       },
       {
         "name": "time_series_consistency",
-        "score": 0.959,
+        "score": 0.963,
+        "weight": 0.15,
+        "details": null
+      },
+      {
+        "name": "cell_reconciliation",
+        "score": 1.0,
         "weight": 0.2,
         "details": null
       }
@@ -1097,11 +1130,12 @@
   "sample_line_items": [
     {
       "sheet": "Financials",
+      "sheet_name": "Financials",
       "row": 1,
       "original_label": "Income Statement",
       "canonical_name": "unmapped",
       "values": {},
-      "confidence": 0.95,
+      "confidence": 0.1,
       "hierarchy_level": 0,
       "provenance": {
         "source_cells": [
@@ -1118,24 +1152,23 @@
           "is_subtotal": false
         },
         "mapping": {
-          "method": "hierarchical",
+          "method": "claude",
           "stage": 3,
           "taxonomy_category": "unknown",
-          "reasoning": "This is a section header for the income statement, not a mappable financial line item"
+          "reasoning": "This is a section header (level 0) indicating the start of income statement data, not a mappable financial line item"
         },
         "validation": null,
-        "enhanced_mapping": {
-          "was_remapped": true,
-          "old_canonical": "unmapped",
-          "old_confidence": 0.9,
-          "new_canonical": "unmapped",
-          "new_confidence": 0.95,
-          "stage": 5
-        }
-      }
+        "enhanced_mapping": null
+      },
+      "period_normalized": {},
+      "source_unit": null,
+      "source_scale": null,
+      "taxonomy_category": "unknown",
+      "method": "claude"
     },
     {
       "sheet": "Financials",
+      "sheet_name": "Financials",
       "row": 3,
       "original_label": "Revenue",
       "canonical_name": "revenue",
@@ -1144,7 +1177,7 @@
         "FY2023": 55000,
         "FY2024E": 60500
       },
-      "confidence": 0.95,
+      "confidence": 1.0,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -1156,17 +1189,20 @@
           {
             "sheet": "Financials",
             "cell_ref": "B3",
-            "raw_value": 50000
+            "raw_value": 50000,
+            "period": "FY2022"
           },
           {
             "sheet": "Financials",
             "cell_ref": "C3",
-            "raw_value": 55000
+            "raw_value": 55000,
+            "period": "FY2023"
           },
           {
             "sheet": "Financials",
             "cell_ref": "D3",
-            "raw_value": 60500
+            "raw_value": 60500,
+            "period": "FY2024E"
           }
         ],
         "parsing": {
@@ -1176,10 +1212,10 @@
           "is_subtotal": false
         },
         "mapping": {
-          "method": "claude",
+          "method": "embedding",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match - Revenue is the primary canonical name for top-line sales"
+          "reasoning": "Embedding match (score=1.000)"
         },
         "validation": {
           "rules_applied": [],
@@ -1187,10 +1223,20 @@
           "flags": []
         },
         "enhanced_mapping": null
-      }
+      },
+      "period_normalized": {
+        "FY2022": "FY2022",
+        "FY2023": "FY2023",
+        "FY2024E": "FY2024E"
+      },
+      "source_unit": null,
+      "source_scale": null,
+      "taxonomy_category": "income_statement",
+      "method": "embedding"
     },
     {
       "sheet": "Financials",
+      "sheet_name": "Financials",
       "row": 4,
       "original_label": "Product Revenue",
       "canonical_name": "product_revenue",
@@ -1199,8 +1245,8 @@
         "FY2023": 38500,
         "FY2024E": 42350
       },
-      "confidence": 0.95,
-      "hierarchy_level": 1,
+      "confidence": 1.0,
+      "hierarchy_level": 2,
       "provenance": {
         "source_cells": [
           {
@@ -1211,30 +1257,33 @@
           {
             "sheet": "Financials",
             "cell_ref": "B4",
-            "raw_value": 35000
+            "raw_value": 35000,
+            "period": "FY2022"
           },
           {
             "sheet": "Financials",
             "cell_ref": "C4",
-            "raw_value": 38500
+            "raw_value": 38500,
+            "period": "FY2023"
           },
           {
             "sheet": "Financials",
             "cell_ref": "D4",
-            "raw_value": 42350
+            "raw_value": 42350,
+            "period": "FY2024E"
           }
         ],
         "parsing": {
-          "hierarchy_level": 1,
+          "hierarchy_level": 2,
           "is_bold": false,
           "is_formula": false,
           "is_subtotal": false
         },
         "mapping": {
-          "method": "claude",
+          "method": "embedding",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Exact match - Product Revenue maps directly to product_revenue canonical"
+          "reasoning": "Embedding match (score=1.000)"
         },
         "validation": {
           "rules_applied": [],
@@ -1242,10 +1291,20 @@
           "flags": []
         },
         "enhanced_mapping": null
-      }
+      },
+      "period_normalized": {
+        "FY2022": "FY2022",
+        "FY2023": "FY2023",
+        "FY2024E": "FY2024E"
+      },
+      "source_unit": null,
+      "source_scale": null,
+      "taxonomy_category": "income_statement",
+      "method": "embedding"
     },
     {
       "sheet": "Financials",
+      "sheet_name": "Financials",
       "row": 5,
       "original_label": "Service Revenue",
       "canonical_name": "service_revenue",
@@ -1254,8 +1313,8 @@
         "FY2023": 16500,
         "FY2024E": 18150
       },
-      "confidence": 0.95,
-      "hierarchy_level": 1,
+      "confidence": 1.0,
+      "hierarchy_level": 2,
       "provenance": {
         "source_cells": [
           {
@@ -1266,30 +1325,33 @@
           {
             "sheet": "Financials",
             "cell_ref": "B5",
-            "raw_value": 15000
+            "raw_value": 15000,
+            "period": "FY2022"
           },
           {
             "sheet": "Financials",
             "cell_ref": "C5",
-            "raw_value": 16500
+            "raw_value": 16500,
+            "period": "FY2023"
           },
           {
             "sheet": "Financials",
             "cell_ref": "D5",
-            "raw_value": 18150
+            "raw_value": 18150,
+            "period": "FY2024E"
           }
         ],
         "parsing": {
-          "hierarchy_level": 1,
+          "hierarchy_level": 2,
           "is_bold": false,
           "is_formula": false,
           "is_subtotal": false
         },
         "mapping": {
-          "method": "claude",
+          "method": "embedding",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Exact match - Service Revenue maps directly to service_revenue canonical"
+          "reasoning": "Embedding match (score=1.000)"
         },
         "validation": {
           "rules_applied": [],
@@ -1297,10 +1359,20 @@
           "flags": []
         },
         "enhanced_mapping": null
-      }
+      },
+      "period_normalized": {
+        "FY2022": "FY2022",
+        "FY2023": "FY2023",
+        "FY2024E": "FY2024E"
+      },
+      "source_unit": null,
+      "source_scale": null,
+      "taxonomy_category": "income_statement",
+      "method": "embedding"
     },
     {
       "sheet": "Financials",
+      "sheet_name": "Financials",
       "row": 6,
       "original_label": "Cost of Goods Sold",
       "canonical_name": "cogs",
@@ -1309,7 +1381,7 @@
         "FY2023": -24750,
         "FY2024E": -27225
       },
-      "confidence": 0.95,
+      "confidence": 1.0,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -1321,17 +1393,20 @@
           {
             "sheet": "Financials",
             "cell_ref": "B6",
-            "raw_value": -22500
+            "raw_value": -22500,
+            "period": "FY2022"
           },
           {
             "sheet": "Financials",
             "cell_ref": "C6",
-            "raw_value": -24750
+            "raw_value": -24750,
+            "period": "FY2023"
           },
           {
             "sheet": "Financials",
             "cell_ref": "D6",
-            "raw_value": -27225
+            "raw_value": -27225,
+            "period": "FY2024E"
           }
         ],
         "parsing": {
@@ -1341,10 +1416,10 @@
           "is_subtotal": false
         },
         "mapping": {
-          "method": "claude",
+          "method": "embedding",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match - Cost of Goods Sold is listed as an alias for cogs"
+          "reasoning": "Embedding match (score=1.000)"
         },
         "validation": {
           "rules_applied": [
@@ -1500,10 +1575,20 @@
           ]
         },
         "enhanced_mapping": null
-      }
+      },
+      "period_normalized": {
+        "FY2022": "FY2022",
+        "FY2023": "FY2023",
+        "FY2024E": "FY2024E"
+      },
+      "source_unit": null,
+      "source_scale": null,
+      "taxonomy_category": "income_statement",
+      "method": "embedding"
     },
     {
       "sheet": "Financials",
+      "sheet_name": "Financials",
       "row": 7,
       "original_label": "Gross Profit",
       "canonical_name": "gross_profit",
@@ -1512,7 +1597,7 @@
         "FY2023": 30250,
         "FY2024E": 33275
       },
-      "confidence": 0.95,
+      "confidence": 1.0,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -1524,17 +1609,20 @@
           {
             "sheet": "Financials",
             "cell_ref": "B7",
-            "raw_value": 27500
+            "raw_value": 27500,
+            "period": "FY2022"
           },
           {
             "sheet": "Financials",
             "cell_ref": "C7",
-            "raw_value": 30250
+            "raw_value": 30250,
+            "period": "FY2023"
           },
           {
             "sheet": "Financials",
             "cell_ref": "D7",
-            "raw_value": 33275
+            "raw_value": 33275,
+            "period": "FY2024E"
           }
         ],
         "parsing": {
@@ -1544,10 +1632,10 @@
           "is_subtotal": true
         },
         "mapping": {
-          "method": "claude",
+          "method": "embedding",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match - Gross Profit maps to gross_profit canonical"
+          "reasoning": "Embedding match (score=1.000)"
         },
         "validation": {
           "rules_applied": [
@@ -1630,10 +1718,20 @@
           ]
         },
         "enhanced_mapping": null
-      }
+      },
+      "period_normalized": {
+        "FY2022": "FY2022",
+        "FY2023": "FY2023",
+        "FY2024E": "FY2024E"
+      },
+      "source_unit": null,
+      "source_scale": null,
+      "taxonomy_category": "income_statement",
+      "method": "embedding"
     },
     {
       "sheet": "Financials",
+      "sheet_name": "Financials",
       "row": 9,
       "original_label": "Selling Expenses",
       "canonical_name": "sales_marketing",
@@ -1642,8 +1740,8 @@
         "FY2023": -8250,
         "FY2024E": -9075
       },
-      "confidence": 0.85,
-      "hierarchy_level": 1,
+      "confidence": 1.0,
+      "hierarchy_level": 2,
       "provenance": {
         "source_cells": [
           {
@@ -1654,30 +1752,33 @@
           {
             "sheet": "Financials",
             "cell_ref": "B9",
-            "raw_value": -7500
+            "raw_value": -7500,
+            "period": "FY2022"
           },
           {
             "sheet": "Financials",
             "cell_ref": "C9",
-            "raw_value": -8250
+            "raw_value": -8250,
+            "period": "FY2023"
           },
           {
             "sheet": "Financials",
             "cell_ref": "D9",
-            "raw_value": -9075
+            "raw_value": -9075,
+            "period": "FY2024E"
           }
         ],
         "parsing": {
-          "hierarchy_level": 1,
+          "hierarchy_level": 2,
           "is_bold": false,
           "is_formula": false,
           "is_subtotal": false
         },
         "mapping": {
-          "method": "claude",
+          "method": "embedding",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Selling Expenses typically refers to sales and marketing costs"
+          "reasoning": "Embedding match (score=1.000)"
         },
         "validation": {
           "rules_applied": [],
@@ -1685,10 +1786,20 @@
           "flags": []
         },
         "enhanced_mapping": null
-      }
+      },
+      "period_normalized": {
+        "FY2022": "FY2022",
+        "FY2023": "FY2023",
+        "FY2024E": "FY2024E"
+      },
+      "source_unit": null,
+      "source_scale": null,
+      "taxonomy_category": "income_statement",
+      "method": "embedding"
     },
     {
       "sheet": "Financials",
+      "sheet_name": "Financials",
       "row": 10,
       "original_label": "Administrative",
       "canonical_name": "general_admin",
@@ -1697,8 +1808,8 @@
         "FY2023": -5500,
         "FY2024E": -6050
       },
-      "confidence": 0.9,
-      "hierarchy_level": 1,
+      "confidence": 0.85,
+      "hierarchy_level": 2,
       "provenance": {
         "source_cells": [
           {
@@ -1709,21 +1820,24 @@
           {
             "sheet": "Financials",
             "cell_ref": "B10",
-            "raw_value": -5000
+            "raw_value": -5000,
+            "period": "FY2022"
           },
           {
             "sheet": "Financials",
             "cell_ref": "C10",
-            "raw_value": -5500
+            "raw_value": -5500,
+            "period": "FY2023"
           },
           {
             "sheet": "Financials",
             "cell_ref": "D10",
-            "raw_value": -6050
+            "raw_value": -6050,
+            "period": "FY2024E"
           }
         ],
         "parsing": {
-          "hierarchy_level": 1,
+          "hierarchy_level": 2,
           "is_bold": false,
           "is_formula": false,
           "is_subtotal": false
@@ -1732,7 +1846,7 @@
           "method": "claude",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Administrative expenses map to general_admin (G&A) canonical"
+          "reasoning": "Administrative expenses are typically mapped to general_admin (G&A, Administrative Expenses), this is a sub-item (level 2) likely under an operating expenses section"
         },
         "validation": {
           "rules_applied": [],
@@ -1740,10 +1854,20 @@
           "flags": []
         },
         "enhanced_mapping": null
-      }
+      },
+      "period_normalized": {
+        "FY2022": "FY2022",
+        "FY2023": "FY2023",
+        "FY2024E": "FY2024E"
+      },
+      "source_unit": null,
+      "source_scale": null,
+      "taxonomy_category": "income_statement",
+      "method": "claude"
     },
     {
       "sheet": "Financials",
+      "sheet_name": "Financials",
       "row": 11,
       "original_label": "Total Operating Expenses",
       "canonical_name": "operating_expenses",
@@ -1752,7 +1876,7 @@
         "FY2023": -13750,
         "FY2024E": -15125
       },
-      "confidence": 0.95,
+      "confidence": 1.0,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -1764,17 +1888,20 @@
           {
             "sheet": "Financials",
             "cell_ref": "B11",
-            "raw_value": -12500
+            "raw_value": -12500,
+            "period": "FY2022"
           },
           {
             "sheet": "Financials",
             "cell_ref": "C11",
-            "raw_value": -13750
+            "raw_value": -13750,
+            "period": "FY2023"
           },
           {
             "sheet": "Financials",
             "cell_ref": "D11",
-            "raw_value": -15125
+            "raw_value": -15125,
+            "period": "FY2024E"
           }
         ],
         "parsing": {
@@ -1784,10 +1911,10 @@
           "is_subtotal": true
         },
         "mapping": {
-          "method": "claude",
+          "method": "embedding",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match - Total Operating Expenses maps to operating_expenses"
+          "reasoning": "Embedding match (score=1.000)"
         },
         "validation": {
           "rules_applied": [],
@@ -1795,19 +1922,29 @@
           "flags": []
         },
         "enhanced_mapping": null
-      }
+      },
+      "period_normalized": {
+        "FY2022": "FY2022",
+        "FY2023": "FY2023",
+        "FY2024E": "FY2024E"
+      },
+      "source_unit": null,
+      "source_scale": null,
+      "taxonomy_category": "income_statement",
+      "method": "embedding"
     },
     {
       "sheet": "Financials",
+      "sheet_name": "Financials",
       "row": 13,
       "original_label": "Operating Income",
-      "canonical_name": "operating_income",
+      "canonical_name": "ebit",
       "values": {
         "FY2022": 15000,
         "FY2023": 16500,
         "FY2024E": 18150
       },
-      "confidence": 0.95,
+      "confidence": 1.0,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -1819,17 +1956,20 @@
           {
             "sheet": "Financials",
             "cell_ref": "B13",
-            "raw_value": 15000
+            "raw_value": 15000,
+            "period": "FY2022"
           },
           {
             "sheet": "Financials",
             "cell_ref": "C13",
-            "raw_value": 16500
+            "raw_value": 16500,
+            "period": "FY2023"
           },
           {
             "sheet": "Financials",
             "cell_ref": "D13",
-            "raw_value": 18150
+            "raw_value": 18150,
+            "period": "FY2024E"
           }
         ],
         "parsing": {
@@ -1839,10 +1979,10 @@
           "is_subtotal": false
         },
         "mapping": {
-          "method": "claude",
+          "method": "embedding",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match - Operating Income maps to operating_income canonical"
+          "reasoning": "Embedding match (score=1.000)"
         },
         "validation": {
           "rules_applied": [],
@@ -1850,10 +1990,20 @@
           "flags": []
         },
         "enhanced_mapping": null
-      }
+      },
+      "period_normalized": {
+        "FY2022": "FY2022",
+        "FY2023": "FY2023",
+        "FY2024E": "FY2024E"
+      },
+      "source_unit": null,
+      "source_scale": null,
+      "taxonomy_category": "income_statement",
+      "method": "embedding"
     },
     {
       "sheet": "Financials",
+      "sheet_name": "Financials",
       "row": 14,
       "original_label": "Interest Expense",
       "canonical_name": "interest_expense",
@@ -1862,7 +2012,7 @@
         "FY2023": -1800,
         "FY2024E": -1600
       },
-      "confidence": 0.95,
+      "confidence": 1.0,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -1874,17 +2024,20 @@
           {
             "sheet": "Financials",
             "cell_ref": "B14",
-            "raw_value": -2000
+            "raw_value": -2000,
+            "period": "FY2022"
           },
           {
             "sheet": "Financials",
             "cell_ref": "C14",
-            "raw_value": -1800
+            "raw_value": -1800,
+            "period": "FY2023"
           },
           {
             "sheet": "Financials",
             "cell_ref": "D14",
-            "raw_value": -1600
+            "raw_value": -1600,
+            "period": "FY2024E"
           }
         ],
         "parsing": {
@@ -1894,10 +2047,10 @@
           "is_subtotal": false
         },
         "mapping": {
-          "method": "claude",
+          "method": "embedding",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "On Income Statement - maps to interest_expense (not interest_expense_debt which is for debt schedules)"
+          "reasoning": "Embedding match (score=1.000)"
         },
         "validation": {
           "rules_applied": [],
@@ -1905,10 +2058,20 @@
           "flags": []
         },
         "enhanced_mapping": null
-      }
+      },
+      "period_normalized": {
+        "FY2022": "FY2022",
+        "FY2023": "FY2023",
+        "FY2024E": "FY2024E"
+      },
+      "source_unit": null,
+      "source_scale": null,
+      "taxonomy_category": "income_statement",
+      "method": "embedding"
     },
     {
       "sheet": "Financials",
+      "sheet_name": "Financials",
       "row": 15,
       "original_label": "Earnings Before Tax",
       "canonical_name": "earnings_before_tax",
@@ -1917,7 +2080,7 @@
         "FY2023": 14700,
         "FY2024E": 16550
       },
-      "confidence": 0.95,
+      "confidence": 1.0,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -1929,17 +2092,20 @@
           {
             "sheet": "Financials",
             "cell_ref": "B15",
-            "raw_value": 13000
+            "raw_value": 13000,
+            "period": "FY2022"
           },
           {
             "sheet": "Financials",
             "cell_ref": "C15",
-            "raw_value": 14700
+            "raw_value": 14700,
+            "period": "FY2023"
           },
           {
             "sheet": "Financials",
             "cell_ref": "D15",
-            "raw_value": 16550
+            "raw_value": 16550,
+            "period": "FY2024E"
           }
         ],
         "parsing": {
@@ -1949,10 +2115,10 @@
           "is_subtotal": false
         },
         "mapping": {
-          "method": "claude",
+          "method": "embedding",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match - Earnings Before Tax maps to earnings_before_tax canonical"
+          "reasoning": "Embedding match (score=1.000)"
         },
         "validation": {
           "rules_applied": [],
@@ -1960,10 +2126,20 @@
           "flags": []
         },
         "enhanced_mapping": null
-      }
+      },
+      "period_normalized": {
+        "FY2022": "FY2022",
+        "FY2023": "FY2023",
+        "FY2024E": "FY2024E"
+      },
+      "source_unit": null,
+      "source_scale": null,
+      "taxonomy_category": "income_statement",
+      "method": "embedding"
     },
     {
       "sheet": "Financials",
+      "sheet_name": "Financials",
       "row": 16,
       "original_label": "Income Tax",
       "canonical_name": "income_tax",
@@ -1972,7 +2148,7 @@
         "FY2023": -3675,
         "FY2024E": -4138
       },
-      "confidence": 0.95,
+      "confidence": 1.0,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -1984,17 +2160,20 @@
           {
             "sheet": "Financials",
             "cell_ref": "B16",
-            "raw_value": -3250
+            "raw_value": -3250,
+            "period": "FY2022"
           },
           {
             "sheet": "Financials",
             "cell_ref": "C16",
-            "raw_value": -3675
+            "raw_value": -3675,
+            "period": "FY2023"
           },
           {
             "sheet": "Financials",
             "cell_ref": "D16",
-            "raw_value": -4138
+            "raw_value": -4138,
+            "period": "FY2024E"
           }
         ],
         "parsing": {
@@ -2004,10 +2183,10 @@
           "is_subtotal": false
         },
         "mapping": {
-          "method": "claude",
+          "method": "embedding",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "Direct match - Income Tax maps to income_tax canonical"
+          "reasoning": "Embedding match (score=1.000)"
         },
         "validation": {
           "rules_applied": [],
@@ -2015,10 +2194,20 @@
           "flags": []
         },
         "enhanced_mapping": null
-      }
+      },
+      "period_normalized": {
+        "FY2022": "FY2022",
+        "FY2023": "FY2023",
+        "FY2024E": "FY2024E"
+      },
+      "source_unit": null,
+      "source_scale": null,
+      "taxonomy_category": "income_statement",
+      "method": "embedding"
     },
     {
       "sheet": "Financials",
+      "sheet_name": "Financials",
       "row": 17,
       "original_label": "Net Income",
       "canonical_name": "net_income",
@@ -2027,7 +2216,7 @@
         "FY2023": 11025,
         "FY2024E": 12413
       },
-      "confidence": 0.95,
+      "confidence": 1.0,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -2039,17 +2228,20 @@
           {
             "sheet": "Financials",
             "cell_ref": "B17",
-            "raw_value": 9750
+            "raw_value": 9750,
+            "period": "FY2022"
           },
           {
             "sheet": "Financials",
             "cell_ref": "C17",
-            "raw_value": 11025
+            "raw_value": 11025,
+            "period": "FY2023"
           },
           {
             "sheet": "Financials",
             "cell_ref": "D17",
-            "raw_value": 12413
+            "raw_value": 12413,
+            "period": "FY2024E"
           }
         ],
         "parsing": {
@@ -2059,10 +2251,10 @@
           "is_subtotal": true
         },
         "mapping": {
-          "method": "claude",
+          "method": "embedding",
           "stage": 3,
           "taxonomy_category": "income_statement",
-          "reasoning": "On Income Statement context - maps to net_income (not net_income_cf which is for cash flow statements)"
+          "reasoning": "Embedding match (score=1.000)"
         },
         "validation": {
           "rules_applied": [],
@@ -2070,15 +2262,25 @@
           "flags": []
         },
         "enhanced_mapping": null
-      }
+      },
+      "period_normalized": {
+        "FY2022": "FY2022",
+        "FY2023": "FY2023",
+        "FY2024E": "FY2024E"
+      },
+      "source_unit": null,
+      "source_scale": null,
+      "taxonomy_category": "income_statement",
+      "method": "embedding"
     },
     {
       "sheet": "Financials",
+      "sheet_name": "Financials",
       "row": 21,
       "original_label": "Balance Sheet",
-      "canonical_name": "unmapped",
+      "canonical_name": "cash",
       "values": {},
-      "confidence": 0.95,
+      "confidence": 0.8,
       "hierarchy_level": 0,
       "provenance": {
         "source_cells": [
@@ -2095,29 +2297,32 @@
           "is_subtotal": false
         },
         "mapping": {
-          "method": "hierarchical",
+          "method": "fuzzy_alias",
           "stage": 3,
-          "taxonomy_category": "unknown",
-          "reasoning": "This is a section header for the balance sheet, not a mappable financial line item"
+          "taxonomy_category": "balance_sheet",
+          "reasoning": "This is a section header (level 0) indicating the start of balance sheet data, not a mappable financial line item"
         },
-        "validation": null,
-        "enhanced_mapping": {
-          "was_remapped": true,
-          "old_canonical": "unmapped",
-          "old_confidence": 0.9,
-          "new_canonical": "unmapped",
-          "new_confidence": 0.95,
-          "stage": 5
-        }
-      }
+        "validation": {
+          "rules_applied": [],
+          "all_passed": true,
+          "flags": []
+        },
+        "enhanced_mapping": null
+      },
+      "period_normalized": {},
+      "source_unit": null,
+      "source_scale": null,
+      "taxonomy_category": "balance_sheet",
+      "method": "fuzzy_alias"
     },
     {
       "sheet": "Financials",
+      "sheet_name": "Financials",
       "row": 23,
       "original_label": "Assets",
       "canonical_name": "total_assets",
       "values": {},
-      "confidence": 0.9,
+      "confidence": 1.0,
       "hierarchy_level": 0,
       "provenance": {
         "source_cells": [
@@ -2134,10 +2339,10 @@
           "is_subtotal": false
         },
         "mapping": {
-          "method": "claude",
+          "method": "embedding",
           "stage": 3,
           "taxonomy_category": "balance_sheet",
-          "reasoning": "Section header - not mappable to canonical taxonomy"
+          "reasoning": "Embedding match (score=1.000)"
         },
         "validation": {
           "rules_applied": [],
@@ -2145,10 +2350,16 @@
           "flags": []
         },
         "enhanced_mapping": null
-      }
+      },
+      "period_normalized": {},
+      "source_unit": null,
+      "source_scale": null,
+      "taxonomy_category": "balance_sheet",
+      "method": "embedding"
     },
     {
       "sheet": "Financials",
+      "sheet_name": "Financials",
       "row": 24,
       "original_label": "Cash",
       "canonical_name": "cash",
@@ -2157,8 +2368,8 @@
         "FY2023": 12000,
         "FY2024E": 18000
       },
-      "confidence": 0.95,
-      "hierarchy_level": 1,
+      "confidence": 1.0,
+      "hierarchy_level": 2,
       "provenance": {
         "source_cells": [
           {
@@ -2169,30 +2380,33 @@
           {
             "sheet": "Financials",
             "cell_ref": "B24",
-            "raw_value": 8000
+            "raw_value": 8000,
+            "period": "FY2022"
           },
           {
             "sheet": "Financials",
             "cell_ref": "C24",
-            "raw_value": 12000
+            "raw_value": 12000,
+            "period": "FY2023"
           },
           {
             "sheet": "Financials",
             "cell_ref": "D24",
-            "raw_value": 18000
+            "raw_value": 18000,
+            "period": "FY2024E"
           }
         ],
         "parsing": {
-          "hierarchy_level": 1,
+          "hierarchy_level": 2,
           "is_bold": false,
           "is_formula": false,
           "is_subtotal": false
         },
         "mapping": {
-          "method": "claude",
+          "method": "embedding",
           "stage": 3,
           "taxonomy_category": "balance_sheet",
-          "reasoning": "Direct match - Cash maps to cash canonical on Balance Sheet"
+          "reasoning": "Embedding match (score=1.000)"
         },
         "validation": {
           "rules_applied": [],
@@ -2200,10 +2414,20 @@
           "flags": []
         },
         "enhanced_mapping": null
-      }
+      },
+      "period_normalized": {
+        "FY2022": "FY2022",
+        "FY2023": "FY2023",
+        "FY2024E": "FY2024E"
+      },
+      "source_unit": null,
+      "source_scale": null,
+      "taxonomy_category": "balance_sheet",
+      "method": "embedding"
     },
     {
       "sheet": "Financials",
+      "sheet_name": "Financials",
       "row": 25,
       "original_label": "Accounts Receivable",
       "canonical_name": "accounts_receivable",
@@ -2212,8 +2436,8 @@
         "FY2023": 7534,
         "FY2024E": 8288
       },
-      "confidence": 0.95,
-      "hierarchy_level": 1,
+      "confidence": 1.0,
+      "hierarchy_level": 2,
       "provenance": {
         "source_cells": [
           {
@@ -2224,30 +2448,33 @@
           {
             "sheet": "Financials",
             "cell_ref": "B25",
-            "raw_value": 6850
+            "raw_value": 6850,
+            "period": "FY2022"
           },
           {
             "sheet": "Financials",
             "cell_ref": "C25",
-            "raw_value": 7534
+            "raw_value": 7534,
+            "period": "FY2023"
           },
           {
             "sheet": "Financials",
             "cell_ref": "D25",
-            "raw_value": 8288
+            "raw_value": 8288,
+            "period": "FY2024E"
           }
         ],
         "parsing": {
-          "hierarchy_level": 1,
+          "hierarchy_level": 2,
           "is_bold": false,
           "is_formula": false,
           "is_subtotal": false
         },
         "mapping": {
-          "method": "claude",
+          "method": "embedding",
           "stage": 3,
           "taxonomy_category": "balance_sheet",
-          "reasoning": "Direct match - Accounts Receivable maps to accounts_receivable canonical"
+          "reasoning": "Embedding match (score=1.000)"
         },
         "validation": {
           "rules_applied": [],
@@ -2255,10 +2482,20 @@
           "flags": []
         },
         "enhanced_mapping": null
-      }
+      },
+      "period_normalized": {
+        "FY2022": "FY2022",
+        "FY2023": "FY2023",
+        "FY2024E": "FY2024E"
+      },
+      "source_unit": null,
+      "source_scale": null,
+      "taxonomy_category": "balance_sheet",
+      "method": "embedding"
     },
     {
       "sheet": "Financials",
+      "sheet_name": "Financials",
       "row": 26,
       "original_label": "Inventory",
       "canonical_name": "inventory",
@@ -2267,8 +2504,8 @@
         "FY2023": 4100,
         "FY2024E": 4400
       },
-      "confidence": 0.95,
-      "hierarchy_level": 1,
+      "confidence": 1.0,
+      "hierarchy_level": 2,
       "provenance": {
         "source_cells": [
           {
@@ -2279,30 +2516,33 @@
           {
             "sheet": "Financials",
             "cell_ref": "B26",
-            "raw_value": 3800
+            "raw_value": 3800,
+            "period": "FY2022"
           },
           {
             "sheet": "Financials",
             "cell_ref": "C26",
-            "raw_value": 4100
+            "raw_value": 4100,
+            "period": "FY2023"
           },
           {
             "sheet": "Financials",
             "cell_ref": "D26",
-            "raw_value": 4400
+            "raw_value": 4400,
+            "period": "FY2024E"
           }
         ],
         "parsing": {
-          "hierarchy_level": 1,
+          "hierarchy_level": 2,
           "is_bold": false,
           "is_formula": false,
           "is_subtotal": false
         },
         "mapping": {
-          "method": "claude",
+          "method": "embedding",
           "stage": 3,
           "taxonomy_category": "balance_sheet",
-          "reasoning": "Direct match - Inventory maps to inventory canonical"
+          "reasoning": "Embedding match (score=1.000)"
         },
         "validation": {
           "rules_applied": [],
@@ -2310,19 +2550,29 @@
           "flags": []
         },
         "enhanced_mapping": null
-      }
+      },
+      "period_normalized": {
+        "FY2022": "FY2022",
+        "FY2023": "FY2023",
+        "FY2024E": "FY2024E"
+      },
+      "source_unit": null,
+      "source_scale": null,
+      "taxonomy_category": "balance_sheet",
+      "method": "embedding"
     },
     {
       "sheet": "Financials",
+      "sheet_name": "Financials",
       "row": 27,
       "original_label": "Total Current Assets",
-      "canonical_name": "total_current_assets",
+      "canonical_name": "current_assets",
       "values": {
         "FY2022": 18650,
         "FY2023": 23634,
         "FY2024E": 30688
       },
-      "confidence": 0.95,
+      "confidence": 1.0,
       "hierarchy_level": 1,
       "provenance": {
         "source_cells": [
@@ -2334,17 +2584,20 @@
           {
             "sheet": "Financials",
             "cell_ref": "B27",
-            "raw_value": 18650
+            "raw_value": 18650,
+            "period": "FY2022"
           },
           {
             "sheet": "Financials",
             "cell_ref": "C27",
-            "raw_value": 23634
+            "raw_value": 23634,
+            "period": "FY2023"
           },
           {
             "sheet": "Financials",
             "cell_ref": "D27",
-            "raw_value": 30688
+            "raw_value": 30688,
+            "period": "FY2024E"
           }
         ],
         "parsing": {
@@ -2354,10 +2607,10 @@
           "is_subtotal": true
         },
         "mapping": {
-          "method": "claude",
+          "method": "embedding",
           "stage": 3,
           "taxonomy_category": "balance_sheet",
-          "reasoning": "Direct match - Total Current Assets maps to total_current_assets canonical"
+          "reasoning": "Embedding match (score=1.000)"
         },
         "validation": {
           "rules_applied": [],
@@ -2365,7 +2618,16 @@
           "flags": []
         },
         "enhanced_mapping": null
-      }
+      },
+      "period_normalized": {
+        "FY2022": "FY2022",
+        "FY2023": "FY2023",
+        "FY2024E": "FY2024E"
+      },
+      "source_unit": null,
+      "source_scale": null,
+      "taxonomy_category": "balance_sheet",
+      "method": "embedding"
     }
   ]
 }

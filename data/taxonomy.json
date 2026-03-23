@@ -1,5 +1,5 @@
 {
-  "version": "3.3.0",
+  "version": "3.4.2",
   "description": "Consolidated canonical financial taxonomy for DebtFund extraction pipeline",
   "categories": {
     "balance_sheet": [
@@ -164,7 +164,6 @@
         "aliases": [
           "Accrued Expenses Payable",
           "Accrued Liabs",
-          "Accruals",
           "Accrued Expenses"
         ],
         "definition": "Accrued liabilities (synonym for accrued_expenses)",
@@ -184,8 +183,7 @@
         "category": "balance_sheet",
         "display_name": "Accumulated Depreciation",
         "aliases": [
-          "Accum Depreciation",
-          "Total Depreciation"
+          "Accum Depreciation"
         ],
         "definition": "Cumulative depreciation of property, plant, and equipment",
         "typical_sign": "negative",
@@ -392,7 +390,7 @@
           "C ash",
           "CASH",
           "Cash.",
-          "Cɑsh"
+          "C\u0251sh"
         ],
         "format_examples": [
           {
@@ -528,11 +526,9 @@
         "display_name": "Current Assets",
         "aliases": [
           "CA",
-          "Current Assets Total",
           "Liquid Assets",
           "Short Term Assets",
           "Short-Term Assets",
-          "Total Current Assets",
           "Working Assets"
         ],
         "definition": "Assets expected to be converted to cash within one year",
@@ -571,10 +567,8 @@
         "aliases": [
           "CL",
           "Creditors: Amounts Falling Due Within One Year",
-          "Current Liabilities Total",
           "Short Term Liabilities",
-          "Short-Term Liabilities",
-          "Total Current Liabilities"
+          "Short-Term Liabilities"
         ],
         "definition": "Liabilities due within one year",
         "typical_sign": "positive",
@@ -612,7 +606,9 @@
           "CP Debt",
           "Current Debt",
           "Short-Term Portion of LT Debt",
-          "CPLTD"
+          "CPLTD",
+          "Current Portion of Borrowings",
+          "Current Portion of Long-Term Debt"
         ],
         "definition": "Current portion of debt (synonym for current_portion_lt_debt)",
         "typical_sign": "positive",
@@ -652,7 +648,6 @@
         "category": "balance_sheet",
         "display_name": "Debt",
         "aliases": [
-          "Total Debt",
           "Borrowings"
         ],
         "definition": "Total debt (synonym for long_term_debt in balance sheet context)",
@@ -672,6 +667,7 @@
         "category": "balance_sheet",
         "display_name": "Deferred Revenue",
         "aliases": [
+          "Deferred Revenue",
           "Unearned Revenue",
           "Deferred Income",
           "Customer Deposits",
@@ -759,7 +755,8 @@
           "Goodwill and Intangibles",
           "GW",
           "Goodwill & Intangible Assets",
-          "Acquired Goodwill"
+          "Acquired Goodwill",
+          "Goodwill"
         ],
         "definition": "Excess of purchase price over fair value of acquired net assets",
         "typical_sign": "positive",
@@ -818,7 +815,8 @@
           "Intangibles Net",
           "Intangibles",
           "Intangible Asset",
-          "Net Intangibles"
+          "Net Intangibles",
+          "Intangible Assets"
         ],
         "definition": "Intangible assets (synonym for intangibles)",
         "typical_sign": "positive",
@@ -1052,7 +1050,10 @@
           "Long Term Debt",
           "Long-Term Borrowings",
           "Non-Current Debt",
-          "Term Debt"
+          "Term Debt",
+          "Long-Term Debt",
+          "Bank Borrowings",
+          "Long-term Debt"
         ],
         "definition": "Debt obligations due after one year",
         "typical_sign": "positive",
@@ -1127,7 +1128,8 @@
           "Net Property Plant Equipment",
           "Net PPE",
           "PP&E Net",
-          "Property Plant Equipment Net"
+          "Property Plant Equipment Net",
+          "Net PP&E"
         ],
         "definition": "Net PP&E after accumulated depreciation",
         "typical_sign": "positive",
@@ -1370,7 +1372,8 @@
           "Property Plant and Equipment",
           "Property and Equipment",
           "Tangible Assets",
-          "Tangible Fixed Assets"
+          "Tangible Fixed Assets",
+          "Property, Plant and Equipment"
         ],
         "definition": "Net value of tangible long-term assets used in operations",
         "typical_sign": "positive",
@@ -1738,7 +1741,7 @@
           "Total Ass ets",
           "Total-Assets",
           "TOTAL ASSETS",
-          "Totɑl Assets"
+          "Tot\u0251l Assets"
         ],
         "format_examples": [
           {
@@ -1770,7 +1773,8 @@
           "Sum of Current Assets",
           "Current Assets Total",
           "TCA",
-          "All Current Assets"
+          "All Current Assets",
+          "Total Current Assets"
         ],
         "definition": "Total current assets (synonym for current_assets)",
         "typical_sign": "positive",
@@ -1792,7 +1796,8 @@
           "Sum of Current Liabilities",
           "Current Liabilities Total",
           "TCL",
-          "All Current Liabilities"
+          "All Current Liabilities",
+          "Total Current Liabilities"
         ],
         "definition": "Total current liabilities (synonym for current_liabilities)",
         "typical_sign": "positive",
@@ -1826,7 +1831,8 @@
           "Total Stockholders' Equity",
           "total equty",
           "toal equity",
-          "total equiity"
+          "total equiity",
+          "Total Stockholders Equity"
         ],
         "definition": "Residual interest in assets after deducting liabilities",
         "typical_sign": "positive",
@@ -1854,7 +1860,7 @@
           "Total Equ ity",
           "Total-Equity",
           "TOTAL EQUITY",
-          "Totɑl Equity"
+          "Tot\u0251l Equity"
         ],
         "format_examples": [
           {
@@ -1984,7 +1990,6 @@
         "display_name": "Unearned Revenue",
         "aliases": [
           "Prepaid Revenue",
-          "Deferred Revenue",
           "Advance Payments",
           "Customer Deposits"
         ],
@@ -2189,7 +2194,7 @@
           "CAPEX",
           "CapEx",
           "Cap-Ex",
-          "Cɑpex"
+          "C\u0251pex"
         ],
         "format_examples": [
           {
@@ -2857,7 +2862,7 @@
           "FC F",
           "F CF",
           "FCF.",
-          "FCƑ"
+          "FC\u0191"
         ],
         "format_examples": [
           {
@@ -2891,7 +2896,9 @@
           "Fin Cash Flow",
           "FCF",
           "Cash Flow from Financing Activities",
-          "Financing CF"
+          "Financing CF",
+          "Cash from Financing",
+          "Cash from Financing Activities"
         ],
         "definition": "Financing cash flow (synonym for cff)",
         "typical_sign": "varies",
@@ -2912,7 +2919,8 @@
           "Free CF",
           "Unlevered Free Cash Flow",
           "FCF",
-          "Free Cashflow"
+          "Free Cashflow",
+          "Free Cash Flow"
         ],
         "definition": "Free cash flow (synonym for fcf)",
         "typical_sign": "positive",
@@ -2933,7 +2941,9 @@
           "Inv Cash Flow",
           "ICF",
           "Cash Flow from Investing Activities",
-          "Investing CF"
+          "Investing CF",
+          "Cash from Investing",
+          "Cash from Investing Activities"
         ],
         "definition": "Investing cash flow (synonym for cfi)",
         "typical_sign": "negative",
@@ -2985,7 +2995,10 @@
         "aliases": [
           "Change in Cash",
           "Net Increase (Decrease) in Cash",
-          "Net Cash Flow"
+          "Net Cash Flow",
+          "Net Increase in Cash",
+          "Net Decrease in Cash",
+          "Net Cash Movement"
         ],
         "definition": "Total change in cash from all activities",
         "typical_sign": "varies",
@@ -3037,7 +3050,10 @@
           "Op Cash Flow",
           "OCF",
           "Cash Flow from Operating Activities",
-          "Operating CF"
+          "Operating CF",
+          "Cash from Operations",
+          "Cash from Operating Activities",
+          "Operating Activities"
         ],
         "definition": "Operating cash flow (synonym for cfo)",
         "typical_sign": "positive",
@@ -3255,7 +3271,6 @@
         "display_name": "Coupon Rate",
         "aliases": [
           "Coupon",
-          "Interest Rate",
           "Fixed Rate",
           "Stated Rate"
         ],
@@ -3471,9 +3486,11 @@
         "display_name": "Debt Service Coverage Ratio",
         "aliases": [
           "DSCR",
-          "Debt Coverage Ratio"
+          "Debt Coverage Ratio",
+          "Debt Service Coverage Ratio",
+          "DSCR (Historical)"
         ],
-        "definition": "Ratio of cash available to debt service payments",
+        "definition": "Debt Service Coverage Ratio (generic). For project finance use dscr_project_finance (CFADS / Debt Service); for corporate borrowers use dscr_corporate (CFO / Debt Service). This item captures DSCR when the distinction is unclear from context.",
         "typical_sign": "positive",
         "parent_canonical": "debt_covenants",
         "validation_rules": {
@@ -3523,7 +3540,6 @@
         "display_name": "Gross Debt",
         "aliases": [
           "Total Gross Debt",
-          "Total Debt",
           "Aggregate Debt",
           "Total Borrowings"
         ],
@@ -3592,7 +3608,8 @@
           "Interest Rate (Annual)",
           "Lending Rate",
           "Rate",
-          "Yield"
+          "Yield",
+          "Interest Rate"
         ],
         "definition": "Annual interest rate charged on debt instrument",
         "typical_sign": "positive",
@@ -3905,7 +3922,8 @@
           "Debt Total",
           "Gross Debt",
           "Total Borrowings",
-          "Total Debt Outstanding"
+          "Total Debt Outstanding",
+          "Total Debt"
         ],
         "definition": "Total outstanding debt (short-term + long-term)",
         "typical_sign": "positive",
@@ -4165,7 +4183,7 @@
         "validation_rules": {
           "type": "percentage",
           "min_value": 0,
-          "max_value": 0.10
+          "max_value": 0.1
         },
         "industry_tags": [
           "leveraged",
@@ -4194,6 +4212,121 @@
           "all",
           "leveraged",
           "credit_analysis"
+        ]
+      },
+      {
+        "canonical_name": "dscr_corporate",
+        "category": "debt_schedule",
+        "display_name": "Corporate DSCR",
+        "aliases": [
+          "DSCR (Corporate)",
+          "Corporate Debt Service Coverage",
+          "Operating Cash Flow Coverage",
+          "DSCR (Operating Cash Flow)"
+        ],
+        "definition": "Corporate Debt Service Coverage Ratio: CFO (Cash Flow from Operations) / Debt Service. Uses the cash flow statement CFO line \u2014 appropriate for corporate borrowers. Distinct from project finance DSCR which uses CFADS.",
+        "typical_sign": "positive",
+        "parent_canonical": "debt_covenants",
+        "validation_rules": {
+          "type": "ratio",
+          "min_value": 0,
+          "max_value": 10.0,
+          "derivation": "cfo / debt_service",
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "1.0 <= dscr_corporate <= 10.0",
+                "error_message": "Corporate DSCR outside expected range (1.0x-10.0x)",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
+        },
+        "industry_tags": [
+          "corporate",
+          "leveraged"
+        ]
+      },
+      {
+        "canonical_name": "leverage_covenant_level",
+        "category": "debt_schedule",
+        "display_name": "Leverage Covenant Level",
+        "aliases": [
+          "Leverage Covenant",
+          "Leverage Covenant Threshold",
+          "Max Leverage",
+          "Maximum Net Leverage",
+          "Leverage Limit",
+          "Debt / EBITDA Covenant"
+        ],
+        "definition": "Maximum Debt/EBITDA ratio permitted under financial covenants.",
+        "typical_sign": "positive",
+        "parent_canonical": "debt_covenants",
+        "validation_rules": {
+          "type": "ratio",
+          "min_value": 0,
+          "max_value": 20.0
+        },
+        "industry_tags": [
+          "corporate",
+          "leveraged"
+        ]
+      },
+      {
+        "canonical_name": "coverage_covenant_level",
+        "category": "debt_schedule",
+        "display_name": "Coverage Covenant Level",
+        "aliases": [
+          "Coverage Covenant",
+          "Coverage Covenant Threshold",
+          "Minimum DSCR Covenant",
+          "Minimum Coverage",
+          "DSCR Covenant",
+          "ICR Covenant"
+        ],
+        "definition": "Minimum coverage ratio (DSCR or ICR) required under financial covenants.",
+        "typical_sign": "positive",
+        "parent_canonical": "debt_covenants",
+        "validation_rules": {
+          "type": "ratio",
+          "min_value": 0,
+          "max_value": 10.0
+        },
+        "industry_tags": [
+          "all",
+          "leveraged",
+          "project_finance"
+        ]
+      },
+      {
+        "canonical_name": "covenant_headroom",
+        "category": "debt_schedule",
+        "display_name": "Covenant Headroom",
+        "aliases": [
+          "Covenant Headroom",
+          "DSCR Headroom",
+          "Coverage Headroom",
+          "Headroom to Covenant"
+        ],
+        "definition": "Buffer between actual ratio and covenant threshold (actual - threshold). Positive = passing; negative = breach.",
+        "typical_sign": "positive",
+        "parent_canonical": "debt_covenants",
+        "validation_rules": {
+          "type": "ratio",
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "covenant_headroom >= 0",
+                "error_message": "Covenant headroom is negative \u2014 covenant breach",
+                "warning_only": false,
+                "optional": true
+              }
+            ]
+          }
+        },
+        "industry_tags": [
+          "all"
         ]
       }
     ],
@@ -4424,7 +4557,8 @@
         "aliases": [
           "Depreciation Expense",
           "D&A - Depreciation",
-          "Depreciation of Assets"
+          "Depreciation of Assets",
+          "Total Depreciation"
         ],
         "definition": "Systematic allocation of tangible asset costs over useful life",
         "typical_sign": "negative",
@@ -4439,7 +4573,7 @@
           "Depreciat ion",
           "Depre ciation",
           "DEPRECIATION",
-          "Depreciaƫon"
+          "Deprecia\u01abon"
         ],
         "format_examples": [
           {
@@ -4994,8 +5128,6 @@
           "Gross Contribution",
           "Gross Earnings",
           "Gross Income",
-          "Gross Margin",
-          "Gross Margin $",
           "Gross Operating Profit",
           "Gross Profit Before OpEx",
           "Gross Trading Profit",
@@ -5308,7 +5440,7 @@
           "Net Inc ome",
           "Net-Income",
           "NET INCOME",
-          "Nɇt Income",
+          "N\u0247t Income",
           "Net lncome"
         ],
         "format_examples": [
@@ -5556,7 +5688,8 @@
         "aliases": [
           "Other Income (Expense)",
           "Non-Operating Income",
-          "Miscellaneous Income"
+          "Miscellaneous Income",
+          "Other Operating Income"
         ],
         "definition": "Income from non-operating activities",
         "typical_sign": "varies",
@@ -5778,7 +5911,7 @@
           "RevenUe",
           "REVENUE",
           "revenue.",
-          "Reveπue",
+          "Reve\u03c0ue",
           "Rev-enue"
         ],
         "format_examples": [
@@ -5856,8 +5989,6 @@
         "display_name": "Sales and Marketing",
         "aliases": [
           "Business Development Expenses",
-          "CAC",
-          "Customer Acquisition Cost",
           "Marketing Costs",
           "Marketing Expense",
           "Marketing and Sales",
@@ -5867,7 +5998,8 @@
           "Sales Expense",
           "Sales and Marketing Expenses",
           "Selling Expenses",
-          "Selling and Marketing"
+          "Selling and Marketing",
+          "Distribution Costs"
         ],
         "definition": "Expenses related to sales and marketing activities",
         "typical_sign": "negative",
@@ -6053,6 +6185,65 @@
           "saas",
           "cloud"
         ]
+      },
+      {
+        "canonical_name": "adjusted_ebit",
+        "category": "income_statement",
+        "display_name": "Adjusted EBIT",
+        "aliases": [
+          "Adjusted EBIT",
+          "EBIT (Adjusted)",
+          "Adj. EBIT",
+          "Normalised EBIT",
+          "Normalized EBIT",
+          "Adjusted Operating Income"
+        ],
+        "definition": "EBIT adjusted for non-recurring items and management add-backs. Distinct from reported EBIT. Captures management adjustments above the D&A line.",
+        "typical_sign": "positive",
+        "parent_canonical": "ebit",
+        "validation_rules": {
+          "type": "currency"
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
+      },
+      {
+        "canonical_name": "ebitda_addbacks",
+        "category": "income_statement",
+        "display_name": "EBITDA Add-backs",
+        "aliases": [
+          "EBITDA Add-backs",
+          "Add-backs",
+          "Adjustments to EBITDA",
+          "Non-recurring Items",
+          "One-time Items",
+          "Management Adjustments",
+          "Total Adjustments",
+          "Total Add-backs"
+        ],
+        "definition": "Total add-backs applied to arrive at Adjusted EBITDA from reported EBITDA. Relationship: adjusted_ebitda = ebitda + ebitda_addbacks.",
+        "typical_sign": "positive",
+        "parent_canonical": "adjusted_ebitda",
+        "validation_rules": {
+          "type": "currency",
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "adjusted_ebitda == ebitda + ebitda_addbacks",
+                "tolerance": 0.02,
+                "error_message": "adjusted_ebitda should equal ebitda + ebitda_addbacks",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
+        },
+        "industry_tags": [
+          "all",
+          "leveraged"
+        ]
       }
     ],
     "project_finance": [
@@ -6064,9 +6255,11 @@
           "CFADS",
           "Cash Flow Available for Debt Service",
           "Cash Available for Debt Service",
-          "Cashflow Available for Debt Service"
+          "Cashflow Available for Debt Service",
+          "Cash Available for Debt Service (CFADS)",
+          "Operating Cash Flow Before Debt Service"
         ],
-        "definition": "Net operating cash flow available to service project debt (typically Net Income + D&A + Interest - Tax adjustments)",
+        "definition": "Cash flow available for debt service (CFADS): computed as EBITDA less taxes paid less maintenance capex, adjusted for changes in working capital, BEFORE any debt service payments. This is the primary metric for assessing project debt capacity. Do NOT start from Net Income \u2014 that is already post-interest and will double-count on leveraged deals.",
         "typical_sign": "positive",
         "validation_rules": {
           "type": "currency",
@@ -6075,7 +6268,7 @@
             "relationships": [
               {
                 "rule": "cfads >= cfae",
-                "error_message": "CFADS should be >= CFAE (CFAE = CFADS after debt service)",
+                "error_message": "CFADS must be >= CFAE (CFAE = CFADS minus debt service)",
                 "warning_only": true,
                 "optional": true
               },
@@ -6461,6 +6654,48 @@
           "type": "ratio",
           "min_value": 1.0,
           "max_value": 2.0
+        },
+        "industry_tags": [
+          "project_finance",
+          "infrastructure"
+        ]
+      },
+      {
+        "canonical_name": "dscr_project_finance",
+        "category": "project_finance",
+        "display_name": "Project Finance DSCR",
+        "aliases": [
+          "DSCR (Project Finance)",
+          "Project Finance Debt Service Coverage",
+          "PF DSCR",
+          "DSCR (Infrastructure)",
+          "Annual DSCR",
+          "Project DSCR"
+        ],
+        "definition": "Project finance Debt Service Coverage Ratio: CFADS / Debt Service. Uses CFADS (not corporate CFO) as the numerator \u2014 this is the covenant-relevant DSCR for infrastructure and project finance deals. Minimum typical covenant 1.10-1.25x (trigger); distribution lock-up typically 1.25-1.50x.",
+        "typical_sign": "positive",
+        "parent_canonical": "dscr",
+        "validation_rules": {
+          "type": "ratio",
+          "min_value": 0,
+          "max_value": 10.0,
+          "derivation": "cfads / debt_service",
+          "cross_item_validation": {
+            "relationships": [
+              {
+                "rule": "1.0 <= dscr_project_finance <= 10.0",
+                "error_message": "PF DSCR outside expected range (1.0x-10.0x)",
+                "warning_only": true,
+                "optional": true
+              },
+              {
+                "rule": "dscr_project_finance >= distribution_lock_up",
+                "error_message": "PF DSCR below distribution lock-up threshold \u2014 cash trap may apply",
+                "warning_only": true,
+                "optional": true
+              }
+            ]
+          }
         },
         "industry_tags": [
           "project_finance",
@@ -7250,7 +7485,8 @@
         "aliases": [
           "DIO",
           "Days in Inventory",
-          "Inventory Days"
+          "Inventory Days",
+          "Days Inventory Outstanding"
         ],
         "definition": "(Average inventory / COGS) * 365; days to sell inventory",
         "typical_sign": "positive",
@@ -7271,7 +7507,10 @@
         "display_name": "Days Payable Outstanding",
         "aliases": [
           "DPO",
-          "Payment Period"
+          "Payment Period",
+          "Days Payable Outstanding",
+          "AP Days",
+          "A/P Days"
         ],
         "definition": "Average days to pay suppliers",
         "typical_sign": "positive",
@@ -7288,7 +7527,10 @@
         "aliases": [
           "DSO",
           "Collection Period",
-          "Receivables Days"
+          "Receivables Days",
+          "Days Sales Outstanding",
+          "AR Days",
+          "A/R Days"
         ],
         "definition": "Average days to collect accounts receivable",
         "typical_sign": "positive",
@@ -7644,7 +7886,8 @@
           "Gross Profit Margin",
           "Gross Margin %",
           "gros margin",
-          "gross margen"
+          "gross margen",
+          "Gross Margin"
         ],
         "definition": "Gross profit as a percentage of revenue",
         "typical_sign": "positive",
@@ -8240,7 +8483,7 @@
           "OEE",
           "Equipment Effectiveness"
         ],
-        "definition": "Availability × Performance × Quality; measures manufacturing productivity",
+        "definition": "Availability \u00d7 Performance \u00d7 Quality; measures manufacturing productivity",
         "typical_sign": "positive",
         "parent_canonical": "manufacturing_metrics",
         "validation_rules": {
@@ -8514,7 +8757,10 @@
         "aliases": [
           "Sales Growth",
           "Top Line Growth",
-          "Revenue CAGR"
+          "Revenue CAGR",
+          "Revenue Growth",
+          "Revenue Growth Rate",
+          "Revenue CAGR Rate"
         ],
         "definition": "Percentage change in revenue from prior period",
         "typical_sign": "positive",
@@ -8959,7 +9205,10 @@
           "derivation": "senior_debt / ebitda",
           "industry_benchmarks": {
             "leveraged": {
-              "typical_range": [2.0, 5.0],
+              "typical_range": [
+                2.0,
+                5.0
+              ],
               "description": "Leveraged buyout senior leverage typically 2-5x"
             }
           }
@@ -9012,7 +9261,10 @@
           "derivation": "(ebitda - capex) / (interest_expense + principal_payment)",
           "industry_benchmarks": {
             "healthy": {
-              "typical_range": [1.25, 3.0],
+              "typical_range": [
+                1.25,
+                3.0
+              ],
               "description": "Healthy companies typically above 1.25x"
             }
           }
@@ -9043,11 +9295,17 @@
           "max_value": 1.5,
           "industry_benchmarks": {
             "conservative": {
-              "typical_range": [0.5, 0.65],
+              "typical_range": [
+                0.5,
+                0.65
+              ],
               "description": "Conservative lending at 50-65% LTV"
             },
             "aggressive": {
-              "typical_range": [0.65, 0.80],
+              "typical_range": [
+                0.65,
+                0.8
+              ],
               "description": "Aggressive lending at 65-80% LTV"
             }
           }
@@ -9079,7 +9337,10 @@
           "max_value": 2.0,
           "industry_benchmarks": {
             "clo_senior": {
-              "typical_range": [1.20, 1.35],
+              "typical_range": [
+                1.2,
+                1.35
+              ],
               "description": "CLO senior OC test typically 120-135%"
             }
           }
@@ -9109,7 +9370,10 @@
           "max_value": 5.0,
           "industry_benchmarks": {
             "clo_senior": {
-              "typical_range": [1.15, 1.50],
+              "typical_range": [
+                1.15,
+                1.5
+              ],
               "description": "CLO senior IC test typically 115-150%"
             }
           }
@@ -9135,11 +9399,14 @@
         "validation_rules": {
           "type": "percentage",
           "min_value": 0,
-          "max_value": 0.30,
+          "max_value": 0.3,
           "derivation": "noi / total_debt",
           "industry_benchmarks": {
             "typical": {
-              "typical_range": [0.08, 0.12],
+              "typical_range": [
+                0.08,
+                0.12
+              ],
               "description": "Typical debt yield 8-12%"
             }
           }
