@@ -588,23 +588,31 @@ class TestEndToEndNoClaude:
 
 
 class TestNormalizeLabelQualifiers:
-    """Test that _normalize_label strips qualifier parentheticals."""
+    """Test _normalize_label qualifier handling.
 
-    def test_strips_adjusted(self):
-        from src.extraction.stages.mapping import _normalize_label
-        assert _normalize_label("Revenue (Adjusted)") == "Revenue"
+    P1-6 change: adjusted/net/gross/pro-forma/restated qualifiers are
+    PRESERVED (not stripped) so that "Adjusted EBITDA" can be mapped to
+    adjusted_ebitda vs. ebitda as separate canonicals.
 
-    def test_strips_net(self):
-        from src.extraction.stages.mapping import _normalize_label
-        assert _normalize_label("Income (Net)") == "Income"
+    Only noise-generating qualifiers (excl./incl./before/after) are stripped.
+    """
 
-    def test_strips_gross(self):
+    def test_preserves_adjusted(self):
         from src.extraction.stages.mapping import _normalize_label
-        assert _normalize_label("Profit (Gross)") == "Profit"
+        # Adjusted qualifier must NOT be stripped (it's a meaningful sub-type)
+        assert _normalize_label("Revenue (Adjusted)") == "Revenue (Adjusted)"
 
-    def test_strips_pro_forma(self):
+    def test_preserves_net(self):
         from src.extraction.stages.mapping import _normalize_label
-        assert _normalize_label("EBITDA (Pro Forma)") == "EBITDA"
+        assert _normalize_label("Income (Net)") == "Income (Net)"
+
+    def test_preserves_gross(self):
+        from src.extraction.stages.mapping import _normalize_label
+        assert _normalize_label("Profit (Gross)") == "Profit (Gross)"
+
+    def test_preserves_pro_forma(self):
+        from src.extraction.stages.mapping import _normalize_label
+        assert _normalize_label("EBITDA (Pro Forma)") == "EBITDA (Pro Forma)"
 
     def test_strips_excl(self):
         from src.extraction.stages.mapping import _normalize_label
@@ -614,9 +622,10 @@ class TestNormalizeLabelQualifiers:
         from src.extraction.stages.mapping import _normalize_label
         assert _normalize_label("EBITDA (excluding restructuring)") == "EBITDA"
 
-    def test_strips_restated(self):
+    def test_preserves_restated(self):
         from src.extraction.stages.mapping import _normalize_label
-        assert _normalize_label("Net Income (Restated)") == "Net Income"
+        # Restated is meaningful — kept so it can map to a specific canonical
+        assert _normalize_label("Net Income (Restated)") == "Net Income (Restated)"
 
     def test_strips_before(self):
         from src.extraction.stages.mapping import _normalize_label
@@ -631,11 +640,11 @@ class TestNormalizeLabelQualifiers:
         # Non-qualifier parentheticals should be preserved
         assert _normalize_label("Revenue (FY2023)") == "Revenue (FY2023)"
 
-    def test_strips_unit_and_qualifier(self):
+    def test_strips_unit_preserves_adjusted(self):
         from src.extraction.stages.mapping import _normalize_label
-        # Unit at end gets stripped first, then qualifier
+        # Unit at end stripped, but Adjusted qualifier preserved
         result = _normalize_label("Revenue (Adjusted) ($M)")
-        assert result == "Revenue"
+        assert result == "Revenue (Adjusted)"
 
     def test_preserves_basic_labels(self):
         from src.extraction.stages.mapping import _normalize_label

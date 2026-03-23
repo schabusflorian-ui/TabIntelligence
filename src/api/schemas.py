@@ -1181,3 +1181,124 @@ class BenchmarkHeatmapResponse(BaseModel):
     categories: List[str]
     runs: List[str]
     heatmap: Dict[str, Dict[str, float]]
+
+
+# ============================================================================
+# Derived Facts (Stage 6 Derivation Engine)
+# ============================================================================
+
+
+class ConsistencyCheckSchema(BaseModel):
+    extracted_value: Optional[float] = None
+    computed_value: float
+    divergence_pct: Optional[float] = None
+    passed: bool
+    threshold_pct: Optional[float] = None
+
+
+class CovenantContextSchema(BaseModel):
+    threshold: Optional[float] = None
+    headroom: Optional[float] = None
+    headroom_range_low: Optional[float] = None
+    headroom_range_high: Optional[float] = None
+    is_sensitive: bool = False
+    flag_message: Optional[str] = None
+
+
+class DerivedFactResponse(BaseModel):
+    canonical_name: str
+    period: str
+    computed_value: float
+    confidence: float
+    value_range_low: Optional[float] = None
+    value_range_high: Optional[float] = None
+    computation_rule_id: str
+    formula: str
+    source_canonicals: List[str] = []
+    confidence_mode: str
+    derivation_pass: int
+    is_gap_fill: bool
+    consistency: Optional[ConsistencyCheckSchema] = None
+    covenant: Optional[CovenantContextSchema] = None
+
+
+class DerivedFactsListResponse(BaseModel):
+    job_id: str
+    model_type: Optional[str] = None
+    count: int
+    facts: List[DerivedFactResponse]
+
+
+class ConsistencyReportItem(BaseModel):
+    canonical_name: str
+    period: str
+    extracted_value: Optional[float] = None
+    computed_value: float
+    divergence_pct: Optional[float] = None
+    passed: bool
+    threshold_pct: Optional[float] = None
+    confidence: float
+
+
+class ConsistencyReportResponse(BaseModel):
+    job_id: str
+    total_checked: int
+    passed: int
+    violations: int
+    items: List[ConsistencyReportItem]
+
+
+class CovenantSensitivityResponse(BaseModel):
+    job_id: str
+    sensitive_count: int
+    facts: List[DerivedFactResponse]
+
+
+# ============================================================================
+# Standardised Financials (extracted UNION derived)
+# ============================================================================
+
+
+class StandardisedFinancialItem(BaseModel):
+    canonical_name: str
+    period: str
+    value: Optional[float] = None
+    source: str  # "extracted" | "computed" | "computed_supplement"
+    confidence: Optional[float] = None
+    value_range_low: Optional[float] = None
+    value_range_high: Optional[float] = None
+    computation_rule_id: Optional[str] = None
+    formula: Optional[str] = None
+    source_canonicals: Optional[List[str]] = None
+    consistency: Optional[ConsistencyCheckSchema] = None
+    computed_value: Optional[float] = None
+    covenant: Optional[CovenantContextSchema] = None
+
+
+class StandardisedFinancialsResponse(BaseModel):
+    entity_id: str
+    count: int
+    items: List[StandardisedFinancialItem]
+
+
+# ============================================================================
+# Portfolio Covenant Monitor
+# ============================================================================
+
+
+class CovenantMonitorItem(BaseModel):
+    entity_id: str
+    entity_name: Optional[str] = None
+    canonical_name: str
+    period: str
+    computed_value: float
+    confidence: Optional[float] = None
+    value_range_low: Optional[float] = None
+    value_range_high: Optional[float] = None
+    covenant_context: CovenantContextSchema
+
+
+class PortfolioCovenantMonitorResponse(BaseModel):
+    total_entities_monitored: int
+    sensitive_count: int
+    items: List[CovenantMonitorItem]

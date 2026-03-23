@@ -93,28 +93,47 @@ class TestSignConvention:
         assert len(results) == 5  # one per non-varies item
 
     def test_multiple_violations(self):
-        """Multiple sign violations should each generate a warning."""
+        """Sign violations: hard items (capex) get ERROR, soft items get WARNING."""
         data = {
-            "revenue": D("-1000000"),  # wrong
-            "cogs": D("600000"),  # wrong
-            "capex": D("200000"),  # wrong
+            "revenue": D("-1000000"),  # wrong — soft warning
+            "cogs": D("600000"),  # wrong — soft warning
+            "capex": D("200000"),  # wrong — hard ERROR
         }
         results = self.validator.validate_sign_conventions(data)
         violations = [r for r in results if not r.passed]
         assert len(violations) == 3
-        assert all(v.severity == "warning" for v in violations)
+
+        # revenue and cogs are soft — warning
+        rev_violations = [v for v in violations if v.item_name == "revenue"]
+        cogs_violations = [v for v in violations if v.item_name == "cogs"]
+        capex_violations = [v for v in violations if v.item_name == "capex"]
+
+        assert rev_violations[0].severity == "warning"
+        assert cogs_violations[0].severity == "warning"
+        assert capex_violations[0].severity == "error"  # capex is a hard sign item
 
 
 class TestSignConventionSeverity:
-    """Verify sign convention checks are always warnings, never errors."""
+    """Verify sign convention checks: hard items get errors, others get warnings."""
 
     def setup_method(self):
         self.validator = AccountingValidator(_make_taxonomy_with_signs())
 
-    def test_sign_violations_are_warnings_not_errors(self):
+    def test_soft_sign_violations_are_warnings(self):
+        """Items not in _HARD_SIGN_ERROR_ITEMS get warning severity."""
         data = {"revenue": D("-1000000"), "total_assets": D("-5000000")}
         results = self.validator.validate_sign_conventions(data)
         for r in results:
             if not r.passed:
                 assert r.severity == "warning"
                 assert r.rule == "sign_convention"
+
+    def test_hard_sign_violations_are_errors(self):
+        """Hard sign items (capex, debt_repayment, interest_expense) get error severity."""
+        data = {
+            "capex": D("200000"),           # should be negative
+        }
+        results = self.validator.validate_sign_conventions(data)
+        violations = [r for r in results if not r.passed]
+        assert len(violations) == 1
+        assert violations[0].severity == "error"

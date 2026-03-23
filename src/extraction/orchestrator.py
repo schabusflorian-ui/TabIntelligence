@@ -35,7 +35,8 @@ STAGE_WEIGHTS = {
     "triage": 30,
     "mapping": 55,
     "validation": 75,
-    "enhanced_mapping": 95,
+    "enhanced_mapping": 92,
+    "derivation": 98,
 }
 
 _GRADE_RANKS = {"A": 5, "B": 4, "C": 3, "D": 2, "F": 1, "?": 0}
@@ -62,6 +63,7 @@ class ExtractionResult:
     item_lineage: Optional[dict] = None
     taxonomy_version: Optional[str] = None
     taxonomy_checksum: Optional[str] = None
+    derived_facts: Optional[list] = None  # Stage 6 computed metrics
 
     def to_dict(self):
         return asdict(self)
@@ -822,6 +824,27 @@ def _build_result(
     except Exception as e:
         logger.warning(f"Could not persist cell mappings: {e}")
 
+    # --- Best-effort derived facts persistence (Stage 6) ---
+    derivation_result = context.results.get("derivation") or {}
+    derived_facts_list = derivation_result.get("derived_facts", [])
+    if derived_facts_list:
+        try:
+            from src.db.crud import persist_derived_facts
+            from src.db.session import get_db_sync
+
+            with get_db_sync() as db:
+                derived_count = persist_derived_facts(
+                    db,
+                    job_id=uuid.UUID(context.job_id) if context.job_id else uuid.uuid4(),
+                    entity_id=getattr(context, "entity_id", None),
+                    derived_facts=derived_facts_list,
+                )
+                logger.info(
+                    f"Persisted {derived_count} derived facts for job {context.job_id}"
+                )
+        except Exception as e:
+            logger.warning(f"Could not persist derived facts: {e}")
+
     # --- Best-effort taxonomy suggestion generation ---
     try:
         from src.db.crud import generate_taxonomy_suggestions
@@ -853,6 +876,7 @@ def _build_result(
         item_lineage=item_lineage or None,
         taxonomy_version=context.taxonomy_version,
         taxonomy_checksum=context.taxonomy_checksum,
+        derived_facts=derived_facts_list or None,
     )
 
     pipeline_duration = time.time() - pipeline_start

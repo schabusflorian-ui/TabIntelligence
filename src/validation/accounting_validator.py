@@ -415,13 +415,19 @@ class AccountingValidator:
                 violation = True
                 msg = f"{canonical_name} is positive ({value}) but typically negative"
 
+            # Hard sign errors corrupt downstream ratio calculations
+            severity = (
+                "error"
+                if violation and canonical_name in self._HARD_SIGN_ERROR_ITEMS
+                else "warning"
+            )
             results.append(
                 ValidationResult(
                     passed=not violation,
                     item_name=canonical_name,
                     rule="sign_convention",
                     message=msg if violation else f"✓ {canonical_name} sign OK",
-                    severity="warning",
+                    severity=severity,
                     actual_value=value,
                     expected_value=typical_sign,
                 )
@@ -433,9 +439,42 @@ class AccountingValidator:
     # Cross-Statement Validation (Part C)
     # ------------------------------------------------------------------
 
-    CROSS_STATEMENT_TOLERANCE = 0.05  # 5% tolerance for cross-statement checks
+    # Granular tolerances — context matters for cross-statement checks.
+    # Primary accounting identities (A=L+E) are enforced at 0.01% in the
+    # taxonomy itself.  These tolerances cover reconciliations that legitimately
+    # carry timing differences, rounding, or secondary treatments.
+    TOLERANCE_CASH_BS_CF = 0.01          # 1%  — cash position should close tightly
+    TOLERANCE_RETAINED_EARNINGS = 0.02   # 2%  — dividends explain residual gap
+    TOLERANCE_DEBT_SCHEDULE = 0.02       # 2%  — tranche sum vs. BS total
+    TOLERANCE_DEPRECIATION = 0.03        # 3%  — IS vs. CF add-back (timing)
+    TOLERANCE_CAPEX_PPE = 0.10           # 10% — disposals / impairments justify wider
+    TOLERANCE_WORKING_CAPITAL = 0.01     # 1%  — pure identity
+    TOLERANCE_INTEREST_IS_DS = 0.05      # 5%  — capitalised interest / timing
+    TOLERANCE_EQUITY_RECON = 0.02        # 2%  — equity issuance / buybacks
+    TOLERANCE_DEBT_ROLL_FORWARD = 0.01   # 1%  — roll-forward must be tight
+    TOLERANCE_NET_INCOME_CF = 0.02       # 2%  — minor restatement differences
+    TOLERANCE_CASH_ROLL_FORWARD = 0.01   # 1%  — cash position identity
+    TOLERANCE_DEBT_SERVICE = 0.01        # 1%  — P+I = debt service (pure identity)
+    TOLERANCE_ADDITIVITY = 0.03          # 3%  — sub-item sum vs. parent (rounding)
+    TOLERANCE_PF_DSCR_COVENANT = 0.0    # 0%  — covenant breach is binary (< threshold = breach)
+    TOLERANCE_SOURCES_USES = 0.03        # 3%  — equity + debt ≈ total investment
 
-    # Debt components to sum for total_debt reconciliation
+    # Items whose sign violations are elevated to ERROR (not just warning).
+    # These items, when wrong-signed, directly corrupt FCF, net-debt, and
+    # coverage ratio calculations.
+    _HARD_SIGN_ERROR_ITEMS: Set[str] = {
+        "capex",
+        "capital_expenditures",
+        "debt_repayment",
+        "debt_mandatory_repayment",
+        "debt_optional_repayment",
+        "interest_expense",
+        "dividends_paid",
+        "share_repurchase",
+        "share_buyback",
+    }
+
+    # All debt tranche canonicals — used for total_debt additivity check
     _DEBT_COMPONENTS: Set[str] = {
         "senior_debt",
         "subordinated_debt",
@@ -447,6 +486,11 @@ class AccountingValidator:
         "revolving_credit",
         "long_term_debt",
         "short_term_debt",
+        "unitranche",
+        "delayed_draw_term_loan",
+        "mezzanine_debt",
+        "convertible_notes",
+        "safe_notes",
     }
 
     def validate_cross_statement(
@@ -505,6 +549,75 @@ class AccountingValidator:
             if r is not None:
                 results.append(r)
 
+            # 9. [CF-5] net_income_cf (CF starting line) == net_income (IS)
+            r = self._check_net_income_cf_vs_is(period, data)
+            if r is not None:
+                results.append(r)
+
+            # 10. [BS-16] beginning_cash + net_change_cash == ending_cash
+            r = self._check_cash_roll_forward(period, data)
+            if r is not None:
+                results.append(r)
+
+            # 11. [DS-1] debt roll-forward: opening + drawdown - repayment == closing
+            r = self._check_debt_roll_forward(period, data)
+            if r is not None:
+                results.append(r)
+
+            # 12. [DS-3] debt_service == principal + interest
+            r = self._check_debt_service_identity(period, data)
+            if r is not None:
+                results.append(r)
+
+            # 13. [PF-2] dscr_project_finance == cfads / debt_service (consistency)
+            r = self._check_dscr_pf_consistency(period, data)
+            if r is not None:
+                results.append(r)
+
+            # 14. [CF-3] fcf == cfo - capex (consistency)
+            r = self._check_fcf_consistency(period, data)
+            if r is not None:
+                results.append(r)
+
+            # ── P1-7: Additivity tree checks ──────────────────────────────
+            # 15. [IS-7] sum of revenue sub-items ≈ revenue
+            for r in self._check_revenue_additivity(period, data):
+                results.append(r)
+
+            # 16. [BS-2] total_assets ≈ current_assets + non_current_assets
+            r = self._check_total_assets_additivity(period, data)
+            if r is not None:
+                results.append(r)
+
+            # 17. [BS-3] total_liabilities ≈ current + non-current liabilities
+            r = self._check_total_liabilities_additivity(period, data)
+            if r is not None:
+                results.append(r)
+
+            # ── P1-8: Enhanced tranche additivity (DS-4) ──────────────────
+            # (already covered by _check_total_debt_schedule; extended below)
+
+            # ── P1-9: Project finance covenant checks ──────────────────────
+            # 18. [PF-3] dscr_project_finance >= minimum_dscr_covenant
+            r = self._check_pf_dscr_covenant(period, data)
+            if r is not None:
+                results.append(r)
+
+            # 19. [PF-5] cfae >= 0 OR flag distribution lock-up breach
+            r = self._check_pf_cfae_positive(period, data)
+            if r is not None:
+                results.append(r)
+
+            # 20. [PF-6] equity_contribution + total_debt ≈ total_investment
+            r = self._check_pf_sources_uses(period, data)
+            if r is not None:
+                results.append(r)
+
+            # 21. [PF-7] loan_to_cost ≤ 90%
+            r = self._check_pf_loan_to_cost(period, data)
+            if r is not None:
+                results.append(r)
+
         return results
 
     def _check_cash_bs_cf(
@@ -520,7 +633,7 @@ class AccountingValidator:
 
         divisor = float(max(abs(cash), abs(ending_cash), 1))  # type: ignore[arg-type]
         diff_pct = abs(float(cash - ending_cash)) / divisor
-        passed = diff_pct <= self.CROSS_STATEMENT_TOLERANCE
+        passed = diff_pct <= self.TOLERANCE_CASH_BS_CF
 
         return ValidationResult(
             passed=passed,
@@ -553,24 +666,27 @@ class AccountingValidator:
             return None
 
         re_change = re_curr - re_prev
-        divisor = float(max(abs(re_change), abs(net_income), 1))  # type: ignore[arg-type]
-        diff_pct = abs(float(re_change - net_income)) / divisor
-        passed = diff_pct <= self.CROSS_STATEMENT_TOLERANCE
+        # Account for dividends declared (gap between RE change and NI)
+        dividends = data.get("dividends_paid", Decimal("0"))
+        expected_re_change = net_income - abs(dividends)
+        divisor = float(max(abs(re_change), abs(expected_re_change), 1))  # type: ignore[arg-type]
+        diff_pct = abs(float(re_change - expected_re_change)) / divisor
+        passed = diff_pct <= self.TOLERANCE_RETAINED_EARNINGS
 
         return ValidationResult(
             passed=passed,
             item_name="retained_earnings",
             rule="cross_statement:retained_earnings_ni",
             message=(
-                "✓ retained_earnings change matches net_income"
+                "✓ retained_earnings change matches net_income (net of dividends)"
                 if passed
                 else f"retained_earnings change ({re_change})"
-                f" differs from net_income ({net_income})"
+                f" differs from net_income - dividends ({expected_re_change})"
                 f" in period {period}"
             ),
             severity="warning",
             actual_value=re_change,
-            expected_value=net_income,
+            expected_value=expected_re_change,
         )
 
     def _check_total_debt_schedule(
@@ -598,7 +714,7 @@ class AccountingValidator:
 
         divisor = float(max(abs(total_debt), abs(debt_sum), 1))  # type: ignore[arg-type]
         diff_pct = abs(float(total_debt - debt_sum)) / divisor
-        passed = diff_pct <= self.CROSS_STATEMENT_TOLERANCE
+        passed = diff_pct <= self.TOLERANCE_DEBT_SCHEDULE
 
         return ValidationResult(
             passed=passed,
@@ -633,7 +749,7 @@ class AccountingValidator:
         abs_cf = abs(da_cf)
         divisor = float(max(abs_is, abs_cf, 1))  # type: ignore[arg-type]
         diff_pct = abs(float(abs_is - abs_cf)) / divisor
-        passed = diff_pct <= self.CROSS_STATEMENT_TOLERANCE
+        passed = diff_pct <= self.TOLERANCE_DEPRECIATION
 
         return ValidationResult(
             passed=passed,
@@ -678,8 +794,7 @@ class AccountingValidator:
 
         divisor = float(max(actual_capex, abs(implied_capex), 1))  # type: ignore[arg-type]
         diff_pct = abs(float(actual_capex - implied_capex)) / divisor
-        wider_tolerance = 0.10  # 10% for capex/PPE reconciliation
-        passed = diff_pct <= wider_tolerance
+        passed = diff_pct <= self.TOLERANCE_CAPEX_PPE
 
         return ValidationResult(
             passed=passed,
@@ -713,7 +828,7 @@ class AccountingValidator:
         expected = ca - cl
         divisor = float(max(abs(wc), abs(expected), 1))
         diff_pct = abs(float(wc - expected)) / divisor
-        passed = diff_pct <= self.CROSS_STATEMENT_TOLERANCE
+        passed = diff_pct <= self.TOLERANCE_WORKING_CAPITAL
 
         return ValidationResult(
             passed=passed,
@@ -747,8 +862,7 @@ class AccountingValidator:
         abs_ti = abs(ti)
         divisor = float(max(abs_ie, abs_ti, 1))
         diff_pct = abs(float(abs_ie - abs_ti)) / divisor
-        wider_tolerance = 0.10  # 10% for IS↔DS reconciliation
-        passed = diff_pct <= wider_tolerance
+        passed = diff_pct <= self.TOLERANCE_INTEREST_IS_DS
 
         return ValidationResult(
             passed=passed,
@@ -766,13 +880,249 @@ class AccountingValidator:
             expected_value=ti,
         )
 
+    # ------------------------------------------------------------------
+    # NEW checks added as part of financial audit hardening
+    # ------------------------------------------------------------------
+
+    def _check_net_income_cf_vs_is(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """[CF-5] net_income_cf (CF starting line) must equal net_income (IS).
+
+        The starting line of the indirect method cash flow statement must match
+        the net income on the income statement.  Any divergence (beyond rounding)
+        signals either a different reporting period or an extraction error.
+        Severity: ERROR — this is a fundamental statement linkage.
+        """
+        ni_cf = data.get("net_income_cf")
+        ni_is = data.get("net_income")
+
+        if ni_cf is None or ni_is is None:
+            return None
+
+        divisor = float(max(abs(ni_cf), abs(ni_is), 1))  # type: ignore[arg-type]
+        diff_pct = abs(float(ni_cf - ni_is)) / divisor
+        passed = diff_pct <= self.TOLERANCE_NET_INCOME_CF
+
+        return ValidationResult(
+            passed=passed,
+            item_name="net_income_cf",
+            rule="cross_statement:net_income_cf_vs_is",
+            message=(
+                "✓ net_income_cf (CF) matches net_income (IS)"
+                if passed
+                else f"net_income_cf ({ni_cf}) differs from net_income ({ni_is})"
+                f" in period {period} — possible period mismatch or extraction error"
+            ),
+            severity="error" if not passed else "warning",
+            actual_value=ni_cf,
+            expected_value=ni_is,
+        )
+
+    def _check_cash_roll_forward(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """[BS-16] beginning_cash + net_change_cash == ending_cash.
+
+        Cash identity across periods — if all three are extracted from the same
+        period they must close to within rounding.  Any divergence > 1% signals
+        a scale mismatch, wrong period, or extraction error.
+        Severity: ERROR — cash position is a fundamental anchor.
+        """
+        beg = data.get("beginning_cash")
+        net_chg = data.get("net_change_cash")
+        ending = data.get("ending_cash")
+
+        if beg is None or net_chg is None or ending is None:
+            return None
+
+        expected = beg + net_chg
+        divisor = float(max(abs(ending), abs(expected), 1))  # type: ignore[arg-type]
+        diff_pct = abs(float(ending - expected)) / divisor
+        passed = diff_pct <= self.TOLERANCE_CASH_ROLL_FORWARD
+
+        return ValidationResult(
+            passed=passed,
+            item_name="ending_cash",
+            rule="cross_statement:cash_roll_forward",
+            message=(
+                "✓ cash roll-forward: beginning + net_change == ending"
+                if passed
+                else f"ending_cash ({ending}) ≠ beginning_cash ({beg})"
+                f" + net_change_cash ({net_chg}) = {expected}"
+                f" in period {period}"
+            ),
+            severity="error" if not passed else "warning",
+            actual_value=ending,
+            expected_value=expected,
+        )
+
+    def _check_debt_roll_forward(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """[DS-1] debt roll-forward: opening + drawdown - repayment == closing.
+
+        The fundamental debt schedule identity.  A model with arithmetic errors in its
+        debt schedule will have a roll-forward gap.  Severity: ERROR — this is
+        the most important integrity check for any leveraged or project finance model.
+        """
+        opening = data.get("debt_opening_balance")
+        drawdown = data.get("debt_drawdown", Decimal("0"))
+        repayment = data.get("principal_payment") or data.get("debt_mandatory_repayment")
+        closing = data.get("debt_closing_balance")
+
+        if opening is None or closing is None or repayment is None:
+            return None
+
+        # Drawdown is positive (cash in); repayment is typically negative (cash out)
+        expected = opening + abs(drawdown) - abs(repayment)
+        divisor = float(max(abs(closing), abs(expected), 1))  # type: ignore[arg-type]
+        diff_pct = abs(float(closing - expected)) / divisor
+        passed = diff_pct <= self.TOLERANCE_DEBT_ROLL_FORWARD
+
+        return ValidationResult(
+            passed=passed,
+            item_name="debt_closing_balance",
+            rule="cross_statement:debt_roll_forward",
+            message=(
+                "✓ debt roll-forward: opening + drawdown - repayment == closing"
+                if passed
+                else f"debt_closing_balance ({closing}) ≠ expected ({expected})"
+                f" [opening={opening} + drawdown={abs(drawdown)} - repayment={abs(repayment)}]"
+                f" in period {period}"
+            ),
+            severity="error" if not passed else "warning",
+            actual_value=closing,
+            expected_value=expected,
+        )
+
+    def _check_debt_service_identity(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """[DS-3] debt_service == principal_payment + interest_payment.
+
+        Debt service is a pure additive identity.  Any divergence is an error
+        in the debt schedule structure.
+        """
+        ds = data.get("debt_service")
+        principal = data.get("principal_payment")
+        interest = data.get("interest_payment")
+
+        if ds is None or principal is None or interest is None:
+            return None
+
+        expected = abs(principal) + abs(interest)
+        actual = abs(ds)
+        divisor = float(max(actual, expected, 1))  # type: ignore[arg-type]
+        diff_pct = abs(float(actual - expected)) / divisor
+        passed = diff_pct <= self.TOLERANCE_DEBT_SERVICE
+
+        return ValidationResult(
+            passed=passed,
+            item_name="debt_service",
+            rule="cross_statement:debt_service_identity",
+            message=(
+                "✓ debt_service == principal + interest"
+                if passed
+                else f"debt_service ({abs(ds)}) ≠ principal ({abs(principal)})"
+                f" + interest ({abs(interest)}) = {expected}"
+                f" in period {period}"
+            ),
+            severity="error" if not passed else "warning",
+            actual_value=actual,
+            expected_value=expected,
+        )
+
+    def _check_dscr_pf_consistency(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """[PF-2] dscr_project_finance consistency: extracted vs. computed CFADS/debt_service.
+
+        If dscr_project_finance is extracted AND both cfads and debt_service are available,
+        compare the extracted value to the computed ratio.  Divergence > 3% suggests
+        a model arithmetic error or a different CFADS definition in the source model.
+        """
+        dscr_extracted = data.get("dscr_project_finance")
+        cfads = data.get("cfads")
+        ds = data.get("debt_service")
+
+        if dscr_extracted is None or cfads is None or ds is None or ds == 0:
+            return None
+
+        dscr_computed = abs(cfads) / abs(ds)
+        divisor = float(max(abs(dscr_extracted), float(dscr_computed), Decimal("0.001")))  # type: ignore[arg-type]
+        diff_pct = abs(float(dscr_extracted) - float(dscr_computed)) / divisor
+        # 3% consistency threshold — tighter than cross-statement because this is
+        # a ratio of two extracted items from the same model
+        passed = diff_pct <= 0.03
+
+        return ValidationResult(
+            passed=passed,
+            item_name="dscr_project_finance",
+            rule="cross_statement:dscr_pf_consistency",
+            message=(
+                f"✓ dscr_project_finance consistent with cfads/debt_service ({dscr_computed:.3f})"
+                if passed
+                else f"dscr_project_finance extracted ({dscr_extracted:.3f})"
+                f" diverges from computed ({dscr_computed:.3f})"
+                f" by {diff_pct*100:.1f}% in period {period}"
+                f" — possible model arithmetic error or CFADS definition mismatch"
+            ),
+            severity="warning",
+            actual_value=dscr_extracted,
+            expected_value=Decimal(str(round(float(dscr_computed), 4))),
+        )
+
+    def _check_fcf_consistency(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """[CF-3] fcf consistency: extracted vs. computed cfo - capex."""
+        fcf_extracted = data.get("fcf")
+        cfo = data.get("cfo")
+        capex = data.get("capex")
+
+        if fcf_extracted is None or cfo is None or capex is None:
+            return None
+
+        fcf_computed = cfo - abs(capex)
+        divisor = float(max(abs(fcf_extracted), abs(fcf_computed), 1))  # type: ignore[arg-type]
+        diff_pct = abs(float(fcf_extracted - fcf_computed)) / divisor
+        passed = diff_pct <= 0.02  # 2% — should be very close
+
+        return ValidationResult(
+            passed=passed,
+            item_name="fcf",
+            rule="cross_statement:fcf_consistency",
+            message=(
+                "✓ fcf consistent with cfo - capex"
+                if passed
+                else f"fcf ({fcf_extracted}) diverges from computed cfo - capex ({fcf_computed})"
+                f" by {diff_pct*100:.1f}% in period {period}"
+            ),
+            severity="warning",
+            actual_value=fcf_extracted,
+            expected_value=fcf_computed,
+        )
+
     def _check_equity_reconciliation(
         self,
         period: str,
         data: Dict[str, Decimal],
         prev_data: Dict[str, Decimal],
     ) -> Optional[ValidationResult]:
-        """equity[t] ≈ equity[t-1] + net_income - dividends (5% tolerance)."""
+        """equity[t] ≈ equity[t-1] + net_income - dividends."""
         eq_curr = data.get("total_equity")
         eq_prev = prev_data.get("total_equity")
         net_income = data.get("net_income")
@@ -781,10 +1131,11 @@ class AccountingValidator:
             return None
 
         dividends = data.get("dividends_paid", Decimal("0"))
+        # Also absorb equity issuances / buybacks (wider tolerance covers these)
         expected = eq_prev + net_income - abs(dividends)
         divisor = float(max(abs(eq_curr), abs(expected), 1))
         diff_pct = abs(float(eq_curr - expected)) / divisor
-        passed = diff_pct <= self.CROSS_STATEMENT_TOLERANCE
+        passed = diff_pct <= self.TOLERANCE_EQUITY_RECON
 
         return ValidationResult(
             passed=passed,
@@ -800,4 +1151,259 @@ class AccountingValidator:
             severity="warning",
             actual_value=eq_curr,
             expected_value=expected,
+        )
+
+    # ── P1-7: Additivity tree checks ──────────────────────────────────────
+
+    #: Revenue sub-item canonicals used for IS-7 additivity check
+    _REVENUE_COMPONENTS: Set[str] = {
+        "product_revenue",
+        "service_revenue",
+        "subscription_revenue",
+        "license_revenue",
+        "transaction_revenue",
+        "recurring_revenue",
+        "non_recurring_revenue",
+        "rental_income",
+        "interest_income",
+        "other_revenue",
+    }
+
+    def _check_revenue_additivity(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+    ) -> List[ValidationResult]:
+        """[IS-7] sum of revenue sub-items ≈ revenue when sub-items present."""
+        revenue = data.get("revenue")
+        if revenue is None:
+            return []
+
+        sub_items = {
+            k: v for k, v in data.items()
+            if k in self._REVENUE_COMPONENTS and v is not None
+        }
+        if len(sub_items) < 2:
+            return []  # not enough sub-items to check additivity
+
+        sub_total = sum(sub_items.values(), Decimal("0"))
+        divisor = float(max(abs(revenue), abs(sub_total), 1))
+        diff_pct = abs(float(revenue - sub_total)) / divisor
+        passed = diff_pct <= self.TOLERANCE_ADDITIVITY
+
+        return [
+            ValidationResult(
+                passed=passed,
+                item_name="revenue",
+                rule="additivity:revenue_components",
+                message=(
+                    f"revenue sub-items sum to {sub_total} ≈ revenue {revenue}"
+                    if passed
+                    else f"revenue ({revenue}) ≠ sum of sub-items ({sub_total})"
+                    f" divergence={diff_pct:.1%} in period {period}"
+                ),
+                severity="warning",
+                actual_value=sub_total,
+                expected_value=revenue,
+            )
+        ]
+
+    def _check_total_assets_additivity(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """[BS-2] total_assets ≈ total_current_assets + total_non_current_assets."""
+        total = data.get("total_assets")
+        current = data.get("total_current_assets")
+        non_current = data.get("total_non_current_assets")
+
+        if total is None or current is None or non_current is None:
+            return None
+
+        expected = current + non_current
+        divisor = float(max(abs(total), abs(expected), 1))
+        diff_pct = abs(float(total - expected)) / divisor
+        passed = diff_pct <= self.TOLERANCE_ADDITIVITY
+
+        return ValidationResult(
+            passed=passed,
+            item_name="total_assets",
+            rule="additivity:total_assets",
+            message=(
+                "total_assets = current + non_current assets ✓"
+                if passed
+                else f"total_assets ({total}) ≠ current ({current}) + non_current ({non_current})"
+                f" in period {period}"
+            ),
+            severity="warning",
+            actual_value=total,
+            expected_value=expected,
+        )
+
+    def _check_total_liabilities_additivity(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """[BS-3] total_liabilities ≈ total_current_liabilities + total_non_current_liabilities."""
+        total = data.get("total_liabilities")
+        current = data.get("total_current_liabilities")
+        non_current = data.get("total_non_current_liabilities")
+
+        if total is None or current is None or non_current is None:
+            return None
+
+        expected = current + non_current
+        divisor = float(max(abs(total), abs(expected), 1))
+        diff_pct = abs(float(total - expected)) / divisor
+        passed = diff_pct <= self.TOLERANCE_ADDITIVITY
+
+        return ValidationResult(
+            passed=passed,
+            item_name="total_liabilities",
+            rule="additivity:total_liabilities",
+            message=(
+                "total_liabilities = current + non_current ✓"
+                if passed
+                else f"total_liabilities ({total}) ≠ current ({current})"
+                f" + non_current ({non_current}) in period {period}"
+            ),
+            severity="warning",
+            actual_value=total,
+            expected_value=expected,
+        )
+
+    # ── P1-9: Project Finance Covenant Checks ──────────────────────────────
+
+    def _check_pf_dscr_covenant(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """[PF-3] dscr_project_finance >= minimum_dscr_covenant (distribution_lock_up).
+
+        If the DSCR is below the lock-up trigger, flag as ERROR (covenant breach).
+        """
+        dscr = data.get("dscr_project_finance") or data.get("dscr")
+        lock_up = data.get("distribution_lock_up")
+
+        if dscr is None or lock_up is None:
+            return None
+
+        breached = dscr < lock_up
+        headroom = dscr - lock_up
+
+        return ValidationResult(
+            passed=not breached,
+            item_name="dscr_project_finance",
+            rule="pf_covenant:dscr_distribution_lock_up",
+            message=(
+                f"DSCR {float(dscr):.3f}x headroom {float(headroom):+.3f}x vs lock-up {float(lock_up):.3f}x ✓"
+                if not breached
+                else f"COVENANT BREACH: DSCR {float(dscr):.3f}x < distribution lock-up "
+                f"{float(lock_up):.3f}x (headroom {float(headroom):.3f}x)"
+                f" in period {period}"
+            ),
+            severity="error" if breached else "warning",
+            actual_value=dscr,
+            expected_value=lock_up,
+        )
+
+    def _check_pf_cfae_positive(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """[PF-5] cfae >= 0 (CFADS after debt service).
+
+        Negative CFAE means CFADS is insufficient to cover debt service.
+        This triggers distribution lock-up.
+        """
+        cfae = data.get("cfae")
+        if cfae is None:
+            return None
+
+        passed = cfae >= Decimal("0")
+        return ValidationResult(
+            passed=passed,
+            item_name="cfae",
+            rule="pf_covenant:cfae_positive",
+            message=(
+                f"cfae {float(cfae):.0f} >= 0 ✓"
+                if passed
+                else f"CFAE ({float(cfae):.0f}) is negative in period {period} "
+                f"— debt service exceeds CFADS, distribution lock-up triggered"
+            ),
+            severity="warning",
+            actual_value=cfae,
+            expected_value=Decimal("0"),
+        )
+
+    def _check_pf_sources_uses(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """[PF-6] equity_contribution + total_debt ≈ total_investment (sources = uses)."""
+        equity_contrib = data.get("equity_contribution")
+        total_debt = data.get("total_debt")
+        total_investment = data.get("total_investment")
+
+        if equity_contrib is None or total_debt is None or total_investment is None:
+            return None
+
+        sources = equity_contrib + total_debt
+        divisor = float(max(abs(total_investment), abs(sources), 1))
+        diff_pct = abs(float(total_investment - sources)) / divisor
+        passed = diff_pct <= self.TOLERANCE_SOURCES_USES
+
+        return ValidationResult(
+            passed=passed,
+            item_name="total_investment",
+            rule="pf_check:sources_uses",
+            message=(
+                f"sources ({float(sources):.0f}) ≈ total_investment ({float(total_investment):.0f}) ✓"
+                if passed
+                else f"PF sources ≠ uses: equity ({float(equity_contrib):.0f})"
+                f" + debt ({float(total_debt):.0f}) = {float(sources):.0f}"
+                f" vs total_investment {float(total_investment):.0f}"
+                f" ({diff_pct:.1%} divergence) in period {period}"
+            ),
+            severity="warning",
+            actual_value=sources,
+            expected_value=total_investment,
+        )
+
+    def _check_pf_loan_to_cost(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """[PF-7] loan_to_cost = total_debt / total_investment ≤ 90%."""
+        total_debt = data.get("total_debt")
+        total_investment = data.get("total_investment")
+
+        if total_debt is None or total_investment is None:
+            return None
+        if total_investment == 0:
+            return None
+
+        ltc = total_debt / total_investment
+        MAX_LTC = Decimal("0.90")
+        passed = ltc <= MAX_LTC
+
+        return ValidationResult(
+            passed=passed,
+            item_name="loan_to_cost",
+            rule="pf_check:loan_to_cost_plausibility",
+            message=(
+                f"loan_to_cost {float(ltc):.1%} ≤ 90% ✓"
+                if passed
+                else f"PF loan_to_cost {float(ltc):.1%} > 90% in period {period}"
+                f" — verify debt quantum or total investment figure"
+            ),
+            severity="warning",
+            actual_value=ltc,
+            expected_value=MAX_LTC,
         )

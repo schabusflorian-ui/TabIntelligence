@@ -179,8 +179,8 @@ async def test_progress_callback_called_after_each_stage(mock_anthropic, sample_
         progress_callback=callback,
     )
 
-    # Pipeline has 5 stages; callback should be called once per stage
-    assert callback.call_count == 5
+    # Pipeline has 6 stages; callback should be called once per stage
+    assert callback.call_count == 6
 
     # Verify each call received (stage_name, progress_percent)
     stage_names = [call.args[0] for call in callback.call_args_list]
@@ -274,11 +274,12 @@ async def test_checkpoint_saved_after_each_stage(mock_anthropic, sample_xlsx):
     ):
         await extract(sample_xlsx, file_id="test-checkpoint")
 
-    # All 5 stages should attempt checkpoint save
+    # All 6 stages should attempt checkpoint save
     assert "parsing" in saved_stages
     assert "triage" in saved_stages
     assert "mapping" in saved_stages
-    assert len(saved_stages) == 5
+    assert "derivation" in saved_stages
+    assert len(saved_stages) == 6
 
 
 @pytest.mark.asyncio

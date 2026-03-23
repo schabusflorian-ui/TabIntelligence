@@ -12,6 +12,10 @@ from src.api.schemas import (
     CellMappingItem,
     CellMappingListResponse,
     CellMappingStatsResponse,
+    ConsistencyReportResponse,
+    CovenantSensitivityResponse,
+    DerivedFactResponse,
+    DerivedFactsListResponse,
     ExtractionDiffResponse,
     ItemLineageResponse,
     JobListResponse,
@@ -832,7 +836,7 @@ async def get_job_cell_mappings(
     _api_key: APIKey = Depends(get_current_api_key),
 ):
     """Get cell mappings for a job. Supports filtering by sheet and mapping status."""
-    job = crud.get_extraction_job(db, job_id)
+    job = crud.get_job(db, job_id)
     if not job:
         raise HTTPException(404, "Job not found")
 
@@ -855,7 +859,7 @@ async def get_job_cell_stats(
     _api_key: APIKey = Depends(get_current_api_key),
 ):
     """Get cell mapping statistics per sheet for a job."""
-    job = crud.get_extraction_job(db, job_id)
+    job = crud.get_job(db, job_id)
     if not job:
         raise HTTPException(404, "Job not found")
 
@@ -876,5 +880,204 @@ async def get_cell_mapping(
     result = crud.get_cell_mapping_by_ref(db, job_id, sheet_name, cell_ref)
     if not result:
         raise HTTPException(404, f"No cell mapping for {sheet_name}!{cell_ref}")
+
+
+# ============================================================================
+# GET /{job_id}/derived-facts
+# ============================================================================
+
+
+@router.get("/{job_id}/derived-facts", response_model=DerivedFactsListResponse)
+@limiter.limit("500/hour")
+async def get_job_derived_facts(
+    request: Request,
+    job_id: UUID,
+    canonical_names: Optional[str] = None,
+    is_gap_fill: Optional[bool] = None,
+    db: Session = Depends(get_db),
+    _api_key: APIKey = Depends(get_current_api_key),
+):
+    """List all derived facts computed by Stage 6 for this job.
+
+    Query parameters:
+    - **canonical_names**: comma-separated list to filter by specific metrics
+    - **is_gap_fill**: true to return only gap-fill facts, false for consistency-check facts
+    """
+    job = crud.get_job(db, job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+
+    canonical_list = (
+        [c.strip() for c in canonical_names.split(",") if c.strip()]
+        if canonical_names
+        else None
+    )
+
+    try:
+        rows = crud.get_derived_facts(
+            db, job_id, canonical_names=canonical_list, is_gap_fill=is_gap_fill
+        )
+    except Exception as e:
+        logger.error(f"Failed to fetch derived facts for job {job_id}: {e}")
+        raise HTTPException(500, "Failed to fetch derived facts")
+
+    facts = [_serialise_derived_fact_response(r) for r in rows]
+
+    # Try to get model_type from job result
+    model_type = None
+    if job.result and isinstance(job.result, dict):
+        model_type = job.result.get("model_type") or job.result.get("derivation", {}).get("model_type")
+
+    return DerivedFactsListResponse(
+        job_id=str(job_id),
+        model_type=model_type,
+        count=len(facts),
+        facts=facts,
+    )
+
+
+# ============================================================================
+# GET /{job_id}/consistency-report
+# ============================================================================
+
+
+@router.get("/{job_id}/consistency-report", response_model=ConsistencyReportResponse)
+@limiter.limit("500/hour")
+async def get_job_consistency_report(
+    request: Request,
+    job_id: UUID,
+    db: Session = Depends(get_db),
+    _api_key: APIKey = Depends(get_current_api_key),
+):
+    """Consistency report: derived metrics where both extracted and computed values exist.
+
+    Returns all derived facts that have a consistency_check, with details on
+    whether the extracted and computed values agree within tolerance.
+    Use this endpoint to surface model arithmetic errors.
+    """
+    job = crud.get_job(db, job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+
+    try:
+        all_rows = crud.get_derived_facts(db, job_id)
+    except Exception as e:
+        logger.error(f"Failed to fetch derived facts for consistency report {job_id}: {e}")
+        raise HTTPException(500, "Failed to fetch derived facts")
+
+    items = []
+    for row in all_rows:
+        cc = row.consistency_check
+        if not cc:
+            continue
+        items.append(
+            {
+                "canonical_name": row.canonical_name,
+                "period": row.period,
+                "extracted_value": cc.get("extracted_value"),
+                "computed_value": cc.get("computed_value", float(row.computed_value)),
+                "divergence_pct": cc.get("divergence_pct"),
+                "passed": bool(cc.get("passed", True)),
+                "threshold_pct": cc.get("threshold_pct"),
+                "confidence": float(row.confidence) if row.confidence is not None else 0.0,
+            }
+        )
+
+    passed = sum(1 for i in items if i["passed"])
+    violations = len(items) - passed
+
+    return ConsistencyReportResponse(
+        job_id=str(job_id),
+        total_checked=len(items),
+        passed=passed,
+        violations=violations,
+        items=items,
+    )
+
+
+# ============================================================================
+# GET /{job_id}/covenant-sensitivity
+# ============================================================================
+
+
+@router.get("/{job_id}/covenant-sensitivity", response_model=CovenantSensitivityResponse)
+@limiter.limit("500/hour")
+async def get_job_covenant_sensitivity(
+    request: Request,
+    job_id: UUID,
+    db: Session = Depends(get_db),
+    _api_key: APIKey = Depends(get_current_api_key),
+):
+    """Return derived metrics where the computed value is within the uncertainty band
+    of a covenant threshold.
+
+    A non-empty response means at least one metric is in covenant-sensitive territory:
+    the lower confidence bound may breach the threshold even though the point estimate
+    passes.  Underwriters should treat these as requiring manual review.
+    """
+    job = crud.get_job(db, job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+
+    try:
+        rows = crud.get_covenant_sensitive_facts(db, job_id)
+    except Exception as e:
+        logger.error(f"Failed to fetch covenant-sensitive facts for job {job_id}: {e}")
+        raise HTTPException(500, "Failed to fetch covenant sensitivity data")
+
+    facts = [_serialise_derived_fact_response(r) for r in rows]
+
+    return CovenantSensitivityResponse(
+        job_id=str(job_id),
+        sensitive_count=len(facts),
+        facts=facts,
+    )
+
+
+def _serialise_derived_fact_response(row) -> DerivedFactResponse:
+    """Convert a DerivedFact ORM row to the API response schema."""
+    cc = row.consistency_check
+    cov = row.covenant_context
+    return DerivedFactResponse(
+        canonical_name=row.canonical_name,
+        period=row.period,
+        computed_value=float(row.computed_value),
+        confidence=float(row.confidence) if row.confidence is not None else 0.0,
+        value_range_low=(
+            float(row.value_range_low) if row.value_range_low is not None else None
+        ),
+        value_range_high=(
+            float(row.value_range_high) if row.value_range_high is not None else None
+        ),
+        computation_rule_id=row.computation_rule_id or "",
+        formula=row.formula or "",
+        source_canonicals=row.source_canonicals or [],
+        confidence_mode=row.confidence_mode or "min",
+        derivation_pass=row.derivation_pass or 1,
+        is_gap_fill=bool(row.is_gap_fill),
+        consistency=(
+            {
+                "extracted_value": cc.get("extracted_value"),
+                "computed_value": cc.get("computed_value", float(row.computed_value)),
+                "divergence_pct": cc.get("divergence_pct"),
+                "passed": bool(cc.get("passed", True)),
+                "threshold_pct": cc.get("threshold_pct"),
+            }
+            if cc
+            else None
+        ),
+        covenant=(
+            {
+                "threshold": cov.get("threshold"),
+                "headroom": cov.get("headroom"),
+                "headroom_range_low": cov.get("headroom_range_low"),
+                "headroom_range_high": cov.get("headroom_range_high"),
+                "is_sensitive": bool(cov.get("is_sensitive", False)),
+                "flag_message": cov.get("flag_message"),
+            }
+            if cov
+            else None
+        ),
+    )
 
     return result

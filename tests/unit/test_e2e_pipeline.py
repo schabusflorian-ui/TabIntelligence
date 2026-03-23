@@ -12,22 +12,24 @@ from src.extraction.registry import registry
 
 
 class TestFullPipelineExecution:
-    """Test the complete 5-stage pipeline end-to-end."""
+    """Test the complete 6-stage pipeline end-to-end."""
 
     @pytest.mark.asyncio
-    async def test_all_five_stages_registered(self):
-        """All 5 extraction stages must be registered."""
+    async def test_all_six_stages_registered(self):
+        """All 6 extraction stages must be registered."""
         pipeline = registry.get_pipeline()
         stage_names = [s.name for s in pipeline]
 
-        assert len(pipeline) == 5
-        assert stage_names == ["parsing", "triage", "mapping", "validation", "enhanced_mapping"]
+        assert len(pipeline) == 6
+        assert stage_names == [
+            "parsing", "triage", "mapping", "validation", "enhanced_mapping", "derivation"
+        ]
 
     @pytest.mark.asyncio
     async def test_stage_numbers_sequential(self):
-        """Stage numbers must be 1-5 in order."""
+        """Stage numbers must be 1-6 in order."""
         pipeline = registry.get_pipeline()
-        assert [s.stage_number for s in pipeline] == [1, 2, 3, 4, 5]
+        assert [s.stage_number for s in pipeline] == [1, 2, 3, 4, 5, 6]
 
     @pytest.mark.asyncio
     async def test_pipeline_returns_all_required_keys(self, mock_anthropic, sample_xlsx):
@@ -71,7 +73,7 @@ class TestFullPipelineExecution:
 
 
 class TestLineageTracking:
-    """Test lineage tracking across all 5 stages."""
+    """Test lineage tracking across all 6 stages."""
 
     @pytest.mark.asyncio
     async def test_lineage_summary_present(self, mock_anthropic, sample_xlsx):
@@ -86,12 +88,12 @@ class TestLineageTracking:
 
     @pytest.mark.asyncio
     async def test_lineage_covers_all_stages(self, mock_anthropic, sample_xlsx):
-        """Lineage must have events for all 5 stages."""
+        """Lineage must have events for all 6 stages."""
         result = await extract(sample_xlsx, file_id="lineage-test-2")
 
         summary = result["lineage_summary"]
-        assert summary["total_events"] == 5
-        assert sorted(summary["stages"]) == [1, 2, 3, 4, 5]
+        assert summary["total_events"] == 6
+        assert sorted(summary["stages"]) == [1, 2, 3, 4, 5, 6]
 
     @pytest.mark.asyncio
     async def test_lineage_event_types_match_stages(self, mock_anthropic, sample_xlsx):
@@ -99,7 +101,7 @@ class TestLineageTracking:
         result = await extract(sample_xlsx, file_id="lineage-test-3")
 
         summary = result["lineage_summary"]
-        expected_types = {"parsing", "triage", "mapping", "validation", "enhanced_mapping"}
+        expected_types = {"parsing", "triage", "mapping", "validation", "enhanced_mapping", "derivation"}
         assert set(summary["event_types"]) == expected_types
 
     @pytest.mark.asyncio

@@ -25,8 +25,10 @@ from src.api.schemas import (
     FactsListResponse,
     MappingSuggestion,
     MultiPeriodComparisonResponse,
+    PortfolioCovenantMonitorResponse,
     PortfolioSummaryResponse,
     QualityTrendResponse,
+    StandardisedFinancialsResponse,
     StructuredStatementResponse,
     SuggestionResponse,
     TaxonomyCoverageResponse,
@@ -1119,4 +1121,125 @@ def entity_quality_trend(
         entity_id=str(entity.id),
         entity_name=entity.name,
         snapshots=snapshots,
+    )
+
+
+# ============================================================================
+# GET /entity/{entity_id}/standardised-financials
+# ============================================================================
+
+
+@router.get(
+    "/entity/{entity_id}/standardised-financials",
+    response_model=StandardisedFinancialsResponse,
+)
+@limiter.limit("500/hour")
+def entity_standardised_financials(
+    request: Request,
+    entity_id: str,
+    canonical_names: Optional[str] = Query(
+        None, description="Comma-separated canonical names to filter"
+    ),
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Standardised financial output: extracted facts supplemented by Stage 6 derived metrics.
+
+    For each (canonical_name, period) in the entity's latest completed job:
+    - Returns the **extracted** fact when mapping confidence ≥ 0.70
+    - Returns the **computed** fact when the canonical was not extracted (gap-fill)
+    - Returns a **computed_supplement** when the extracted confidence < 0.70 and
+      a computed counterpart exists
+
+    Each item carries ``value_range_low`` / ``value_range_high`` (the ±uncertainty band)
+    and a ``covenant`` block for metrics near a threshold.
+    """
+    try:
+        entity_uuid = UUID(entity_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid entity_id format")
+
+    entity = crud.get_entity(db, entity_uuid)
+    if not entity:
+        raise HTTPException(404, "Entity not found")
+
+    canonical_list = (
+        [c.strip() for c in canonical_names.split(",") if c.strip()]
+        if canonical_names
+        else None
+    )
+
+    try:
+        items = crud.get_entity_standardised_financials(
+            db, entity_uuid, canonical_names=canonical_list
+        )
+    except Exception as e:
+        from src.core.exceptions import DatabaseError
+
+        logger.error(f"Error fetching standardised financials for entity {entity_uuid}: {e}", exc_info=True)
+        if isinstance(e, DatabaseError):
+            raise HTTPException(500, "Failed to fetch standardised financials")
+        raise HTTPException(500, "Failed to fetch standardised financials")
+
+    return StandardisedFinancialsResponse(
+        entity_id=str(entity_uuid),
+        count=len(items),
+        items=items,
+    )
+
+
+# ============================================================================
+# GET /portfolio/covenant-monitor
+# ============================================================================
+
+
+@router.get(
+    "/portfolio/covenant-monitor",
+    response_model=PortfolioCovenantMonitorResponse,
+)
+@limiter.limit("200/hour")
+def portfolio_covenant_monitor(
+    request: Request,
+    entity_ids: Optional[str] = Query(
+        None,
+        description="Comma-separated entity UUIDs to include (omit for all entities)",
+    ),
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Portfolio-wide covenant sensitivity monitor.
+
+    Returns all derived metrics across the portfolio where the computed value is
+    within its uncertainty band of a covenant threshold.  A non-empty response
+    indicates deals that require manual underwriter review before distribution or
+    reporting.
+
+    Each item includes:
+    - ``covenant_context.headroom`` — point-estimate headroom above/below threshold
+    - ``covenant_context.headroom_range_low`` — lower uncertainty bound of headroom
+      (negative → lower bound breaches threshold)
+    - ``covenant_context.flag_message`` — plain-language description of the sensitivity
+    """
+    entity_uuid_list: Optional[List[UUID]] = None
+    if entity_ids:
+        try:
+            entity_uuid_list = [UUID(e.strip()) for e in entity_ids.split(",") if e.strip()]
+        except ValueError:
+            raise HTTPException(400, "Invalid entity_id format in entity_ids parameter")
+
+    try:
+        items = crud.get_portfolio_covenant_monitor(db, entity_ids=entity_uuid_list)
+    except Exception as e:
+        from src.core.exceptions import DatabaseError
+
+        if isinstance(e, DatabaseError):
+            raise HTTPException(500, "Failed to fetch covenant monitor data")
+        raise HTTPException(500, "Failed to fetch covenant monitor data")
+
+    entity_ids_seen = {i["entity_id"] for i in items if i.get("entity_id")}
+
+    return PortfolioCovenantMonitorResponse(
+        total_entities_monitored=len(entity_ids_seen),
+        sensitive_count=len(items),
+        items=items,
     )

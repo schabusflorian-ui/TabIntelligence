@@ -1,5 +1,6 @@
 """Extraction pipeline stages."""
 
+from src.extraction.stages.derivation import DerivationStage
 from src.extraction.stages.enhanced_mapping import EnhancedMappingStage
 from src.extraction.stages.mapping import MappingStage
 from src.extraction.stages.parsing import ParsingStage
@@ -12,4 +13,5 @@ __all__ = [
     "MappingStage",
     "ValidationStage",
     "EnhancedMappingStage",
+    "DerivationStage",
 ]

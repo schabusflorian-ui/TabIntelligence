@@ -12,8 +12,11 @@ def _make_taxonomy():
     return [
         {"canonical_name": "cash", "typical_sign": "positive", "validation_rules": {}},
         {"canonical_name": "ending_cash", "typical_sign": "positive", "validation_rules": {}},
+        {"canonical_name": "beginning_cash", "typical_sign": "positive", "validation_rules": {}},
+        {"canonical_name": "net_change_cash", "typical_sign": "varies", "validation_rules": {}},
         {"canonical_name": "retained_earnings", "typical_sign": "varies", "validation_rules": {}},
         {"canonical_name": "net_income", "typical_sign": "varies", "validation_rules": {}},
+        {"canonical_name": "net_income_cf", "typical_sign": "varies", "validation_rules": {}},
         {"canonical_name": "total_debt", "typical_sign": "positive", "validation_rules": {}},
         {"canonical_name": "long_term_debt", "typical_sign": "positive", "validation_rules": {}},
         {"canonical_name": "short_term_debt", "typical_sign": "positive", "validation_rules": {}},
@@ -27,6 +30,19 @@ def _make_taxonomy():
         {"canonical_name": "capex", "typical_sign": "negative", "validation_rules": {}},
         {"canonical_name": "ppe", "typical_sign": "positive", "validation_rules": {}},
         {"canonical_name": "depreciation", "typical_sign": "negative", "validation_rules": {}},
+        # Debt schedule items
+        {"canonical_name": "debt_opening_balance", "typical_sign": "positive", "validation_rules": {}},
+        {"canonical_name": "debt_closing_balance", "typical_sign": "positive", "validation_rules": {}},
+        {"canonical_name": "debt_drawdown", "typical_sign": "positive", "validation_rules": {}},
+        {"canonical_name": "principal_payment", "typical_sign": "negative", "validation_rules": {}},
+        {"canonical_name": "interest_payment", "typical_sign": "negative", "validation_rules": {}},
+        {"canonical_name": "debt_service", "typical_sign": "negative", "validation_rules": {}},
+        # Project finance
+        {"canonical_name": "cfads", "typical_sign": "positive", "validation_rules": {}},
+        {"canonical_name": "dscr_project_finance", "typical_sign": "positive", "validation_rules": {}},
+        # Cash flow statement
+        {"canonical_name": "cfo", "typical_sign": "positive", "validation_rules": {}},
+        {"canonical_name": "fcf", "typical_sign": "varies", "validation_rules": {}},
     ]
 
 
@@ -56,14 +72,24 @@ class TestCashBsCf:
         assert cash_results[0].severity == "warning"
 
     def test_within_tolerance_passes(self):
-        """4% difference should pass with 5% tolerance."""
+        """0.5% rounding difference should pass within 1% tolerance."""
+        data = {
+            "1.0": {"cash": D("1000000"), "ending_cash": D("995000")},
+        }
+        results = self.validator.validate_cross_statement(data)
+        cash_results = [r for r in results if r.rule == "cross_statement:cash_bs_cf"]
+        assert len(cash_results) == 1
+        assert cash_results[0].passed is True
+
+    def test_4pct_difference_fails_tighter_tolerance(self):
+        """4% difference should now fail with tighter 1% tolerance."""
         data = {
             "1.0": {"cash": D("1000000"), "ending_cash": D("960000")},
         }
         results = self.validator.validate_cross_statement(data)
         cash_results = [r for r in results if r.rule == "cross_statement:cash_bs_cf"]
         assert len(cash_results) == 1
-        assert cash_results[0].passed is True
+        assert cash_results[0].passed is False
 
     def test_missing_ending_cash_skips(self):
         data = {
@@ -110,16 +136,31 @@ class TestRetainedEarningsNetIncome:
         assert len(re_results) == 0
 
     def test_dividend_gap_within_tolerance(self):
-        """Small gap (due to dividends) within 5% tolerance should pass."""
+        """Gap explained by dividends_paid should pass with tighter 2% tolerance."""
         data = {
             "1.0": {"retained_earnings": D("5000000"), "net_income": D("500000")},
-            "2.0": {"retained_earnings": D("5480000"), "net_income": D("500000")},
-            # change = 480K, net_income = 500K, diff = 4% — within 5%
+            "2.0": {
+                "retained_earnings": D("5450000"),
+                "net_income": D("500000"),
+                "dividends_paid": D("-50000"),  # 500000 - 50000 = 450000 = exact change
+            },
         }
         results = self.validator.validate_cross_statement(data)
         re_results = [r for r in results if r.rule == "cross_statement:retained_earnings_ni"]
         assert len(re_results) == 1
         assert re_results[0].passed is True
+
+    def test_4pct_unexplained_gap_fails(self):
+        """4% unexplained gap (no dividends) should fail with 2% tolerance."""
+        data = {
+            "1.0": {"retained_earnings": D("5000000"), "net_income": D("500000")},
+            "2.0": {"retained_earnings": D("5480000"), "net_income": D("500000")},
+            # change = 480K vs NI 500K = 4% gap, no dividends to explain it
+        }
+        results = self.validator.validate_cross_statement(data)
+        re_results = [r for r in results if r.rule == "cross_statement:retained_earnings_ni"]
+        assert len(re_results) == 1
+        assert re_results[0].passed is False
 
 
 class TestTotalDebtSchedule:
@@ -341,11 +382,12 @@ class TestInterestIsDsCheck:
         assert int_results[0].passed is False
         assert int_results[0].severity == "warning"
 
-    def test_within_10pct_passes(self):
+    def test_within_5pct_passes(self):
+        """3% difference — within tightened 5% tolerance."""
         data = {
             "1.0": {
                 "interest_expense": D("-50000"),
-                "total_interest": D("54000"),  # 8% difference, within 10%
+                "total_interest": D("51500"),  # 3% difference, within 5%
             },
         }
         results = self.validator.validate_cross_statement(data)
@@ -379,7 +421,7 @@ class TestEquityReconciliation:
                 "net_income": D("200000"),
             },
             "2.0": {
-                "total_equity": D("1200000"),  # 1000000 + 200000
+                "total_equity": D("1250000"),  # 1000000 + 250000 (period 2 NI)
                 "net_income": D("250000"),
             },
         }
@@ -425,7 +467,8 @@ class TestEquityReconciliation:
                 "dividends_paid": D("-50000"),
             },
             "2.0": {
-                "total_equity": D("1150000"),  # 1000000 + 200000 - 50000
+                # 1000000 + 250000 (period 2 NI) - 60000 (period 2 divs) = 1190000
+                "total_equity": D("1190000"),
                 "net_income": D("250000"),
                 "dividends_paid": D("-60000"),
             },
@@ -434,3 +477,192 @@ class TestEquityReconciliation:
         eq_results = [r for r in results if r.rule == "cross_statement:equity_reconciliation"]
         assert len(eq_results) == 1
         assert eq_results[0].passed is True
+
+
+class TestNetIncomeCfVsIs:
+    """[CF-5] net_income_cf (CF) must equal net_income (IS)."""
+
+    def setup_method(self):
+        self.validator = AccountingValidator(_make_taxonomy())
+
+    def test_matching_passes(self):
+        data = {
+            "1.0": {"net_income_cf": D("500000"), "net_income": D("500000")},
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "cross_statement:net_income_cf_vs_is"]
+        assert len(r) == 1
+        assert r[0].passed is True
+
+    def test_mismatch_is_error(self):
+        data = {
+            "1.0": {"net_income_cf": D("500000"), "net_income": D("400000")},
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "cross_statement:net_income_cf_vs_is"]
+        assert len(r) == 1
+        assert r[0].passed is False
+        assert r[0].severity == "error"
+
+    def test_missing_either_skips(self):
+        data = {"1.0": {"net_income": D("500000")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "cross_statement:net_income_cf_vs_is"]
+        assert len(r) == 0
+
+
+class TestCashRollForward:
+    """[BS-16] beginning_cash + net_change_cash == ending_cash."""
+
+    def setup_method(self):
+        self.validator = AccountingValidator(_make_taxonomy())
+
+    def test_balancing_passes(self):
+        data = {
+            "1.0": {
+                "beginning_cash": D("100000"),
+                "net_change_cash": D("50000"),
+                "ending_cash": D("150000"),
+            },
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "cross_statement:cash_roll_forward"]
+        assert len(r) == 1
+        assert r[0].passed is True
+
+    def test_mismatch_is_error(self):
+        data = {
+            "1.0": {
+                "beginning_cash": D("100000"),
+                "net_change_cash": D("50000"),
+                "ending_cash": D("200000"),  # wrong — should be 150000
+            },
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "cross_statement:cash_roll_forward"]
+        assert len(r) == 1
+        assert r[0].passed is False
+        assert r[0].severity == "error"
+
+    def test_missing_component_skips(self):
+        data = {"1.0": {"beginning_cash": D("100000"), "ending_cash": D("150000")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "cross_statement:cash_roll_forward"]
+        assert len(r) == 0
+
+
+class TestDebtRollForward:
+    """[DS-1] opening + drawdown - repayment == closing."""
+
+    def setup_method(self):
+        self.validator = AccountingValidator(_make_taxonomy())
+
+    def test_matching_passes(self):
+        data = {
+            "1.0": {
+                "debt_opening_balance": D("10000000"),
+                "debt_drawdown": D("2000000"),
+                "principal_payment": D("-1000000"),
+                "debt_closing_balance": D("11000000"),  # 10M + 2M - 1M
+            },
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "cross_statement:debt_roll_forward"]
+        assert len(r) == 1
+        assert r[0].passed is True
+
+    def test_mismatch_is_error(self):
+        data = {
+            "1.0": {
+                "debt_opening_balance": D("10000000"),
+                "debt_drawdown": D("2000000"),
+                "principal_payment": D("-1000000"),
+                "debt_closing_balance": D("12000000"),  # wrong — should be 11M
+            },
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "cross_statement:debt_roll_forward"]
+        assert len(r) == 1
+        assert r[0].passed is False
+        assert r[0].severity == "error"
+
+    def test_missing_repayment_skips(self):
+        data = {
+            "1.0": {
+                "debt_opening_balance": D("10000000"),
+                "debt_closing_balance": D("11000000"),
+            },
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "cross_statement:debt_roll_forward"]
+        assert len(r) == 0
+
+
+class TestDebtServiceIdentity:
+    """[DS-3] debt_service == principal + interest."""
+
+    def setup_method(self):
+        self.validator = AccountingValidator(_make_taxonomy())
+
+    def test_matching_passes(self):
+        data = {
+            "1.0": {
+                "debt_service": D("-3000000"),
+                "principal_payment": D("-2000000"),
+                "interest_payment": D("-1000000"),
+            },
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "cross_statement:debt_service_identity"]
+        assert len(r) == 1
+        assert r[0].passed is True
+
+    def test_mismatch_is_error(self):
+        data = {
+            "1.0": {
+                "debt_service": D("-3000000"),
+                "principal_payment": D("-1500000"),
+                "interest_payment": D("-1000000"),  # 1500 + 1000 = 2500, not 3000
+            },
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "cross_statement:debt_service_identity"]
+        assert len(r) == 1
+        assert r[0].passed is False
+        assert r[0].severity == "error"
+
+
+class TestDscrPfConsistency:
+    """[PF-2] dscr_project_finance consistency with cfads / debt_service."""
+
+    def setup_method(self):
+        self.validator = AccountingValidator(_make_taxonomy())
+
+    def test_consistent_dscr_passes(self):
+        # cfads=5M, debt_service=4M, ratio=1.25x — extracted also 1.25x
+        data = {
+            "1.0": {
+                "dscr_project_finance": D("1.25"),
+                "cfads": D("5000000"),
+                "debt_service": D("4000000"),
+            },
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "cross_statement:dscr_pf_consistency"]
+        assert len(r) == 1
+        assert r[0].passed is True
+
+    def test_divergent_dscr_warns(self):
+        # cfads=5M, debt_service=4M, ratio=1.25x — but extracted says 1.40x
+        data = {
+            "1.0": {
+                "dscr_project_finance": D("1.40"),
+                "cfads": D("5000000"),
+                "debt_service": D("4000000"),
+            },
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "cross_statement:dscr_pf_consistency"]
+        assert len(r) == 1
+        assert r[0].passed is False
+        assert r[0].severity == "warning"

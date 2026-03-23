@@ -23,6 +23,7 @@ from src.db.models import (
     CellMapping,
     CorrectionHistory,
     DLQEntry,
+    DerivedFact,
     Entity,
     EntityPattern,
     ExtractionFact,
@@ -4598,3 +4599,406 @@ def get_benchmark_category_heatmap(
         "runs": run_labels,
         "heatmap": heatmap,
     }
+
+
+# ============================================================================
+# DERIVED FACTS (Stage 6 Derivation Engine)
+# ============================================================================
+
+
+def persist_derived_facts(
+    db: Session,
+    job_id: UUID,
+    entity_id,
+    derived_facts: List[dict],
+) -> int:
+    """Bulk-upsert derived facts produced by the Stage 6 Derivation Engine.
+
+    Args:
+        db: Database session
+        job_id: ExtractionJob UUID
+        entity_id: Optional entity UUID (string or UUID)
+        derived_facts: List of serialised DerivedFact dicts from DerivationStage
+
+    Returns:
+        Number of derived facts persisted.
+    """
+    from decimal import Decimal, InvalidOperation
+
+    if not derived_facts:
+        return 0
+
+    entity_uuid: Optional[UUID] = None
+    if entity_id:
+        try:
+            entity_uuid = UUID(str(entity_id)) if not isinstance(entity_id, UUID) else entity_id
+        except (ValueError, AttributeError):
+            pass
+
+    rows = []
+    seen: set = set()  # dedup (canonical, period) — first-write-wins
+
+    for fact in derived_facts:
+        canonical = fact.get("canonical_name")
+        period = fact.get("period")
+        if not canonical or not period:
+            continue
+
+        key = (canonical, period)
+        if key in seen:
+            continue
+        seen.add(key)
+
+        try:
+            computed_value = Decimal(str(fact.get("computed_value", 0)))
+        except (InvalidOperation, ValueError):
+            continue
+
+        def _dec(v):
+            if v is None:
+                return None
+            try:
+                return Decimal(str(v))
+            except (InvalidOperation, ValueError):
+                return None
+
+        consistency = fact.get("consistency")
+        covenant = fact.get("covenant")
+
+        rows.append(
+            DerivedFact(
+                job_id=job_id,
+                entity_id=entity_uuid,
+                canonical_name=canonical,
+                period=period,
+                computed_value=computed_value,
+                confidence=float(fact.get("confidence", 0.0)),
+                value_range_low=_dec(fact.get("value_range_low")),
+                value_range_high=_dec(fact.get("value_range_high")),
+                computation_rule_id=fact.get("computation_rule_id", ""),
+                formula=fact.get("formula", ""),
+                source_canonicals=fact.get("source_canonicals", []),
+                confidence_mode=fact.get("confidence_mode", "min"),
+                derivation_pass=int(fact.get("derivation_pass", 1)),
+                is_gap_fill=bool(fact.get("is_gap_fill", True)),
+                consistency_check=consistency,
+                covenant_context=covenant,
+            )
+        )
+
+    if rows:
+        db.bulk_save_objects(rows)
+        db.commit()
+
+
+def get_derived_facts(
+    db: Session,
+    job_id: UUID,
+    canonical_names: Optional[List[str]] = None,
+    is_gap_fill: Optional[bool] = None,
+) -> List[DerivedFact]:
+    """Query derived facts for a job, with optional filters.
+
+    Args:
+        db: Database session
+        job_id: ExtractionJob UUID
+        canonical_names: If given, only return facts for these canonicals
+        is_gap_fill: If True/False, filter to gap-fill or consistency-check facts only
+
+    Returns:
+        List of DerivedFact rows ordered by canonical_name, period.
+    """
+    try:
+        q = db.query(DerivedFact).filter(DerivedFact.job_id == job_id)
+        if canonical_names:
+            q = q.filter(DerivedFact.canonical_name.in_(canonical_names))
+        if is_gap_fill is not None:
+            q = q.filter(DerivedFact.is_gap_fill == is_gap_fill)
+        return q.order_by(DerivedFact.canonical_name, DerivedFact.period).all()
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to query derived facts for job {job_id}: {str(e)}")
+        raise DatabaseError(
+            f"Failed to query derived facts: {str(e)}",
+            operation="select",
+            table="derived_facts",
+        )
+
+
+def get_covenant_sensitive_facts(
+    db: Session,
+    job_id: UUID,
+) -> List[DerivedFact]:
+    """Return derived facts for a job that have a covenant-sensitive flag.
+
+    A fact is covenant-sensitive when its ``covenant_context`` JSON field
+    contains ``is_sensitive: true``.  The filter is done in Python because the
+    JSON predicate syntax differs between SQLite (tests) and PostgreSQL (prod).
+    """
+    try:
+        rows = (
+            db.query(DerivedFact)
+            .filter(
+                DerivedFact.job_id == job_id,
+                DerivedFact.covenant_context.isnot(None),
+            )
+            .order_by(DerivedFact.canonical_name, DerivedFact.period)
+            .all()
+        )
+        return [r for r in rows if _is_covenant_sensitive(r.covenant_context)]
+    except SQLAlchemyError as e:
+        logger.error(
+            f"Failed to query covenant-sensitive facts for job {job_id}: {str(e)}"
+        )
+        raise DatabaseError(
+            f"Failed to query covenant facts: {str(e)}",
+            operation="select",
+            table="derived_facts",
+        )
+
+
+def _is_covenant_sensitive(covenant_context) -> bool:
+    """Return True if covenant_context dict marks this fact as sensitive."""
+    if not covenant_context:
+        return False
+    if isinstance(covenant_context, dict):
+        return bool(covenant_context.get("is_sensitive"))
+    return False
+
+
+def get_entity_standardised_financials(
+    db: Session,
+    entity_id: UUID,
+    canonical_names: Optional[List[str]] = None,
+) -> List[dict]:
+    """Return a union of extracted and derived facts for an entity.
+
+    For each (canonical_name, period) pair, prefer the extracted fact when
+    its confidence ≥ 0.70, otherwise prefer the derived fact.  Both facts are
+    returned with a ``source`` field ("extracted", "derived", or
+    "computed_supplement") so callers can distinguish provenance.
+
+    Returns:
+        List of dicts, one per unique (canonical_name, period), sorted by
+        canonical_name then period.
+    """
+    try:
+        # Gather the latest completed job for this entity (via File.entity_id)
+        latest_job = (
+            db.query(ExtractionJob)
+            .join(File, ExtractionJob.file_id == File.file_id)
+            .filter(
+                File.entity_id == entity_id,
+                ExtractionJob.status == JobStatusEnum.COMPLETED,
+            )
+            .order_by(ExtractionJob.created_at.desc())
+            .first()
+        )
+        if not latest_job:
+            return []
+
+        job_id = latest_job.job_id
+
+        # Extracted facts
+        ef_query = db.query(ExtractionFact).filter(ExtractionFact.job_id == job_id)
+        if canonical_names:
+            ef_query = ef_query.filter(
+                ExtractionFact.canonical_name.in_(canonical_names)
+            )
+        extracted = {
+            (f.canonical_name, f.period): f for f in ef_query.all()
+        }
+
+        # Derived facts
+        df_query = db.query(DerivedFact).filter(DerivedFact.job_id == job_id)
+        if canonical_names:
+            df_query = df_query.filter(
+                DerivedFact.canonical_name.in_(canonical_names)
+            )
+        derived = {
+            (f.canonical_name, f.period): f for f in df_query.all()
+        }
+
+        result: List[dict] = []
+        all_keys = sorted(set(extracted) | set(derived))
+        for key in all_keys:
+            cn, period = key
+            ef = extracted.get(key)
+            df = derived.get(key)
+
+            if ef and (df is None or float(ef.confidence or 0) >= 0.70):
+                source = "extracted"
+                row = _extraction_fact_to_standardised(ef, source)
+                if df:
+                    # Attach consistency data if a derived counterpart exists
+                    row["consistency"] = df.consistency_check
+                    row["computed_value"] = float(df.computed_value)
+                    row["value_range_low"] = (
+                        float(df.value_range_low) if df.value_range_low is not None else None
+                    )
+                    row["value_range_high"] = (
+                        float(df.value_range_high) if df.value_range_high is not None else None
+                    )
+                    row["covenant"] = df.covenant_context
+            elif df:
+                source = (
+                    "computed_supplement"
+                    if ef and float(ef.confidence or 0) < 0.70
+                    else "computed"
+                )
+                row = _derived_fact_to_standardised(df, source)
+            else:
+                continue
+
+            result.append(row)
+
+        return result
+    except SQLAlchemyError as e:
+        logger.error(
+            f"Failed to query standardised financials for entity {entity_id}: {str(e)}"
+        )
+        raise DatabaseError(
+            f"Failed to query standardised financials: {str(e)}",
+            operation="select",
+            table="extraction_facts/derived_facts",
+        )
+
+
+def _extraction_fact_to_standardised(fact: "ExtractionFact", source: str) -> dict:
+    from decimal import Decimal as _D
+
+    return {
+        "canonical_name": fact.canonical_name,
+        "period": fact.period,
+        "value": float(fact.value) if fact.value is not None else None,
+        "source": source,
+        "confidence": float(fact.confidence) if fact.confidence is not None else None,
+        "value_range_low": None,
+        "value_range_high": None,
+        "computation_rule_id": None,
+        "formula": None,
+        "source_canonicals": None,
+        "consistency": None,
+        "computed_value": None,
+        "covenant": None,
+    }
+
+
+def _derived_fact_to_standardised(fact: "DerivedFact", source: str) -> dict:
+    return {
+        "canonical_name": fact.canonical_name,
+        "period": fact.period,
+        "value": float(fact.computed_value),
+        "source": source,
+        "confidence": float(fact.confidence) if fact.confidence is not None else None,
+        "value_range_low": (
+            float(fact.value_range_low) if fact.value_range_low is not None else None
+        ),
+        "value_range_high": (
+            float(fact.value_range_high) if fact.value_range_high is not None else None
+        ),
+        "computation_rule_id": fact.computation_rule_id,
+        "formula": fact.formula,
+        "source_canonicals": fact.source_canonicals,
+        "consistency": fact.consistency_check,
+        "computed_value": float(fact.computed_value),
+        "covenant": fact.covenant_context,
+    }
+
+
+def get_portfolio_covenant_monitor(
+    db: Session,
+    entity_ids: Optional[List[UUID]] = None,
+) -> List[dict]:
+    """Return all covenant-sensitive derived facts across the portfolio.
+
+    For each entity, queries the latest completed job and returns derived
+    facts where covenant_context.is_sensitive is True.
+
+    Args:
+        db: Database session
+        entity_ids: If given, limit to these entities; otherwise all entities.
+
+    Returns:
+        List of dicts with entity_id, entity_name, canonical_name, period,
+        computed_value, confidence, value_range_low/high, covenant_context.
+    """
+    try:
+        # Get latest completed job per entity
+        from sqlalchemy import func
+
+        entity_query = db.query(Entity)
+        if entity_ids:
+            entity_query = entity_query.filter(Entity.id.in_(entity_ids))
+        entities = {e.id: e for e in entity_query.all()}
+
+        if not entities:
+            return []
+
+        # For each entity, find its latest completed job (via File.entity_id)
+        latest_jobs: dict = {}
+        for eid in entities:
+            job = (
+                db.query(ExtractionJob)
+                .join(File, ExtractionJob.file_id == File.file_id)
+                .filter(
+                    File.entity_id == eid,
+                    ExtractionJob.status == JobStatusEnum.COMPLETED,
+                )
+                .order_by(ExtractionJob.created_at.desc())
+                .first()
+            )
+            if job:
+                latest_jobs[eid] = job.job_id
+
+        if not latest_jobs:
+            return []
+
+        # Query derived_facts for all those jobs
+        job_ids = list(latest_jobs.values())
+        rows = (
+            db.query(DerivedFact)
+            .filter(
+                DerivedFact.job_id.in_(job_ids),
+                DerivedFact.covenant_context.isnot(None),
+            )
+            .order_by(DerivedFact.canonical_name, DerivedFact.period)
+            .all()
+        )
+
+        # Map job_id back to entity_id
+        job_to_entity = {v: k for k, v in latest_jobs.items()}
+
+        result = []
+        for row in rows:
+            if not _is_covenant_sensitive(row.covenant_context):
+                continue
+            eid = job_to_entity.get(row.job_id)
+            entity = entities.get(eid) if eid else None
+            result.append(
+                {
+                    "entity_id": str(eid) if eid else None,
+                    "entity_name": entity.name if entity else None,
+                    "canonical_name": row.canonical_name,
+                    "period": row.period,
+                    "computed_value": float(row.computed_value),
+                    "confidence": float(row.confidence) if row.confidence is not None else None,
+                    "value_range_low": (
+                        float(row.value_range_low) if row.value_range_low is not None else None
+                    ),
+                    "value_range_high": (
+                        float(row.value_range_high) if row.value_range_high is not None else None
+                    ),
+                    "covenant_context": row.covenant_context,
+                }
+            )
+
+        return result
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to query portfolio covenant monitor: {str(e)}")
+        raise DatabaseError(
+            f"Failed to query portfolio covenant monitor: {str(e)}",
+            operation="select",
+            table="derived_facts",
+        )
+
+    return len(rows)

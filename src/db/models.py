@@ -866,6 +866,85 @@ class BenchmarkCategoryMetric(Base):
         )
 
 
+# ============================================================================
+# DERIVED FACTS (Stage 6 Derivation Engine output)
+# ============================================================================
+
+
+class DerivedFact(Base):
+    """
+    Computed financial metric produced by the Stage 6 Derivation Engine.
+
+    One row per (job_id, canonical_name, period). Derived facts supplement
+    extracted facts with:
+      - Gap-filled metrics (computed when not extracted)
+      - Consistency checks (extracted vs. computed)
+      - Uncertainty bands (value_range_low / value_range_high)
+      - Covenant sensitivity flags (dscr vs. distribution_lock_up, etc.)
+
+    Source provenance is encoded in computation_rule_id and source_canonicals
+    so downstream consumers can trace exactly how each metric was derived.
+    """
+
+    __tablename__ = "derived_facts"
+
+    __table_args__ = (
+        UniqueConstraint("job_id", "canonical_name", "period", name="uq_derived_job_canonical_period"),
+        Index("ix_derived_job_canonical", "job_id", "canonical_name"),
+        Index("ix_derived_entity_canonical", "entity_id", "canonical_name"),
+    )
+
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    job_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("extraction_jobs.job_id", ondelete="CASCADE"), index=True
+    )
+    entity_id: Mapped[Optional[UUID]] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("entities.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
+    # Metric identity
+    canonical_name: Mapped[str] = mapped_column(String(100), index=True)
+    period: Mapped[str] = mapped_column(String(50), index=True)
+
+    # Computed value and confidence
+    computed_value: Mapped[Decimal] = mapped_column(Numeric(precision=20, scale=6))
+    confidence: Mapped[float] = mapped_column(Float)
+    value_range_low: Mapped[Optional[Decimal]] = mapped_column(Numeric(precision=20, scale=6), nullable=True)
+    value_range_high: Mapped[Optional[Decimal]] = mapped_column(Numeric(precision=20, scale=6), nullable=True)
+
+    # Derivation provenance
+    computation_rule_id: Mapped[str] = mapped_column(String(20))  # e.g. "DR-031"
+    formula: Mapped[str] = mapped_column(String(200))              # e.g. "cfads / debt_service"
+    source_canonicals: Mapped[list] = mapped_column(JSON)          # ["cfads", "debt_service"]
+    confidence_mode: Mapped[str] = mapped_column(String(20))       # "min", "product", "weighted"
+    derivation_pass: Mapped[int] = mapped_column(Integer)          # which DAG pass
+
+    # Gap-fill vs. consistency-check mode
+    is_gap_fill: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    # Consistency check result (when metric was also extracted)
+    consistency_check: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    # {"extracted_value": float, "computed_value": float,
+    #  "divergence_pct": float, "passed": bool, "threshold_pct": float}
+
+    # Covenant sensitivity context (DSCR, coverage ratios)
+    covenant_context: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    # {"threshold": float, "headroom": float, "headroom_range_low": float,
+    #  "headroom_range_high": float, "is_sensitive": bool, "flag_message": str}
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    def __repr__(self):
+        return (
+            f"<DerivedFact(job_id={self.job_id}, canonical='{self.canonical_name}', "
+            f"period='{self.period}', value={self.computed_value}, "
+            f"rule='{self.computation_rule_id}')>"
+        )
+
+
 # NOTE: APIKey (src.auth.models) is registered with Base.metadata when
 # src.auth is imported by the app. Do NOT import it here — circular import.
 
