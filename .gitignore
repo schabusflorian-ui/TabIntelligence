@@ -33,6 +33,7 @@ ENV/
 *.swp
 *.swo
 *~
+*.code-workspace
 .DS_Store
 
 # Environment
@@ -42,6 +43,7 @@ ENV/
 
 # Testing
 .pytest_cache/
+.mypy_cache/
 .coverage
 htmlcov/
 coverage.xml
@@ -68,6 +70,11 @@ Thumbs.db
 
 # Generated output
 data/benchmark_results/
+data/real_extraction_results/
 
-# Agent-internal files
-AGENT_TASKS.md
+# SQLite databases (dev artifacts)
+*.db
+!tests/fixtures/*.db
+
+# Real data test fixtures (may contain proprietary data)
+tests/real_data/
