@@ -145,16 +145,15 @@ Each stage extends `ExtractionStage` from `src/extraction/base.py`. The orchestr
 
 ## Documentation
 
-Internal developer documentation lives in `docs/`:
+Developer documentation lives in `docs/`:
 
 | Directory | Audience | Contents |
 |-----------|----------|----------|
 | `docs/demo/` | Users & stakeholders | Product overview, feature catalog, roadmap, demo script, architecture & data flow diagrams |
-| `docs/architecture/` | Engineers | Agent organization, kickoff briefs, product integration plan |
 | `docs/adr/` | Engineers | Architecture Decision Records (auth, DB consolidation, S3, lineage, retry) |
-| `docs/development/` | Engineers | Getting started, project setup, parallelization strategy |
-| `docs/verification/` | Engineers | Agent and feature verification reports |
-| `docs/governance/` | All | Project governance (The Four Laws) |
+| `docs/API.md` | Engineers | API endpoint reference |
+| `docs/DEVELOPER_GUIDE.md` | Engineers | Architecture overview and development workflow |
+| `docs/TESTING.md` | Engineers | Test strategy, fixtures, and execution guide |
 
 When adding significant features, update the relevant documentation — especially `docs/demo/feature-catalog.md` for user-visible features and `CHANGELOG.md` for all changes.
 

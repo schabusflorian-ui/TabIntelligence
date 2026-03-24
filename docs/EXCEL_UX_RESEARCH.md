@@ -1,6 +1,6 @@
 # Excel Interaction UX: Option A vs Option B
 
-**Date**: 2026-03-21 | **Status**: Research | **Author**: Phase 2 Planning
+**Date**: 2026-03-21 | **Status**: Research
 
 ## 1. Executive Summary
 

@@ -77,8 +77,6 @@ python scripts/validate_taxonomy.py
 |--------|-------------|
 | `start_worker.sh` | Start Celery worker for async extraction processing |
 | `e2e.sh` | Run E2E tests. Modes: (default) mock Claude, `real` for real API, `clean` to tear down |
-| `poc_guided_extraction.py` | Proof-of-concept guided extraction with Claude (standalone) |
-| `verify_week1.sh` | Week 1 verification suite |
 
 ```bash
 ./scripts/start_worker.sh    # Start Celery worker

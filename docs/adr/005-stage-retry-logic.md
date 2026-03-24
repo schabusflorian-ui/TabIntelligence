@@ -177,7 +177,7 @@ def _extract_json(content: str) -> Union[dict, list]:
    - JSON parse errors show content preview
    - Clear distinction between transient and permanent failures
 
-5. **EXISTENTIAL Alignment**: Failed jobs can now be attributed to permanent errors (bad data, invalid format) vs. transient errors (rate limits, network blips).
+5. **Error Attribution**: Failed jobs can now be attributed to permanent errors (bad data, invalid format) vs. transient errors (rate limits, network blips).
 
 ### Negative
 
@@ -223,7 +223,7 @@ Should verify:
 
 ## Notes
 
-This fix was identified during Week 1 audit of the extraction pipeline. The inconsistent retry behavior was particularly problematic during development when Claude API rate limits were frequently hit.
+The inconsistent retry behavior was particularly problematic during development when Claude API rate limits were frequently hit.
 
 Key insight: The most expensive operation (Stage 1 parsing with document upload) was already protected by retries. Not protecting Stages 2 and 3 meant throwing away that investment on transient failures.
 

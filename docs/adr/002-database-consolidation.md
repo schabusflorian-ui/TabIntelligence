@@ -17,7 +17,7 @@ The DebtFund system had TWO separate database modules with conflicting configura
    - Missing resilience patterns
    - Used by some legacy code
 
-2. **src/db/** - Week 2 canonical module with full support
+2. **src/db/** - Canonical module with full support
    - pool_size=10, max_overflow=20 (30 total connections)
    - Both async AND sync sessions
    - Circuit breaker and retry logic
@@ -36,7 +36,7 @@ The DebtFund system had TWO separate database modules with conflicting configura
 
 We consolidated all database functionality into `src/db/` for these reasons:
 
-1. **Already Marked as Canonical**: Contains explicit "Week 2 canonical location" comment
+1. **Already Marked as Canonical**: Contains explicit "canonical location" comment
 2. **Superior Architecture**: Has both async (FastAPI) and sync (migrations) support
 3. **Resilience Patterns**: Includes circuit breaker, retry logic, and connection validation
 4. **Modern Code**: Uses SQLAlchemy 2.0 declarative syntax
@@ -170,7 +170,6 @@ Returns:
 ## References
 
 - SQLAlchemy Connection Pooling: https://docs.sqlalchemy.org/en/20/core/pooling.html
-- Week 2 Strategy Document: `/docs/WEEK2_ALIGNMENT_SUMMARY.md`
 - Health Check Implementation: `/src/api/health.py`
 - Database Session Management: `/src/db/session.py`
 

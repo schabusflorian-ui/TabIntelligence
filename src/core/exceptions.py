@@ -102,9 +102,9 @@ class LineageError(DebtFundError):
 
 class LineageIncompleteError(LineageError):
     """
-    Lineage completeness check failed - EXISTENTIAL error.
+    Lineage completeness check failed - critical error.
 
-    Without complete lineage, there is no trust. Without trust, there is no product.
+    Complete lineage is required for data trust and auditability.
 
     Attributes:
         missing_events: List of stages that didn't emit lineage events

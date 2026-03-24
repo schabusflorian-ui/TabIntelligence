@@ -187,17 +187,17 @@ DebtFund/
 │   ├── lineage/           # Lineage tracker + cross-extraction differ
 │   ├── storage/           # S3/MinIO file storage
 │   └── validation/        # Accounting, completeness, quality, lifecycle
-├── tests/                 # 1,852 tests (88% coverage)
+├── tests/                 # 2,500+ tests
 │   ├── unit/              # Unit tests
 │   ├── integration/       # API integration tests
+│   ├── e2e/               # End-to-end tests
 │   └── fixtures/          # Test Excel files + expected JSON
 ├── data/
 │   └── taxonomy.json      # Canonical taxonomy (350+ items)
 ├── docs/
 │   ├── demo/              # Product documentation for users
-│   ├── architecture/      # Architecture decisions & briefs
 │   ├── adr/               # Architecture Decision Records
-│   └── ...                # Developer guides, testing, governance
+│   └── *.md               # Developer guide, API reference, testing guide
 ├── alembic/               # Database migrations
 ├── static/                # Frontend UI
 ├── scripts/               # Utilities (benchmarks, fixtures)
@@ -272,12 +272,12 @@ alembic downgrade -1      # Rollback one migration
 ## Technology Stack
 
 - **Backend**: Python 3.11+, FastAPI, Pydantic v2
-- **AI**: Anthropic Claude API (Sonnet 4.5)
+- **AI**: Anthropic Claude API (Sonnet 4)
 - **Database**: PostgreSQL 15, SQLAlchemy 2.0, Alembic
 - **Cache/Queue**: Redis 7, Celery
 - **Storage**: S3/MinIO
 - **Monitoring**: Prometheus metrics, Jaeger tracing (optional)
-- **Testing**: pytest (1,852 tests, 88% coverage)
+- **Testing**: pytest (2,500+ tests)
 - **Linting**: Ruff
 - **Deployment**: Docker multi-target builds
 

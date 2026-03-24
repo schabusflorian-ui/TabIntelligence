@@ -8,7 +8,7 @@ Accepted
 
 ## Context
 
-The lineage tracking system had two critical issues that violated EXISTENTIAL requirements:
+The lineage tracking system had two critical issues that violated critical requirements:
 
 1. **Async/Sync Mismatch**: The `save_to_db()` method in `LineageTracker` was declared as `async def` but used synchronous database operations via `get_db_context()`. This created false async semantics - the function was called with `await` but didn't actually perform any async operations.
 
@@ -19,7 +19,7 @@ The lineage tracking system had two critical issues that violated EXISTENTIAL re
 Without transactional saves:
 - Partial lineage data could exist in the database
 - Lineage completeness validation could pass locally but fail to persist
-- Trust in the system would be undermined (EXISTENTIAL violation)
+- Trust in the system would be undermined (critical violation)
 - Debugging would become impossible with incomplete event chains
 
 ### Prior Implementation
@@ -83,7 +83,7 @@ def save_to_db(self) -> None:
 
 ### Positive
 
-- **EXISTENTIAL requirement met**: Lineage saves are now atomic (all-or-nothing)
+- **critical requirement met**: Lineage saves are now atomic (all-or-nothing)
 - **Consistent architecture**: Function signature matches actual behavior (synchronous)
 - **Proper error handling**: Explicit commit/rollback with comprehensive logging
 - **Debugging clarity**: No more confusion about async/sync semantics
@@ -116,6 +116,4 @@ Should verify:
 
 ## Notes
 
-This fix was identified during Week 1 audit of the extraction pipeline. The async/sync mismatch was particularly insidious because it "worked" in the sense that no errors were raised, but the semantics were incorrect and transaction safety was missing.
-
-The fix aligns with the principle: "Without complete lineage, there is no trust. Without trust, there is no product."
+The async/sync mismatch was particularly insidious because it "worked" in the sense that no errors were raised, but the semantics were incorrect and transaction safety was missing.

@@ -1,10 +1,7 @@
 ## Description
 [Brief summary of changes - what and why]
 
-## Agent & Deliverable
-- **Agent**: [Agent X]
-- **Deliverable**: [DX.Y - Title]
-- **Related Issue**: [#issue_number]
+**Related Issue**: [#issue_number]
 
 ## Type of Change
 - [ ] Bug fix (non-breaking change which fixes an issue)
@@ -49,8 +46,6 @@
 
 ## Review Checklist
 **For Reviewer:**
-- [ ] Code follows The Four Laws
-- [ ] Changes match deliverable requirements
 - [ ] Tests adequately cover new code
 - [ ] No obvious performance issues
 - [ ] Error handling is appropriate
