@@ -65,8 +65,9 @@ alembic/versions/*.pyc
 .DS_Store
 Thumbs.db
 
-# Agent/IDE config
+# Local config
 .claude/
+AGENT_TASKS.md
 
 # Generated output
 data/benchmark_results/

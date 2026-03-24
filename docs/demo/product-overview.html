@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DebtFund — Financial Model Intelligence Platform</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231D6B9F'/><rect x='9' y='9' width='14' height='14' rx='3' fill='none' stroke='white' stroke-width='2.5'/></svg>">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/dm-serif-display@5/400.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5/400.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --steel: #1D6B9F;
+      --steel-light: #E3EEF8;
+      --steel-text: #1A4D7A;
+      --bg-page: #F6F4EF;
+      --bg-card: #FFFFFF;
+      --bg-secondary: #F0EDE8;
+      --text-primary: #1C1C1C;
+      --text-secondary: #6B7280;
+      --text-tertiary: #9CA3AF;
+      --ok: #1A7A4A;
+      --ok-bg: #E6F4ED;
+      --warn: #C47D00;
+      --warn-bg: #FEF3CD;
+      --bad: #A32626;
+      --bad-bg: #FDEAEA;
+      --border: rgba(0,0,0,0.08);
+      --border-md: rgba(0,0,0,0.15);
+      --font-serif: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-page);
+      color: var(--text-primary);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .accent-bar { height: 4px; background: var(--steel); }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    section {
+      padding: 4rem 0;
+    }
+
+    section + section {
+      border-top: 1px solid var(--border);
+    }
+
+    h1, h2, h3 { font-family: var(--font-serif); font-weight: 400; }
+
+    h2 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+
+    .section-subtitle {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      transition: box-shadow 0.2s;
+    }
+
+    .card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    .card h3 {
+      font-size: 1.15rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .card p, .card li {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    .card ul { list-style: none; padding: 0; margin-top: 0.75rem; }
+    .card ul li { padding: 0.25rem 0; padding-left: 1.1rem; position: relative; }
+    .card ul li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.65rem;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--steel);
+    }
+
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+
+    @media (max-width: 900px) {
+      .grid-3 { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .grid-3, .grid-2 { grid-template-columns: 1fr; }
+      .container { padding: 0 1.25rem; }
+      section { padding: 2.5rem 0; }
+    }
+
+    /* Hero */
+    .hero { text-align: center; padding: 5rem 0 4rem; }
+    .hero-logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px; height: 56px;
+      background: var(--steel);
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+    }
+    .hero-logo svg { width: 28px; height: 28px; }
+    .hero h1 { font-size: 2.75rem; line-height: 1.15; margin-bottom: 0.5rem; }
+    .hero .brand { color: var(--steel); font-family: var(--font-serif); font-size: 1.1rem; margin-bottom: 1rem; display: block; }
+    .hero .tagline {
+      color: var(--text-secondary);
+      font-size: 1.15rem;
+      max-width: 640px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* Problem cards */
+    .problem-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Pipeline */
+    .pipeline {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0;
+      margin-bottom: 3rem;
+    }
+    .pipeline-step {
+      padding: 0.6rem 1.1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .pipeline-step.ai { background: var(--steel-light); color: var(--steel-text); }
+    .pipeline-step.det { background: var(--warn-bg); color: var(--warn); }
+    .pipeline-step.input { background: var(--bg-secondary); color: var(--text-secondary); }
+    .pipeline-step.output { background: var(--ok-bg); color: var(--ok); }
+    .pipeline-arrow {
+      color: var(--text-tertiary);
+      font-size: 1.1rem;
+      margin: 0 0.35rem;
+    }
+
+    .triad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 2rem; }
+    .triad .card { text-align: center; }
+    .triad .card.ai-col { background: var(--steel); color: #fff; border-color: var(--steel); }
+    .triad .card.ai-col h3 { color: #fff; }
+    .triad .card.ai-col p, .triad .card.ai-col li { color: rgba(255,255,255,0.85); }
+    .triad .card.ai-col ul li::before { background: rgba(255,255,255,0.6); }
+    @media (max-width: 700px) { .triad { grid-template-columns: 1fr; } }
+
+    /* Capability cards */
+    .cap-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      margin-bottom: 0.75rem;
+    }
+
+    /* App pages */
+    .cat-header {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-bottom: 0.75rem;
+      margin-top: 1.5rem;
+    }
+    .cat-header:first-child { margin-top: 0; }
+    .pages-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .page-card {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1.25rem;
+    }
+    .page-card h4 { font-family: var(--font-serif); font-size: 1rem; margin-bottom: 0.4rem; }
+    .page-card ul { list-style: none; padding: 0; }
+    .page-card li { font-size: 0.82rem; color: var(--text-secondary); padding: 0.15rem 0; }
+    @media (max-width: 700px) { .pages-grid { grid-template-columns: 1fr; } }
+
+    /* Taxonomy coverage */
+    .tax-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; }
+    .tax-card {
+      text-align: center;
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1.25rem 0.75rem;
+    }
+    .tax-card .count { font-family: var(--font-serif); font-size: 2rem; color: var(--steel); display: block; }
+    .tax-card .label { font-size: 0.78rem; color: var(--text-secondary); display: block; margin-top: 0.25rem; }
+    .tax-card .examples { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-tertiary); margin-top: 0.5rem; line-height: 1.6; }
+    .tax-total {
+      text-align: center;
+      margin-top: 1.5rem;
+    }
+    .tax-total .count { font-family: var(--font-serif); font-size: 3rem; color: var(--steel); }
+    .tax-total .label { color: var(--text-secondary); font-size: 1rem; }
+    @media (max-width: 800px) { .tax-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 500px) { .tax-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    /* Quality */
+    .quality-row { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
+    @media (max-width: 700px) { .quality-row { grid-template-columns: 1fr; } }
+
+    .dim-bar { display: flex; height: 28px; border-radius: 6px; overflow: hidden; margin-bottom: 1rem; }
+    .dim-bar span { display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 600; color: #fff; }
+
+    .dim-list { list-style: none; padding: 0; }
+    .dim-list li { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0; font-size: 0.85rem; }
+    .dim-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+    .grade-scale { list-style: none; padding: 0; }
+    .grade-scale li { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0; }
+    .grade-badge {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-serif);
+      font-size: 1.2rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    /* Moat table */
+    .moat-table { width: 100%; border-collapse: collapse; }
+    .moat-table th {
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-tertiary);
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border-md);
+    }
+    .moat-table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+      vertical-align: top;
+    }
+    .moat-table td:first-child { font-weight: 600; color: var(--steel-text); white-space: nowrap; }
+    .moat-table td:last-child { color: var(--text-secondary); font-size: 0.82rem; }
+
+    /* Metrics */
+    .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .metric-card {
+      text-align: center;
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1.5rem 1rem;
+    }
+    .metric-card .value { font-family: var(--font-serif); font-size: 1.75rem; color: var(--steel); }
+    .metric-card .desc { font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.25rem; }
+    @media (max-width: 600px) { .metrics-grid { grid-template-columns: 1fr 1fr; } }
+
+    /* Tech stack */
+    .tech-row { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: start; }
+    @media (max-width: 700px) { .tech-row { grid-template-columns: 1fr; } }
+    .tech-list { list-style: none; padding: 0; }
+    .tech-list li {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    .tech-list li:last-child { border-bottom: none; }
+    .tech-label { font-weight: 600; min-width: 130px; }
+    .tech-desc { color: var(--text-secondary); font-size: 0.82rem; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .stat-item { text-align: center; }
+    .stat-item .num { font-family: var(--font-serif); font-size: 1.5rem; color: var(--steel); display: block; }
+    .stat-item .lbl { font-size: 0.78rem; color: var(--text-secondary); }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 2rem 0;
+      border-top: 1px solid var(--border);
+    }
+    footer p { color: var(--text-secondary); font-size: 0.82rem; }
+    footer .built { font-size: 0.9rem; color: var(--text-primary); margin-bottom: 0.5rem; }
+
+    @media print {
+      body { background: #fff; }
+      .card:hover { box-shadow: none; }
+      section { page-break-inside: avoid; padding: 2rem 0; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="accent-bar"></div>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-logo">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="5" y="5" width="18" height="18" rx="4" stroke="white" stroke-width="3" fill="none"/>
+      </svg>
+    </div>
+    <span class="brand">DebtFund</span>
+    <h1>Financial Model<br>Intelligence Platform</h1>
+    <p class="tagline">Turn any Excel financial model into structured, queryable, auditable data &mdash; without losing context.</p>
+  </div>
+</section>
+
+<!-- The Problem -->
+<section>
+  <div class="container">
+    <h2>The Problem</h2>
+    <p class="section-subtitle">Every credit fund faces these challenges with financial model data.</p>
+    <div class="grid-3">
+      <div class="card">
+        <div class="problem-icon" style="background: var(--bad-bg); color: var(--bad);">&#9201;</div>
+        <h3>Manual Data Entry</h3>
+        <p>Credit analysts spend hours manually extracting financial data from Excel models. Each model has different layouts, naming conventions, and structures.</p>
+      </div>
+      <div class="card">
+        <div class="problem-icon" style="background: var(--warn-bg); color: var(--warn);">&#9874;</div>
+        <h3>No Standard Vocabulary</h3>
+        <p>The same line item appears as "Revenue", "Total Revenue", "Net Revenue", "Sales", or "Turnover" across different sponsors. There is no canonical mapping.</p>
+      </div>
+      <div class="card">
+        <div class="problem-icon" style="background: var(--steel-light); color: var(--steel);">&#128269;</div>
+        <h3>Lost Audit Trail</h3>
+        <p>Once data moves from Excel to a database or spreadsheet, the connection to the source cell is lost. There is no way to verify where a number came from.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section>
+  <div class="container">
+    <h2>How It Works</h2>
+    <p class="section-subtitle">A 5-stage AI pipeline guided by domain expertise.</p>
+
+    <div class="pipeline">
+      <span class="pipeline-step input">Upload .xlsx</span>
+      <span class="pipeline-arrow">&rarr;</span>
+      <span class="pipeline-step ai">Parse</span>
+      <span class="pipeline-arrow">&rarr;</span>
+      <span class="pipeline-step ai">Triage</span>
+      <span class="pipeline-arrow">&rarr;</span>
+      <span class="pipeline-step ai">Map</span>
+      <span class="pipeline-arrow">&rarr;</span>
+      <span class="pipeline-step det">Validate</span>
+      <span class="pipeline-arrow">&rarr;</span>
+      <span class="pipeline-step ai">Enhanced Map</span>
+      <span class="pipeline-arrow">&rarr;</span>
+      <span class="pipeline-step output">Structured Data</span>
+    </div>
+
+    <div class="triad">
+      <div class="card">
+        <h3>We Provide</h3>
+        <p style="font-weight:600; color: var(--steel); margin-bottom:0.5rem;">Domain Expertise</p>
+        <ul>
+          <li>Canonical taxonomy (312 items)</li>
+          <li>Tier definitions for sheet classification</li>
+          <li>Entity context and history</li>
+          <li>Financial validation rules</li>
+        </ul>
+      </div>
+      <div class="card ai-col">
+        <h3>Claude AI Does</h3>
+        <p style="font-weight:600; color: rgba(255,255,255,0.95); margin-bottom:0.5rem;">AI Understanding</p>
+        <ul>
+          <li>Reads Excel cells and formulas</li>
+          <li>Understands financial context</li>
+          <li>Maps labels with reasoning</li>
+          <li>Explains edge cases</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>We Add</h3>
+        <p style="font-weight:600; color: var(--steel); margin-bottom:0.5rem;">Structured Output</p>
+        <ul>
+          <li>Full lineage tracking</li>
+          <li>Entity-specific patterns</li>
+          <li>Validation and quality scoring</li>
+          <li>Persistent data warehouse</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Platform Capabilities -->
+<section>
+  <div class="container">
+    <h2>Platform Capabilities</h2>
+    <p class="section-subtitle">Six pillars of financial model intelligence.</p>
+    <div class="grid-3">
+      <div class="card">
+        <span class="cap-badge" style="background: var(--steel-light); color: var(--steel-text);">Extraction</span>
+        <h3>AI-Powered Extraction</h3>
+        <ul>
+          <li>5-stage pipeline with Claude AI</li>
+          <li>312 canonical line items, 6 categories</li>
+          <li>Configurable confidence thresholds</li>
+          <li>Checkpoint/resume for fault tolerance</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="cap-badge" style="background: var(--ok-bg); color: var(--ok);">Learning</span>
+        <h3>Entity Learning</h3>
+        <ul>
+          <li>Patterns improve with each extraction</li>
+          <li>Learned aliases auto-promoted</li>
+          <li>User corrections create persistent mappings</li>
+          <li>Confidence decay prevents stale data</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="cap-badge" style="background: var(--warn-bg); color: var(--warn);">Analytics</span>
+        <h3>Portfolio Analytics</h3>
+        <ul>
+          <li>Cross-entity comparison with FX</li>
+          <li>Anomaly detection (IQR, Z-score)</li>
+          <li>Quality trending and calibration</li>
+          <li>Unmapped label gap analysis</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="cap-badge" style="background: var(--bg-secondary); color: var(--text-secondary);">Lineage</span>
+        <h3>Full Audit Trail</h3>
+        <ul>
+          <li>Lineage through every pipeline stage</li>
+          <li>Click any data point &rarr; source cell</li>
+          <li>Correction history with undo</li>
+          <li>Stage-by-stage transformation records</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="cap-badge" style="background: var(--steel-light); color: var(--steel-text);">Governance</span>
+        <h3>Taxonomy Governance</h3>
+        <ul>
+          <li>312 canonical items with aliases</li>
+          <li>AI-generated improvement suggestions</li>
+          <li>Deprecation workflow with redirects</li>
+          <li>Field-level changelog and versioning</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="cap-badge" style="background: var(--ok-bg); color: var(--ok);">Quality</span>
+        <h3>Quality Assurance</h3>
+        <ul>
+          <li>5-dimension composite quality scoring</li>
+          <li>A&ndash;F letter grades</li>
+          <li>Auto-review gating for low quality</li>
+          <li>Model-type-specific scoring</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- The Application -->
+<section>
+  <div class="container">
+    <h2>The Application</h2>
+    <p class="section-subtitle">Eight purpose-built pages for every workflow.</p>
+
+    <div class="cat-header">Core</div>
+    <div class="pages-grid">
+      <div class="page-card">
+        <h4>Dashboard</h4>
+        <ul>
+          <li>Portfolio KPIs at a glance</li>
+          <li>Quick file upload zone</li>
+          <li>Recent extractions table</li>
+        </ul>
+      </div>
+      <div class="page-card">
+        <h4>Extractions</h4>
+        <ul>
+          <li>Full job list with status filters</li>
+          <li>Real-time progress tracking</li>
+          <li>Retry failed extractions</li>
+        </ul>
+      </div>
+      <div class="page-card">
+        <h4>Job Detail</h4>
+        <ul>
+          <li>5-tab deep dive (Items, Triage, Validation, Lineage, Corrections)</li>
+          <li>Inline provenance and bulk corrections</li>
+          <li>CSV / JSON export</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cat-header">Portfolio</div>
+    <div class="pages-grid">
+      <div class="page-card">
+        <h4>Entities</h4>
+        <ul>
+          <li>Create and manage portfolio companies</li>
+          <li>Configure industry, currency, reporting standard</li>
+          <li>View extraction history</li>
+        </ul>
+      </div>
+      <div class="page-card">
+        <h4>Entity Detail</h4>
+        <ul>
+          <li>Structured financial statements (IS / BS / CF)</li>
+          <li>Learned patterns library</li>
+          <li>Quality trending charts and sparklines</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cat-header">Reference</div>
+    <div class="pages-grid">
+      <div class="page-card">
+        <h4>Taxonomy Browser</h4>
+        <ul>
+          <li>Browse 312 items by category with hierarchy</li>
+          <li>Search with fuzzy matching</li>
+          <li>Suggestions and deprecation management</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cat-header">Intelligence</div>
+    <div class="pages-grid">
+      <div class="page-card">
+        <h4>Analytics</h4>
+        <ul>
+          <li>Portfolio Health &amp; quality distribution</li>
+          <li>Cross-Entity Compare with FX</li>
+          <li>Cost Analysis, Coverage, Anomalies, Gaps</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cat-header">Operations</div>
+    <div class="pages-grid">
+      <div class="page-card">
+        <h4>System Admin</h4>
+        <ul>
+          <li>Health dashboard with auto-refresh</li>
+          <li>Dead letter queue management</li>
+          <li>Learned alias lifecycle</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Taxonomy Coverage -->
+<section>
+  <div class="container">
+    <h2>Taxonomy Coverage</h2>
+    <p class="section-subtitle">A canonical vocabulary for every financial line item.</p>
+    <div class="tax-grid">
+      <div class="tax-card">
+        <span class="count">54</span>
+        <span class="label">Income Statement</span>
+        <div class="examples">revenue, cogs, opex, ebitda, net_income</div>
+      </div>
+      <div class="tax-card">
+        <span class="count">73</span>
+        <span class="label">Balance Sheet</span>
+        <div class="examples">cash, accounts_receivable, total_assets, total_equity</div>
+      </div>
+      <div class="tax-card">
+        <span class="count">50</span>
+        <span class="label">Cash Flow</span>
+        <div class="examples">cfo, capex, fcf, dividends_paid</div>
+      </div>
+      <div class="tax-card">
+        <span class="count">29</span>
+        <span class="label">Debt Schedule</span>
+        <div class="examples">total_debt, interest_expense, dscr</div>
+      </div>
+      <div class="tax-card">
+        <span class="count">93</span>
+        <span class="label">Metrics</span>
+        <div class="examples">gross_margin, roe, current_ratio, ev_ebitda</div>
+      </div>
+      <div class="tax-card">
+        <span class="count">13</span>
+        <span class="label">Project Finance</span>
+        <div class="examples">cfads, dsra, irr</div>
+      </div>
+    </div>
+    <div class="tax-total">
+      <span class="count">312</span>
+      <span class="label">canonical financial items with aliases, definitions, and validation rules</span>
+    </div>
+  </div>
+</section>
+
+<!-- Quality & Trust -->
+<section>
+  <div class="container">
+    <h2>Quality &amp; Trust</h2>
+    <p class="section-subtitle">Five-dimension composite scoring for every extraction.</p>
+    <div class="quality-row">
+      <div>
+        <div class="dim-bar">
+          <span style="width:25%; background: var(--steel);">25%</span>
+          <span style="width:20%; background: var(--ok);">20%</span>
+          <span style="width:20%; background: var(--warn);">20%</span>
+          <span style="width:15%; background: var(--text-secondary);">15%</span>
+          <span style="width:20%; background: var(--bad);">20%</span>
+        </div>
+        <ul class="dim-list">
+          <li><span class="dim-dot" style="background: var(--steel);"></span> Mapping Confidence <span style="color: var(--text-tertiary); margin-left:auto;">25%</span></li>
+          <li><span class="dim-dot" style="background: var(--ok);"></span> Validation Success <span style="color: var(--text-tertiary); margin-left:auto;">20%</span></li>
+          <li><span class="dim-dot" style="background: var(--warn);"></span> Completeness <span style="color: var(--text-tertiary); margin-left:auto;">20%</span></li>
+          <li><span class="dim-dot" style="background: var(--text-secondary);"></span> Time-Series Consistency <span style="color: var(--text-tertiary); margin-left:auto;">15%</span></li>
+          <li><span class="dim-dot" style="background: var(--bad);"></span> Cell Reconciliation <span style="color: var(--text-tertiary); margin-left:auto;">20%</span></li>
+        </ul>
+      </div>
+      <div>
+        <ul class="grade-scale">
+          <li><span class="grade-badge" style="background: #1A7A4A;">A</span> <div><strong>&ge; 90%</strong> &mdash; Trustworthy<br><span style="font-size:0.82rem; color:var(--text-secondary);">Data can be used without manual review.</span></div></li>
+          <li><span class="grade-badge" style="background: #1D6B9F;">B</span> <div><strong>&ge; 75%</strong> &mdash; Reliable<br><span style="font-size:0.82rem; color:var(--text-secondary);">Spot-check recommended for edge cases.</span></div></li>
+          <li><span class="grade-badge" style="background: #C47D00;">C</span> <div><strong>&ge; 60%</strong> &mdash; Needs Review<br><span style="font-size:0.82rem; color:var(--text-secondary);">Manual review of flagged items recommended.</span></div></li>
+          <li><span class="grade-badge" style="background: #A32626;">D</span> <div><strong>&ge; 40%</strong> &mdash; Low Confidence<br><span style="font-size:0.82rem; color:var(--text-secondary);">Significant manual intervention required.</span></div></li>
+          <li><span class="grade-badge" style="background: #6B7280;">F</span> <div><strong>&lt; 40%</strong> &mdash; Unreliable<br><span style="font-size:0.82rem; color:var(--text-secondary);">Extraction quality insufficient for use.</span></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- The Moat -->
+<section>
+  <div class="container">
+    <h2>Competitive Advantages</h2>
+    <p class="section-subtitle">Five compounding assets that grow with every extraction.</p>
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <table class="moat-table">
+        <thead>
+          <tr><th>Asset</th><th>Value</th><th>Defensibility</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Canonical Taxonomy</td><td>312 industry-standard financial terms with aliases, definitions, and validation rules</td><td>Network effects &mdash; improves with usage</td></tr>
+          <tr><td>Entity Patterns</td><td>Learned mappings that improve accuracy with every extraction from a given entity</td><td>Compounding data asset</td></tr>
+          <tr><td>Full Lineage</td><td>Complete audit trail from source Excel cell to final structured data point</td><td>Compliance-ready &mdash; no competitor has this</td></tr>
+          <tr><td>Guided Prompts</td><td>Domain expertise encoded in every AI pipeline stage</td><td>Hard to replicate &mdash; years of financial knowledge</td></tr>
+          <tr><td>Structured Warehouse</td><td>Cross-entity queryable financial data warehouse</td><td>Enables portfolio analytics at scale</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Target Performance -->
+<section>
+  <div class="container">
+    <h2>Target Performance</h2>
+    <p class="section-subtitle">Measurable targets for extraction quality and efficiency.</p>
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="value">&gt;85%</div>
+        <div class="desc">Extraction Accuracy (Tier 1)</div>
+      </div>
+      <div class="metric-card">
+        <div class="value">100%</div>
+        <div class="desc">Lineage Completeness</div>
+      </div>
+      <div class="metric-card">
+        <div class="value">&lt;20%</div>
+        <div class="desc">Human Review Rate</div>
+      </div>
+      <div class="metric-card">
+        <div class="value">&lt;15 min</div>
+        <div class="desc">First Model Extraction</div>
+      </div>
+      <div class="metric-card">
+        <div class="value">&lt;8 min</div>
+        <div class="desc">Subsequent (Cached)</div>
+      </div>
+      <div class="metric-card">
+        <div class="value">&lt;$0.75</div>
+        <div class="desc">Cost per Model</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Technical Foundation -->
+<section>
+  <div class="container">
+    <h2>Technical Foundation</h2>
+    <p class="section-subtitle">Production-ready from day one.</p>
+    <div class="tech-row">
+      <div>
+        <ul class="tech-list">
+          <li><span class="tech-label">FastAPI</span> <span class="tech-desc">Python API framework</span></li>
+          <li><span class="tech-label">PostgreSQL 15</span> <span class="tech-desc">Primary database</span></li>
+          <li><span class="tech-label">Redis</span> <span class="tech-desc">Cache &amp; message broker</span></li>
+          <li><span class="tech-label">Celery</span> <span class="tech-desc">Background task processing</span></li>
+          <li><span class="tech-label">S3 / MinIO</span> <span class="tech-desc">File storage</span></li>
+          <li><span class="tech-label">Claude AI</span> <span class="tech-desc">Extraction intelligence (Anthropic)</span></li>
+        </ul>
+      </div>
+      <div>
+        <div class="stats-grid">
+          <div class="stat-item"><span class="num">50+</span><span class="lbl">REST API Endpoints</span></div>
+          <div class="stat-item"><span class="num">15+</span><span class="lbl">Database Tables</span></div>
+          <div class="stat-item"><span class="num">2,555+</span><span class="lbl">Automated Tests</span></div>
+          <div class="stat-item"><span class="num">24</span><span class="lbl">Schema Migrations</span></div>
+          <div class="stat-item"><span class="num">CI/CD</span><span class="lbl">Pipeline</span></div>
+          <div class="stat-item"><span class="num">K8s</span><span class="lbl">Ready</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <p class="built">Built with Claude AI by DebtFund</p>
+    <p>&copy; 2026 DebtFund. All rights reserved.</p>
+  </div>
+</footer>
+
+<div class="accent-bar"></div>
+
+</body>
+</html>

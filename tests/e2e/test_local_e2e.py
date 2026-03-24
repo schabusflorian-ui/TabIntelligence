@@ -179,10 +179,10 @@ def test_full_extraction_completes(e2e_client):
     canonical_names = {li["canonical_name"] for li in result["line_items"]}
     assert canonical_names == {"revenue", "cogs", "gross_profit"}
 
-    # Validate all 5 stages produced lineage events
+    # Validate all 6 stages produced lineage events (Stage 6 = Derivation Engine)
     summary = result["lineage_summary"]
-    assert summary["total_events"] == 5
-    assert sorted(summary["stages"]) == [1, 2, 3, 4, 5]
+    assert summary["total_events"] == 6
+    assert sorted(summary["stages"]) == [1, 2, 3, 4, 5, 6]
 
 
 def test_deduplication_via_api(e2e_client):
