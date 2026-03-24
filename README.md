@@ -285,6 +285,4 @@ alembic downgrade -1      # Rollback one migration
 
 ## License
 
-Proprietary and confidential. See [LICENSE](LICENSE) for details.
-
-Copyright 2025 Florian Schabus. All Rights Reserved.
+MIT License. See [LICENSE](LICENSE) for details.
