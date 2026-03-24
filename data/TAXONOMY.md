@@ -21,7 +21,7 @@ The canonical financial taxonomy lives in `data/taxonomy.json` (v3.0.0). It defi
 
 ## Categories
 
-297 items across 6 categories:
+369 items across 6 categories:
 
 | Category | Description | Examples |
 |----------|-------------|---------|

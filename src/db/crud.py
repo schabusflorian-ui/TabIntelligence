@@ -2,7 +2,6 @@
 CRUD (Create, Read, Update, Delete) operations for TabIntelligence database.
 
 All operations use explicit transaction management and proper error handling.
-This is the canonical location per Week 2 strategy.
 """
 
 import copy

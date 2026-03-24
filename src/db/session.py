@@ -1,7 +1,6 @@
 """
 Database session management with both async and sync support.
 
-This is the canonical session management per Week 2 strategy.
 Provides session factories for both FastAPI (async) and Alembic (sync).
 """
 

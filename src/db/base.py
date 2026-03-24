@@ -2,7 +2,6 @@
 SQLAlchemy base configuration and engine utilities.
 
 Provides Base class and utility functions for database operations.
-This is the canonical location per Week 2 strategy.
 """
 
 from sqlalchemy.orm import DeclarativeBase

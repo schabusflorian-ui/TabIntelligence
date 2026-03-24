@@ -1,4 +1,4 @@
-"""Database models and session management (Week 2 canonical location)."""
+"""Database models and session management."""
 
 from src.db import crud  # noqa: E402 — must be after models to avoid circular import
 from src.db.base import Base, create_tables, drop_tables, get_engine

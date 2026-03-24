@@ -1,7 +1,6 @@
 """
 SQLAlchemy 2.0 ORM models for TabIntelligence database.
 
-This is the canonical location for database models per Week 2 strategy.
 Uses modern SQLAlchemy 2.0 declarative syntax with Mapped and mapped_column.
 
 Models:

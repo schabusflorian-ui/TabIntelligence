@@ -18,14 +18,14 @@ from src.core.exceptions import FileStorageError
 from src.core.logging import api_logger as logger
 from src.core.logging import setup_logging
 
-# Tracing is optional (Week 3 feature) - don't block if not installed
+# Tracing is optional - don't block if not installed
 try:
     from src.core.tracing import instrument_fastapi, setup_tracing
 
     TRACING_AVAILABLE = True
 except ImportError:
     TRACING_AVAILABLE = False
-    logger.warning("OpenTelemetry not installed - tracing disabled (install for Week 3)")
+    logger.warning("OpenTelemetry not installed - tracing disabled (pip install .[tracing])")
 # Initialize logging
 # Use JSON format in production for machine-parseable logs
 import os
@@ -111,7 +111,7 @@ _openapi_tags = [
     {"name": "entities", "description": "Company/asset entity CRUD and pattern management."},
     {"name": "jobs", "description": "Extraction job lifecycle: submit, poll, export, retry, review."},
     {"name": "files", "description": "Upload Excel models (.xlsx/.xls) for extraction."},
-    {"name": "taxonomy", "description": "Browse/search the 297-item canonical financial taxonomy."},
+    {"name": "taxonomy", "description": "Browse/search the canonical financial taxonomy (369 items, 6 categories)."},
     {"name": "analytics", "description": "Cross-entity comparison, portfolio summary, structured statements."},
     {"name": "corrections", "description": "User corrections that train entity-specific patterns."},
     {"name": "admin-dlq", "description": "Dead-letter queue for failed extraction jobs."},
