@@ -19,7 +19,7 @@ import pytest
 # Real data directory and helpers
 # ---------------------------------------------------------------------------
 
-REAL_DATA_DIR = Path(__file__).parent.parent / "real data"
+REAL_DATA_DIR = Path(__file__).parent.parent / "real_data"
 
 FILES = {
     1: "01_electrolyser_FOAK_singlesheet.xlsx",
