@@ -1,5 +1,5 @@
 """
-Celery tasks for DebtFund extraction pipeline.
+Celery tasks for TabIntelligence extraction pipeline.
 
 Job failure handling strategy:
 - During retries: job stays in PROCESSING (no premature FAILED marking)
@@ -49,7 +49,7 @@ except (ImportError, AttributeError):
 @celery_app.task(
     bind=True,
     base=DLQTask,
-    name="debtfund.extraction.run",
+    name="tabintelligence.extraction.run",
     autoretry_for=_TRANSIENT_EXCEPTIONS,
     max_retries=3,
     acks_late=True,

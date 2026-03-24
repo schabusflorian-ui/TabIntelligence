@@ -6,22 +6,22 @@ rule_files:
   - "alerts.yml"
 
 scrape_configs:
-  # DebtFund API — Prometheus metrics from /metrics endpoint
-  - job_name: "debtfund-api"
+  # TabIntelligence API — Prometheus metrics from /metrics endpoint
+  - job_name: "tabintelligence-api"
     metrics_path: /metrics
     static_configs:
       - targets: ["api:8000"]
         labels:
-          service: "debtfund-api"
+          service: "tabintelligence-api"
 
-  # DebtFund database health — custom metrics from /health/db-metrics
-  - job_name: "debtfund-db"
+  # TabIntelligence database health — custom metrics from /health/db-metrics
+  - job_name: "tabintelligence-db"
     metrics_path: /health/db-metrics
     scrape_interval: 30s
     static_configs:
       - targets: ["api:8000"]
         labels:
-          service: "debtfund-db"
+          service: "tabintelligence-db"
 
   # Redis exporter (optional — add redis_exporter service if needed)
   # - job_name: "redis"

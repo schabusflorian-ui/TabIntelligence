@@ -1,6 +1,6 @@
-# DebtFund — Data Flow & Integration Diagrams
+# TabIntelligence — Data Flow & Integration Diagrams
 
-> Detailed data transformation, learning loop, security, and deployment diagrams for the DebtFund platform.
+> Detailed data transformation, learning loop, security, and deployment diagrams for the TabIntelligence platform.
 
 ---
 
@@ -183,8 +183,8 @@ graph TB
 
 | Service | Image | Ports | Purpose |
 |---------|-------|-------|---------|
-| `api` | debtfund:api | 8000 | FastAPI REST server + static frontend |
-| `worker` | debtfund:worker | — | Celery async extraction |
+| `api` | tabintelligence:api | 8000 | FastAPI REST server + static frontend |
+| `worker` | tabintelligence:worker | — | Celery async extraction |
 | `postgres` | postgres:15 | 5432 | Primary database |
 | `redis` | redis:7 | 6379 | Cache + message broker |
 | `minio` | minio/minio | 9000, 9001 | S3-compatible file storage |
@@ -194,4 +194,4 @@ graph TB
 
 ---
 
-*Document generated for the DebtFund Excel Model Intelligence Platform documentation package.*
+*Document generated for the TabIntelligence Excel Model Intelligence Platform documentation package.*

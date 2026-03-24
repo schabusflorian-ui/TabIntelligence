@@ -3,7 +3,7 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15
-    container_name: debtfund-postgres
+    container_name: tabintelligence-postgres
     environment:
       POSTGRES_USER: emi
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-emi_dev}
@@ -20,7 +20,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: debtfund-redis
+    container_name: tabintelligence-redis
     ports:
       - "6379:6379"
     volumes:
@@ -33,7 +33,7 @@ services:
 
   minio:
     image: minio/minio:latest
-    container_name: debtfund-minio
+    container_name: tabintelligence-minio
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
@@ -51,7 +51,7 @@ services:
 
   jaeger:
     image: jaegertracing/all-in-one:1.50
-    container_name: debtfund-jaeger
+    container_name: tabintelligence-jaeger
     ports:
       - "5775:5775/udp"
       - "6831:6831/udp"
@@ -74,7 +74,7 @@ services:
     build:
       context: .
       target: api
-    container_name: debtfund-api
+    container_name: tabintelligence-api
     ports:
       - "8000:8000"
     environment:
@@ -83,7 +83,7 @@ services:
       S3_ENDPOINT: http://minio:9000
       S3_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
       S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
-      S3_BUCKET: debtfund-files
+      S3_BUCKET: tabintelligence-files
       S3_VERIFY_SSL: "false"
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       LOG_FORMAT: json
@@ -105,14 +105,14 @@ services:
     build:
       context: .
       target: worker
-    container_name: debtfund-worker
+    container_name: tabintelligence-worker
     environment:
       DATABASE_URL: postgresql://emi:${POSTGRES_PASSWORD:-emi_dev}@postgres:5432/emi
       REDIS_URL: redis://redis:6379/0
       S3_ENDPOINT: http://minio:9000
       S3_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
       S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
-      S3_BUCKET: debtfund-files
+      S3_BUCKET: tabintelligence-files
       S3_VERIFY_SSL: "false"
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       LOG_FORMAT: json
@@ -128,7 +128,7 @@ services:
   # --- Monitoring ---
   prometheus:
     image: prom/prometheus:v2.51.0
-    container_name: debtfund-prometheus
+    container_name: tabintelligence-prometheus
     ports:
       - "9090:9090"
     volumes:
@@ -144,7 +144,7 @@ services:
 
   grafana:
     image: grafana/grafana:10.4.0
-    container_name: debtfund-grafana
+    container_name: tabintelligence-grafana
     ports:
       - "3000:3000"
     environment:
@@ -154,7 +154,7 @@ services:
     volumes:
       - ./monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
       - ./monitoring/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
-      - ./monitoring/grafana/debtfund-api.json:/etc/grafana/provisioning/dashboards/debtfund-api.json:ro
+      - ./monitoring/grafana/tabintelligence-api.json:/etc/grafana/provisioning/dashboards/tabintelligence-api.json:ro
       - grafana_data:/var/lib/grafana
     depends_on:
       - prometheus

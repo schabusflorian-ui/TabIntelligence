@@ -1,6 +1,6 @@
-# DebtFund — Product Roadmap
+# TabIntelligence — Product Roadmap
 
-> Vision and planned development phases for the DebtFund Excel Model Intelligence Platform.
+> Vision and planned development phases for the TabIntelligence Excel Model Intelligence Platform.
 
 ---
 
@@ -8,7 +8,7 @@
 
 ```mermaid
 gantt
-    title DebtFund Product Roadmap 2025–2027
+    title TabIntelligence Product Roadmap 2025–2027
     dateFormat YYYY-MM-DD
 
     section MVP (Complete)
@@ -95,7 +95,7 @@ The foundational platform is built, tested, and operational.
 
 ## Phase 2 — Deeper Integration (Q2–Q3 2026)
 
-Bringing DebtFund closer to the analyst's existing workflow.
+Bringing TabIntelligence closer to the analyst's existing workflow.
 
 ### Excel Add-in (Office.js)
 Extract data directly from within Excel — no need to leave the spreadsheet. The add-in will:
@@ -191,4 +191,4 @@ Connect to external financial data providers:
 
 ---
 
-*Document generated for the DebtFund Excel Model Intelligence Platform documentation package.*
+*Document generated for the TabIntelligence Excel Model Intelligence Platform documentation package.*

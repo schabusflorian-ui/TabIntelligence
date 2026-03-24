@@ -296,6 +296,7 @@ function renderResults(data, job) {
     { id: 'line-items', label: 'Line Items', render: (panel) => renderLineItemsTab(panel, data) },
     { id: 'triage', label: 'Triage', render: (panel) => renderTriageTab(panel, data) },
     { id: 'validation', label: 'Validation', render: (panel) => renderValidationTab(panel, data) },
+    { id: 'covenants', label: 'Covenants', render: (panel) => renderCovenantsTab(panel) },
     { id: 'lineage', label: 'Lineage', render: (panel) => renderLineageTab(panel) },
     { id: 'corrections', label: 'Corrections', render: (panel) => renderCorrectionsTab(panel) },
     { id: 'source-view', label: 'Source View', render: (panel) => renderSourceView(panel, currentJobId, data) },
@@ -1136,6 +1137,141 @@ function renderValidationTab(panel, data) {
   }
   html += '</div>';
   panel.innerHTML = html;
+}
+
+// --- Covenants Tab ---
+async function renderCovenantsTab(panel) {
+  panel.innerHTML = loadingPlaceholder('Loading derived facts...');
+  try {
+    const [factsData, consistencyData, covenantData] = await Promise.all([
+      apiGet('/api/v1/jobs/' + currentJobId + '/derived-facts'),
+      apiGet('/api/v1/jobs/' + currentJobId + '/consistency-report'),
+      apiGet('/api/v1/jobs/' + currentJobId + '/covenant-sensitivity'),
+    ]);
+
+    let html = '';
+
+    // ── Covenant Sensitivity Alert Banner ────────────────────────────────────
+    const sensitiveFacts = covenantData.facts || [];
+    if (sensitiveFacts.length > 0) {
+      html += `<div class="covenant-alert-banner" style="background:#FFF7ED;border:1px solid #F59E0B;border-radius:8px;padding:14px 16px;margin-bottom:16px">`;
+      html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">`;
+      html += `<span style="font-size:16px">⚠</span>`;
+      html += `<strong style="font-size:13px;color:#92400E">${sensitiveFacts.length} Covenant-Sensitive Metric${sensitiveFacts.length !== 1 ? 's' : ''}</strong>`;
+      html += `</div>`;
+      for (const f of sensitiveFacts) {
+        const cov = f.covenant || {};
+        const val = f.computed_value != null ? (+f.computed_value).toFixed(3) + 'x' : 'N/A';
+        const threshold = cov.threshold != null ? (+cov.threshold).toFixed(3) + 'x' : 'N/A';
+        const headroom = cov.headroom != null ? ((+cov.headroom) >= 0 ? '+' : '') + (+cov.headroom).toFixed(3) + 'x' : 'N/A';
+        const hrLow = cov.headroom_range_low != null ? (+cov.headroom_range_low).toFixed(3) : null;
+        const isBreach = cov.headroom != null && (+cov.headroom) < 0;
+        html += `<div style="background:white;border-radius:6px;padding:10px 12px;margin-bottom:6px;border-left:3px solid ${isBreach ? '#DC2626' : '#F59E0B'}">`;
+        html += `<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">`;
+        html += `<span style="font-family:monospace;font-size:12px;font-weight:600;color:#111">${esc(f.canonical_name)}</span>`;
+        html += `<span style="font-size:10.5px;color:#888">${esc(f.period || '')}</span>`;
+        html += `</div>`;
+        html += `<div style="display:flex;gap:16px;margin-top:6px;flex-wrap:wrap">`;
+        html += `<span style="font-size:11.5px"><span style="color:#888">Value:</span> <strong>${esc(val)}</strong></span>`;
+        html += `<span style="font-size:11.5px"><span style="color:#888">Threshold:</span> <strong>${esc(threshold)}</strong></span>`;
+        html += `<span style="font-size:11.5px;color:${isBreach ? '#DC2626' : '#C47D00'}"><span style="color:#888">Headroom:</span> <strong>${esc(headroom)}</strong></span>`;
+        if (f.value_range_low != null && f.value_range_high != null) {
+          html += `<span style="font-size:11.5px;color:#888">Range: ${(+f.value_range_low).toFixed(3)}–${(+f.value_range_high).toFixed(3)}</span>`;
+        }
+        html += `</div>`;
+        if (cov.flag_message) {
+          html += `<p style="font-size:11px;color:${isBreach ? '#DC2626' : '#92400E'};margin:6px 0 0">${esc(cov.flag_message)}</p>`;
+        }
+        html += `</div>`;
+      }
+      html += `</div>`;
+    }
+
+    // ── Derived Facts Table ────────────────────────────────────────────────────
+    const facts = factsData.facts || [];
+    html += `<div class="card" style="margin-bottom:16px">`;
+    html += `<div class="card-header"><span class="card-title">Derived Facts (${factsData.count || 0})</span>`;
+    html += `<span style="font-size:11px;color:#888;margin-left:8px">Computed by the Stage 6 Derivation Engine from extracted values</span></div>`;
+    if (facts.length === 0) {
+      html += `<div style="padding:20px;text-align:center;color:var(--color-text-secondary);font-size:12.5px">No derived facts available for this extraction.</div>`;
+    } else {
+      html += `<div class="table-wrapper"><table class="data-table data-table-compact"><thead><tr>`;
+      html += `<th>Canonical Name</th><th>Period</th><th class="col-number">Value</th><th class="col-number">Confidence</th>`;
+      html += `<th class="col-number">Range Low</th><th class="col-number">Range High</th><th>Rule</th><th>Formula</th><th>Pass</th><th>Type</th>`;
+      html += `</tr></thead><tbody>`;
+      for (const f of facts) {
+        const val = f.computed_value != null ? formatFinancial(+f.computed_value) : '—';
+        const conf = f.confidence != null ? (f.confidence * 100).toFixed(0) + '%' : '—';
+        const confCls = (f.confidence || 0) >= 0.8 ? 'badge-high' : (f.confidence || 0) >= 0.6 ? 'badge-mid' : 'badge-low';
+        const low = f.value_range_low != null ? formatFinancial(+f.value_range_low) : '—';
+        const high = f.value_range_high != null ? formatFinancial(+f.value_range_high) : '—';
+        const isSens = f.covenant && f.covenant.is_sensitive;
+        const rowStyle = isSens ? 'background:#FFF7ED' : '';
+        html += `<tr style="${rowStyle}">`;
+        html += `<td><code>${esc(f.canonical_name || '')}</code>${isSens ? ' <span style="color:#F59E0B;font-size:11px">⚠</span>' : ''}</td>`;
+        html += `<td>${esc(f.period || '')}</td>`;
+        html += `<td class="col-number">${esc(val)}</td>`;
+        html += `<td class="col-number"><span class="badge ${confCls}">${esc(conf)}</span></td>`;
+        html += `<td class="col-number">${esc(low)}</td>`;
+        html += `<td class="col-number">${esc(high)}</td>`;
+        html += `<td><code style="font-size:10px">${esc(f.computation_rule_id || '')}</code></td>`;
+        html += `<td style="font-size:11px;color:#888">${esc(f.formula || '')}</td>`;
+        html += `<td class="col-number">${f.derivation_pass != null ? f.derivation_pass : '—'}</td>`;
+        html += `<td><span class="badge ${f.is_gap_fill ? 'badge-high' : 'badge-mid'}">${f.is_gap_fill ? 'Gap Fill' : 'Check'}</span></td>`;
+        html += `</tr>`;
+      }
+      html += `</tbody></table></div>`;
+    }
+    html += `</div>`;
+
+    // ── Consistency Report ────────────────────────────────────────────────────
+    const consistencyItems = consistencyData.items || [];
+    const violations = consistencyData.violations || 0;
+    const totalChecked = consistencyData.total_checked || 0;
+    html += `<div class="card">`;
+    html += `<div class="card-header">`;
+    html += `<span class="card-title">Consistency Report</span>`;
+    html += `<span style="font-size:11px;color:#888;margin-left:8px">Extracted vs. computed values — divergences indicate possible model errors</span>`;
+    html += `</div>`;
+    if (totalChecked === 0) {
+      html += `<div style="padding:20px;text-align:center;color:var(--color-text-secondary);font-size:12.5px">No consistency checks available — no metrics were both extracted and derivable.</div>`;
+    } else {
+      const passedCount = consistencyData.passed || 0;
+      html += `<div style="padding:12px 16px;display:flex;gap:20px;border-bottom:0.5px solid rgba(0,0,0,0.06)">`;
+      html += `<span style="font-size:12px"><span style="color:#888">Checks:</span> <strong>${totalChecked}</strong></span>`;
+      html += `<span style="font-size:12px"><span style="color:#888">Passed:</span> <strong style="color:#1A7A4A">${passedCount}</strong></span>`;
+      if (violations > 0) {
+        html += `<span style="font-size:12px"><span style="color:#888">Violations:</span> <strong style="color:#DC2626">${violations}</strong></span>`;
+      }
+      html += `</div>`;
+      html += `<div class="table-wrapper"><table class="data-table data-table-compact"><thead><tr>`;
+      html += `<th>Canonical Name</th><th>Period</th><th class="col-number">Extracted</th><th class="col-number">Computed</th><th class="col-number">Divergence</th><th>Status</th>`;
+      html += `</tr></thead><tbody>`;
+      for (const item of consistencyItems) {
+        const divPct = item.divergence_pct != null ? (item.divergence_pct * 100).toFixed(1) + '%' : '—';
+        const passed = item.passed;
+        const statusBadge = passed
+          ? '<span class="badge badge-high">Pass</span>'
+          : `<span class="badge badge-low">Fail</span>`;
+        const rowStyle = !passed ? 'background:#FFF1F2' : '';
+        html += `<tr style="${rowStyle}">`;
+        html += `<td><code>${esc(item.canonical_name || '')}</code></td>`;
+        html += `<td>${esc(item.period || '')}</td>`;
+        html += `<td class="col-number">${item.extracted_value != null ? formatFinancial(+item.extracted_value) : '—'}</td>`;
+        html += `<td class="col-number">${item.computed_value != null ? formatFinancial(+item.computed_value) : '—'}</td>`;
+        html += `<td class="col-number" style="color:${!passed ? '#DC2626' : '#888'}">${esc(divPct)}</td>`;
+        html += `<td>${statusBadge}</td>`;
+        html += `</tr>`;
+      }
+      html += `</tbody></table></div>`;
+    }
+    html += `</div>`;
+
+    panel.innerHTML = html;
+  } catch (err) {
+    panel.innerHTML = errorState('Failed to load covenants data: ' + esc(err.message), 'Retry');
+    panel.querySelector('.error-retry-btn')?.addEventListener('click', () => renderCovenantsTab(panel));
+  }
 }
 
 // --- Lineage Tab ---

@@ -1,6 +1,6 @@
 # Comprehensive Extraction Pipeline Audit & Stress-Test Agent
 
-You are a senior QA engineer and financial modeling expert performing a deep audit of the DebtFund extraction pipeline. The project is at `~/DebtFund`. You have 10 real Excel files representing climate-hardware due-diligence financial models with deliberately embedded errors and structural challenges. Your job is to write exhaustive, deterministic pytest tests that stress-test every layer of the pipeline against these real files — parsing, period detection, section detection, triage, mapping lookups, validation rules, and quality scoring. You are NOT testing Claude's reasoning — you are testing every piece of deterministic Python logic that runs before, after, and around the LLM calls.
+You are a senior QA engineer and financial modeling expert performing a deep audit of the TabIntelligence extraction pipeline. The project is at `~/TabIntelligence`. You have 10 real Excel files representing climate-hardware due-diligence financial models with deliberately embedded errors and structural challenges. Your job is to write exhaustive, deterministic pytest tests that stress-test every layer of the pipeline against these real files — parsing, period detection, section detection, triage, mapping lookups, validation rules, and quality scoring. You are NOT testing Claude's reasoning — you are testing every piece of deterministic Python logic that runs before, after, and around the LLM calls.
 
 ## Critical Mindset
 

@@ -1,1 +1,1 @@
-"""Integration tests for DebtFund API."""
+"""Integration tests for TabIntelligence API."""

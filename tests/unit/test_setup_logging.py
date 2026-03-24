@@ -122,7 +122,7 @@ class TestCustomJsonFormatter:
         assert "timestamp" in log_record
         assert log_record["level"] == "INFO"
         assert log_record["logger"] == "test.logger"
-        assert log_record["service"] == "debtfund"
+        assert log_record["service"] == "tabintelligence"
 
     def test_adds_request_id(self):
         """Should include request_id from context variable."""

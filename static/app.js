@@ -1,4 +1,4 @@
-// DebtFund Frontend — Vanilla JS
+// TabIntelligence Frontend — Vanilla JS
 (function () {
   "use strict";
 

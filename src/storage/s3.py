@@ -26,7 +26,7 @@ from src.core.exceptions import FileStorageError
 from src.core.logging import get_logger, log_exception, log_performance
 
 # Module logger
-storage_logger = get_logger("debtfund.storage")
+storage_logger = get_logger("tabintelligence.storage")
 logger = storage_logger
 
 
@@ -35,7 +35,7 @@ class S3Client:
     S3/MinIO storage client for file operations.
 
     Manages file uploads, downloads, and lifecycle operations with MinIO/S3.
-    Follows DebtFund error handling and logging patterns.
+    Follows TabIntelligence error handling and logging patterns.
 
     Attributes:
         endpoint: S3/MinIO endpoint URL

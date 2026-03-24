@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# DebtFund E2E Test Runner
+# TabIntelligence E2E Test Runner
 # =============================================================================
 # Usage:
 #   ./scripts/e2e.sh          # Mock Claude (free, fast, deterministic)
@@ -58,7 +58,7 @@ if [ "$MODE" = "clean" ]; then
 fi
 
 echo "============================================"
-echo "DebtFund E2E Tests (mode: $MODE)"
+echo "TabIntelligence E2E Tests (mode: $MODE)"
 echo "============================================"
 
 # Cleanup on exit

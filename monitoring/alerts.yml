@@ -1,12 +1,12 @@
 groups:
-  - name: debtfund-api
+  - name: tabintelligence-api
     rules:
       # High error rate — more than 5% of requests returning 5xx in 5 minutes
       - alert: HighErrorRate
         expr: >
-          sum(rate(debtfund_http_requests_total{status_code=~"5.."}[5m]))
+          sum(rate(tabintelligence_http_requests_total{status_code=~"5.."}[5m]))
           /
-          sum(rate(debtfund_http_requests_total[5m]))
+          sum(rate(tabintelligence_http_requests_total[5m]))
           > 0.05
         for: 2m
         labels:
@@ -18,7 +18,7 @@ groups:
       # Slow response times — p95 latency above 2 seconds
       - alert: HighLatency
         expr: >
-          histogram_quantile(0.95, rate(debtfund_http_request_duration_seconds_bucket[5m]))
+          histogram_quantile(0.95, rate(tabintelligence_http_request_duration_seconds_bucket[5m]))
           > 2.0
         for: 5m
         labels:
@@ -27,12 +27,12 @@ groups:
           summary: "High API latency (p95 = {{ $value | humanizeDuration }})"
           description: "95th percentile response time is above 2 seconds."
 
-  - name: debtfund-extraction
+  - name: tabintelligence-extraction
     rules:
       # Extraction failures — more than 3 failed jobs in 30 minutes
       - alert: ExtractionFailureSpike
         expr: >
-          increase(debtfund_extraction_jobs_total{status="FAILED"}[30m]) > 3
+          increase(tabintelligence_extraction_jobs_total{status="FAILED"}[30m]) > 3
         for: 1m
         labels:
           severity: critical
@@ -43,9 +43,9 @@ groups:
       # Low quality scores — average quality below 0.5 in last hour
       - alert: LowExtractionQuality
         expr: >
-          avg(rate(debtfund_extraction_quality_score_sum[1h]))
+          avg(rate(tabintelligence_extraction_quality_score_sum[1h]))
           /
-          avg(rate(debtfund_extraction_quality_score_count[1h]))
+          avg(rate(tabintelligence_extraction_quality_score_count[1h]))
           < 0.5
         for: 15m
         labels:
@@ -57,7 +57,7 @@ groups:
       # Slow extraction — p95 above 5 minutes
       - alert: SlowExtraction
         expr: >
-          histogram_quantile(0.95, rate(debtfund_extraction_duration_seconds_bucket[1h]))
+          histogram_quantile(0.95, rate(tabintelligence_extraction_duration_seconds_bucket[1h]))
           > 300
         for: 10m
         labels:
@@ -66,7 +66,7 @@ groups:
           summary: "Slow extractions (p95 = {{ $value | humanizeDuration }})"
           description: "95th percentile extraction time is above 5 minutes."
 
-  - name: debtfund-infrastructure
+  - name: tabintelligence-infrastructure
     rules:
       # Database circuit breaker open
       - alert: DatabaseCircuitBreakerOpen

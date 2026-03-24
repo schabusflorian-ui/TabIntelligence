@@ -1,4 +1,4 @@
-# DebtFund — Feature Catalog
+# TabIntelligence — Feature Catalog
 
 > Comprehensive feature list organized by user persona. Each section addresses what that user type cares about most.
 
@@ -273,4 +273,4 @@ Production-grade system observability:
 
 ---
 
-*Document generated for the DebtFund Excel Model Intelligence Platform documentation package.*
+*Document generated for the TabIntelligence Excel Model Intelligence Platform documentation package.*

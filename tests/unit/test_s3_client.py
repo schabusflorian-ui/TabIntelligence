@@ -22,12 +22,12 @@ class TestS3ClientInit:
             endpoint="http://localhost:9000",
             access_key="minioadmin",
             secret_key="minioadmin",
-            bucket_name="debtfund-test",
+            bucket_name="tabintelligence-test",
             verify_ssl=False,
         )
 
         assert client.endpoint == "http://localhost:9000"
-        assert client.bucket_name == "debtfund-test"
+        assert client.bucket_name == "tabintelligence-test"
         assert client.verify_ssl is False
         assert client.s3_client is not None
 
@@ -42,7 +42,7 @@ class TestUploadFile:
             endpoint="http://localhost:9000",
             access_key="minioadmin",
             secret_key="minioadmin",
-            bucket_name="debtfund-test",
+            bucket_name="tabintelligence-test",
         )
 
     def test_upload_file_success(self):
@@ -98,7 +98,7 @@ class TestDownloadFile:
             endpoint="http://localhost:9000",
             access_key="minioadmin",
             secret_key="minioadmin",
-            bucket_name="debtfund-test",
+            bucket_name="tabintelligence-test",
         )
 
     def test_download_file_success(self):
@@ -135,7 +135,7 @@ class TestGenerateS3Key:
             endpoint="http://localhost:9000",
             access_key="minioadmin",
             secret_key="minioadmin",
-            bucket_name="debtfund-test",
+            bucket_name="tabintelligence-test",
         )
 
     def test_generates_key_with_date_partition(self):
@@ -179,7 +179,7 @@ class TestEnsureBucketExists:
             endpoint="http://localhost:9000",
             access_key="minioadmin",
             secret_key="minioadmin",
-            bucket_name="debtfund-test",
+            bucket_name="tabintelligence-test",
         )
 
     def test_bucket_already_exists(self):
@@ -214,7 +214,7 @@ class TestFileExists:
             endpoint="http://localhost:9000",
             access_key="minioadmin",
             secret_key="minioadmin",
-            bucket_name="debtfund-test",
+            bucket_name="tabintelligence-test",
         )
 
     def test_file_exists_returns_true(self):
@@ -247,7 +247,7 @@ class TestDeleteFile:
             endpoint="http://localhost:9000",
             access_key="minioadmin",
             secret_key="minioadmin",
-            bucket_name="debtfund-test",
+            bucket_name="tabintelligence-test",
         )
 
     def test_delete_existing_file(self):
@@ -287,7 +287,7 @@ class TestGetFileMetadata:
             endpoint="http://localhost:9000",
             access_key="minioadmin",
             secret_key="minioadmin",
-            bucket_name="debtfund-test",
+            bucket_name="tabintelligence-test",
         )
 
     def test_get_metadata_success(self):
@@ -330,7 +330,7 @@ class TestUploadClientError:
             endpoint="http://localhost:9000",
             access_key="minioadmin",
             secret_key="minioadmin",
-            bucket_name="debtfund-test",
+            bucket_name="tabintelligence-test",
         )
 
     def _make_client_error(self, code="Unknown"):
@@ -400,7 +400,7 @@ class TestDownloadClientError:
             endpoint="http://localhost:9000",
             access_key="minioadmin",
             secret_key="minioadmin",
-            bucket_name="debtfund-test",
+            bucket_name="tabintelligence-test",
         )
 
     def _make_client_error(self, code="Unknown"):
@@ -481,7 +481,7 @@ class TestEnsureBucketClientError:
             endpoint="http://localhost:9000",
             access_key="minioadmin",
             secret_key="minioadmin",
-            bucket_name="debtfund-test",
+            bucket_name="tabintelligence-test",
         )
 
     def _make_client_error(self, code="Unknown"):
@@ -537,7 +537,7 @@ class TestFileExistsClientError:
             endpoint="http://localhost:9000",
             access_key="minioadmin",
             secret_key="minioadmin",
-            bucket_name="debtfund-test",
+            bucket_name="tabintelligence-test",
         )
 
     def _make_client_error(self, code="Unknown"):
@@ -578,7 +578,7 @@ class TestGetMetadataClientError:
             endpoint="http://localhost:9000",
             access_key="minioadmin",
             secret_key="minioadmin",
-            bucket_name="debtfund-test",
+            bucket_name="tabintelligence-test",
         )
 
     def _make_client_error(self, code="Unknown"):
@@ -622,7 +622,7 @@ class TestPresignedUrl:
             endpoint="http://localhost:9000",
             access_key="minioadmin",
             secret_key="minioadmin",
-            bucket_name="debtfund-test",
+            bucket_name="tabintelligence-test",
         )
 
     def test_presigned_url_success(self):
@@ -691,13 +691,13 @@ class TestGetS3ClientFactory:
         mock_settings.s3_endpoint = "http://localhost:9000"
         mock_settings.s3_access_key = "minioadmin"
         mock_settings.s3_secret_key = "minioadmin"
-        mock_settings.s3_bucket = "debtfund"
+        mock_settings.s3_bucket = "tabintelligence"
         mock_settings.s3_verify_ssl = False
 
         client = get_s3_client(mock_settings)
 
         assert client.endpoint == "http://localhost:9000"
-        assert client.bucket_name == "debtfund"
+        assert client.bucket_name == "tabintelligence"
 
     def test_creates_client_with_default_settings(self):
         """Test factory uses get_settings() when no settings provided."""

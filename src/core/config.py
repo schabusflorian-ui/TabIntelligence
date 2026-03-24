@@ -66,7 +66,7 @@ class Settings(BaseSettings):
     # =========================================================================
     # Application Configuration
     # =========================================================================
-    app_name: str = Field(default="DebtFund", description="Application name")
+    app_name: str = Field(default="TabIntelligence", description="Application name")
 
     app_version: str = Field(default="0.1.0", description="Application version")
 
@@ -265,7 +265,7 @@ def get_settings() -> Settings:
 def print_settings():
     """Print all settings (masking sensitive values)."""
     print("=" * 60)
-    print("DebtFund Configuration")
+    print("TabIntelligence Configuration")
     print("=" * 60)
 
     for field_name, field_info in Settings.model_fields.items():

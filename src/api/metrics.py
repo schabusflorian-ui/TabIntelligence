@@ -1,5 +1,5 @@
 """
-Prometheus metrics for DebtFund API.
+Prometheus metrics for TabIntelligence API.
 
 Defines application-level metrics and a middleware to collect HTTP request data.
 Exposes a /metrics endpoint for Prometheus scraping.
@@ -19,101 +19,101 @@ from starlette.responses import Response
 
 # HTTP request metrics
 http_requests_total = Counter(
-    "debtfund_http_requests_total",
+    "tabintelligence_http_requests_total",
     "Total HTTP requests",
     ["method", "endpoint", "status_code"],
 )
 
 http_request_duration_seconds = Histogram(
-    "debtfund_http_request_duration_seconds",
+    "tabintelligence_http_request_duration_seconds",
     "HTTP request duration in seconds",
     ["method", "endpoint"],
     buckets=[0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0],
 )
 
 http_requests_in_progress = Gauge(
-    "debtfund_http_requests_in_progress",
+    "tabintelligence_http_requests_in_progress",
     "Number of HTTP requests currently being processed",
     ["method"],
 )
 
 # Extraction job metrics
 extraction_jobs_total = Counter(
-    "debtfund_extraction_jobs_total",
+    "tabintelligence_extraction_jobs_total",
     "Total extraction jobs by status",
     ["status"],
 )
 
 extraction_duration_seconds = Histogram(
-    "debtfund_extraction_duration_seconds",
+    "tabintelligence_extraction_duration_seconds",
     "Extraction pipeline duration in seconds",
     buckets=[1.0, 5.0, 10.0, 30.0, 60.0, 120.0, 300.0],
 )
 
 # File upload metrics
 file_uploads_total = Counter(
-    "debtfund_file_uploads_total",
+    "tabintelligence_file_uploads_total",
     "Total file uploads",
 )
 
 file_upload_bytes = Histogram(
-    "debtfund_file_upload_bytes",
+    "tabintelligence_file_upload_bytes",
     "File upload size in bytes",
     buckets=[10_000, 100_000, 500_000, 1_000_000, 5_000_000, 10_000_000, 50_000_000, 100_000_000],
 )
 
 # Per-stage extraction metrics
 extraction_stage_duration_seconds = Histogram(
-    "debtfund_extraction_stage_duration_seconds",
+    "tabintelligence_extraction_stage_duration_seconds",
     "Duration of individual extraction stages",
     ["stage"],
     buckets=[0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0, 120.0],
 )
 
 extraction_stage_tokens_total = Counter(
-    "debtfund_extraction_stage_tokens_total",
+    "tabintelligence_extraction_stage_tokens_total",
     "Total tokens consumed per extraction stage",
     ["stage"],
 )
 
 extraction_cost_usd_total = Counter(
-    "debtfund_extraction_cost_usd_total",
+    "tabintelligence_extraction_cost_usd_total",
     "Total estimated Claude API cost in USD",
 )
 
 validation_flags_total = Counter(
-    "debtfund_validation_flags_total",
+    "tabintelligence_validation_flags_total",
     "Total validation flags raised",
     ["severity"],
 )
 
 extraction_stage_timeouts_total = Counter(
-    "debtfund_extraction_stage_timeouts_total",
+    "tabintelligence_extraction_stage_timeouts_total",
     "Total stage timeouts",
     ["stage"],
 )
 
 extraction_quality_score = Histogram(
-    "debtfund_extraction_quality_score",
+    "tabintelligence_extraction_quality_score",
     "Composite extraction quality score (0-1)",
     buckets=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
 )
 
 extraction_quality_by_model_type = Counter(
-    "debtfund_extraction_quality_by_model_type",
+    "tabintelligence_extraction_quality_by_model_type",
     "Extraction quality grade count by model type",
     ["model_type", "grade"],
 )
 
 # Deduplication metrics
 duplicate_uploads_total = Counter(
-    "debtfund_duplicate_uploads_total",
+    "tabintelligence_duplicate_uploads_total",
     "Total duplicate file uploads detected",
 )
 
 # Database metrics
 db_query_duration_seconds = Histogram(
-    "debtfund_db_query_duration_seconds",
+    "tabintelligence_db_query_duration_seconds",
     "Database query duration in seconds",
     ["operation"],
     buckets=[0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0],

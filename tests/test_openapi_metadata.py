@@ -7,10 +7,10 @@ def test_openapi_info(test_client_with_db):
     assert response.status_code == 200
     spec = response.json()
 
-    assert spec["info"]["title"] == "DebtFund"
+    assert spec["info"]["title"] == "TabIntelligence"
     assert "version" in spec["info"]
     assert "extraction" in spec["info"]["description"].lower()
-    assert spec["info"]["contact"]["name"] == "DebtFund"
+    assert spec["info"]["contact"]["name"] == "TabIntelligence"
     assert spec["info"]["license"]["name"] == "Proprietary"
 
 

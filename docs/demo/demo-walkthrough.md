@@ -1,4 +1,4 @@
-# DebtFund — Demo Walkthrough Script
+# TabIntelligence — Demo Walkthrough Script
 
 > A 20-minute guided demo for potential users. Each act includes talking points, expected screen state, and key moments to pause for questions.
 
@@ -30,7 +30,7 @@ Before the demo, ensure:
 
 > "Once you copy numbers into your analysis, you lose the audit trail. Where did this EBITDA number come from? Which cell? Which sheet?"
 
-> "DebtFund solves all three problems: **speed, standardization, and auditability**."
+> "TabIntelligence solves all three problems: **speed, standardization, and auditability**."
 
 ### Transition
 
@@ -201,7 +201,7 @@ When the extraction completes, pause on the quality grade badge:
 
 > "Under the hood: **2,555 automated tests**, CI/CD pipeline, Docker deployment, Kubernetes-ready health probes."
 
-> "DebtFund turns the most tedious part of credit analysis — extracting data from Excel models — into a **15-minute automated process** with full auditability. And it **gets smarter with every model you feed it**."
+> "TabIntelligence turns the most tedious part of credit analysis — extracting data from Excel models — into a **15-minute automated process** with full auditability. And it **gets smarter with every model you feed it**."
 
 ---
 
@@ -238,4 +238,4 @@ A: You correct it inline. The correction creates an entity pattern that prevents
 
 ---
 
-*Document generated for the DebtFund Excel Model Intelligence Platform documentation package.*
+*Document generated for the TabIntelligence Excel Model Intelligence Platform documentation package.*

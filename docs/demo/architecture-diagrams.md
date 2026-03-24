@@ -1,6 +1,6 @@
-# DebtFund -- System Architecture
+# TabIntelligence -- System Architecture
 
-This document provides a comprehensive visual overview of the DebtFund Excel Model Intelligence Platform. The diagrams below cover the full system topology, extraction pipeline lifecycle, database schema, quality scoring methodology, and canonical taxonomy hierarchy. Together they serve as the authoritative architecture reference for engineering, product, and stakeholder audiences.
+This document provides a comprehensive visual overview of the TabIntelligence Excel Model Intelligence Platform. The diagrams below cover the full system topology, extraction pipeline lifecycle, database schema, quality scoring methodology, and canonical taxonomy hierarchy. Together they serve as the authoritative architecture reference for engineering, product, and stakeholder audiences.
 
 ---
 
@@ -440,7 +440,7 @@ The canonical taxonomy contains 312 standardized financial line items organized 
 
 ```mermaid
 mindmap
-  root(("DebtFund Canonical Taxonomy<br/>312 Items"))
+  root(("TabIntelligence Canonical Taxonomy<br/>312 Items"))
     Income Statement -- 54
       Revenue
       COGS
@@ -489,4 +489,4 @@ mindmap
 
 ---
 
-*Document generated for the DebtFund Excel Model Intelligence Platform documentation package.*
+*Document generated for the TabIntelligence Excel Model Intelligence Platform documentation package.*

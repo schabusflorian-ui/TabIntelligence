@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "DebtFund Canonical Financial Taxonomy",
+  "title": "TabIntelligence Canonical Financial Taxonomy",
   "description": "Schema for data/taxonomy.json — the canonical financial line items taxonomy.",
   "type": "object",
   "required": ["version", "categories"],

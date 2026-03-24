@@ -30,19 +30,19 @@ from src.db.models import AuditLog
 
 class TestModuleLoggers:
     def test_extraction_logger_exists(self):
-        assert extraction_logger.name == "debtfund.extraction"
+        assert extraction_logger.name == "tabintelligence.extraction"
 
     def test_api_logger_exists(self):
-        assert api_logger.name == "debtfund.api"
+        assert api_logger.name == "tabintelligence.api"
 
     def test_database_logger_exists(self):
-        assert database_logger.name == "debtfund.database"
+        assert database_logger.name == "tabintelligence.database"
 
     def test_lineage_logger_exists(self):
-        assert lineage_logger.name == "debtfund.lineage"
+        assert lineage_logger.name == "tabintelligence.lineage"
 
     def test_validation_logger_exists(self):
-        assert validation_logger.name == "debtfund.validation"
+        assert validation_logger.name == "tabintelligence.validation"
 
     def test_get_logger(self):
         logger = get_logger("test.module")

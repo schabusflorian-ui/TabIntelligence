@@ -4,7 +4,7 @@
 
 ## 1. Executive Summary
 
-DebtFund needs to let analysts visualize cell-level extraction mappings overlaid on the original spreadsheet layout. Two approaches exist: rendering the spreadsheet in our web app (Option A) or building an Excel add-in (Option B). Both consume the same cell mapping API (`GET /jobs/{id}/cells`).
+TabIntelligence needs to let analysts visualize cell-level extraction mappings overlaid on the original spreadsheet layout. Two approaches exist: rendering the spreadsheet in our web app (Option A) or building an Excel add-in (Option B). Both consume the same cell mapping API (`GET /jobs/{id}/cells`).
 
 **Recommendation**: Build Option A first (Phase 2a, weeks 1-3) using FortuneSheet. Design the Option B add-in interface later (Phase 2b) once the API surface is proven. This avoids Microsoft deployment review delays and keeps the full UX under our control during iteration.
 

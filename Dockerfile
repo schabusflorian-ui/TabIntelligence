@@ -1,8 +1,8 @@
 # =============================================================================
-# DebtFund Multi-Target Dockerfile
+# TabIntelligence Multi-Target Dockerfile
 # =============================================================================
 # Targets: api, worker, init-db, mock-claude
-# Build:   docker build --target api -t debtfund-api .
+# Build:   docker build --target api -t tabintelligence-api .
 # =============================================================================
 
 # --- Base stage: shared dependencies + source ---

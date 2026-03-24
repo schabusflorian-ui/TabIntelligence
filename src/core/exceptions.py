@@ -1,14 +1,14 @@
 """
-Custom exception hierarchy for DebtFund.
+Custom exception hierarchy for TabIntelligence.
 
-All DebtFund exceptions inherit from DebtFundError for easy catching.
+All TabIntelligence exceptions inherit from TabIntelligenceError for easy catching.
 """
 
 from typing import Optional
 
 
-class DebtFundError(Exception):
-    """Base exception for all DebtFund errors."""
+class TabIntelligenceError(Exception):
+    """Base exception for all TabIntelligence errors."""
 
     def __init__(self, message: str, details: Optional[dict] = None):
         self.message = message
@@ -21,7 +21,7 @@ class DebtFundError(Exception):
         return self.message
 
 
-class ConfigurationError(DebtFundError):
+class ConfigurationError(TabIntelligenceError):
     """Configuration or environment setup issues."""
 
     def __init__(self, message: str, missing_vars: Optional[list] = None):
@@ -29,7 +29,7 @@ class ConfigurationError(DebtFundError):
         super().__init__(message, details)
 
 
-class ExtractionError(DebtFundError):
+class ExtractionError(TabIntelligenceError):
     """Base exception for extraction pipeline errors."""
 
     def __init__(self, message: str, stage: Optional[str] = None, file_id: Optional[str] = None):
@@ -90,7 +90,7 @@ class ValidationError(ExtractionError):
         self.details.update(details)
 
 
-class LineageError(DebtFundError):
+class LineageError(TabIntelligenceError):
     """Lineage system errors."""
 
     def __init__(self, message: str, job_id: Optional[str] = None):
@@ -120,7 +120,7 @@ class LineageIncompleteError(LineageError):
         self.details["missing_events"] = missing_events
 
 
-class DatabaseError(DebtFundError):
+class DatabaseError(TabIntelligenceError):
     """Database operation failures."""
 
     def __init__(self, message: str, operation: Optional[str] = None, table: Optional[str] = None):
@@ -132,7 +132,7 @@ class DatabaseError(DebtFundError):
         super().__init__(message, details)
 
 
-class FileStorageError(DebtFundError):
+class FileStorageError(TabIntelligenceError):
     """S3/MinIO storage operation failures."""
 
     def __init__(self, message: str, bucket: Optional[str] = None, key: Optional[str] = None):
@@ -144,7 +144,7 @@ class FileStorageError(DebtFundError):
         super().__init__(message, details)
 
 
-class AuthenticationError(DebtFundError):
+class AuthenticationError(TabIntelligenceError):
     """Authentication/authorization failures."""
 
     def __init__(self, message: str, user_id: Optional[str] = None):
@@ -167,7 +167,7 @@ class RateLimitError(ClaudeAPIError):
             self.details["retry_after"] = retry_after
 
 
-class InvalidFileError(DebtFundError):
+class InvalidFileError(TabIntelligenceError):
     """Invalid or corrupted file uploaded."""
 
     def __init__(
@@ -181,7 +181,7 @@ class InvalidFileError(DebtFundError):
         super().__init__(message, details)
 
 
-class DuplicateFileError(DebtFundError):
+class DuplicateFileError(TabIntelligenceError):
     """File with identical content already uploaded."""
 
     def __init__(

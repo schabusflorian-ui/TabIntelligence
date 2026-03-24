@@ -23,7 +23,7 @@ class TestDLQList:
             crud.create_dlq_entry(
                 session,
                 task_id="task-abc-123",
-                task_name="debtfund.extraction.run",
+                task_name="tabintelligence.extraction.run",
                 task_args=["job-id-1"],
                 task_kwargs={"entity_id": None},
                 error="Claude API timeout",
@@ -32,7 +32,7 @@ class TestDLQList:
             crud.create_dlq_entry(
                 session,
                 task_id="task-def-456",
-                task_name="debtfund.extraction.run",
+                task_name="tabintelligence.extraction.run",
                 task_args=["job-id-2"],
                 task_kwargs={},
                 error="Rate limit exceeded",
@@ -45,7 +45,7 @@ class TestDLQList:
         assert response.status_code == 200
         data = response.json()
         assert data["count"] == 2
-        assert data["entries"][0]["task_name"] == "debtfund.extraction.run"
+        assert data["entries"][0]["task_name"] == "tabintelligence.extraction.run"
 
     def test_list_dlq_only_unreplayed(self, test_client_with_db, test_db):
         from src.db import crud
@@ -93,7 +93,7 @@ class TestDLQGetDetail:
             entry = crud.create_dlq_entry(
                 session,
                 task_id="task-xyz",
-                task_name="debtfund.extraction.run",
+                task_name="tabintelligence.extraction.run",
                 task_args=["job-123"],
                 task_kwargs={"entity_id": "ent-456"},
                 error="Something went wrong",

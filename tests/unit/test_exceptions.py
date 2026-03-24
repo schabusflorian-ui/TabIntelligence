@@ -11,7 +11,7 @@ from src.core.exceptions import (
     ClaudeAPIError,
     ConfigurationError,
     DatabaseError,
-    DebtFundError,
+    TabIntelligenceError,
     ExtractionError,
     FileStorageError,
     InvalidFileError,
@@ -22,27 +22,27 @@ from src.core.exceptions import (
 )
 
 
-class TestDebtFundError:
+class TestTabIntelligenceError:
     def test_basic_creation(self):
-        e = DebtFundError("something failed")
+        e = TabIntelligenceError("something failed")
         assert str(e) == "something failed"
         assert e.message == "something failed"
         assert e.details == {}
 
     def test_with_details(self):
-        e = DebtFundError("failed", details={"key": "value"})
+        e = TabIntelligenceError("failed", details={"key": "value"})
         assert "Details:" in str(e)
         assert e.details == {"key": "value"}
 
     def test_is_exception(self):
-        with pytest.raises(DebtFundError):
-            raise DebtFundError("test")
+        with pytest.raises(TabIntelligenceError):
+            raise TabIntelligenceError("test")
 
 
 class TestConfigurationError:
     def test_basic(self):
         e = ConfigurationError("missing config")
-        assert isinstance(e, DebtFundError)
+        assert isinstance(e, TabIntelligenceError)
         assert e.details == {}
 
     def test_with_missing_vars(self):
@@ -53,7 +53,7 @@ class TestConfigurationError:
 class TestExtractionError:
     def test_basic(self):
         e = ExtractionError("extraction failed")
-        assert isinstance(e, DebtFundError)
+        assert isinstance(e, TabIntelligenceError)
         assert e.details == {}
 
     def test_with_stage_and_file(self):
@@ -94,7 +94,7 @@ class TestValidationError:
 class TestLineageError:
     def test_basic(self):
         e = LineageError("lineage broken")
-        assert isinstance(e, DebtFundError)
+        assert isinstance(e, TabIntelligenceError)
 
     def test_with_job_id(self):
         e = LineageError("broken", job_id="job-123")
@@ -117,7 +117,7 @@ class TestLineageIncompleteError:
 class TestDatabaseError:
     def test_basic(self):
         e = DatabaseError("db failed")
-        assert isinstance(e, DebtFundError)
+        assert isinstance(e, TabIntelligenceError)
 
     def test_with_operation_and_table(self):
         e = DatabaseError("insert failed", operation="create", table="files")
@@ -128,7 +128,7 @@ class TestDatabaseError:
 class TestFileStorageError:
     def test_basic(self):
         e = FileStorageError("s3 failed")
-        assert isinstance(e, DebtFundError)
+        assert isinstance(e, TabIntelligenceError)
 
     def test_with_bucket_and_key(self):
         e = FileStorageError("upload failed", bucket="my-bucket", key="path/to/file")
@@ -139,7 +139,7 @@ class TestFileStorageError:
 class TestAuthenticationError:
     def test_basic(self):
         e = AuthenticationError("unauthorized")
-        assert isinstance(e, DebtFundError)
+        assert isinstance(e, TabIntelligenceError)
 
     def test_with_user_id(self):
         e = AuthenticationError("forbidden", user_id="user-1")
@@ -160,7 +160,7 @@ class TestRateLimitError:
 class TestInvalidFileError:
     def test_basic(self):
         e = InvalidFileError("bad file")
-        assert isinstance(e, DebtFundError)
+        assert isinstance(e, TabIntelligenceError)
 
     def test_with_filename(self):
         e = InvalidFileError("corrupt", filename="bad.xlsx", file_type="xlsx")
@@ -171,8 +171,8 @@ class TestInvalidFileError:
 class TestInheritanceChain:
     """Verify the exception hierarchy is correct."""
 
-    def test_all_inherit_from_debtfund_error(self):
-        """All custom exceptions should inherit from DebtFundError."""
+    def test_all_inherit_from_tabintelligence_error(self):
+        """All custom exceptions should inherit from TabIntelligenceError."""
         exceptions = [
             ConfigurationError("x"),
             ExtractionError("x"),
@@ -187,8 +187,8 @@ class TestInheritanceChain:
             InvalidFileError("x"),
         ]
         for exc in exceptions:
-            assert isinstance(exc, DebtFundError), (
-                f"{type(exc).__name__} doesn't inherit DebtFundError"
+            assert isinstance(exc, TabIntelligenceError), (
+                f"{type(exc).__name__} doesn't inherit TabIntelligenceError"
             )
 
     def test_claude_api_error_is_extraction_error(self):

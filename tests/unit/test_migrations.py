@@ -41,8 +41,8 @@ class TestMigrationFileStructure:
 
     def test_initial_migration_exists(self):
         """Initial migration file should exist."""
-        initial = ALEMBIC_VERSIONS_DIR / "001_initial_debtfund_schema.py"
-        assert initial.exists(), "Initial migration 001_initial_debtfund_schema.py not found"
+        initial = ALEMBIC_VERSIONS_DIR / "001_initial_tabintelligence_schema.py"
+        assert initial.exists(), "Initial migration 001_initial_tabintelligence_schema.py not found"
 
     def test_migration_files_are_python(self):
         """All migration files should be valid Python."""

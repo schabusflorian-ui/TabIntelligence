@@ -1,4 +1,4 @@
-// DebtFund SVG Icon System
+// TabIntelligence SVG Icon System
 // Minimal, stroke-based icons for sidebar navigation.
 // Each returns an SVG string: 13x13 viewBox, 1.5px stroke, currentColor.
 

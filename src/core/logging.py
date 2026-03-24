@@ -1,9 +1,9 @@
 """
-Centralized logging configuration for DebtFund.
+Centralized logging configuration for TabIntelligence.
 
 Provides structured logging with:
 - Console output (stdout)
-- File output (logs/debtfund.log)
+- File output (logs/tabintelligence.log)
 - JSON format support for production
 - Correlation IDs (trace_id, request_id)
 - Module-specific loggers
@@ -45,7 +45,7 @@ class CustomJsonFormatter(jsonlogger.JsonFormatter):
         log_record["timestamp"] = record.created
         log_record["level"] = record.levelname
         log_record["logger"] = record.name
-        log_record["service"] = "debtfund"
+        log_record["service"] = "tabintelligence"
 
         # Add trace context
         try:
@@ -69,7 +69,7 @@ class CustomJsonFormatter(jsonlogger.JsonFormatter):
 
 def setup_logging(
     level: str = "INFO",
-    log_file: str = "logs/debtfund.log",
+    log_file: str = "logs/tabintelligence.log",
     log_format: Optional[str] = None,
     use_json: bool = False,
 ) -> logging.Logger:
@@ -87,7 +87,7 @@ def setup_logging(
 
     Example:
         >>> setup_logging(level="DEBUG", use_json=True)
-        >>> logger = logging.getLogger("debtfund.extraction")
+        >>> logger = logging.getLogger("tabintelligence.extraction")
         >>> logger.info("Starting extraction")
     """
     # Create logs directory if it doesn't exist
@@ -154,18 +154,18 @@ def get_logger(name: str) -> logging.Logger:
         Logger instance
 
     Example:
-        >>> logger = get_logger("debtfund.extraction")
+        >>> logger = get_logger("tabintelligence.extraction")
         >>> logger.info("Extraction started")
     """
     return logging.getLogger(name)
 
 
 # Create module-specific loggers for common use
-extraction_logger = logging.getLogger("debtfund.extraction")
-api_logger = logging.getLogger("debtfund.api")
-database_logger = logging.getLogger("debtfund.database")
-lineage_logger = logging.getLogger("debtfund.lineage")
-validation_logger = logging.getLogger("debtfund.validation")
+extraction_logger = logging.getLogger("tabintelligence.extraction")
+api_logger = logging.getLogger("tabintelligence.api")
+database_logger = logging.getLogger("tabintelligence.database")
+lineage_logger = logging.getLogger("tabintelligence.lineage")
+validation_logger = logging.getLogger("tabintelligence.validation")
 
 
 class LogContext:
@@ -175,7 +175,7 @@ class LogContext:
     Useful for debugging specific sections without changing global level.
 
     Example:
-        >>> with LogContext("debtfund.extraction", "DEBUG"):
+        >>> with LogContext("tabintelligence.extraction", "DEBUG"):
         ...     logger.debug("Detailed debugging info")
     """
 

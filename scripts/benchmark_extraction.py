@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Benchmark the DebtFund extraction pipeline with real Claude API calls.
+Benchmark the TabIntelligence extraction pipeline with real Claude API calls.
 
 Runs the full 5-stage extraction pipeline on a financial model Excel file
 and measures timing, token usage, cost, and optionally accuracy against
@@ -260,7 +260,7 @@ def _evaluate_mapping_accuracy(result: dict, expected: dict) -> dict:
 def _print_header(filename: str, size_kb: float, sheets: int, rows: int):
     """Print the benchmark header."""
     print()
-    print("DebtFund Extraction Benchmark")
+    print("TabIntelligence Extraction Benchmark")
     print("=" * 50)
     print(f"File: {filename} ({size_kb:.0f} KB)")
     print(f"Sheets: {sheets} | Rows: ~{rows}")
@@ -726,7 +726,7 @@ def _print_aggregate_summary(results: list):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Benchmark DebtFund extraction pipeline with real Claude API calls."
+        description="Benchmark TabIntelligence extraction pipeline with real Claude API calls."
     )
     parser.add_argument(
         "file",

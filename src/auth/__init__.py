@@ -1,5 +1,5 @@
 """
-Authentication and authorization module for DebtFund.
+Authentication and authorization module for TabIntelligence.
 
 Provides API key authentication, rate limiting integration, and audit trail.
 """

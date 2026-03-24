@@ -1,4 +1,4 @@
-// DebtFund API Client Module
+// TabIntelligence API Client Module
 
 const API_BASE = '/api/v1';
 

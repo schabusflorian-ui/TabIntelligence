@@ -21,7 +21,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${YELLOW}=== DebtFund Database Reset ===${NC}"
+echo -e "${YELLOW}=== TabIntelligence Database Reset ===${NC}"
 
 # Safety check: refuse to run if DATABASE_URL looks like production
 if [[ "${DATABASE_URL:-}" == *"rds.amazonaws.com"* ]] || [[ "${DATABASE_URL:-}" == *"production"* ]]; then

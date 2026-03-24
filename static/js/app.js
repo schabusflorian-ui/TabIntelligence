@@ -1,4 +1,4 @@
-// DebtFund Frontend — ES Module Entry Point
+// TabIntelligence Frontend — ES Module Entry Point
 import { addRoute, initRouter } from './router.js';
 import { renderSidebar } from './components/sidebar.js';
 import { initKeyboard } from './components/keyboard.js';

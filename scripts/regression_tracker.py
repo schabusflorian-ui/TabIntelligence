@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Regression tracker for DebtFund extraction benchmark results.
+Regression tracker for TabIntelligence extraction benchmark results.
 
 Compares latest benchmark results against saved baselines to detect
 accuracy regressions. Supports per-fixture configurable thresholds.

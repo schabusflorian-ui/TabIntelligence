@@ -1,6 +1,6 @@
 {
   "version": "3.5.0",
-  "description": "Consolidated canonical financial taxonomy for DebtFund extraction pipeline",
+  "description": "Consolidated canonical financial taxonomy for TabIntelligence extraction pipeline",
   "categories": {
     "balance_sheet": [
       {

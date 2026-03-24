@@ -1,9 +1,9 @@
 #!/bin/bash
-# Start Celery worker for DebtFund extraction queue
+# Start Celery worker for TabIntelligence extraction queue
 
 set -e
 
-echo "Starting Celery worker for DebtFund..."
+echo "Starting Celery worker for TabIntelligence..."
 
 # Start worker with logging
 celery -A src.jobs.celery_app worker \

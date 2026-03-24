@@ -1,1 +1,1 @@
-"""FastAPI routers, schemas, and middleware for the DebtFund REST API."""
+"""FastAPI routers, schemas, and middleware for the TabIntelligence REST API."""

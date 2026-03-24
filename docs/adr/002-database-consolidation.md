@@ -9,7 +9,7 @@ Accepted
 ## Context
 
 ### Problem
-The DebtFund system had TWO separate database modules with conflicting configurations:
+The TabIntelligence system had TWO separate database modules with conflicting configurations:
 
 1. **src/database/** - Older module with sync-only support
    - pool_size=5, max_overflow=10 (15 total connections)

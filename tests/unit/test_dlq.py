@@ -18,7 +18,7 @@ class TestDLQTaskOnFailure:
         from src.jobs.dlq import DLQTask
 
         task = DLQTask()
-        task.name = "debtfund.extraction.run"
+        task.name = "tabintelligence.extraction.run"
         task.max_retries = 3
         return task
 

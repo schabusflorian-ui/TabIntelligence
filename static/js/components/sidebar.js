@@ -32,7 +32,7 @@ export function renderSidebar(container) {
     <div class="sidebar-brand">
       <div class="brand-row">
         <div class="logomark"><div class="logomark-inner"></div></div>
-        <h1>DebtFund</h1>
+        <h1>TabIntelligence</h1>
       </div>
     </div>
     <nav class="sidebar-nav" aria-label="Main navigation">
@@ -86,7 +86,7 @@ export function renderSidebar(container) {
     const hint = document.createElement('p');
     hint.className = 'text-sm';
     hint.style.cssText = 'color:#C47D00;margin:4px 0 0;font-size:10.5px';
-    hint.textContent = 'An API key is required to use DebtFund.';
+    hint.textContent = 'An API key is required to use TabIntelligence.';
     container.querySelector('.sidebar-key').appendChild(hint);
   }
 }

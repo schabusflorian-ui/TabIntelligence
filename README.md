@@ -67,7 +67,7 @@ Excel File
 
 ```bash
 git clone <repository-url>
-cd DebtFund
+cd TabIntelligence
 
 python -m venv .venv
 source .venv/bin/activate
@@ -172,7 +172,7 @@ The `docs/demo/` directory contains a comprehensive documentation package for sh
 ### Project Structure
 
 ```
-DebtFund/
+TabIntelligence/
 ├── src/
 │   ├── api/               # FastAPI routers (8 routers, 50 endpoints)
 │   ├── auth/              # API key authentication
@@ -234,10 +234,10 @@ ruff check --fix src tests
 
 ```bash
 # Build API image
-docker build --target api -t debtfund-api .
+docker build --target api -t tabintelligence-api .
 
 # Build worker image
-docker build --target worker -t debtfund-worker .
+docker build --target worker -t tabintelligence-worker .
 ```
 
 ---

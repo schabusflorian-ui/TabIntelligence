@@ -6,7 +6,7 @@ import os
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-logger = logging.getLogger("debtfund.api.rate_limit")
+logger = logging.getLogger("tabintelligence.api.rate_limit")
 
 
 def _create_limiter() -> Limiter:

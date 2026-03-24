@@ -1,5 +1,5 @@
 """
-DebtFund - API Server
+TabIntelligence - API Server
 """
 
 from contextlib import asynccontextmanager
@@ -62,7 +62,7 @@ async def lifespan(app: FastAPI):
 
     # Initialize distributed tracing (optional)
     if TRACING_AVAILABLE:
-        setup_tracing(service_name="debtfund-api")
+        setup_tracing(service_name="tabintelligence-api")
         instrument_fastapi(app)
         logger.info("Distributed tracing initialized")
     else:
@@ -89,11 +89,11 @@ async def lifespan(app: FastAPI):
         logger.error(f"S3 bucket initialization failed: {str(e)}")
         logger.warning("Application starting without S3 storage")
 
-    logger.info("DebtFund API server started")
+    logger.info("TabIntelligence API server started")
     yield
 
     # --- SHUTDOWN ---
-    logger.info("DebtFund API server shutting down...")
+    logger.info("TabIntelligence API server shutting down...")
     from src.db.session import async_engine, get_sync_engine
 
     try:
@@ -102,7 +102,7 @@ async def lifespan(app: FastAPI):
         logger.info("Database connections closed")
     except Exception as e:
         logger.warning(f"Error closing database connections: {e}")
-    logger.info("DebtFund API server stopped")
+    logger.info("TabIntelligence API server stopped")
 
 
 _settings = get_settings()
@@ -119,17 +119,17 @@ _openapi_tags = [
 ]
 
 app = FastAPI(
-    title="DebtFund",
+    title="TabIntelligence",
     version=_settings.app_version,
-    description="**DebtFund** — Guided hybrid extraction platform for financial models. "
+    description="**TabIntelligence** — Guided hybrid extraction platform for financial models. "
     "Extracts structured line items from Excel using Claude AI, maps to canonical taxonomy.",
     openapi_tags=_openapi_tags,
-    contact={"name": "DebtFund", "email": "support@debtfund.example.com"},
+    contact={"name": "TabIntelligence", "email": "support@tabintelligence.example.com"},
     license_info={"name": "Proprietary"},
     lifespan=lifespan,
 )
 
-logger.info("DebtFund API module loaded")
+logger.info("TabIntelligence API module loaded")
 
 # Attach shared rate limiter to app
 app.state.limiter = limiter
@@ -201,7 +201,7 @@ async def root():
     if index.is_file():
         return FileResponse(str(index))
     return {
-        "service": "DebtFund - Excel Model Intelligence",
+        "service": "TabIntelligence - Excel Model Intelligence",
         "version": _settings.app_version,
         "status": "operational",
     }

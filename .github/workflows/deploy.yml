@@ -63,7 +63,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.IMAGE_PREFIX }}/debtfund-api
+          images: ${{ env.IMAGE_PREFIX }}/tabintelligence-api
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,prefix=,format=short
@@ -76,8 +76,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.IMAGE_PREFIX }}/debtfund-api:buildcache
-          cache-to: type=registry,ref=${{ env.IMAGE_PREFIX }}/debtfund-api:buildcache,mode=max
+          cache-from: type=registry,ref=${{ env.IMAGE_PREFIX }}/tabintelligence-api:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE_PREFIX }}/tabintelligence-api:buildcache,mode=max
 
   # ------------------------------------------------------------------
   # Build & push the `worker` image
@@ -111,7 +111,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.IMAGE_PREFIX }}/debtfund-worker
+          images: ${{ env.IMAGE_PREFIX }}/tabintelligence-worker
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,prefix=,format=short
@@ -124,8 +124,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.IMAGE_PREFIX }}/debtfund-worker:buildcache
-          cache-to: type=registry,ref=${{ env.IMAGE_PREFIX }}/debtfund-worker:buildcache,mode=max
+          cache-from: type=registry,ref=${{ env.IMAGE_PREFIX }}/tabintelligence-worker:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE_PREFIX }}/tabintelligence-worker:buildcache,mode=max
 
   # ------------------------------------------------------------------
   # Deploy to staging (placeholder — replace with real infra tooling)
@@ -136,7 +136,7 @@ jobs:
     needs: [build-api, build-worker]
     environment:
       name: staging
-      url: https://staging.debtfund.example.com   # update to real URL
+      url: https://staging.tabintelligence.example.com   # update to real URL
 
     steps:
       - name: Checkout code
@@ -148,8 +148,8 @@ jobs:
         id: tags
         run: |
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          echo "api_tag=${{ env.IMAGE_PREFIX }}/debtfund-api:sha-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
-          echo "worker_tag=${{ env.IMAGE_PREFIX }}/debtfund-worker:sha-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "api_tag=${{ env.IMAGE_PREFIX }}/tabintelligence-api:sha-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "worker_tag=${{ env.IMAGE_PREFIX }}/tabintelligence-worker:sha-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
 
       # ----------------------------------------------------------------
       # Replace the two echo steps below with your actual deploy command,
@@ -161,9 +161,9 @@ jobs:
       - name: Deploy api to staging
         run: |
           echo "Deploying api image: ${{ steps.tags.outputs.api_tag }}"
-          echo "Also tagged as:      ${{ env.IMAGE_PREFIX }}/debtfund-api:latest"
+          echo "Also tagged as:      ${{ env.IMAGE_PREFIX }}/tabintelligence-api:latest"
 
       - name: Deploy worker to staging
         run: |
           echo "Deploying worker image: ${{ steps.tags.outputs.worker_tag }}"
-          echo "Also tagged as:         ${{ env.IMAGE_PREFIX }}/debtfund-worker:latest"
+          echo "Also tagged as:         ${{ env.IMAGE_PREFIX }}/tabintelligence-worker:latest"

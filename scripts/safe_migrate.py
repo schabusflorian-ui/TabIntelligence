@@ -161,7 +161,7 @@ class DatabaseBackup:
             Path to backup file
         """
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_file = self.backup_dir / f"debtfund_{label}_{timestamp}.sql"
+        backup_file = self.backup_dir / f"tabintelligence_{label}_{timestamp}.sql"
 
         logger.info(f"Creating database backup: {backup_file}")
 

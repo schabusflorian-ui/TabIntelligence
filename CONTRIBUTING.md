@@ -1,10 +1,10 @@
-# Contributing to DebtFund
+# Contributing to TabIntelligence
 
 ## Development Setup
 
 ```bash
 # Clone & install
-git clone <repository-url> && cd DebtFund
+git clone <repository-url> && cd TabIntelligence
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 

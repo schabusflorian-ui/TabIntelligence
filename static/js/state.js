@@ -1,4 +1,4 @@
-// DebtFund Shared State Module
+// TabIntelligence Shared State Module
 // Lightweight reactive state for cross-component communication
 
 const listeners = {};

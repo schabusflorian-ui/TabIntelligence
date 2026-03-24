@@ -85,7 +85,7 @@ class TestMetricsEndpoint:
 
         output = generate_latest()
         assert isinstance(output, bytes)
-        assert b"debtfund_http_requests_total" in output or len(output) > 0
+        assert b"tabintelligence_http_requests_total" in output or len(output) > 0
 
 
 class TestSlowQueryLog:

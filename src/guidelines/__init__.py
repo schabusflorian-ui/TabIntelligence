@@ -1,5 +1,5 @@
 """
-Guidelines module for DebtFund extraction system.
+Guidelines module for TabIntelligence extraction system.
 
 Provides taxonomy management for the guided hybrid extraction approach.
 Entity pattern learning is handled by sync CRUD functions in src.db.crud.

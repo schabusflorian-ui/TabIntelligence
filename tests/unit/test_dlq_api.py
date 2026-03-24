@@ -20,7 +20,7 @@ class TestListDLQ:
         crud.create_dlq_entry(
             db_session,
             task_id="task-1",
-            task_name="debtfund.extraction.run",
+            task_name="tabintelligence.extraction.run",
             task_args=["arg1"],
             task_kwargs={"key": "value"},
             error="Test error",
@@ -31,7 +31,7 @@ class TestListDLQ:
         assert resp.status_code == 200
         data = resp.json()
         assert data["count"] == 1
-        assert data["entries"][0]["task_name"] == "debtfund.extraction.run"
+        assert data["entries"][0]["task_name"] == "tabintelligence.extraction.run"
 
     def test_list_dlq_only_unreplayed(self, test_client_with_db, db_session):
         entry = crud.create_dlq_entry(
@@ -80,7 +80,7 @@ class TestGetDLQ:
         entry = crud.create_dlq_entry(
             db_session,
             task_id="task-1",
-            task_name="debtfund.extraction.run",
+            task_name="tabintelligence.extraction.run",
             task_args=["arg1"],
             task_kwargs={"key": "value"},
             error="Test error",
@@ -90,7 +90,7 @@ class TestGetDLQ:
         resp = test_client_with_db.get(f"/api/v1/admin/dlq/{entry.dlq_id}")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["task_name"] == "debtfund.extraction.run"
+        assert data["task_name"] == "tabintelligence.extraction.run"
         assert data["error"] == "Test error"
         assert data["traceback"] == "Full traceback here"
         assert data["task_args"] == ["arg1"]

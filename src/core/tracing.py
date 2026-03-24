@@ -18,7 +18,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 
-def setup_tracing(service_name: str = "debtfund-api"):
+def setup_tracing(service_name: str = "tabintelligence-api"):
     """
     Initialize distributed tracing.
 

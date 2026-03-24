@@ -16,7 +16,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: mock-claude
-    container_name: debtfund-mock-claude
+    container_name: tabintelligence-mock-claude
     ports:
       - "8180:8080"
     healthcheck:
@@ -31,7 +31,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: init-db
-    container_name: debtfund-init-db
+    container_name: tabintelligence-init-db
     environment:
       DATABASE_URL: postgresql://emi:emi_dev@postgres:5432/emi
       ANTHROPIC_API_KEY: sk-ant-fake-key-for-e2e-testing
@@ -52,7 +52,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: api
-    container_name: debtfund-app
+    container_name: tabintelligence-app
     ports:
       - "8100:8000"
     environment:
@@ -89,7 +89,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: worker
-    container_name: debtfund-worker
+    container_name: tabintelligence-worker
     environment:
       DATABASE_URL: postgresql://emi:emi_dev@postgres:5432/emi
       REDIS_URL: redis://redis:6379/0

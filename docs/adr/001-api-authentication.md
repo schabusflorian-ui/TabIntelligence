@@ -8,7 +8,7 @@ Accepted
 
 ## Context
 
-The DebtFund API had critical security vulnerabilities that posed serious production risks:
+The TabIntelligence API had critical security vulnerabilities that posed serious production risks:
 
 1. **No Authentication**: Both endpoints (`/api/v1/files/upload` and `/api/v1/jobs/{job_id}`) were completely exposed without authentication, despite having a complete auth infrastructure implemented at `src/auth/`
 2. **CORS Wildcard**: The API allowed requests from any origin (`allow_origins=["*"]`), making it vulnerable to CSRF attacks
@@ -267,7 +267,7 @@ To verify the implementation:
 1. **Configure CORS**:
    ```bash
    # In .env file
-   CORS_ORIGINS=["http://localhost:3000","https://app.debtfund.com"]
+   CORS_ORIGINS=["http://localhost:3000","https://app.tabintelligence.com"]
    ```
 
 2. **Create API Keys**:

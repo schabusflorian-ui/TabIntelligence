@@ -1,4 +1,4 @@
-// Keyboard Shortcuts Module — DebtFund SPA
+// Keyboard Shortcuts Module — TabIntelligence SPA
 //
 // Supports single-key shortcuts ('u', '?') and two-key chord
 // shortcuts ('g d', 'g e', etc.).  The chord prefix times out

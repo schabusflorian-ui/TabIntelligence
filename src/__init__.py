@@ -1,1 +1,1 @@
-"""DebtFund — guided hybrid extraction platform for Excel financial models."""
+"""TabIntelligence — guided hybrid extraction platform for Excel financial models."""

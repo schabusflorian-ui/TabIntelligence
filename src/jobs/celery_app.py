@@ -1,5 +1,5 @@
 """
-Celery application configuration for DebtFund extraction pipeline.
+Celery application configuration for TabIntelligence extraction pipeline.
 
 Includes:
 - Dead Letter Queue (DLQ) for failed tasks
@@ -15,12 +15,12 @@ from src.core.config import get_settings
 settings = get_settings()
 
 celery_app = Celery(
-    "debtfund", broker=settings.redis_url, backend=settings.redis_url, include=["src.jobs.tasks"]
+    "tabintelligence", broker=settings.redis_url, backend=settings.redis_url, include=["src.jobs.tasks"]
 )
 
 # Define exchanges
-default_exchange = Exchange("debtfund", type="direct", durable=True)
-dlq_exchange = Exchange("debtfund.dlq", type="direct", durable=True)
+default_exchange = Exchange("tabintelligence", type="direct", durable=True)
+dlq_exchange = Exchange("tabintelligence.dlq", type="direct", durable=True)
 
 # Define queues
 celery_app.conf.task_queues = (
@@ -30,7 +30,7 @@ celery_app.conf.task_queues = (
 
 # Default queue for tasks
 celery_app.conf.task_default_queue = "extraction"
-celery_app.conf.task_default_exchange = "debtfund"
+celery_app.conf.task_default_exchange = "tabintelligence"
 celery_app.conf.task_default_routing_key = "extraction.default"
 
 celery_app.conf.update(

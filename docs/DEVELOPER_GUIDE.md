@@ -1,6 +1,6 @@
-# DebtFund Developer Guide
+# TabIntelligence Developer Guide
 
-A practical guide for working in the DebtFund codebase. Read this before making changes.
+A practical guide for working in the TabIntelligence codebase. Read this before making changes.
 
 ## Project Structure
 
@@ -83,7 +83,7 @@ docs/
 
 ```bash
 # 1. Clone and install
-git clone <repo> && cd DebtFund
+git clone <repo> && cd TabIntelligence
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 
@@ -217,7 +217,7 @@ All config lives in `src/core/config.py` via Pydantic Settings. Override with en
 | `REDIS_URL` | `redis://localhost:6379/0` | Celery broker |
 | `ANTHROPIC_API_KEY` | (required) | Claude API key |
 | `S3_ENDPOINT` | `http://localhost:9000` | MinIO/S3 endpoint |
-| `S3_BUCKET` | `debtfund-files` | Storage bucket |
+| `S3_BUCKET` | `tabintelligence-files` | Storage bucket |
 | `CLAUDE_MODEL` | `claude-sonnet-4-20250514` | Model for extraction |
 | `MAX_FILE_SIZE_MB` | `50` | Upload limit |
 | `QUALITY_GATE_MIN_GRADE` | `F` | Minimum grade to pass (A/B/C/D/F) |

@@ -41,6 +41,7 @@ export async function render(container) {
     { id: 'health', label: 'Portfolio Health', render: renderPortfolioHealth },
     { id: 'compare', label: 'Cross-Entity Compare', render: renderCompare },
     { id: 'costs', label: 'Cost Analysis', render: renderCosts },
+    { id: 'covenants', label: 'Covenant Monitor', render: renderCovenantMonitor },
     { id: 'taxonomy', label: 'Taxonomy Coverage', render: renderTaxonomy },
     { id: 'anomalies', label: 'Anomalies', render: renderAnomalies },
     { id: 'unmapped', label: 'Taxonomy Gaps', render: renderUnmapped },
@@ -525,7 +526,168 @@ async function renderCosts(panel) {
   }
 }
 
-// ========== TAB 4: Taxonomy Coverage ==========
+// ========== TAB 4: Covenant Monitor ==========
+
+async function renderCovenantMonitor(panel) {
+  panel.innerHTML = loadingPlaceholder('Loading covenant monitor...');
+
+  let data;
+  try {
+    data = await apiGet('/api/v1/analytics/portfolio/covenant-monitor');
+  } catch (err) {
+    panel.innerHTML = errorState('Failed to load covenant data: ' + esc(err.message), 'Retry');
+    return;
+  }
+
+  const items = data.items || [];
+  const breaches = items.filter(i => i.covenant_context && i.covenant_context.headroom != null && i.covenant_context.headroom < 0);
+  const sensitive = items.filter(i => i.covenant_context && i.covenant_context.is_sensitive && !(i.covenant_context.headroom != null && i.covenant_context.headroom < 0));
+
+  // Summary stats
+  let html = `
+    <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+      ${statCard('Entities Monitored', formatNum(data.total_entities_monitored))}
+      ${statCardColored('Covenant Breaches', formatNum(breaches.length), breaches.length > 0 ? '#A32626' : '#1A7A4A')}
+      ${statCardColored('Sensitive Items', formatNum(sensitive.length), sensitive.length > 0 ? '#C47D00' : '#1A7A4A')}
+      ${statCard('Total Flagged', formatNum(items.length))}
+    </div>
+  `;
+
+  if (items.length === 0) {
+    html += `
+      <div class="card">
+        <div style="padding:32px;text-align:center;color:#1A7A4A">
+          <div style="font-size:32px;margin-bottom:8px">&#10003;</div>
+          <div style="font-weight:600;font-size:15px">No covenant sensitivity flags</div>
+          <div style="color:#888;font-size:13px;margin-top:4px">All monitored entities are within comfortable headroom of their covenant thresholds.</div>
+        </div>
+      </div>
+    `;
+    panel.innerHTML = html;
+    return;
+  }
+
+  // Group items by entity
+  const byEntity = {};
+  for (const item of items) {
+    const key = item.entity_id;
+    if (!byEntity[key]) byEntity[key] = { name: item.entity_name || item.entity_id, items: [] };
+    byEntity[key].items.push(item);
+  }
+
+  // Sort entities: breaching entities first, then sensitive
+  const entityOrder = Object.entries(byEntity).sort(([, a], [, b]) => {
+    const aBreaches = a.items.filter(i => i.covenant_context.headroom != null && i.covenant_context.headroom < 0).length;
+    const bBreaches = b.items.filter(i => i.covenant_context.headroom != null && i.covenant_context.headroom < 0).length;
+    return bBreaches - aBreaches;
+  });
+
+  html += '<div class="card"><div class="card-header"><span class="card-title">Covenant Sensitivity by Entity</span></div>';
+  html += '<div style="padding:0 16px 16px">';
+
+  for (const [entityId, { name, items: entityItems }] of entityOrder) {
+    const entityBreaches = entityItems.filter(i => i.covenant_context.headroom != null && i.covenant_context.headroom < 0).length;
+    const headerColor = entityBreaches > 0 ? '#A32626' : '#C47D00';
+    const headerBg = entityBreaches > 0 ? '#FEF2F2' : '#FFF7ED';
+    const statusIcon = entityBreaches > 0 ? '&#9888;' : '&#9873;';
+
+    html += `
+      <div style="margin-top:16px;border:1px solid #E5E0D8;border-radius:6px;overflow:hidden">
+        <div style="background:${headerBg};padding:10px 14px;border-bottom:1px solid #E5E0D8;display:flex;align-items:center;gap:8px">
+          <span style="color:${headerColor};font-size:16px">${statusIcon}</span>
+          <span style="font-weight:600;font-size:14px;color:${headerColor}">${esc(name)}</span>
+          ${entityBreaches > 0
+            ? `<span class="badge" style="background:#A32626;color:#fff;margin-left:auto">${entityBreaches} breach${entityBreaches > 1 ? 'es' : ''}</span>`
+            : `<span class="badge" style="background:#C47D00;color:#fff;margin-left:auto">${entityItems.length} sensitive</span>`
+          }
+        </div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead>
+              <tr style="background:#F6F4EF;color:#888;text-transform:uppercase;font-size:10px;letter-spacing:.05em">
+                <th style="padding:7px 10px;text-align:left;font-weight:600">Metric</th>
+                <th style="padding:7px 10px;text-align:left;font-weight:600">Period</th>
+                <th style="padding:7px 10px;text-align:right;font-weight:600">Value</th>
+                <th style="padding:7px 10px;text-align:right;font-weight:600">Threshold</th>
+                <th style="padding:7px 10px;text-align:right;font-weight:600">Headroom</th>
+                <th style="padding:7px 10px;text-align:right;font-weight:600">Range (Low / High)</th>
+                <th style="padding:7px 10px;text-align:left;font-weight:600">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+    `;
+
+    // Sort items: breaches first, then by period desc
+    const sorted = [...entityItems].sort((a, b) => {
+      const aBreach = a.covenant_context.headroom != null && a.covenant_context.headroom < 0 ? 1 : 0;
+      const bBreach = b.covenant_context.headroom != null && b.covenant_context.headroom < 0 ? 1 : 0;
+      if (bBreach !== aBreach) return bBreach - aBreach;
+      return b.period.localeCompare(a.period);
+    });
+
+    for (const item of sorted) {
+      const ctx = item.covenant_context;
+      const isBreach = ctx.headroom != null && ctx.headroom < 0;
+      const rowBg = isBreach ? '#FEF2F2' : (ctx.is_sensitive ? '#FFFBEB' : '');
+
+      const fmtVal = (v) => v != null ? v.toFixed(2) + 'x' : '—';
+      const fmtHR  = (v) => {
+        if (v == null) return '—';
+        const s = (v >= 0 ? '+' : '') + v.toFixed(3) + 'x';
+        return s;
+      };
+
+      const headroomColor = ctx.headroom == null ? '#888'
+        : ctx.headroom < 0 ? '#A32626'
+        : ctx.headroom < 0.1 ? '#C47D00'
+        : '#1A7A4A';
+
+      const rangeLow  = item.value_range_low  != null ? item.value_range_low.toFixed(2)  + 'x' : '—';
+      const rangeHigh = item.value_range_high != null ? item.value_range_high.toFixed(2) + 'x' : '—';
+
+      let statusBadge;
+      if (isBreach) {
+        statusBadge = `<span class="badge" style="background:#A32626;color:#fff">BREACH</span>`;
+      } else if (ctx.headroom_range_low != null && ctx.headroom_range_low < 0) {
+        statusBadge = `<span class="badge" style="background:#C47D00;color:#fff">SENSITIVE</span>`;
+      } else {
+        statusBadge = `<span class="badge b-yellow">WATCH</span>`;
+      }
+
+      const metricLabel = item.canonical_name.replace(/_/g, '\u00a0');
+
+      html += `
+        <tr style="border-top:1px solid #F0EBE3${rowBg ? ';background:' + rowBg : ''}">
+          <td style="padding:8px 10px;font-weight:500;font-family:monospace;font-size:11px">${esc(metricLabel)}</td>
+          <td style="padding:8px 10px;color:#555">${esc(item.period)}</td>
+          <td style="padding:8px 10px;text-align:right;font-weight:600">${fmtVal(item.computed_value)}</td>
+          <td style="padding:8px 10px;text-align:right;color:#555">${fmtVal(ctx.threshold)}</td>
+          <td style="padding:8px 10px;text-align:right;font-weight:600;color:${headroomColor}">${fmtHR(ctx.headroom)}</td>
+          <td style="padding:8px 10px;text-align:right;color:#555;font-size:11px">${esc(rangeLow)} / ${esc(rangeHigh)}</td>
+          <td style="padding:8px 10px">${statusBadge}</td>
+        </tr>
+      `;
+
+      // Flag message row if present
+      if (ctx.flag_message) {
+        html += `
+          <tr style="border-top:1px solid #F0EBE3${rowBg ? ';background:' + rowBg : ''}">
+            <td colspan="7" style="padding:4px 10px 8px 28px;font-size:11px;color:${isBreach ? '#A32626' : '#C47D00'};font-style:italic">
+              ${esc(ctx.flag_message)}
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    html += '</tbody></table></div></div>';
+  }
+
+  html += '</div></div>';
+  panel.innerHTML = html;
+}
+
+// ========== TAB 5: Taxonomy Coverage ==========
 
 async function renderTaxonomy(panel) {
   panel.innerHTML = `
@@ -616,7 +778,7 @@ async function renderTaxonomy(panel) {
   }
 }
 
-// ========== TAB 5: Anomaly Detection ==========
+// ========== TAB 6: Anomaly Detection ==========
 
 async function renderAnomalies(panel) {
   panel.innerHTML = `
@@ -759,7 +921,7 @@ function renderAnomalyResults(el, data) {
   el.innerHTML = html;
 }
 
-// ========== TAB 6: Unmapped Labels / Taxonomy Gaps ==========
+// ========== TAB 7: Unmapped Labels / Taxonomy Gaps ==========
 
 async function renderUnmapped(panel) {
   panel.innerHTML = `

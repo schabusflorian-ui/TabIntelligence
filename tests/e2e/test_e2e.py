@@ -201,7 +201,7 @@ if __name__ == "__main__":
     ]
 
     print("=" * 60)
-    print("DebtFund E2E Test Suite")
+    print("TabIntelligence E2E Test Suite")
     print(f"Target: {BASE_URL}")
     print("=" * 60)
 
