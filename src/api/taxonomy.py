@@ -421,3 +421,134 @@ def get_taxonomy_gap_clusters(
         clusters=clusters,
         total_clusters=len(clusters),
     )
+
+
+# ============================================================================
+# Version Snapshots
+# ============================================================================
+
+
+class TaxonomyVersionSummary(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    version: str
+    item_count: int
+    checksum: str
+    categories: Dict[str, int]
+    applied_at: Optional[str]
+    applied_by: Optional[str]
+    has_snapshot: bool
+
+
+class TaxonomyVersionListResponse(BaseModel):
+    versions: List[TaxonomyVersionSummary]
+    total: int
+
+
+class AliasChange(BaseModel):
+    canonical_name: str
+    added_aliases: List[str]
+    removed_aliases: List[str]
+
+
+class DisplayNameChange(BaseModel):
+    canonical_name: str
+    from_name: str = ""
+    to_name: str = ""
+
+
+class TaxonomyDiffSummary(BaseModel):
+    items_added: int
+    items_removed: int
+    aliases_changed: int
+    display_names_changed: int
+
+
+class TaxonomyDiffResponse(BaseModel):
+    from_version: str
+    to_version: str
+    items_added: List[str]
+    items_removed: List[str]
+    aliases_changed: List[AliasChange]
+    display_names_changed: List[DisplayNameChange]
+    summary: TaxonomyDiffSummary
+
+
+@router.get("/versions", response_model=TaxonomyVersionListResponse)
+def list_taxonomy_versions(
+    limit: int = Query(20, ge=1, le=100, description="Max versions to return"),
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """List recorded taxonomy versions, newest first.
+
+    Each entry includes metadata and whether a full snapshot is stored.
+    Use GET /taxonomy/versions/{id}/snapshot to retrieve the full snapshot.
+    """
+    from src.db.crud import list_taxonomy_versions as crud_list_versions
+
+    versions = crud_list_versions(db, limit=limit)
+    return TaxonomyVersionListResponse(versions=versions, total=len(versions))
+
+
+@router.get("/versions/{version_id}/snapshot")
+def get_version_snapshot(
+    version_id: str,
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Return the full taxonomy snapshot for a recorded version.
+
+    Returns the raw taxonomy.json content as-was at the time the version
+    was applied. Raises 404 if the version does not exist or has no snapshot.
+    """
+    from src.core.exceptions import DatabaseError
+    from src.db.crud import get_taxonomy_version_snapshot
+
+    try:
+        snapshot = get_taxonomy_version_snapshot(db, version_id)
+    except DatabaseError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return snapshot
+
+
+@router.get("/versions/diff", response_model=TaxonomyDiffResponse)
+def diff_versions(
+    from_id: str = Query(..., description="UUID of the older version"),
+    to_id: str = Query(..., description="UUID of the newer version"),
+    db: Session = Depends(get_db),
+    _api_key=Depends(get_current_api_key),
+):
+    """Compute a diff between two taxonomy version snapshots.
+
+    Returns items added/removed and alias changes between the two versions.
+    Both versions must have stored snapshots.
+    """
+    from src.core.exceptions import DatabaseError
+    from src.db.crud import diff_taxonomy_versions
+
+    try:
+        result = diff_taxonomy_versions(db, from_id=from_id, to_id=to_id)
+    except DatabaseError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    # Re-map display_names_changed keys to match Pydantic model
+    display_names = [
+        DisplayNameChange(
+            canonical_name=d["canonical_name"],
+            from_name=d.get("from", ""),
+            to_name=d.get("to", ""),
+        )
+        for d in result["display_names_changed"]
+    ]
+
+    return TaxonomyDiffResponse(
+        from_version=result["from_version"],
+        to_version=result["to_version"],
+        items_added=result["items_added"],
+        items_removed=result["items_removed"],
+        aliases_changed=[AliasChange(**a) for a in result["aliases_changed"]],
+        display_names_changed=display_names,
+        summary=TaxonomyDiffSummary(**result["summary"]),
+    )

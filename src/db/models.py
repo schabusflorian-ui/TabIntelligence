@@ -557,6 +557,7 @@ class TaxonomyVersion(Base):
     item_count: Mapped[int] = mapped_column(Integer)
     checksum: Mapped[str] = mapped_column(String(64))  # SHA-256
     categories: Mapped[dict] = mapped_column(JSON)  # {"income_statement": 54, ...}
+    snapshot: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)  # full taxonomy.json content
     applied_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     applied_by: Mapped[Optional[str]] = mapped_column(String(100))
 

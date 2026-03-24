@@ -233,6 +233,9 @@ class TestTaxonomyVersioning:
         assert v.applied_by == "test"
         assert isinstance(v.categories, dict)
         assert "income_statement" in v.categories
+        # Snapshot should be stored starting from this version
+        assert v.snapshot is not None
+        assert v.snapshot.get("version") == "3.5.0"
 
     def test_record_version_checksum_matches_file(self, db_session):
         from src.extraction.taxonomy_loader import TAXONOMY_PATH, record_taxonomy_version

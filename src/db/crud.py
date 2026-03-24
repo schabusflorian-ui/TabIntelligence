@@ -35,6 +35,7 @@ from src.db.models import (
     Taxonomy,
     TaxonomyChangelog,
     TaxonomySuggestion,
+    TaxonomyVersion,
     UnmappedLabelAggregate,
 )
 
@@ -5002,3 +5003,148 @@ def get_portfolio_covenant_monitor(
         )
 
     return len(rows)
+
+
+# ============================================================================
+# TAXONOMY VERSION SNAPSHOTS
+# ============================================================================
+
+
+def list_taxonomy_versions(db: Session, limit: int = 20) -> list[dict]:
+    """List recorded taxonomy versions, newest first.
+
+    Returns summary metadata (id, version, item_count, checksum, categories,
+    applied_at, applied_by, has_snapshot).  The full snapshot is intentionally
+    excluded from the list to keep payloads small.
+    """
+    try:
+        rows = (
+            db.query(TaxonomyVersion)
+            .order_by(TaxonomyVersion.applied_at.desc())
+            .limit(limit)
+            .all()
+        )
+        return [
+            {
+                "id": str(row.id),
+                "version": row.version,
+                "item_count": row.item_count,
+                "checksum": row.checksum,
+                "categories": row.categories or {},
+                "applied_at": row.applied_at.isoformat() if row.applied_at else None,
+                "applied_by": row.applied_by,
+                "has_snapshot": row.snapshot is not None,
+            }
+            for row in rows
+        ]
+    except SQLAlchemyError as e:
+        raise DatabaseError(
+            f"Failed to list taxonomy versions: {e}",
+            operation="select",
+            table="taxonomy_versions",
+        )
+
+
+def get_taxonomy_version_snapshot(db: Session, version_id: str) -> dict:
+    """Return the full snapshot for a single taxonomy version.
+
+    Raises DatabaseError if the version does not exist or has no snapshot.
+    """
+    from uuid import UUID as _UUID
+
+    try:
+        # Accept both str and UUID; cast for databases that need a UUID object (PostgreSQL)
+        try:
+            uid = _UUID(str(version_id))
+        except ValueError:
+            raise DatabaseError("Invalid version ID format", operation="select", table="taxonomy_versions")
+        row = db.query(TaxonomyVersion).filter(TaxonomyVersion.id == uid).first()
+    except SQLAlchemyError as e:
+        raise DatabaseError(
+            f"Failed to fetch taxonomy version: {e}",
+            operation="select",
+            table="taxonomy_versions",
+        )
+    if not row:
+        raise DatabaseError("Taxonomy version not found", operation="select", table="taxonomy_versions")
+    if not row.snapshot:
+        raise DatabaseError(
+            "This version has no stored snapshot (recorded before snapshots were enabled)",
+            operation="select",
+            table="taxonomy_versions",
+        )
+    return row.snapshot
+
+
+def diff_taxonomy_versions(db: Session, from_id: str, to_id: str) -> dict:
+    """Compute a human-readable diff between two stored taxonomy snapshots.
+
+    Returns a dict with:
+    - from_version / to_version: version strings
+    - items_added: list of canonical_names present in to but not from
+    - items_removed: list of canonical_names present in from but not to
+    - aliases_changed: list of {canonical_name, added_aliases, removed_aliases}
+      for items whose alias sets changed
+    - display_names_changed: list of {canonical_name, from, to}
+    """
+    snap_from = get_taxonomy_version_snapshot(db, from_id)
+    snap_to = get_taxonomy_version_snapshot(db, to_id)
+
+    def _extract_items(snapshot: dict) -> dict[str, dict]:
+        """Flatten {categories: {cat: [items]}} into {canonical_name: item}."""
+        items: dict[str, dict] = {}
+        for cat_items in snapshot.get("categories", {}).values():
+            if isinstance(cat_items, list):
+                for item in cat_items:
+                    if isinstance(item, dict) and "canonical_name" in item:
+                        items[item["canonical_name"]] = item
+        return items
+
+    def _alias_set(item: dict) -> set[str]:
+        result: set[str] = set()
+        for a in item.get("aliases", []):
+            if isinstance(a, str):
+                result.add(a)
+            elif isinstance(a, dict):
+                result.add(a.get("text", ""))
+        return result
+
+    from_items = _extract_items(snap_from)
+    to_items = _extract_items(snap_to)
+
+    from_names = set(from_items)
+    to_names = set(to_items)
+
+    items_added = sorted(to_names - from_names)
+    items_removed = sorted(from_names - to_names)
+
+    aliases_changed = []
+    display_names_changed = []
+    for name in sorted(from_names & to_names):
+        old_aliases = _alias_set(from_items[name])
+        new_aliases = _alias_set(to_items[name])
+        added = sorted(new_aliases - old_aliases)
+        removed = sorted(old_aliases - new_aliases)
+        if added or removed:
+            aliases_changed.append(
+                {"canonical_name": name, "added_aliases": added, "removed_aliases": removed}
+            )
+        old_dn = from_items[name].get("display_name", "")
+        new_dn = to_items[name].get("display_name", "")
+        if old_dn != new_dn:
+            display_names_changed.append({"canonical_name": name, "from": old_dn, "to": new_dn})
+
+    return {
+        "from_version": snap_from.get("version", "unknown"),
+        "to_version": snap_to.get("version", "unknown"),
+        "items_added": items_added,
+        "items_removed": items_removed,
+        "aliases_changed": aliases_changed,
+        "display_names_changed": display_names_changed,
+        "summary": {
+            "items_added": len(items_added),
+            "items_removed": len(items_removed),
+            "aliases_changed": len(aliases_changed),
+            "display_names_changed": len(display_names_changed),
+        },
+    }

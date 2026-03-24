@@ -468,6 +468,7 @@ def record_taxonomy_version(session, applied_by: str = "manual") -> None:
         item_count=total,
         checksum=checksum,
         categories=category_counts,
+        snapshot=data,
         applied_by=applied_by,
     )
     session.add(tv)
