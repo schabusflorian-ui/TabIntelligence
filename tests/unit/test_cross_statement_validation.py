@@ -632,6 +632,22 @@ class TestDebtServiceIdentity:
         assert r[0].severity == "error"
 
 
+def _make_taxonomy_pf():
+    """Extended taxonomy with project-finance-specific canonicals."""
+    base = _make_taxonomy()
+    pf_items = [
+        {"canonical_name": "cfae", "typical_sign": "varies", "validation_rules": {}},
+        {"canonical_name": "llcr", "typical_sign": "positive", "validation_rules": {}},
+        {"canonical_name": "plcr", "typical_sign": "positive", "validation_rules": {}},
+        {"canonical_name": "dsra_balance", "typical_sign": "positive", "validation_rules": {}},
+        {"canonical_name": "equity_irr", "typical_sign": "positive", "validation_rules": {}},
+        {"canonical_name": "distribution_lock_up", "typical_sign": "positive", "validation_rules": {}},
+        {"canonical_name": "equity_contribution", "typical_sign": "positive", "validation_rules": {}},
+        {"canonical_name": "total_investment", "typical_sign": "positive", "validation_rules": {}},
+    ]
+    return base + pf_items
+
+
 class TestDscrPfConsistency:
     """[PF-2] dscr_project_finance consistency with cfads / debt_service."""
 
@@ -666,3 +682,317 @@ class TestDscrPfConsistency:
         assert len(r) == 1
         assert r[0].passed is False
         assert r[0].severity == "warning"
+
+
+# ============================================================================
+# PF-4: CFAE consistency
+# ============================================================================
+
+class TestPfCfaeConsistency:
+    """[PF-4] cfae = cfads - debt_service consistency."""
+
+    def setup_method(self):
+        self.validator = AccountingValidator(_make_taxonomy_pf())
+
+    def test_consistent_cfae_passes(self):
+        # cfads=5M, debt_service=4M, cfae=1M — consistent
+        data = {
+            "1.0": {
+                "cfae": D("1000000"),
+                "cfads": D("5000000"),
+                "debt_service": D("4000000"),
+            },
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:cfae_consistency"]
+        assert len(r) == 1
+        assert r[0].passed is True
+
+    def test_divergent_cfae_warns(self):
+        # cfads=5M, debt_service=4M, computed cfae=1M — but extracted says 0.8M (20% off)
+        data = {
+            "1.0": {
+                "cfae": D("800000"),
+                "cfads": D("5000000"),
+                "debt_service": D("4000000"),
+            },
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:cfae_consistency"]
+        assert len(r) == 1
+        assert r[0].passed is False
+        assert r[0].severity == "warning"
+
+    def test_skips_when_cfads_missing(self):
+        data = {"1.0": {"cfae": D("1000000"), "debt_service": D("4000000")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:cfae_consistency"]
+        assert len(r) == 0
+
+    def test_skips_when_cfae_missing(self):
+        data = {"1.0": {"cfads": D("5000000"), "debt_service": D("4000000")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:cfae_consistency"]
+        assert len(r) == 0
+
+    def test_debt_service_sign_insensitive(self):
+        # debt_service can be stored as negative; check uses abs()
+        data = {
+            "1.0": {
+                "cfae": D("1000000"),
+                "cfads": D("5000000"),
+                "debt_service": D("-4000000"),
+            },
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:cfae_consistency"]
+        assert len(r) == 1
+        assert r[0].passed is True
+
+
+# ============================================================================
+# PF-8: LLCR >= DSCR
+# ============================================================================
+
+class TestPfLlcrVsDscr:
+    """[PF-8] llcr >= dscr_project_finance."""
+
+    def setup_method(self):
+        self.validator = AccountingValidator(_make_taxonomy_pf())
+
+    def test_llcr_above_dscr_passes(self):
+        data = {
+            "1.0": {
+                "llcr": D("1.50"),
+                "dscr_project_finance": D("1.25"),
+            },
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:llcr_vs_dscr"]
+        assert len(r) == 1
+        assert r[0].passed is True
+
+    def test_llcr_equal_to_dscr_passes(self):
+        data = {"1.0": {"llcr": D("1.25"), "dscr_project_finance": D("1.25")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:llcr_vs_dscr"]
+        assert r[0].passed is True
+
+    def test_llcr_below_dscr_warns(self):
+        # LLCR 1.10x < DSCR 1.25x — structural inconsistency
+        data = {
+            "1.0": {
+                "llcr": D("1.10"),
+                "dscr_project_finance": D("1.25"),
+            },
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:llcr_vs_dscr"]
+        assert len(r) == 1
+        assert r[0].passed is False
+        assert r[0].severity == "warning"
+
+    def test_skips_when_llcr_missing(self):
+        data = {"1.0": {"dscr_project_finance": D("1.25")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:llcr_vs_dscr"]
+        assert len(r) == 0
+
+    def test_skips_when_dscr_missing(self):
+        data = {"1.0": {"llcr": D("1.50")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:llcr_vs_dscr"]
+        assert len(r) == 0
+
+
+# ============================================================================
+# PF-9: PLCR >= LLCR
+# ============================================================================
+
+class TestPfPlcrVsLlcr:
+    """[PF-9] plcr >= llcr."""
+
+    def setup_method(self):
+        self.validator = AccountingValidator(_make_taxonomy_pf())
+
+    def test_plcr_above_llcr_passes(self):
+        data = {"1.0": {"plcr": D("2.00"), "llcr": D("1.50")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:plcr_vs_llcr"]
+        assert len(r) == 1
+        assert r[0].passed is True
+
+    def test_plcr_equal_to_llcr_passes(self):
+        data = {"1.0": {"plcr": D("1.50"), "llcr": D("1.50")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:plcr_vs_llcr"]
+        assert r[0].passed is True
+
+    def test_plcr_below_llcr_warns(self):
+        data = {"1.0": {"plcr": D("1.30"), "llcr": D("1.50")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:plcr_vs_llcr"]
+        assert len(r) == 1
+        assert r[0].passed is False
+        assert r[0].severity == "warning"
+
+    def test_skips_when_plcr_missing(self):
+        data = {"1.0": {"llcr": D("1.50")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:plcr_vs_llcr"]
+        assert len(r) == 0
+
+
+# ============================================================================
+# PF-10: DSRA adequacy
+# ============================================================================
+
+class TestPfDsraAdequacy:
+    """[PF-10] dsra_balance >= 1× debt_service."""
+
+    def setup_method(self):
+        self.validator = AccountingValidator(_make_taxonomy_pf())
+
+    def test_adequate_dsra_passes(self):
+        # DSRA 4.2M >= 1× debt_service 4M ✓
+        data = {
+            "1.0": {
+                "dsra_balance": D("4200000"),
+                "debt_service": D("4000000"),
+            },
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:dsra_adequacy"]
+        assert len(r) == 1
+        assert r[0].passed is True
+
+    def test_exactly_one_times_passes(self):
+        data = {
+            "1.0": {
+                "dsra_balance": D("4000000"),
+                "debt_service": D("4000000"),
+            },
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:dsra_adequacy"]
+        assert r[0].passed is True
+
+    def test_within_tolerance_passes(self):
+        # DSRA 3.81M vs required 4M → 4.75% below 1× → within 5% tolerance
+        data = {
+            "1.0": {
+                "dsra_balance": D("3810000"),
+                "debt_service": D("4000000"),
+            },
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:dsra_adequacy"]
+        assert r[0].passed is True
+
+    def test_under_funded_dsra_warns(self):
+        # DSRA 3M < required 4M (25% shortfall) → fails
+        data = {
+            "1.0": {
+                "dsra_balance": D("3000000"),
+                "debt_service": D("4000000"),
+            },
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:dsra_adequacy"]
+        assert len(r) == 1
+        assert r[0].passed is False
+        assert r[0].severity == "warning"
+
+    def test_debt_service_sign_insensitive(self):
+        # debt_service stored as negative
+        data = {
+            "1.0": {
+                "dsra_balance": D("4200000"),
+                "debt_service": D("-4000000"),
+            },
+        }
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:dsra_adequacy"]
+        assert r[0].passed is True
+
+    def test_skips_when_dsra_missing(self):
+        data = {"1.0": {"debt_service": D("4000000")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:dsra_adequacy"]
+        assert len(r) == 0
+
+    def test_skips_when_debt_service_zero(self):
+        data = {"1.0": {"dsra_balance": D("1000000"), "debt_service": D("0")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:dsra_adequacy"]
+        assert len(r) == 0
+
+
+# ============================================================================
+# PF-11: Equity IRR plausibility
+# ============================================================================
+
+class TestPfEquityIrrPlausibility:
+    """[PF-11] equity_irr range: 3% to 40%."""
+
+    def setup_method(self):
+        self.validator = AccountingValidator(_make_taxonomy_pf())
+
+    def test_normal_irr_passes(self):
+        # 12% in decimal form
+        data = {"1.0": {"equity_irr": D("0.12")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:equity_irr_plausibility"]
+        assert len(r) == 1
+        assert r[0].passed is True
+
+    def test_percentage_form_normalised(self):
+        # 12.0 in percentage form → normalised to 0.12
+        data = {"1.0": {"equity_irr": D("12.0")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:equity_irr_plausibility"]
+        assert r[0].passed is True
+
+    def test_boundary_low_passes(self):
+        # Exactly 3% (lower bound inclusive)
+        data = {"1.0": {"equity_irr": D("0.03")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:equity_irr_plausibility"]
+        assert r[0].passed is True
+
+    def test_boundary_high_passes(self):
+        # Exactly 40% (upper bound inclusive)
+        data = {"1.0": {"equity_irr": D("0.40")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:equity_irr_plausibility"]
+        assert r[0].passed is True
+
+    def test_below_minimum_warns(self):
+        # 1% — implausibly low for equity
+        data = {"1.0": {"equity_irr": D("0.01")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:equity_irr_plausibility"]
+        assert len(r) == 1
+        assert r[0].passed is False
+        assert r[0].severity == "warning"
+
+    def test_above_maximum_warns(self):
+        # 55% — unusually high, check triggers
+        data = {"1.0": {"equity_irr": D("0.55")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:equity_irr_plausibility"]
+        assert len(r) == 1
+        assert r[0].passed is False
+
+    def test_percentage_form_above_max_warns(self):
+        # 55.0 in percentage form → 0.55 → fails
+        data = {"1.0": {"equity_irr": D("55.0")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:equity_irr_plausibility"]
+        assert r[0].passed is False
+
+    def test_skips_when_irr_missing(self):
+        data = {"1.0": {"cfads": D("5000000")}}
+        results = self.validator.validate_cross_statement(data)
+        r = [x for x in results if x.rule == "pf_check:equity_irr_plausibility"]
+        assert len(r) == 0

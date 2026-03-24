@@ -458,6 +458,8 @@ class AccountingValidator:
     TOLERANCE_ADDITIVITY = 0.03          # 3%  — sub-item sum vs. parent (rounding)
     TOLERANCE_PF_DSCR_COVENANT = 0.0    # 0%  — covenant breach is binary (< threshold = breach)
     TOLERANCE_SOURCES_USES = 0.03        # 3%  — equity + debt ≈ total investment
+    TOLERANCE_CFAE_CONSISTENCY = 0.02    # 2%  — cfae = cfads - debt_service
+    TOLERANCE_DSRA_RESERVE = 0.05        # 5%  — DSRA coverage adequacy
 
     # Items whose sign violations are elevated to ERROR (not just warning).
     # These items, when wrong-signed, directly corrupt FCF, net-debt, and
@@ -615,6 +617,31 @@ class AccountingValidator:
 
             # 21. [PF-7] loan_to_cost ≤ 90%
             r = self._check_pf_loan_to_cost(period, data)
+            if r is not None:
+                results.append(r)
+
+            # 22. [PF-4] cfae consistency: extracted vs. computed cfads - debt_service
+            r = self._check_pf_cfae_consistency(period, data)
+            if r is not None:
+                results.append(r)
+
+            # 23. [PF-8] llcr >= dscr_project_finance
+            r = self._check_pf_llcr_vs_dscr(period, data)
+            if r is not None:
+                results.append(r)
+
+            # 24. [PF-9] plcr >= llcr
+            r = self._check_pf_plcr_vs_llcr(period, data)
+            if r is not None:
+                results.append(r)
+
+            # 25. [PF-10] dsra_balance >= 1× debt_service
+            r = self._check_pf_dsra_adequacy(period, data)
+            if r is not None:
+                results.append(r)
+
+            # 26. [PF-11] equity_irr plausibility: 3% to 40%
+            r = self._check_pf_equity_irr_plausibility(period, data)
             if r is not None:
                 results.append(r)
 
@@ -1406,4 +1433,197 @@ class AccountingValidator:
             severity="warning",
             actual_value=ltc,
             expected_value=MAX_LTC,
+        )
+
+    def _check_pf_cfae_consistency(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """[PF-4] cfae consistency: extracted cfae vs. computed cfads - debt_service.
+
+        CFAE (Cash Flow Available for Equity) = CFADS - Debt Service.
+        If both the extracted cfae and the inputs (cfads, debt_service) are
+        present, any divergence > 2% signals a model arithmetic error or a
+        different CFAE definition in the source model.
+        """
+        cfae_extracted = data.get("cfae")
+        cfads = data.get("cfads")
+        ds = data.get("debt_service")
+
+        if cfae_extracted is None or cfads is None or ds is None:
+            return None
+
+        cfae_computed = cfads - abs(ds)
+        divisor = float(max(abs(cfae_extracted), abs(cfae_computed), Decimal("1")))
+        diff_pct = abs(float(cfae_extracted - cfae_computed)) / divisor
+        passed = diff_pct <= self.TOLERANCE_CFAE_CONSISTENCY
+
+        return ValidationResult(
+            passed=passed,
+            item_name="cfae",
+            rule="pf_check:cfae_consistency",
+            message=(
+                f"✓ cfae consistent with cfads - debt_service (computed={float(cfae_computed):.0f})"
+                if passed
+                else f"cfae ({float(cfae_extracted):.0f}) diverges from"
+                f" cfads ({float(cfads):.0f}) - debt_service ({float(ds):.0f})"
+                f" = {float(cfae_computed):.0f}"
+                f" ({diff_pct:.1%} divergence) in period {period}"
+            ),
+            severity="warning",
+            actual_value=cfae_extracted,
+            expected_value=Decimal(str(round(float(cfae_computed), 0))),
+        )
+
+    def _check_pf_llcr_vs_dscr(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """[PF-8] llcr >= dscr_project_finance.
+
+        For amortising project finance debt, the Loan Life Coverage Ratio (LLCR)
+        represents the NPV of all future CFADS divided by the outstanding debt —
+        it should always be >= the point-in-time DSCR.  An LLCR below the current
+        DSCR signals that the project cannot fully service debt over its remaining
+        loan life.
+        """
+        llcr = data.get("llcr")
+        dscr = data.get("dscr_project_finance") or data.get("dscr")
+
+        if llcr is None or dscr is None:
+            return None
+
+        passed = llcr >= dscr
+
+        return ValidationResult(
+            passed=passed,
+            item_name="llcr",
+            rule="pf_check:llcr_vs_dscr",
+            message=(
+                f"✓ llcr ({float(llcr):.3f}x) >= dscr ({float(dscr):.3f}x)"
+                if passed
+                else f"llcr ({float(llcr):.3f}x) < dscr ({float(dscr):.3f}x)"
+                f" in period {period}"
+                f" — loan life coverage insufficient relative to point-in-time coverage"
+            ),
+            severity="warning",
+            actual_value=llcr,
+            expected_value=dscr,
+        )
+
+    def _check_pf_plcr_vs_llcr(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """[PF-9] plcr >= llcr.
+
+        The Project Life Coverage Ratio (PLCR) — NPV of CFADS over the full
+        project life — should be >= the Loan Life Coverage Ratio (LLCR) because
+        the project life extends beyond the loan maturity.  PLCR < LLCR is a
+        structural inconsistency in the financial model.
+        """
+        plcr = data.get("plcr")
+        llcr = data.get("llcr")
+
+        if plcr is None or llcr is None:
+            return None
+
+        passed = plcr >= llcr
+
+        return ValidationResult(
+            passed=passed,
+            item_name="plcr",
+            rule="pf_check:plcr_vs_llcr",
+            message=(
+                f"✓ plcr ({float(plcr):.3f}x) >= llcr ({float(llcr):.3f}x)"
+                if passed
+                else f"plcr ({float(plcr):.3f}x) < llcr ({float(llcr):.3f}x)"
+                f" in period {period}"
+                f" — project life coverage should exceed loan life coverage"
+            ),
+            severity="warning",
+            actual_value=plcr,
+            expected_value=llcr,
+        )
+
+    def _check_pf_dsra_adequacy(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """[PF-10] dsra_balance >= 1× debt_service (minimum reserve adequacy).
+
+        The Debt Service Reserve Account (DSRA) must hold at least one period's
+        worth of debt service.  Accounts holding less than that are under-funded
+        relative to the minimum required reserve (typically 6 months to 12 months
+        in practice; this check uses 1× as a conservative floor).
+        Uses 5% tolerance to absorb minor investment return accruals.
+        """
+        dsra = data.get("dsra_balance")
+        ds = data.get("debt_service")
+
+        if dsra is None or ds is None or ds == 0:
+            return None
+
+        required = abs(ds)
+        # Passed if dsra >= required within tolerance
+        passed = dsra >= required * Decimal(str(1 - self.TOLERANCE_DSRA_RESERVE))
+
+        return ValidationResult(
+            passed=passed,
+            item_name="dsra_balance",
+            rule="pf_check:dsra_adequacy",
+            message=(
+                f"✓ dsra_balance ({float(dsra):.0f}) >= 1× debt_service ({float(required):.0f})"
+                if passed
+                else f"dsra_balance ({float(dsra):.0f}) < required 1×"
+                f" debt_service ({float(required):.0f})"
+                f" — DSRA under-funded in period {period}"
+            ),
+            severity="warning",
+            actual_value=dsra,
+            expected_value=required,
+        )
+
+    def _check_pf_equity_irr_plausibility(
+        self,
+        period: str,
+        data: Dict[str, Decimal],
+    ) -> Optional[ValidationResult]:
+        """[PF-11] equity_irr plausibility: expected range 3% to 40%.
+
+        Project equity IRRs below 3% are implausibly low (below risk-free rate)
+        and typically indicate a data error (wrong scale, wrong sign, or a model
+        that has not been run to completion).  IRRs above 40% are unusually high
+        for infrastructure / project finance and warrant verification.
+        The check is applied at any period where equity_irr is extracted.
+        """
+        irr = data.get("equity_irr")
+        if irr is None:
+            return None
+
+        # Normalise: values > 1.0 are assumed to be in percentage form (e.g., 15.0 = 15%)
+        irr_decimal = irr / Decimal("100") if abs(irr) > Decimal("1") else irr
+
+        MIN_IRR = Decimal("0.03")
+        MAX_IRR = Decimal("0.40")
+        passed = MIN_IRR <= irr_decimal <= MAX_IRR
+
+        return ValidationResult(
+            passed=passed,
+            item_name="equity_irr",
+            rule="pf_check:equity_irr_plausibility",
+            message=(
+                f"✓ equity_irr {float(irr_decimal):.1%} within plausible range (3%–40%)"
+                if passed
+                else f"equity_irr {float(irr_decimal):.1%} outside plausible range (3%–40%)"
+                f" in period {period}"
+                f" — verify scale, sign, or model completion"
+            ),
+            severity="warning",
+            actual_value=irr_decimal,
+            expected_value=f"{float(MIN_IRR):.0%} to {float(MAX_IRR):.0%}",  # type: ignore[arg-type]
         )
